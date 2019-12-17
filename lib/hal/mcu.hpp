@@ -7,10 +7,14 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cortexm
+//cml
 #ifdef STM32L452xx
 #include <hal/stm32l452xx/mcu.hpp>
 #endif // STM32L452xx
+
+#ifdef STM32L011xx
+#include <hal/stm32l011xx/mcu.hpp>
+#endif // STM32L011xx
 
 namespace cml {
 namespace hal {
@@ -18,6 +22,10 @@ namespace hal {
 #ifdef STM32L452xx
 using c_mcu = stm32l452xx::c_mcu;
 #endif // STM32L452xx
+
+#ifdef STM32L011xx
+using c_mcu = stm32l011xx::c_mcu;
+#endif
 
 } // namespace cml
 } // namespace hal

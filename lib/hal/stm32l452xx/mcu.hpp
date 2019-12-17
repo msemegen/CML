@@ -14,7 +14,6 @@
 #include <common/bit.hpp>
 #include <hal/stm32l452xx/config.hpp>
 
-
 namespace cml {
 namespace hal {
 namespace stm32l452xx {
