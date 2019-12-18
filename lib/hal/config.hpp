@@ -7,17 +7,26 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cortexm
+//cml
 #ifdef STM32L452xx
-#include <hal/st/stm32l452xx/config.hpp>
+#include <hal/stm32l452xx/config.hpp>
+#endif // STM32L452xx
+
+#ifdef STM32L011xx
+#include <hal/stm32l011xx/config.hpp>
 #endif // STM32L452xx
 
 namespace cml {
 namespace hal {
 
 #ifdef STM32L452xx
-using s_config = st::stm32l452xx::s_config;
+using s_config = stm32l452xx::s_config;
 #endif // STM32L452xx
+
+#ifdef STM32L011xx
+using s_config = stm32l011xx::s_config;
+#endif // STM32L452xx
+
 
 } // namespace hal
 } // namespace cml

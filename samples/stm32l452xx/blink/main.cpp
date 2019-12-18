@@ -25,7 +25,8 @@ int main()
     c_mcu::get_instance().enable_hsi_clock(c_mcu::e_hsi_frequency::_16_MHz);
     c_mcu::get_instance().set_sysclk(c_mcu::e_sysclk_source::hsi, { c_mcu::s_bus_prescalers::e_ahb::_1,
                                                                     c_mcu::s_bus_prescalers::e_apb1::_1,
-                                                                    c_mcu::s_bus_prescalers::e_apb2::_1 });
+                                                                    c_mcu::s_bus_prescalers::e_apb2::_1 },
+                                                                    { 0x00000003, 15 << 4 });
     c_mcu::get_instance().disable_msi_clock();
     c_systick::get_instance().enable();
 

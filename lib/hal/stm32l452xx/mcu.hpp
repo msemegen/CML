@@ -227,12 +227,12 @@ public:
 
     e_voltage_scaling get_voltage_scaling() const
     {
-        return static_cast<e_voltage_scaling>(get_flag(PWR->CR1, PWR_CR1_VOS));
+        return static_cast<e_voltage_scaling>(common::get_flag(PWR->CR1, PWR_CR1_VOS));
     }
 
     e_flash_latency get_flash_latency() const
     {
-        return static_cast<e_flash_latency>(get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
+        return static_cast<e_flash_latency>(common::get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
     }
 
     static c_mcu& get_instance()
