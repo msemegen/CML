@@ -76,14 +76,14 @@ public:
         _2 = FLASH_ACR_LATENCY_2WS,
         _3 = FLASH_ACR_LATENCY_3WS,
         _4 = FLASH_ACR_LATENCY_4WS,
-        uknown
+        unknown
     };
 
     enum class e_voltage_scaling : common::uint32
     {
         _1 = PWR_CR1_VOS_0,
         _2 = PWR_CR1_VOS_1,
-        uknown
+        unkown
     };
 
     struct s_pll_config

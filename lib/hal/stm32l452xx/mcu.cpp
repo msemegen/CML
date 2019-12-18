@@ -236,18 +236,7 @@ void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_presc
         break;
     }
 
-    if (e_flash_latency::_0 != this->get_flash_latency())
-    {
-        set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN);
-        set_flag(&(FLASH->ACR), FLASH_ACR_DCEN);
-        set_flag(&(FLASH->ACR), FLASH_ACR_ICEN);
-    }
-    else
-    {
-        clear_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN);
-        clear_flag(&(FLASH->ACR), FLASH_ACR_DCEN);
-        clear_flag(&(FLASH->ACR), FLASH_ACR_ICEN);
-    }
+    set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
 
     if (nullptr != this->post_sysclock_frequency_callback.p_function)
     {
@@ -331,19 +320,19 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq,
         }
         break;
 
-        case e_voltage_scaling::uknown:
+        case e_voltage_scaling::unkown:
         {
             _assert(false);
         }
         break;
     }
 
-    return e_flash_latency::uknown;
+    return e_flash_latency::unknown;
 }
 
 c_mcu::e_voltage_scaling c_mcu::select_voltage_scaling(uint32 a_sysclk_freq)
 {
-    e_voltage_scaling retval = e_voltage_scaling::uknown;
+    e_voltage_scaling retval = e_voltage_scaling::unkown;
 
     //RM0394
     //DocID027295 Rev 3
@@ -363,7 +352,7 @@ c_mcu::e_voltage_scaling c_mcu::select_voltage_scaling(uint32 a_sysclk_freq)
 
 void c_mcu::set_flash_latency(e_flash_latency a_latency)
 {
-    _assert(a_latency != e_flash_latency::uknown);
+    _assert(a_latency != e_flash_latency::unknown);
 
     uint32 flash_acr = FLASH->ACR;
 
@@ -377,7 +366,7 @@ void c_mcu::set_flash_latency(e_flash_latency a_latency)
 
 void c_mcu::set_voltage_scaling(e_voltage_scaling a_scaling)
 {
-    _assert(a_scaling != e_voltage_scaling::uknown);
+    _assert(a_scaling != e_voltage_scaling::unkown);
 
     uint32 pwr_cr1 = PWR->CR1;
 
@@ -399,20 +388,19 @@ void c_mcu::increase_sysclk_frequency(e_sysclk_source a_source,
     auto new_voltage_scaling = this->select_voltage_scaling(a_frequency_hz);
     auto new_flash_latency   = this->select_flash_latency(a_frequency_hz, new_voltage_scaling);
 
-    if (e_voltage_scaling::uknown != new_voltage_scaling &&
-        e_flash_latency::uknown   != new_flash_latency)
-    {
-        if (e_voltage_scaling::_2 == this->get_voltage_scaling() && e_voltage_scaling::_1 == new_voltage_scaling)
-        {
-            this->set_voltage_scaling(new_voltage_scaling);
-            while (false == get_bit(PWR->SR2, PWR_SR2_VOSF_Pos));
-        }
+    _assert(e_voltage_scaling::unkown != new_voltage_scaling);
+    _assert(e_flash_latency::unknown != new_flash_latency);
 
-        if (new_flash_latency != this->get_flash_latency())
-        {
-            this->set_flash_latency(new_flash_latency);
-            while (new_flash_latency != this->get_flash_latency());
-        }
+    if (e_voltage_scaling::_2 == this->get_voltage_scaling() && e_voltage_scaling::_1 == new_voltage_scaling)
+    {
+        this->set_voltage_scaling(new_voltage_scaling);
+        while (false == get_bit(PWR->SR2, PWR_SR2_VOSF_Pos));
+    }
+
+    if (new_flash_latency != this->get_flash_latency())
+    {
+        this->set_flash_latency(new_flash_latency);
+        while (new_flash_latency != this->get_flash_latency());
     }
 
     set_flag(&(RCC->CFGR), static_cast<uint32>(a_source));
@@ -448,19 +436,18 @@ void c_mcu::decrease_sysclk_frequency(e_sysclk_source a_source,
     auto new_voltage_scaling = this->select_voltage_scaling(a_frequency_hz);
     auto new_flash_latency   = this->select_flash_latency(a_frequency_hz, new_voltage_scaling);
 
-    if (e_voltage_scaling::uknown != new_voltage_scaling &&
-        e_flash_latency::uknown   != new_flash_latency)
-    {
-        if (new_flash_latency != this->get_flash_latency())
-        {
-            this->set_flash_latency(new_flash_latency);
-            while (new_flash_latency != this->get_flash_latency());
-        }
+    _assert(e_voltage_scaling::unkown != new_voltage_scaling);
+    _assert(e_flash_latency::unknown != new_flash_latency);
 
-        if (e_voltage_scaling::_1 == this->get_voltage_scaling() && e_voltage_scaling::_2 == new_voltage_scaling)
-        {
-            this->set_voltage_scaling(new_voltage_scaling);
-        }
+    if (new_flash_latency != this->get_flash_latency())
+    {
+        this->set_flash_latency(new_flash_latency);
+        while (new_flash_latency != this->get_flash_latency());
+    }
+
+    if (e_voltage_scaling::_1 == this->get_voltage_scaling() && e_voltage_scaling::_2 == new_voltage_scaling)
+    {
+        this->set_voltage_scaling(new_voltage_scaling);
     }
 
     clear_flag(&(RCC->CFGR), RCC_CFGR_PPRE1);

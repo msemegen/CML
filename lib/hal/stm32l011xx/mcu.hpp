@@ -33,9 +33,9 @@ public:
 
     enum class e_sysclk_source : common::uint32
     {
-        msi = RCC_CFGR_SWS_MSI,
-        hsi = RCC_CFGR_SWS_HSI,
-        pll = RCC_CFGR_SWS_PLL
+        msi = RCC_CFGR_SW_MSI,
+        hsi = RCC_CFGR_SW_HSI,
+        pll = RCC_CFGR_SW_PLL
     };
 
     enum class e_pll_clock_source : common::uint32
@@ -68,7 +68,7 @@ public:
     {
         _0 = 0,
         _1 = FLASH_ACR_LATENCY,
-        uknown
+        unknown
     };
 
     enum class e_voltage_scaling : common::uint32
