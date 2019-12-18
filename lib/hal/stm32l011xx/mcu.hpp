@@ -75,7 +75,8 @@ public:
     {
         _1 = PWR_CR_VOS_0,
         _2 = PWR_CR_VOS_1,
-        uknown
+        _3 = PWR_CR_VOS_0 | PWR_CR_VOS_1,
+        unknown
     };
 
     struct s_pll_config
@@ -121,7 +122,42 @@ public:
 
     struct s_bus_prescalers
     {
+        enum class e_ahb
+        {
+            _1,
+            _2,
+            _4,
+            _8,
+            _16,
+            _64,
+            _128,
+            _256,
+            unknown
+        };
 
+        enum class e_apb1
+        {
+            _1,
+            _2,
+            _4,
+            _8,
+            _16,
+            unknown
+        };
+
+        enum class e_apb2
+        {
+            _1,
+            _2,
+            _4,
+            _8,
+            _16,
+            unknown
+        };
+
+        e_ahb  ahb  = e_ahb::unknown;
+        e_apb1 apb1 = e_apb1::unknown;
+        e_apb2 apb2 = e_apb2::unknown;
     };
 
 public:
@@ -175,14 +211,53 @@ public:
         return common::is_flag(PWR->CR, PWR_CR_LPRUN);
     }
 
-    e_voltage_scaling get_voltage_scaling() const;
-    e_flash_latency get_flash_latency() const;
+    e_voltage_scaling get_voltage_scaling() const
+    {
+        return static_cast<e_voltage_scaling>(common::get_flag(PWR->CR, PWR_CR_VOS));
+    }
+
+    e_flash_latency get_flash_latency() const
+    {
+        return static_cast<e_flash_latency>(common::get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
+    }
 
     static c_mcu& get_instance()
     {
         static c_mcu instance;
         return instance;
     }
+
+private:
+
+    c_mcu()
+        : clock_source(e_sysclk_source::msi)
+        , enabled_clocks(static_cast<common::uint32>(e_clock::msi))
+    {}
+
+    c_mcu(const c_mcu&) = delete;
+    c_mcu(c_mcu&&)      = delete;
+    ~c_mcu()            = default;
+
+    c_mcu& operator = (const c_mcu&) = delete;
+    c_mcu& operator = (c_mcu&&)      = delete;
+
+    e_flash_latency select_flash_latency(common::uint32 a_syclk_freq,
+                                         e_voltage_scaling a_voltage_scaling);
+
+    e_voltage_scaling select_voltage_scaling(common::uint32 a_sysclk_freq);
+
+    void set_flash_latency(e_flash_latency a_latency);
+    void set_voltage_scaling(e_voltage_scaling a_scaling);
+
+    void increase_sysclk_frequency(e_sysclk_source a_source,
+                                   common::uint32 a_frequency_hz,
+                                   const s_bus_prescalers& a_prescalers);
+
+    void decrease_sysclk_frequency(e_sysclk_source a_source,
+                                   common::uint32 a_frequency_hz,
+                                   const s_bus_prescalers& a_prescalers);
+
+    common::uint32 calculate_frequency_from_pll_configuration();
 
 private:
 

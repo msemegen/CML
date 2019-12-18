@@ -35,7 +35,6 @@ public:
         msi = RCC_CFGR_SW_MSI,
         hsi = RCC_CFGR_SW_HSI,
         pll = RCC_CFGR_SW_PLL,
-        unknown
     };
 
     enum class e_pll_clock_source : common::uint32
@@ -140,7 +139,8 @@ public:
             _64  = RCC_CFGR_HPRE_DIV64,
             _128 = RCC_CFGR_HPRE_DIV128,
             _256 = RCC_CFGR_HPRE_DIV256,
-            _512 = RCC_CFGR_HPRE_DIV512
+            _512 = RCC_CFGR_HPRE_DIV512,
+            unknown
         };
 
         enum class e_apb1 : common::uint32
@@ -149,7 +149,8 @@ public:
             _2  = RCC_CFGR_PPRE1_DIV2,
             _4  = RCC_CFGR_PPRE1_DIV4,
             _8  = RCC_CFGR_PPRE1_DIV8,
-            _16 = RCC_CFGR_PPRE1_DIV16
+            _16 = RCC_CFGR_PPRE1_DIV16,
+            unknown
         };
 
         enum class e_apb2 : common::uint32
@@ -158,12 +159,19 @@ public:
             _2  = RCC_CFGR_PPRE2_DIV2,
             _4  = RCC_CFGR_PPRE2_DIV4,
             _8  = RCC_CFGR_PPRE2_DIV8,
-            _16 = RCC_CFGR_PPRE2_DIV16
+            _16 = RCC_CFGR_PPRE2_DIV16,
+            unknown
         };
 
-        e_ahb  ahb  = e_ahb::_1;
-        e_apb1 apb1 = e_apb1::_1;
-        e_apb2 apb2 = e_apb2::_1;
+        e_ahb  ahb  = e_ahb::unknown;
+        e_apb1 apb1 = e_apb1::unknown;
+        e_apb2 apb2 = e_apb2::unknown;
+    };
+
+    struct s_nvic
+    {
+        common::uint32 priority_grouping = 0;
+        common::uint32 base_priority     = 0;
     };
 
 public:
@@ -179,7 +187,7 @@ public:
     void enable_pll(e_pll_clock_source a_source, const s_pll_config& a_pll_config);
     void disable_pll();
 
-    void set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_prescalers);
+    void set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_prescalers, const s_nvic& a_nvic_settings);
     bool enable_low_power_run();
     void disable_low_power_run();
 
@@ -217,8 +225,15 @@ public:
         return common::is_flag(PWR->CR1, PWR_CR1_LPR);
     }
 
-    e_voltage_scaling get_voltage_scaling() const;
-    e_flash_latency get_flash_latency() const;
+    e_voltage_scaling get_voltage_scaling() const
+    {
+        return static_cast<e_voltage_scaling>(get_flag(PWR->CR1, PWR_CR1_VOS));
+    }
+
+    e_flash_latency get_flash_latency() const
+    {
+        return static_cast<e_flash_latency>(get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
+    }
 
     static c_mcu& get_instance()
     {
@@ -229,7 +244,7 @@ public:
 private:
 
     c_mcu()
-        : clock_source(e_sysclk_source::unknown)
+        : clock_source(e_sysclk_source::msi)
         , enabled_clocks(static_cast<common::uint32>(e_clock::msi))
     {}
 

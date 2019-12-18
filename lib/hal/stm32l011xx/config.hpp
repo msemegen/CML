@@ -8,6 +8,7 @@
 */
 
 //cml
+#include <common/frequency.hpp>
 #include <common/integer.hpp>
 
 namespace cml {
@@ -27,6 +28,20 @@ struct s_config
 
         s_mcu& operator = (s_mcu&)       = delete;
         s_mcu& operator = (const s_mcu&) = delete;
+    };
+
+    struct s_clock
+    {
+        static constexpr common::uint32 hsi_frequency_hz = common::MHz(16u);
+        static constexpr common::uint32 lsi_frequency_hz = common::kHz(37u);
+
+        s_clock()               = delete;
+        s_clock(s_clock&&)      = delete;
+        s_clock(const s_clock&) = delete;
+        ~s_clock()              = delete;
+
+        s_clock& operator = (s_clock&)       = delete;
+        s_clock& operator = (const s_clock&) = delete;
     };
 
     s_config()                = delete;

@@ -153,8 +153,12 @@ void c_mcu::disable_pll()
     clear_bit(&(this->enabled_clocks), static_cast<uint32>(e_clock::pll));
 }
 
-void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_prescalers)
+void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_prescalers, const s_nvic& a_nvic_settings)
 {
+    _assert(s_bus_prescalers::e_ahb::unknown != a_prescalers.ahb);
+    _assert(s_bus_prescalers::e_apb1::unknown != a_prescalers.apb1);
+    _assert(s_bus_prescalers::e_apb2::unknown != a_prescalers.apb2);
+
     if (nullptr != this->pre_sysclock_frequency_callback.p_function)
     {
         this->pre_sysclock_frequency_callback.p_function(this->pre_sysclock_frequency_callback.a_p_user_data);
@@ -230,12 +234,6 @@ void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_presc
             while (false == is_flag(RCC->CFGR, RCC_CFGR_SW_PLL));
         }
         break;
-
-        case e_sysclk_source::unknown:
-        {
-            _assert(false);
-        }
-        break;
     }
 
     if (e_flash_latency::_0 != this->get_flash_latency())
@@ -256,8 +254,8 @@ void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_presc
         this->post_sysclock_frequency_callback.p_function(this->post_sysclock_frequency_callback.a_p_user_data);
     }
 
-    NVIC_SetPriorityGrouping(0x00000003);
-    __set_BASEPRI(15 << 4);
+    NVIC_SetPriorityGrouping(a_nvic_settings.priority_grouping);
+    __set_BASEPRI(a_nvic_settings.base_priority);
 }
 
 bool c_mcu::enable_low_power_run()
@@ -278,21 +276,9 @@ void c_mcu::disable_low_power_run()
     while (true == is_flag(PWR->SR2, PWR_SR2_REGLPF));
 }
 
-c_mcu::e_voltage_scaling c_mcu::get_voltage_scaling() const
-{
-    return static_cast<e_voltage_scaling>(get_flag(PWR->CR1, PWR_CR1_VOS));
-}
-
-c_mcu::e_flash_latency c_mcu::get_flash_latency() const
-{
-    return static_cast<e_flash_latency>(get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
-}
-
 c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq,
-                                                 e_voltage_scaling a_voltage_scaling)
+                                                   e_voltage_scaling a_voltage_scaling)
 {
-    e_flash_latency retval = e_flash_latency::uknown;
-
     //RM0394
     //DocID027295 Rev 3
     //75, 3.3.3 Read access latency
@@ -303,23 +289,23 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq,
         {
             if (a_syclk_freq <= MHz(16))
             {
-                retval = e_flash_latency::_0;
+                return e_flash_latency::_0;
             }
             else if (a_syclk_freq <= MHz(32))
             {
-                retval = e_flash_latency::_1;
+                return e_flash_latency::_1;
             }
             else if (a_syclk_freq <= MHz(48))
             {
-                retval = e_flash_latency::_2;
+                return e_flash_latency::_2;
             }
             else if (a_syclk_freq <= MHz(64))
             {
-                retval = e_flash_latency::_3;
+                return e_flash_latency::_3;
             }
             else if (a_syclk_freq <= MHz(80))
             {
-                retval = e_flash_latency::_4;
+                return e_flash_latency::_4;
             }
         }
         break;
@@ -328,19 +314,19 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq,
         {
             if (a_syclk_freq <= MHz(6))
             {
-                retval = e_flash_latency::_0;
+                return e_flash_latency::_0;
             }
             else if (a_syclk_freq <= MHz(12))
             {
-                retval = e_flash_latency::_1;
+                return e_flash_latency::_1;
             }
             else if (a_syclk_freq <= MHz(18))
             {
-                retval = e_flash_latency::_2;
+                return e_flash_latency::_2;
             }
             else if (a_syclk_freq <= MHz(26))
             {
-                retval = e_flash_latency::_3;
+                return e_flash_latency::_3;
             }
         }
         break;
@@ -352,7 +338,7 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq,
         break;
     }
 
-    return retval;
+    return e_flash_latency::uknown;
 }
 
 c_mcu::e_voltage_scaling c_mcu::select_voltage_scaling(uint32 a_sysclk_freq)
@@ -379,8 +365,12 @@ void c_mcu::set_flash_latency(e_flash_latency a_latency)
 {
     _assert(a_latency != e_flash_latency::uknown);
 
-    clear_flag(&(FLASH->ACR), FLASH_ACR_LATENCY);
-    set_flag(&(FLASH->ACR), static_cast<uint32>(a_latency));
+    uint32 flash_acr = FLASH->ACR;
+
+    clear_flag(&flash_acr, FLASH_ACR_LATENCY);
+    set_flag(&flash_acr, static_cast<uint32>(a_latency));
+
+    FLASH->ACR = flash_acr;
 
     while (false == is_flag(FLASH->ACR, static_cast<uint32>(a_latency)));
 }
@@ -390,10 +380,10 @@ void c_mcu::set_voltage_scaling(e_voltage_scaling a_scaling)
     _assert(a_scaling != e_voltage_scaling::uknown);
 
     uint32 pwr_cr1 = PWR->CR1;
-    clear_flag(&pwr_cr1,
-               static_cast<uint32>(e_voltage_scaling::_1) | static_cast<uint32>(e_voltage_scaling::_2));
 
+    clear_flag(&pwr_cr1, PWR_CR1_VOS);
     set_flag(&pwr_cr1, static_cast<uint32>(a_scaling));
+
     PWR->CR1 = pwr_cr1;
 }
 
@@ -401,8 +391,6 @@ void c_mcu::increase_sysclk_frequency(e_sysclk_source a_source,
                                       uint32 a_frequency_hz,
                                       const s_bus_prescalers& a_prescalers)
 {
-    _assert(e_sysclk_source::unknown != a_source);
-
     //RM0394
     //DocID027295 Rev 3
     //130, 5.1.7 Dynamic voltage scaling management
@@ -446,8 +434,6 @@ void c_mcu::decrease_sysclk_frequency(e_sysclk_source a_source,
                                       uint32 a_frequency_hz,
                                       const s_bus_prescalers& a_prescalers)
 {
-    _assert(e_sysclk_source::unknown != a_source);
-
     //RM0394
     //DocID027295 Rev 3
     //130, 5.1.7 Dynamic voltage scaling management
