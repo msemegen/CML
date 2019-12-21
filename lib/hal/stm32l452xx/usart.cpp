@@ -385,8 +385,7 @@ void c_usart::set_word_length(e_word_length a_word_length)
     _assert(e_word_length::unknown != a_word_length);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
-    set_flag(&(this->p_usart->CR1), static_cast<uint32>(a_word_length));
-    set_flag(&(this->p_usart->CR1), USART_CR1_UE);
+    set_flag(&(this->p_usart->CR1), static_cast<uint32>(a_word_length) | USART_CR1_UE);
 }
 
 void c_usart::set_parity(e_parity a_parity)
@@ -394,8 +393,7 @@ void c_usart::set_parity(e_parity a_parity)
     _assert(e_parity::unknown != a_parity);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
-    set_flag(&(this->p_usart->CR1), static_cast<uint32>(a_parity));
-    set_flag(&(this->p_usart->CR1), USART_CR1_UE);
+    set_flag(&(this->p_usart->CR1), static_cast<uint32>(a_parity) | USART_CR1_UE);
 }
 
 void c_usart::set_stop_bits(e_stop_bits a_stop_bits)

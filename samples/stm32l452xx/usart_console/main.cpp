@@ -46,28 +46,33 @@ int main()
     c_mcu::get_instance().enable_hsi_clock(c_mcu::e_hsi_frequency::_16_MHz);
     c_mcu::get_instance().set_sysclk(c_mcu::e_sysclk_source::hsi, { c_mcu::s_bus_prescalers::e_ahb::_1,
                                                                     c_mcu::s_bus_prescalers::e_apb1::_1,
-                                                                    c_mcu::s_bus_prescalers::e_apb2::_1 });
-    c_mcu::get_instance().disable_msi_clock();
-    c_systick::get_instance().enable();
+                                                                    c_mcu::s_bus_prescalers::e_apb2::_1 },
+                                                                    { 0x00000003, 15 << 4 });
 
-    c_gpio gpio_port_a(c_gpio::e_periph::a);
-    gpio_port_a.enable();
-
-    c_alternate_function_pin console_usart_tx_pin(&gpio_port_a, 2);
-    c_alternate_function_pin console_usart_rx_pin(&gpio_port_a, 3);
-
-    console_usart_tx_pin.enable(usart_pin_config);
-    console_usart_rx_pin.enable(usart_pin_config);
-
-    c_usart console_usart(c_usart::e_periph::_2);
-    console_usart.enable(usart_config, usart_clock);
-
-    c_console console(&console_usart);
-
-    while (true)
+    if (c_mcu::e_sysclk_source::hsi == c_mcu::get_instance().get_sysclk_source())
     {
-        console.read_key(true);
+        c_mcu::get_instance().disable_msi_clock();
+        c_systick::get_instance().enable();
+
+        c_gpio gpio_port_a(c_gpio::e_periph::a);
+        gpio_port_a.enable();
+
+        c_alternate_function_pin console_usart_tx_pin(&gpio_port_a, 2);
+        c_alternate_function_pin console_usart_rx_pin(&gpio_port_a, 3);
+
+        console_usart_tx_pin.enable(usart_pin_config);
+        console_usart_rx_pin.enable(usart_pin_config);
+
+        c_usart console_usart(c_usart::e_periph::_2);
+        console_usart.enable(usart_config, usart_clock);
+
+        c_console console(&console_usart);
+
+        while (true)
+        {
+            console.read_key(true);
+        }
     }
 
-    return 0;
+    while (true);
 }
