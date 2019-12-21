@@ -5,49 +5,28 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-#ifdef STM32L452xx
+#ifdef STM32L011xx
 
 //this
-#include <hal/stm32l452xx/usart.hpp>
+#include <hal/stm32l011xx/usart.hpp>
 
 //cml
 #include <common/assert.hpp>
 #include <common/bit.hpp>
-#include <hal/stm32l452xx/config.hpp>
+#include <hal/stm32l011xx/config.hpp>
 
 namespace {
 
 using namespace cml::common;
-using namespace cml::hal::stm32l452xx;
-
-void usart_1_enable(c_usart::s_clock::e_source a_clock_source)
-{
-    _assert(a_clock_source != c_usart::s_clock::e_source::unknown);
-
-    clear_flag(&(RCC->CCIPR), RCC_CCIPR_USART1SEL);
-    set_flag(&(RCC->CCIPR), clock_source_lut[static_cast<uint32>(a_clock_source)]);
-
-    set_flag(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN);
-
-    NVIC_SetPriority(USART1_IRQn, s_config::s_usart::_1_interrupt_priority);
-    NVIC_EnableIRQ(USART1_IRQn);
-}
-
-void usart_1_disable()
-{
-    clear_flag(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN);
-    NVIC_DisableIRQ(USART1_IRQn);
-}
+using namespace cml::hal::stm32l011xx;
 
 void usart_2_enable(c_usart::s_clock::e_source a_clock_source)
 {
     _assert(a_clock_source != c_usart::s_clock::e_source::unknown);
 
     constexpr uint32 clock_source_lut[] = { 0, RCC_CCIPR_USART2SEL_0, RCC_CCIPR_USART2SEL_1 };
-    clear_flag(&(RCC->CCIPR), RCC_CCIPR_USART2SEL);
-    set_flag(&(RCC->CCIPR), clock_source_lut[static_cast<uint32>(a_clock_source)]);
-
-    set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN);
+    set_flag(&(RCC->CCIPR), RCC_CCIPR_USART2SEL, clock_source_lut[static_cast<uint32>(a_clock_source)]);
+    set_flag(&(RCC->APB1ENR), RCC_APB1ENR_USART2EN);
 
     NVIC_SetPriority(USART2_IRQn, s_config::s_usart::_2_interrupt_priority);
     NVIC_EnableIRQ(USART2_IRQn);
@@ -55,27 +34,8 @@ void usart_2_enable(c_usart::s_clock::e_source a_clock_source)
 
 void usart_2_disable()
 {
-    clear_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN);
+    clear_flag(&(RCC->APB1ENR), RCC_APB1ENR_USART2EN);
     NVIC_DisableIRQ(USART2_IRQn);
-}
-
-void usart_3_enable(c_usart::s_clock::e_source a_clock_source)
-{
-    constexpr uint32 clock_source_lut[] = { 0, RCC_CCIPR_USART3SEL_0, RCC_CCIPR_USART3SEL_1 };
-
-    clear_flag(&(RCC->CCIPR), RCC_CCIPR_USART3SEL);
-    set_flag(&(RCC->CCIPR), clock_source_lut[static_cast<int32>(a_clock_source)]);
-
-    set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART3EN);
-
-    NVIC_SetPriority(USART3_IRQn, s_config::s_usart::_3_interrupt_priority);
-    NVIC_EnableIRQ(USART3_IRQn);
-}
-
-void usart_3_disable()
-{
-    clear_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART3EN);
-    NVIC_DisableIRQ(USART3_IRQn);
 }
 
 struct s_ll_config_data
@@ -89,16 +49,14 @@ struct s_ll_config_data
 
 s_ll_config_data ll_configs[] =
 {
-    { USART1, nullptr, usart_1_enable, usart_1_disable },
     { USART2, nullptr, usart_2_enable, usart_2_disable },
-    { USART3, nullptr, usart_3_enable, usart_3_disable }
 };
 
 } // namespace ::
 
 namespace cml {
 namespace hal {
-namespace stm32l452xx {
+namespace stm32l011xx {
 
 class c_interrupt_handler
 {
@@ -161,36 +119,24 @@ public:
     }
 };
 
-} // namespace stm32l452xx
+} // namespace stm32l4011xx
 } // namespace hal
 } // namespace cml
 
 extern "C"
 {
 
-void USART1_IRQHandler()
+void USART2_IRQHandler()
 {
     _assert(nullptr != ll_configs[0].p_usart_handle);
     c_interrupt_handler::usart_handle_interrupt(ll_configs[0].p_usart_handle);
-}
-
-void USART2_IRQHandler()
-{
-    _assert(nullptr != ll_configs[1].p_usart_handle);
-    c_interrupt_handler::usart_handle_interrupt(ll_configs[1].p_usart_handle);
-}
-
-void USART3_IRQHandler()
-{
-    _assert(nullptr != ll_configs[2].p_usart_handle);
-    c_interrupt_handler::usart_handle_interrupt(ll_configs[2].p_usart_handle);
 }
 
 } // extern "C"
 
 namespace cml {
 namespace hal {
-namespace stm32l452xx {
+namespace stm32l011xx {
 
 using namespace common;
 
@@ -449,8 +395,8 @@ c_usart::e_mode c_usart::get_mode() const
     return static_cast<e_mode>(get_flag(this->p_usart->CR1, (USART_CR1_TE_Msk | USART_CR1_RE_Msk)));
 }
 
-} // naespace stm32l452xx
+} // naespace stm32l011xx
 } // namespace hal
 } // namespace cml`
 
-#endif // STM32L452xx
+#endif // STM32L011xx

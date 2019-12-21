@@ -17,6 +17,19 @@ namespace stm32l011xx {
 
 struct s_config
 {
+    struct s_usart
+    {
+        static constexpr common::uint32 _2_interrupt_priority = 0;
+
+        s_usart()               = delete;
+        s_usart(s_usart&&)      = delete;
+        s_usart(const s_usart&) = delete;
+        ~s_usart()              = delete;
+
+        s_usart& operator = (s_usart&)       = delete;
+        s_usart& operator = (const s_usart&) = delete;
+    };
+
     struct s_mcu
     {
         static constexpr common::uint8 device_id_length = 12;
