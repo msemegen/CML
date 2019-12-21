@@ -52,10 +52,6 @@ int main()
             }
         }
     }
-    else
-    {
-        while (true);
-    }
 
-    return 0;
+    while (true);
 }

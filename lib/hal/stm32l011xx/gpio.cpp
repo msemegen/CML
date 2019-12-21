@@ -5,10 +5,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-#ifdef STM32L452xx
+#ifdef STM32L011xx
 
 //this
-#include <hal/stm32l452xx/gpio.hpp>
+#include <hal/stm32l011xx/gpio.hpp>
 
 namespace
 {
@@ -17,62 +17,32 @@ using namespace cml::common;
 
 void gpio_a_enable()
 {
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
+    set_flag(&(RCC->IOPENR), RCC_IOPENR_GPIOAEN);
 }
 
 void gpio_a_disable()
 {
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
+    clear_flag(&(RCC->IOPENR), RCC_IOPENR_GPIOAEN);
 }
 
 void gpio_b_enable()
 {
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
+    set_flag(&(RCC->IOPENR), RCC_IOPENR_GPIOBEN);
 }
 
 void gpio_b_disable()
 {
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
+    clear_flag(&(RCC->IOPENR), RCC_IOPENR_GPIOBEN);
 }
 
 void gpio_c_enable()
 {
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
+    set_flag(&(RCC->IOPENR), RCC_IOPENR_GPIOCEN);
 }
 
 void gpio_c_disable()
 {
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
-}
-
-void gpio_d_enable()
-{
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
-}
-
-void gpio_d_disable()
-{
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
-}
-
-void gpio_e_enable()
-{
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
-}
-
-void gpio_e_disable()
-{
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
-}
-
-void gpio_h_enable()
-{
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
-}
-
-void gpio_h_disable()
-{
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
+    clear_flag(&(RCC->IOPENR), RCC_IOPENR_GPIOCEN);
 }
 
 struct s_ll_config_data
@@ -88,16 +58,13 @@ s_ll_config_data ll_configs[] =
     { GPIOA, gpio_a_enable, gpio_a_disable },
     { GPIOB, gpio_b_enable, gpio_b_disable },
     { GPIOC, gpio_c_enable, gpio_c_disable },
-    { GPIOD, gpio_d_enable, gpio_d_disable },
-    { GPIOE, gpio_e_enable, gpio_e_disable },
-    { GPIOH, gpio_h_enable, gpio_h_disable },
 };
 
 } // namespace ::
 
 namespace cml {
 namespace hal {
-namespace stm32l452xx {
+namespace stm32l011xx {
 
 using namespace cml::common;
 
@@ -345,8 +312,8 @@ void c_alternate_function_pin::set_function(uint32 a_function)
     p_port->AFR[af_register_index] = af_register;
 }
 
-} // namespace stm32l452xx
+} // namespace stm32l011xx
 } // namespace hal
 } // namespace cml
 
-#endif // STM32L0xx
+#endif // STM32L011xx

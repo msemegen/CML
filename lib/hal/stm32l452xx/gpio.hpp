@@ -96,16 +96,6 @@ public:
         return this->periph;
     }
 
-    void take_pin(common::uint8 a_pin)
-    {
-        common::set_bit(&(this->flags), a_pin);
-    }
-
-    void give_pin(common::uint8 a_pin)
-    {
-        common::clear_bit(&(this->flags), a_pin);
-    }
-
     bool is_pin_taken(common::uint8 a_pin) const
     {
         return common::get_bit(this->flags, a_pin);
@@ -123,12 +113,30 @@ private:
         return static_cast<common::uint32>(a_periph);
     }
 
+    void take_pin(common::uint8 a_pin)
+    {
+        common::set_bit(&(this->flags), a_pin);
+    }
+
+    void give_pin(common::uint8 a_pin)
+    {
+        common::clear_bit(&(this->flags), a_pin);
+    }
+
+
 private:
 
     e_periph periph;
 
     common::uint32 flags;
     GPIO_TypeDef* p_gpio;
+
+private:
+
+    friend class c_output_pin;
+    friend class c_input_pin;
+    friend class c_alternate_function_pin;
+    friend class c_analog_pin;
 };
 
 class c_output_pin

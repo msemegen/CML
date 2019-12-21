@@ -27,9 +27,32 @@ int main()
 
     if (c_mcu::e_sysclk_source::pll == c_mcu::get_instance().get_sysclk_source())
     {
+        c_output_pin::s_config led_pin_config =
+        {
+            c_gpio::e_mode::push_pull,
+            c_gpio::e_pull::down,
+            c_gpio::e_speed::low
+        };
+
+        c_systick::get_instance().enable();
+
+        c_gpio gpio_port_b(c_gpio::e_periph::b);
+        gpio_port_b.enable();
+
+        c_output_pin led_pin(&gpio_port_b, 3);
+        led_pin.enable(led_pin_config);
+
+        led_pin.set_level(c_gpio::e_level::low);
+
+        time_tick start = c_systick::get_instance().get_counter();
+
         while (true)
         {
-
+            if (c_systick::get_instance().get_counter() - start >= 500u)
+            {
+                led_pin.toggle_level();
+                start = c_systick::get_instance().get_counter();
+            }
         }
     }
 
