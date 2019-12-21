@@ -47,6 +47,16 @@ void set_flag(register_type *a_p_register, flag_type a_flag)
     (*a_p_register) |= a_flag;
 }
 
+template<typename register_type, typename clear_mask_type, typename flag_type>
+void set_flag(register_type *a_p_register, clear_mask_type a_clear_mask, flag_type a_set_flag)
+{
+    static_assert(sizeof(register_type) == sizeof(flag_type));
+    static_assert(sizeof(register_type) == sizeof(clear_mask_type));
+
+    (*a_p_register) = (((*a_p_register) & (~a_clear_mask)) | a_set_flag);
+}
+
+
 template<typename register_type>
 void clear_bit(register_type *a_p_register, uint8 a_index)
 {

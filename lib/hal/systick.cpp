@@ -9,7 +9,15 @@
 #include <hal/systick.hpp>
 
 //externals
+
+#ifdef STM32L452xx
 #include <stm32l4xx.h>
+#endif
+
+#ifdef STM32L011xx
+#include <stm32l0xx.h>
+#endif
+
 
 //mhl
 #include <common/assert.hpp>

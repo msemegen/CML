@@ -193,7 +193,7 @@ public:
 
     e_sysclk_source get_sysclk_source() const
     {
-        return this->clock_source;
+        return static_cast<e_sysclk_source>(common::get_flag(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
     common::uint32 get_syclk_frequency_hz() const
@@ -230,8 +230,7 @@ public:
 private:
 
     c_mcu()
-        : clock_source(e_sysclk_source::msi)
-        , enabled_clocks(static_cast<common::uint32>(e_clock::msi))
+        : enabled_clocks(static_cast<common::uint32>(e_clock::msi))
     {}
 
     c_mcu(const c_mcu&) = delete;
@@ -248,6 +247,8 @@ private:
 
     void set_flash_latency(e_flash_latency a_latency);
     void set_voltage_scaling(e_voltage_scaling a_scaling);
+    void set_sysclk_source(e_sysclk_source a_sysclk_source);
+    void set_bus_prescalers(const s_bus_prescalers& a_prescalers);
 
     void increase_sysclk_frequency(e_sysclk_source a_source,
                                    common::uint32 a_frequency_hz,
@@ -261,7 +262,6 @@ private:
 
 private:
 
-    e_sysclk_source clock_source;
     common::uint8   enabled_clocks;
 
     s_sysclk_frequency_change_callback pre_sysclock_frequency_callback;

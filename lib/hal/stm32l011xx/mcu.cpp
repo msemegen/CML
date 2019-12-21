@@ -42,10 +42,7 @@ using namespace cml::common;
 void c_mcu::enable_msi_clock(e_msi_frequency a_freq)
 {
     clear_flag(&(RCC->CR), RCC_CR_MSION);
-
-    clear_flag(&(RCC->ICSCR), RCC_ICSCR_MSIRANGE);
-    set_flag(&(RCC->ICSCR), static_cast<uint32>(a_freq) << RCC_ICSCR_MSIRANGE_Pos);
-
+    set_flag(&(RCC->ICSCR), RCC_ICSCR_MSIRANGE, static_cast<uint32>(a_freq) << RCC_ICSCR_MSIRANGE_Pos);
     set_flag(&(RCC->CR), RCC_CR_MSION);
 
     while (false == is_flag(RCC->CR, RCC_CR_MSIRDY));
@@ -60,7 +57,6 @@ void c_mcu::enable_hsi_clock(e_hsi_frequency a_freq)
 {
     _unused(a_freq);
 
-    clear_flag(&(RCC->CR), RCC_CR_HSION);
     set_flag(&(RCC->CR), RCC_CR_HSION);
 
     while (false == is_flag(RCC->CR, RCC_CR_HSIRDY));
@@ -71,7 +67,6 @@ void c_mcu::enable_lsi_clock(e_lsi_frequency a_freq)
 {
     _unused(a_freq);
 
-    clear_flag(&(RCC->CSR), RCC_CSR_LSION);
     set_flag(&(RCC->CSR), RCC_CSR_LSION);
 
     while (false == is_flag(RCC->CSR, RCC_CSR_LSIRDY));
@@ -120,8 +115,8 @@ void c_mcu::enable_pll(e_pll_clock_source a_source, const s_pll_config& a_pll_co
 
     while (false == is_flag(RCC->CR, RCC_CR_HSIRDY));
 
-    clear_flag(&(RCC->CFGR), RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL | RCC_CFGR_PLLDIV);
-    set_flag(&(RCC->CFGR), RCC_CFGR_PLLSRC_HSI                           |
+    set_flag(&(RCC->CFGR), RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL | RCC_CFGR_PLLDIV,
+                           static_cast<uint32>(a_source)                 |
                            static_cast<uint32>(a_pll_config.pll_divider) |
                            static_cast<uint32>(a_pll_config.pll_multiplier));
 
@@ -176,7 +171,7 @@ void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_presc
             }
             else if (SystemCoreClock < s_config::s_clock::hsi_frequency_hz)
             {
-                this->increase_sysclk_frequency(e_sysclk_source::msi,
+                this->increase_sysclk_frequency(e_sysclk_source::hsi,
                                                 s_config::s_clock::hsi_frequency_hz,
                                                 a_prescalers);
             }
@@ -191,17 +186,18 @@ void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_presc
 
             if (SystemCoreClock > pll_frequency_hz)
             {
-                this->decrease_sysclk_frequency(e_sysclk_source::hsi, pll_frequency_hz, a_prescalers);
+                this->decrease_sysclk_frequency(e_sysclk_source::pll, pll_frequency_hz, a_prescalers);
             }
             else if (SystemCoreClock < pll_frequency_hz)
             {
-                this->increase_sysclk_frequency(e_sysclk_source::msi, pll_frequency_hz, a_prescalers);
+                this->increase_sysclk_frequency(e_sysclk_source::pll, pll_frequency_hz, a_prescalers);
             }
         }
         break;
     }
 
-    set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN);
+    set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_PRE_READ);
+    clear_flag(&(FLASH->ACR), FLASH_ACR_DISAB_BUF);
 }
 
 bool c_mcu::enable_low_power_run()
@@ -258,6 +254,12 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq, e_voltag
             }
         }
         break;
+
+        case e_voltage_scaling::unknown:
+        {
+            _assert(false);
+        }
+        break;
     }
 
     return e_flash_latency::unknown;
@@ -303,12 +305,20 @@ void c_mcu::set_flash_latency(e_flash_latency a_latency)
 
 void c_mcu::set_voltage_scaling(e_voltage_scaling a_scaling)
 {
-    uint32 pwr_cr = PWR->CR;
+    set_flag(&(PWR->CR), PWR_CR_VOS, static_cast<uint32>(a_scaling));
+}
 
-    clear_flag(&pwr_cr, PWR_CR_VOS);
-    set_flag(&pwr_cr, static_cast<uint32>(a_scaling));
+void c_mcu::set_sysclk_source(e_sysclk_source a_sysclk_source)
+{
+    set_flag(&(RCC->CFGR), RCC_CFGR_SW, static_cast<uint32>(a_sysclk_source));
+    while (false == is_flag(RCC->CFGR, static_cast<uint32>(a_sysclk_source) << RCC_CFGR_SWS_Pos));
+}
 
-    PWR->CR = pwr_cr;
+void c_mcu::set_bus_prescalers(const s_bus_prescalers& a_prescalers)
+{
+    set_flag(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32>(a_prescalers.ahb));
+    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32>(a_prescalers.apb1));
+    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<uint32>(a_prescalers.apb2));
 }
 
 void c_mcu::increase_sysclk_frequency(e_sysclk_source a_source,
@@ -328,7 +338,7 @@ void c_mcu::increase_sysclk_frequency(e_sysclk_source a_source,
         (e_voltage_scaling::_2 == current_voltage_scaling && e_voltage_scaling::_1 == new_voltage_scaling))
     {
         this->set_voltage_scaling(new_voltage_scaling);
-        while (false == get_bit(PWR->CSR, PWR_CSR_VOSF_Pos));
+        while (true == get_bit(PWR->CSR, PWR_CSR_VOSF_Pos));
     }
 
     if (e_flash_latency::_1 == current_flash_latency && e_flash_latency::_0 == new_flash_latency)
@@ -337,17 +347,8 @@ void c_mcu::increase_sysclk_frequency(e_sysclk_source a_source,
         while (true == get_bit(FLASH->ACR, FLASH_ACR_LATENCY_Pos));
     }
 
-    set_flag(&(RCC->CFGR), static_cast<uint32>(a_source));
-    clear_flag(&(RCC->CFGR), RCC_CFGR_HPRE);
-    set_flag(&(RCC->CFGR), static_cast<uint32>(a_prescalers.ahb));
-
-    while (false == is_flag(RCC->CFGR, static_cast<uint32>(a_source)));
-
-    clear_flag(&(RCC->CFGR), RCC_CFGR_PPRE1);
-    set_flag(&(RCC->CFGR), static_cast<uint32>(a_prescalers.apb1));
-
-    clear_flag(&(RCC->CFGR), RCC_CFGR_PPRE2);
-    set_flag(&(RCC->CFGR), static_cast<uint32>(a_prescalers.apb2));
+    this->set_sysclk_source(a_source);
+    this->set_bus_prescalers(a_prescalers);
 
     SystemCoreClock = a_frequency_hz;
 }
@@ -356,11 +357,7 @@ void c_mcu::decrease_sysclk_frequency(e_sysclk_source a_source,
                                       uint32 a_frequency_hz,
                                       const s_bus_prescalers& a_prescalers)
 {
-    set_flag(&(RCC->CFGR), static_cast<uint32>(a_source));
-    clear_flag(&(RCC->CFGR), RCC_CFGR_HPRE);
-    set_flag(&(RCC->CFGR), static_cast<uint32>(a_prescalers.ahb));
-
-    while (false == is_flag(RCC->CFGR, static_cast<uint32>(a_source)));
+    this->set_sysclk_source(a_source);
 
     auto new_voltage_scaling = this->select_voltage_scaling(a_frequency_hz);
     auto new_flash_latency   = this->select_flash_latency(a_frequency_hz, new_voltage_scaling);
@@ -375,7 +372,7 @@ void c_mcu::decrease_sysclk_frequency(e_sysclk_source a_source,
         (e_voltage_scaling::_1 == current_voltage_scaling && e_voltage_scaling::_2 == new_voltage_scaling))
     {
         this->set_voltage_scaling(new_voltage_scaling);
-        while (false == get_bit(PWR->CSR, PWR_CSR_VOSF_Pos));
+        while (true == get_bit(PWR->CSR, PWR_CSR_VOSF_Pos));
     }
 
     if (e_flash_latency::_0 == current_flash_latency && e_flash_latency::_1 == new_flash_latency)
@@ -384,11 +381,7 @@ void c_mcu::decrease_sysclk_frequency(e_sysclk_source a_source,
         while (false == get_bit(FLASH->ACR, FLASH_ACR_LATENCY_Pos));
     }
 
-    clear_flag(&(RCC->CFGR), RCC_CFGR_PPRE1);
-    set_flag(&(RCC->CFGR), static_cast<uint32>(a_prescalers.apb1));
-
-    clear_flag(&(RCC->CFGR), RCC_CFGR_PPRE2);
-    set_flag(&(RCC->CFGR), static_cast<uint32>(a_prescalers.apb2));
+    this->set_bus_prescalers(a_prescalers);
 
     SystemCoreClock = a_frequency_hz;
 }
@@ -398,8 +391,8 @@ uint32 c_mcu::calculate_frequency_from_pll_configuration()
     constexpr uint32 m_lut[] = { 3, 4, 6, 8, 12, 16, 24, 32, 48 };
     constexpr uint32 d_lut[] = { 2, 3, 4 };
 
-    const uint32 mi = get_flag(RCC->CFGR, RCC_CFGR_PLLMUL) >> RCC_CFGR_PLLMUL_Pos;
-    const uint32 di = get_flag(RCC->CFGR, RCC_CFGR_PLLDIV) >> RCC_CFGR_PLLDIV_Pos;
+    const uint32 mi = (get_flag(RCC->CFGR, RCC_CFGR_PLLMUL) >> RCC_CFGR_PLLMUL_Pos) - 0;
+    const uint32 di = (get_flag(RCC->CFGR, RCC_CFGR_PLLDIV) >> RCC_CFGR_PLLDIV_Pos) - 1;
 
     _assert(mi < sizeof(m_lut) / sizeof(m_lut[0]));
     _assert(di < sizeof(d_lut) / sizeof(d_lut[0]));

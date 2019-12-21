@@ -12,11 +12,19 @@
 #include <hal/stm32l452xx/usart.hpp>
 #endif
 
+#ifdef STM32L011xx
+#include <hal/stm32l011xx/usart.hpp>
+#endif
+
 namespace cml {
 namespace hal {
 
 #ifdef STM32L452xx
 using c_usart = stm32l452xx::c_usart;
+#endif
+
+#ifdef STM32L011xx
+using c_usart = stm32l011xx::c_usart;
 #endif
 
 } // namespace hal

@@ -14,7 +14,6 @@
 #include <hal/usart.hpp>
 #include <utils/config.hpp>
 
-
 namespace cml {
 namespace utils {
 

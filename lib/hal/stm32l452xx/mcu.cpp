@@ -236,15 +236,18 @@ void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_presc
         break;
     }
 
-    set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
+    if (e_flash_latency::_0 != this->get_flash_latency())
+    {
+        set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
+    }
+
+    NVIC_SetPriorityGrouping(a_nvic_settings.priority_grouping);
+    __set_BASEPRI(a_nvic_settings.base_priority);
 
     if (nullptr != this->post_sysclock_frequency_callback.p_function)
     {
         this->post_sysclock_frequency_callback.p_function(this->post_sysclock_frequency_callback.a_p_user_data);
     }
-
-    NVIC_SetPriorityGrouping(a_nvic_settings.priority_grouping);
-    __set_BASEPRI(a_nvic_settings.base_priority);
 }
 
 bool c_mcu::enable_low_power_run()
