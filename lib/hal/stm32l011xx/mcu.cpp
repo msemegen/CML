@@ -50,7 +50,6 @@ void c_mcu::enable_msi_clock(e_msi_frequency a_freq)
     clear_flag(&(RCC->ICSCR), RCC_ICSCR_MSITRIM);
 
     while (false == is_flag(RCC->CR, RCC_CR_MSIRDY));
-    set_bit(&(this->enabled_clocks), static_cast<uint32>(e_clock::msi));
 }
 
 void c_mcu::enable_hsi_clock(e_hsi_frequency a_freq)
@@ -60,7 +59,6 @@ void c_mcu::enable_hsi_clock(e_hsi_frequency a_freq)
     set_flag(&(RCC->CR), RCC_CR_HSION);
 
     while (false == is_flag(RCC->CR, RCC_CR_HSIRDY));
-    set_bit(&(this->enabled_clocks), static_cast<uint32>(e_clock::hsi));
 }
 
 void c_mcu::enable_lsi_clock(e_lsi_frequency a_freq)
@@ -70,7 +68,6 @@ void c_mcu::enable_lsi_clock(e_lsi_frequency a_freq)
     set_flag(&(RCC->CSR), RCC_CSR_LSION);
 
     while (false == is_flag(RCC->CSR, RCC_CSR_LSIRDY));
-    set_bit(&(this->enabled_clocks), static_cast<uint32>(e_clock::lsi));
 }
 
 void c_mcu::disable_msi_clock()
@@ -78,7 +75,6 @@ void c_mcu::disable_msi_clock()
     clear_flag(&(RCC->CR), RCC_CR_MSION);
 
     while (true == is_flag(RCC->CR, RCC_CR_MSIRDY));
-    clear_bit(&(this->enabled_clocks), static_cast<uint32>(e_clock::msi));
 }
 
 void c_mcu::disable_hsi_clock()
@@ -86,7 +82,6 @@ void c_mcu::disable_hsi_clock()
     clear_flag(&(RCC->CR), RCC_CR_HSION);
 
     while (true == is_flag(RCC->CR, RCC_CR_HSIRDY));
-    clear_bit(&(this->enabled_clocks), static_cast<uint32>(e_clock::hsi));
 }
 
 void c_mcu::disable_lsi_clock()
@@ -94,7 +89,6 @@ void c_mcu::disable_lsi_clock()
     clear_flag(&(RCC->CSR), RCC_CSR_LSION);
 
     while (true == is_flag(RCC->CSR, RCC_CSR_LSIRDY));
-    clear_bit(&(this->enabled_clocks), static_cast<uint32>(e_clock::lsi));
 }
 
 void c_mcu::enable_pll(e_pll_clock_source a_source, const s_pll_config& a_pll_config)
@@ -123,7 +117,6 @@ void c_mcu::enable_pll(e_pll_clock_source a_source, const s_pll_config& a_pll_co
     set_flag(&(RCC->CR), RCC_CR_PLLON);
 
     while (false == is_flag(RCC->CR, RCC_CR_PLLRDY));
-    set_bit(&(this->enabled_clocks), static_cast<uint32>(e_clock::pll));
 }
 
 void c_mcu::disable_pll()
@@ -134,6 +127,11 @@ void c_mcu::disable_pll()
 
 void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_prescalers)
 {
+    if (nullptr != this->pre_sysclock_frequency_change_callback.p_function)
+    {
+        this->pre_sysclock_frequency_change_callback.p_function(this->pre_sysclock_frequency_change_callback.a_p_user_data);
+    }
+
     if (false == is_flag(RCC->APB1ENR, RCC_APB1ENR_PWREN))
     {
         set_flag(&(RCC->APB1ENR), RCC_APB1ENR_PWREN);
@@ -198,6 +196,11 @@ void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_presc
 
     set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_PRE_READ);
     clear_flag(&(FLASH->ACR), FLASH_ACR_DISAB_BUF);
+
+    if (nullptr != this->post_sysclock_frequency_change_callback.p_function)
+    {
+        this->post_sysclock_frequency_change_callback.p_function(this->post_sysclock_frequency_change_callback.a_p_user_data);
+    }
 }
 
 bool c_mcu::enable_low_power_run()

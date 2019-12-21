@@ -25,10 +25,10 @@ public:
 
     enum class e_clock : common::uint32
     {
-        msi = 1,
-        hsi = 2,
-        lsi = 3,
-        pll = 4
+        msi = RCC_CR_MSION,
+        hsi = RCC_CR_HSION,
+        pll = RCC_CR_PLLON,
+        lsi
     };
 
     enum class e_sysclk_source : common::uint32
@@ -203,7 +203,24 @@ public:
 
     bool is_clock_enabled(e_clock a_clock) const
     {
-        return common::get_bit(this->enabled_clocks, static_cast<common::uint32>(a_clock));
+        switch (a_clock)
+        {
+            case e_clock::msi:
+            case e_clock::hsi:
+            case e_clock::pll:
+            {
+                return common::is_flag(RCC->CR, static_cast<common::uint32>(a_clock));
+            }
+            break;
+
+            case e_clock::lsi:
+            {
+                return common::is_flag(RCC->CSR, RCC_CSR_LSION);
+            }
+            break;
+        }
+
+        return false;
     }
 
     bool is_in_low_power_run() const
@@ -221,6 +238,16 @@ public:
         return static_cast<e_flash_latency>(common::get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
     }
 
+    void register_pre_sysclk_frequency_change_callback(const s_sysclk_frequency_change_callback& a_callback)
+    {
+        this->pre_sysclock_frequency_change_callback;
+    }
+
+    void register_post_sysclk_frequency_change_callback(const s_sysclk_frequency_change_callback& a_callback)
+    {
+        this->post_sysclock_frequency_change_callback;
+    }
+
     static c_mcu& get_instance()
     {
         static c_mcu instance;
@@ -229,10 +256,7 @@ public:
 
 private:
 
-    c_mcu()
-        : enabled_clocks(static_cast<common::uint32>(e_clock::msi))
-    {}
-
+    c_mcu()             = default;
     c_mcu(const c_mcu&) = delete;
     c_mcu(c_mcu&&)      = delete;
     ~c_mcu()            = default;
@@ -262,10 +286,8 @@ private:
 
 private:
 
-    common::uint8   enabled_clocks;
-
-    s_sysclk_frequency_change_callback pre_sysclock_frequency_callback;
-    s_sysclk_frequency_change_callback post_sysclock_frequency_callback;
+    s_sysclk_frequency_change_callback pre_sysclock_frequency_change_callback;
+    s_sysclk_frequency_change_callback post_sysclock_frequency_change_callback;
 };
 
 } // namespace stm32l011xx
