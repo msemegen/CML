@@ -240,12 +240,12 @@ public:
 
     void register_pre_sysclk_frequency_change_callback(const s_sysclk_frequency_change_callback& a_callback)
     {
-        this->pre_sysclock_frequency_change_callback;
+        this->pre_sysclock_frequency_change_callback = a_callback;
     }
 
     void register_post_sysclk_frequency_change_callback(const s_sysclk_frequency_change_callback& a_callback)
     {
-        this->post_sysclock_frequency_change_callback;
+        this->post_sysclock_frequency_change_callback = a_callback;
     }
 
     static c_mcu& get_instance()

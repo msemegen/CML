@@ -308,6 +308,8 @@ void c_mcu::set_flash_latency(e_flash_latency a_latency)
 
 void c_mcu::set_voltage_scaling(e_voltage_scaling a_scaling)
 {
+    _assert(a_scaling != e_voltage_scaling::unknown);
+
     set_flag(&(PWR->CR), PWR_CR_VOS, static_cast<uint32>(a_scaling));
 }
 
@@ -319,6 +321,10 @@ void c_mcu::set_sysclk_source(e_sysclk_source a_sysclk_source)
 
 void c_mcu::set_bus_prescalers(const s_bus_prescalers& a_prescalers)
 {
+    _assert(s_bus_prescalers::e_ahb::unknown != a_prescalers.ahb);
+    _assert(s_bus_prescalers::e_apb1::unknown != a_prescalers.apb1);
+    _assert(s_bus_prescalers::e_apb2::unknown != a_prescalers.apb2);
+
     set_flag(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32>(a_prescalers.ahb));
     set_flag(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32>(a_prescalers.apb1));
     set_flag(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<uint32>(a_prescalers.apb2));

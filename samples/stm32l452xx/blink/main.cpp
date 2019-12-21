@@ -28,25 +28,33 @@ int main()
                                                                     c_mcu::s_bus_prescalers::e_apb2::_1 },
                                                                     { 0x00000003, 15 << 4 });
     c_mcu::get_instance().disable_msi_clock();
-    c_systick::get_instance().enable();
 
-    c_gpio gpio_port_a(c_gpio::e_periph::a);
-    gpio_port_a.enable();
-
-    c_output_pin led_pin(&gpio_port_a, 5);
-    led_pin.enable(led_pin_config);
-
-    led_pin.set_level(c_gpio::e_level::low);
-
-    time_tick start = c_systick::get_instance().get_counter();
-
-    while (true)
+    if (c_mcu::e_sysclk_source::hsi == c_mcu::get_instance().get_sysclk_source())
     {
-        if (c_systick::get_instance().get_counter() - start >= 500u)
+        c_systick::get_instance().enable();
+
+        c_gpio gpio_port_a(c_gpio::e_periph::a);
+        gpio_port_a.enable();
+
+        c_output_pin led_pin(&gpio_port_a, 5);
+        led_pin.enable(led_pin_config);
+
+        led_pin.set_level(c_gpio::e_level::low);
+
+        time_tick start = c_systick::get_instance().get_counter();
+
+        while (true)
         {
-            led_pin.toggle_level();
-            start = c_systick::get_instance().get_counter();
+            if (c_systick::get_instance().get_counter() - start >= 500u)
+            {
+                led_pin.toggle_level();
+                start = c_systick::get_instance().get_counter();
+            }
         }
+    }
+    else
+    {
+        while (true);
     }
 
     return 0;

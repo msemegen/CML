@@ -24,10 +24,10 @@ public:
 
     enum class e_clock : common::uint32
     {
-        msi = 1,
-        hsi = 2,
-        lsi = 3,
-        pll = 4
+        msi = RCC_CR_MSION,
+        hsi = RCC_CR_HSION,
+        pll = RCC_CR_PLLON,
+        lsi
     };
 
     enum class e_sysclk_source : common::uint32
@@ -207,7 +207,7 @@ public:
 
     e_sysclk_source get_sysclk_source() const
     {
-        return this->clock_source;
+        return static_cast<e_sysclk_source>(common::get_flag(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
     common::uint32 get_syclk_frequency_hz() const
@@ -217,7 +217,24 @@ public:
 
     bool is_clock_enabled(e_clock a_clock) const
     {
-        return common::get_bit(this->enabled_clocks, static_cast<common::uint32>(a_clock));
+        switch (a_clock)
+        {
+            case e_clock::msi:
+            case e_clock::hsi:
+            case e_clock::pll:
+            {
+                return common::is_flag(RCC->CR, static_cast<common::uint32>(a_clock));
+            }
+            break;
+
+            case e_clock::lsi:
+            {
+                return common::is_flag(RCC->CSR, RCC_CSR_LSION);
+            }
+            break;
+        }
+
+        return false;
     }
 
     bool is_in_low_power_run() const
@@ -235,6 +252,16 @@ public:
         return static_cast<e_flash_latency>(common::get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
     }
 
+    void register_pre_sysclk_frequency_change_callback(const s_sysclk_frequency_change_callback& a_callback)
+    {
+        this->pre_sysclock_frequency_change_callback = a_callback;
+    }
+
+    void register_post_sysclk_frequency_change_callback(const s_sysclk_frequency_change_callback& a_callback)
+    {
+        this->post_sysclock_frequency_change_callback = a_callback;
+    }
+
     static c_mcu& get_instance()
     {
         static c_mcu instance;
@@ -243,11 +270,7 @@ public:
 
 private:
 
-    c_mcu()
-        : clock_source(e_sysclk_source::msi)
-        , enabled_clocks(static_cast<common::uint32>(e_clock::msi))
-    {}
-
+    c_mcu()             = default;
     c_mcu(const c_mcu&) = delete;
     c_mcu(c_mcu&&)      = delete;
     ~c_mcu()            = default;
@@ -262,6 +285,8 @@ private:
 
     void set_flash_latency(e_flash_latency a_latency);
     void set_voltage_scaling(e_voltage_scaling a_scaling);
+    void set_sysclk_source(e_sysclk_source a_sysclk_source);
+    void set_bus_prescalers(const s_bus_prescalers& a_prescalers);
 
     void increase_sysclk_frequency(e_sysclk_source a_source,
                                    common::uint32 a_frequency_hz,
@@ -275,11 +300,8 @@ private:
 
 private:
 
-    e_sysclk_source clock_source;
-    common::uint8   enabled_clocks;
-
-    s_sysclk_frequency_change_callback pre_sysclock_frequency_callback;
-    s_sysclk_frequency_change_callback post_sysclock_frequency_callback;
+    s_sysclk_frequency_change_callback pre_sysclock_frequency_change_callback;
+    s_sysclk_frequency_change_callback post_sysclock_frequency_change_callback;
 };
 
 } // namespace stm32l452xx
