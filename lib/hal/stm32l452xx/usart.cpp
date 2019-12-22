@@ -25,9 +25,7 @@ void usart_1_enable(c_usart::s_clock::e_source a_clock_source)
     _assert(a_clock_source != c_usart::s_clock::e_source::unknown);
 
     constexpr uint32 clock_source_lut[] = { 0, RCC_CCIPR_USART1SEL_0, RCC_CCIPR_USART1SEL_1 };
-    clear_flag(&(RCC->CCIPR), RCC_CCIPR_USART1SEL);
-    set_flag(&(RCC->CCIPR), clock_source_lut[static_cast<uint32>(a_clock_source)]);
-
+    set_flag(&(RCC->CCIPR), RCC_CCIPR_USART1SEL, clock_source_lut[static_cast<uint32>(a_clock_source)]);
     set_flag(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN);
 
     NVIC_SetPriority(USART1_IRQn, s_config::s_usart::_1_interrupt_priority);
@@ -45,9 +43,7 @@ void usart_2_enable(c_usart::s_clock::e_source a_clock_source)
     _assert(a_clock_source != c_usart::s_clock::e_source::unknown);
 
     constexpr uint32 clock_source_lut[] = { 0, RCC_CCIPR_USART2SEL_0, RCC_CCIPR_USART2SEL_1 };
-    clear_flag(&(RCC->CCIPR), RCC_CCIPR_USART2SEL);
-    set_flag(&(RCC->CCIPR), clock_source_lut[static_cast<uint32>(a_clock_source)]);
-
+    set_flag(&(RCC->CCIPR), RCC_CCIPR_USART2SEL, clock_source_lut[static_cast<uint32>(a_clock_source)]);
     set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN);
 
     NVIC_SetPriority(USART2_IRQn, s_config::s_usart::_2_interrupt_priority);
@@ -63,10 +59,7 @@ void usart_2_disable()
 void usart_3_enable(c_usart::s_clock::e_source a_clock_source)
 {
     constexpr uint32 clock_source_lut[] = { 0, RCC_CCIPR_USART3SEL_0, RCC_CCIPR_USART3SEL_1 };
-
-    clear_flag(&(RCC->CCIPR), RCC_CCIPR_USART3SEL);
-    set_flag(&(RCC->CCIPR), clock_source_lut[static_cast<int32>(a_clock_source)]);
-
+    set_flag(&(RCC->CCIPR), RCC_CCIPR_USART3SEL, clock_source_lut[static_cast<int32>(a_clock_source)]);
     set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART3EN);
 
     NVIC_SetPriority(USART3_IRQn, s_config::s_usart::_3_interrupt_priority);
