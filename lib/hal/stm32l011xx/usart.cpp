@@ -54,82 +54,13 @@ s_ll_config_data ll_configs[] =
 
 } // namespace ::
 
-namespace cml {
-namespace hal {
-namespace stm32l011xx {
-
-class c_interrupt_handler
-{
-public:
-
-    c_interrupt_handler()                           = delete;
-    c_interrupt_handler(c_interrupt_handler&&)      = delete;
-    c_interrupt_handler(const c_interrupt_handler&) = delete;
-
-    c_interrupt_handler& operator = (c_interrupt_handler&&)      = delete;
-    c_interrupt_handler& operator = (const c_interrupt_handler&) = delete;
-
-    void static usart_handle_interrupt(c_usart* a_p_this)
-    {
-        _assert(nullptr != a_p_this);
-
-        uint32 isr = a_p_this->p_usart->ISR;
-        uint32 cr1 = a_p_this->p_usart->CR1;
-
-        if (true == is_flag(isr, USART_ISR_TXE) && true == is_flag(cr1, USART_CR1_TXEIE))
-        {
-            byte data                    = 0;
-            auto p_context               = &(a_p_this->tx_context);
-            const time_tick elapsed_time = c_systick::get_instance().get_counter() - p_context->start_timestamp;
-            const bool procceed          = p_context->callback.p_function(&data,
-                                                                          p_context->callback.p_user_data,
-                                                                          elapsed_time < p_context->timeout);
-
-            if (true == procceed)
-            {
-                a_p_this->p_usart->TDR = data;
-            }
-            else
-            {
-                clear_flag(&(a_p_this->p_usart->CR1), USART_CR1_TXEIE);
-
-                p_context->callback        = { nullptr, nullptr };
-                p_context->start_timestamp = 0;
-                p_context->timeout         = 0;
-            }
-        }
-
-        if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
-        {
-            auto p_context               = &(a_p_this->rx_context);
-            const time_tick elapsed_time = c_systick::get_instance().get_counter() - p_context->start_timestamp;
-            const bool procceed          = p_context->callback.p_function(a_p_this->p_usart->RDR,
-                                                                          p_context->callback.p_user_data,
-                                                                          elapsed_time < p_context->timeout);
-
-            if (false == procceed)
-            {
-                clear_flag(&(a_p_this->p_usart->CR1), USART_CR1_RXNEIE);
-
-                p_context->callback        = { nullptr, nullptr };
-                p_context->start_timestamp = 0;
-                p_context->timeout         = 0;
-            }
-        }
-    }
-};
-
-} // namespace stm32l4011xx
-} // namespace hal
-} // namespace cml
-
 extern "C"
 {
 
 void USART2_IRQHandler()
 {
     _assert(nullptr != ll_configs[0].p_usart_handle);
-    c_interrupt_handler::usart_handle_interrupt(ll_configs[0].p_usart_handle);
+    usart_handle_interrupt(ll_configs[0].p_usart_handle);
 }
 
 } // extern "C"
@@ -138,7 +69,56 @@ namespace cml {
 namespace hal {
 namespace stm32l011xx {
 
-using namespace common;
+using namespace cml::common;
+
+void usart_handle_interrupt(c_usart* a_p_this)
+{
+    _assert(nullptr != a_p_this);
+
+    uint32 isr = a_p_this->p_usart->ISR;
+    uint32 cr1 = a_p_this->p_usart->CR1;
+
+    if (true == is_flag(isr, USART_ISR_TXE) && true == is_flag(cr1, USART_CR1_TXEIE))
+    {
+        byte data                    = 0;
+        auto p_context               = &(a_p_this->tx_context);
+        const time_tick elapsed_time = c_systick::get_instance().get_counter() - p_context->start_timestamp;
+        const bool procceed          = p_context->callback.p_function(&data,
+                                                                      p_context->callback.p_user_data,
+                                                                      elapsed_time < p_context->timeout);
+
+        if (true == procceed)
+        {
+            a_p_this->p_usart->TDR = data;
+        }
+        else
+        {
+            clear_flag(&(a_p_this->p_usart->CR1), USART_CR1_TXEIE);
+
+            p_context->callback        = { nullptr, nullptr };
+            p_context->start_timestamp = 0;
+            p_context->timeout         = 0;
+        }
+    }
+
+    if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
+    {
+        auto p_context               = &(a_p_this->rx_context);
+        const time_tick elapsed_time = c_systick::get_instance().get_counter() - p_context->start_timestamp;
+        const bool procceed          = p_context->callback.p_function(a_p_this->p_usart->RDR,
+                                                                      p_context->callback.p_user_data,
+                                                                      elapsed_time < p_context->timeout);
+
+        if (false == procceed)
+        {
+            clear_flag(&(a_p_this->p_usart->CR1), USART_CR1_RXNEIE);
+
+            p_context->callback        = { nullptr, nullptr };
+            p_context->start_timestamp = 0;
+            p_context->timeout         = 0;
+        }
+    }
+}
 
 void c_usart::enable(const s_config& a_config, const s_clock &a_clock)
 {

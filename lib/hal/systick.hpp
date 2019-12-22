@@ -7,7 +7,8 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+//cml
+#include <common/assert.hpp>
 #include <common/time_tick.hpp>
 
 namespace cml {
@@ -50,9 +51,17 @@ private:
     c_systick& operator = (c_systick&&)      = delete;
     c_systick& operator = (const c_systick&) = delete;
 
+private:
+
     volatile common::time_tick cnt;
 
-    friend class c_interrupt_handler;
+private:
+
+    friend void systick_handle_interrupt(c_systick* a_p_this)
+    {
+        _assert(nullptr != a_p_this);
+        a_p_this->cnt++;
+    }
 };
 
 } // namespace hal

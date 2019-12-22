@@ -18,35 +18,8 @@
 #include <stm32l0xx.h>
 #endif
 
-
 //mhl
-#include <common/assert.hpp>
 #include <common/bit.hpp>
-
-namespace cml {
-namespace hal {
-
-class c_interrupt_handler
-{
-public:
-
-    c_interrupt_handler()                           = delete;
-    c_interrupt_handler(c_interrupt_handler&&)      = delete;
-    c_interrupt_handler(const c_interrupt_handler&) = delete;
-
-    c_interrupt_handler& operator = (c_interrupt_handler&&)      = delete;
-    c_interrupt_handler& operator = (const c_interrupt_handler&) = delete;
-
-    void static systick_handle_interrupt(c_systick* a_p_this)
-    {
-        _assert(nullptr != a_p_this);
-
-        a_p_this->cnt++;
-    }
-};
-
-} // namespace hal
-} // namespace cml
 
 extern "C"
 {
@@ -54,7 +27,7 @@ using namespace cml::hal;
 
 void SysTick_Handler()
 {
-    c_interrupt_handler::systick_handle_interrupt(&(c_systick::get_instance()));
+    systick_handle_interrupt(&(c_systick::get_instance()));
 }
 
 } // extern "C"

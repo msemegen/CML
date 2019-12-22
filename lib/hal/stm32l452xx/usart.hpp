@@ -263,7 +263,7 @@ private:
 
 private:
 
-    friend class c_interrupt_handler;
+    friend void usart_handle_interrupt(c_usart* a_p_this);
 };
 
 } // namespace stm32l452xx
