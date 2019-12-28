@@ -261,19 +261,23 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq,
             {
                 return e_flash_latency::_0;
             }
-            else if (a_syclk_freq <= MHz(32))
+
+            if (a_syclk_freq <= MHz(32))
             {
                 return e_flash_latency::_1;
             }
-            else if (a_syclk_freq <= MHz(48))
+
+            if (a_syclk_freq <= MHz(48))
             {
                 return e_flash_latency::_2;
             }
-            else if (a_syclk_freq <= MHz(64))
+
+            if (a_syclk_freq <= MHz(64))
             {
                 return e_flash_latency::_3;
             }
-            else if (a_syclk_freq <= MHz(80))
+
+            if (a_syclk_freq <= MHz(80))
             {
                 return e_flash_latency::_4;
             }
@@ -286,15 +290,18 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq,
             {
                 return e_flash_latency::_0;
             }
-            else if (a_syclk_freq <= MHz(12))
+
+            if (a_syclk_freq <= MHz(12))
             {
                 return e_flash_latency::_1;
             }
-            else if (a_syclk_freq <= MHz(18))
+
+            if (a_syclk_freq <= MHz(18))
             {
                 return e_flash_latency::_2;
             }
-            else if (a_syclk_freq <= MHz(26))
+
+            if (a_syclk_freq <= MHz(26))
             {
                 return e_flash_latency::_3;
             }

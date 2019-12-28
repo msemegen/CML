@@ -229,7 +229,8 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq, e_voltag
             {
                 return e_flash_latency::_0;
             }
-            else if (a_syclk_freq <= MHz(32))
+
+            if (a_syclk_freq <= MHz(32))
             {
                 return e_flash_latency::_1;
             }
@@ -242,7 +243,8 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq, e_voltag
             {
                 return e_flash_latency::_0;
             }
-            else if (a_syclk_freq <= MHz(16))
+
+            if (a_syclk_freq <= MHz(16))
             {
                 return e_flash_latency::_1;
             }
