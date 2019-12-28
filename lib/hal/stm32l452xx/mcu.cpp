@@ -311,13 +311,17 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq,
     return e_flash_latency::unknown;
 }
 
-c_mcu::e_voltage_scaling c_mcu::select_voltage_scaling(uint32 a_sysclk_freq)
+c_mcu::e_voltage_scaling c_mcu::select_voltage_scaling(e_sysclk_source a_source, uint32 a_sysclk_freq)
 {
-    if (a_sysclk_freq <= MHz(26))
+    if (e_sysclk_source::msi == a_source && a_sysclk_freq <= MHz(24) ||
+        e_sysclk_source::pll == a_source && a_sysclk_freq <= MHz(26))
     {
         return e_voltage_scaling::_2;
     }
-    else if (a_sysclk_freq <= MHz(80))
+
+    if (e_sysclk_source::msi == a_source && a_sysclk_freq <= MHz(48) ||
+        e_sysclk_source::pll == a_source && a_sysclk_freq <= MHz(80) ||
+        e_sysclk_source::hsi == a_source)
     {
         return e_voltage_scaling::_1;
     }
@@ -364,7 +368,7 @@ void c_mcu::increase_sysclk_frequency(e_sysclk_source a_source,
                                       uint32 a_frequency_hz,
                                       const s_bus_prescalers& a_prescalers)
 {
-    auto new_voltage_scaling = this->select_voltage_scaling(a_frequency_hz);
+    auto new_voltage_scaling = this->select_voltage_scaling(a_source, a_frequency_hz);
     auto new_flash_latency   = this->select_flash_latency(a_frequency_hz, new_voltage_scaling);
 
     _assert(e_voltage_scaling::unkown != new_voltage_scaling);
@@ -392,7 +396,7 @@ void c_mcu::decrease_sysclk_frequency(e_sysclk_source a_source,
 {
     this->set_sysclk_source(a_source);
 
-    auto new_voltage_scaling = this->select_voltage_scaling(a_frequency_hz);
+    auto new_voltage_scaling = this->select_voltage_scaling(a_source, a_frequency_hz);
     auto new_flash_latency   = this->select_flash_latency(a_frequency_hz, new_voltage_scaling);
 
     _assert(e_voltage_scaling::unkown != new_voltage_scaling);
