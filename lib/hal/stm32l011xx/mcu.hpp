@@ -174,8 +174,6 @@ public:
     void disable_pll();
 
     void set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_prescalers);
-    bool enable_low_power_run();
-    void disable_low_power_run();
 
     s_id get_id()
     {
@@ -221,11 +219,6 @@ public:
         }
 
         return false;
-    }
-
-    bool is_in_low_power_run() const
-    {
-        return common::is_flag(PWR->CR, PWR_CR_LPRUN);
     }
 
     e_voltage_scaling get_voltage_scaling() const

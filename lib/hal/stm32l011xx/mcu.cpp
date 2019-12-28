@@ -203,22 +203,6 @@ void c_mcu::set_sysclk(e_sysclk_source a_source, const s_bus_prescalers& a_presc
     }
 }
 
-bool c_mcu::enable_low_power_run()
-{
-    bool ret = SystemCoreClock < msi_frequency_lut[1];
-
-    if (true == ret)
-    {
-        set_flag(&(PWR->CR), PWR_CR_LPRUN);
-    }
-
-    return ret;
-}
-void c_mcu::disable_low_power_run()
-{
-    clear_flag(&(PWR->CR), PWR_CR_LPRUN);
-}
-
 c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq, e_voltage_scaling a_voltage_scaling)
 {
     switch (a_voltage_scaling)
