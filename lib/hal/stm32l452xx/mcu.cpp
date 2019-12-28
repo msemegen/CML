@@ -320,15 +320,15 @@ c_mcu::e_flash_latency c_mcu::select_flash_latency(uint32 a_syclk_freq,
 
 c_mcu::e_voltage_scaling c_mcu::select_voltage_scaling(e_sysclk_source a_source, uint32 a_sysclk_freq)
 {
-    if (e_sysclk_source::msi == a_source && a_sysclk_freq <= MHz(24) ||
-        e_sysclk_source::pll == a_source && a_sysclk_freq <= MHz(26))
+    if ((e_sysclk_source::msi == a_source && a_sysclk_freq <= MHz(24)) ||
+        (e_sysclk_source::pll == a_source && a_sysclk_freq <= MHz(26)))
     {
         return e_voltage_scaling::_2;
     }
 
-    if (e_sysclk_source::msi == a_source && a_sysclk_freq <= MHz(48) ||
-        e_sysclk_source::pll == a_source && a_sysclk_freq <= MHz(80) ||
-        e_sysclk_source::hsi == a_source)
+    if ((e_sysclk_source::msi == a_source && a_sysclk_freq <= MHz(48)) ||
+        (e_sysclk_source::pll == a_source && a_sysclk_freq <= MHz(80)) ||
+        (e_sysclk_source::hsi == a_source))
     {
         return e_voltage_scaling::_1;
     }
