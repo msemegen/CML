@@ -271,9 +271,7 @@ private:
     c_mcu& operator = (const c_mcu&) = delete;
     c_mcu& operator = (c_mcu&&)      = delete;
 
-    e_flash_latency select_flash_latency(common::uint32 a_syclk_freq,
-                                         e_voltage_scaling a_voltage_scaling);
-
+    e_flash_latency select_flash_latency(common::uint32 a_syclk_freq, e_voltage_scaling a_voltage_scaling);
     e_voltage_scaling select_voltage_scaling(e_sysclk_source a_source, common::uint32 a_sysclk_freq);
 
     void set_flash_latency(e_flash_latency a_latency);
