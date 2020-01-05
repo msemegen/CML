@@ -124,13 +124,12 @@ void c_output_pin::enable(const s_config& a_config)
     _assert(c_gpio::e_speed::unknown != a_config.speed);
     _assert(c_gpio::e_mode::unknown  != a_config.mode);
 
-    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-
-    set_flag(&(p_port->MODER), 0x3u << (this->pin * 2), 0x1u << (this->pin * 2));
-
     this->set_speed(a_config.speed);
     this->set_pull(a_config.pull);
     this->set_mode(a_config.mode);
+
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+    set_flag(&(p_port->MODER), 0x3u << (this->pin * 2), 0x1u << (this->pin * 2));
 
     this->p_port->take_pin(this->pin);
 }
@@ -217,9 +216,11 @@ void c_input_pin::enable(const s_config& a_config)
     _assert(false == this->p_port->is_pin_taken(this->pin));
     _assert(c_gpio::e_pull::unknown != a_config.pull);
 
-    clear_flag(&(static_cast<GPIO_TypeDef*>((*this->p_port))->MODER), 0x3u << (this->pin * 2));
-
     this->set_pull(a_config.pull);
+
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+    clear_flag(&(p_port->MODER), 0x3u << (this->pin * 2));
+
     this->p_port->take_pin(this->pin);
 }
 
@@ -230,7 +231,6 @@ void c_input_pin::disable()
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
 
     set_flag(&(p_port->MODER),     flag);
-    clear_flag(&(p_port->OSPEEDR), flag);
     clear_flag(&(p_port->PUPDR),   flag);
 
     this->p_port->give_pin(this->pin);
@@ -262,13 +262,13 @@ void c_alternate_function_pin::enable(const s_config& a_config)
     _assert(c_gpio::e_speed::unknown != a_config.speed);
     _assert(c_gpio::e_mode::unknown  != a_config.mode);
 
-    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    set_flag(&(p_port->MODER), 0x3u << (this->pin * 2), 0x2u << (this->pin * 2));
-
     this->set_speed(a_config.speed);
     this->set_pull(a_config.pull);
     this->set_mode(a_config.mode);
     this->set_function(a_config.function);
+
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+    set_flag(&(p_port->MODER), 0x3u << (this->pin * 2), 0x2u << (this->pin * 2));
 
     this->p_port->take_pin(this->pin);
 }
