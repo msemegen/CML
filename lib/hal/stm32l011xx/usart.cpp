@@ -12,7 +12,6 @@
 
 //cml
 #include <common/assert.hpp>
-#include <common/bit.hpp>
 #include <hal/stm32l011xx/config.hpp>
 
 namespace {
@@ -120,12 +119,10 @@ void usart_handle_interrupt(c_usart* a_p_this)
     }
 }
 
-void c_usart::enable(const s_config& a_config, const s_clock &a_clock)
+bool c_usart::enable(const s_config& a_config, const s_clock &a_clock, time_tick a_timeout_ms)
 {
     _assert(a_config.baud_rate    != e_baud_rate::unknown);
     _assert(a_config.flow_control != e_flow_control::unknown);
-    _assert(a_config.mode         != e_mode::unknown);
-    _assert(a_config.oversampling != e_oversampling::unknown);
     _assert(a_config.parity       != e_parity::unknown);
     _assert(a_config.stop_bits    != e_stop_bits::unknown);
     _assert(a_config.word_length  != e_word_length::unknown);
@@ -142,17 +139,43 @@ void c_usart::enable(const s_config& a_config, const s_clock &a_clock)
     this->p_usart->CR2 = 0;
     this->p_usart->CR3 = 0;
 
-    this->p_usart->BRR = a_clock.frequency_hz / static_cast<uint32>(a_config.baud_rate);
     this->p_usart->CR2 = static_cast<uint32>(a_config.stop_bits);
     this->p_usart->CR3 = static_cast<uint32>(a_config.flow_control);
 
+    switch (a_config.oversampling)
+    {
+        case e_oversampling::_16:
+        {
+            this->p_usart->BRR = a_clock.frequency_hz / static_cast<uint32>(a_config.baud_rate);
+        }
+        break;
+
+        case e_oversampling::_8:
+        {
+            uint32 usartdiv = 2 * a_clock.frequency_hz / static_cast<uint32>(a_config.baud_rate);
+            this->p_usart->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
+        }
+        break;
+
+        case e_oversampling::unknown:
+        {
+            _assert(a_config.oversampling != e_oversampling::unknown);
+        }
+        break;
+    }
+
     set_flag(&(this->p_usart->CR1), static_cast<uint32>(a_config.word_length)  |
                                     static_cast<uint32>(a_config.oversampling) |
-                                    static_cast<uint32>(a_config.parity)       |
-                                    static_cast<uint32>(a_config.mode)         |
-                                    USART_CR1_UE);
+                                    static_cast<uint32>(a_config.parity));
+
+    set_flag(&(this->p_usart->CR1), USART_CR1_UE);
+    set_flag(&(this->p_usart->CR1), USART_CR1_RE | USART_CR1_TE);
 
     this->baud_rate = a_config.baud_rate;
+    return this->wait_until_isr(USART_ISR_REACK | USART_ISR_TEACK,
+                                false,
+                                c_systick::get_instance().get_counter(),
+                                a_timeout_ms);
 }
 
 void c_usart::disable()
@@ -167,33 +190,35 @@ void c_usart::disable()
     ll_configs[this->to_index(this->periph)].p_usart_handle = nullptr;
 }
 
-void c_usart::write_bytes_polling(const void* a_p_data, uint32 a_data_length)
+void c_usart::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes)
 {
     _assert(nullptr != a_p_data);
-    _assert(a_data_length > 0);
+    _assert(a_data_size_in_bytes > 0);
 
-    for (decltype(a_data_length) i = 0; i < a_data_length; i++)
+    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
     {
-        while (false == is_flag(this->p_usart->ISR, USART_ISR_TXE));
+        this->wait_until_isr(USART_ISR_TXE, false);
         this->p_usart->TDR = static_cast<const uint8*>(a_p_data)[i];
     }
+
+    this->wait_until_isr(USART_ISR_TC, false);
+    this->p_usart->ICR = USART_ICR_TCCF;
 }
 
-bool c_usart::write_bytes_polling(const void* a_p_data, uint32 a_data_length, time_tick a_timeout)
+bool c_usart::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
 {
     _assert(nullptr != a_p_data);
-    _assert(a_data_length > 0);
+    _assert(a_data_size_in_bytes > 0);
     _assert(true == c_systick::get_instance().is_enabled());
 
     bool timeout_occured = false;
     time_tick start      = c_systick::get_instance().get_counter();
 
-    for (decltype(a_data_length) i = 0; i < a_data_length && false == timeout_occured; i++)
+    set_flag(&(this->p_usart->CR1), USART_CR1_TE);
+
+    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && false == timeout_occured; i++)
     {
-        while (false == is_flag(this->p_usart->ISR, USART_ISR_TXE) && false == timeout_occured)
-        {
-            timeout_occured = c_systick::get_instance().get_counter() - start >= a_timeout;
-        }
+        timeout_occured = this->wait_until_isr(USART_ISR_TXE, false, start, a_timeout_ms);
 
         if (false == timeout_occured)
         {
@@ -201,36 +226,35 @@ bool c_usart::write_bytes_polling(const void* a_p_data, uint32 a_data_length, ti
         }
     }
 
+    timeout_occured = this->wait_until_isr(USART_ISR_TC, false, start, a_timeout_ms);
+
     return false == timeout_occured;
 }
 
-void c_usart::read_bytes_polling(void* a_p_data, uint32 a_data_length)
+void c_usart::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
 {
     _assert(nullptr != a_p_data);
-    _assert(a_data_length > 0);
+    _assert(a_data_size_in_bytes > 0);
 
-    for (decltype(a_data_length) i = 0; i < a_data_length; i++)
+    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
     {
-        while (false == is_flag(this->p_usart->ISR, USART_ISR_RXNE));
+        this->wait_until_isr(USART_ISR_RXNE, false);
         static_cast<uint8*>(a_p_data)[i] = this->p_usart->RDR;
     }
 }
 
-bool c_usart::read_bytes_polling(void* a_p_data, uint32 a_data_length, time_tick a_timeout)
+bool c_usart::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
 {
     _assert(nullptr != a_p_data);
-    _assert(a_data_length > 0);
+    _assert(a_data_size_in_bytes > 0);
     _assert(true == c_systick::get_instance().is_enabled());
 
     bool timeout_occured = false;
     time_tick start      = c_systick::get_instance().get_counter();
 
-    for (decltype(a_data_length) i = 0; i < a_data_length && false == timeout_occured; i++)
+    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && false == timeout_occured; i++)
     {
-        while (false == is_flag(this->p_usart->ISR, USART_ISR_RXNE) && false == timeout_occured)
-        {
-            timeout_occured = c_systick::get_instance().get_counter() - start >= a_timeout;
-        }
+        timeout_occured = this->wait_until_isr(USART_ISR_RXNE, false, start, a_timeout_ms);
 
         if (false == timeout_occured)
         {
@@ -241,7 +265,7 @@ bool c_usart::read_bytes_polling(void* a_p_data, uint32 a_data_length, time_tick
     return false == timeout_occured;
 }
 
-void c_usart::write_bytes_it(const s_tx_callback& a_callback, time_tick a_timeout)
+void c_usart::write_bytes_it(const s_tx_callback& a_callback, time_tick a_timeout_ms)
 {
     _assert(true == c_systick::get_instance().is_enabled());
 
@@ -251,7 +275,7 @@ void c_usart::write_bytes_it(const s_tx_callback& a_callback, time_tick a_timeou
     {
         this->tx_context.callback        = a_callback;
         this->tx_context.start_timestamp = c_systick::get_instance().get_counter();
-        this->tx_context.timeout         = a_timeout;
+        this->tx_context.timeout         = a_timeout_ms;
 
         set_flag(&(this->p_usart->CR1), USART_CR1_TXEIE);
     }
@@ -263,7 +287,7 @@ void c_usart::write_bytes_it(const s_tx_callback& a_callback, time_tick a_timeou
     }
 }
 
-void c_usart::read_bytes_it(const s_rx_callback& a_callback, time_tick a_timeout)
+void c_usart::read_bytes_it(const s_rx_callback& a_callback, time_tick a_timeout_ms)
 {
     _assert(true == c_systick::get_instance().is_enabled());
 
@@ -273,7 +297,7 @@ void c_usart::read_bytes_it(const s_rx_callback& a_callback, time_tick a_timeout
     {
         this->rx_context.callback        = a_callback;
         this->rx_context.start_timestamp = c_systick::get_instance().get_counter();;
-        this->rx_context.timeout         = a_timeout;
+        this->rx_context.timeout         = a_timeout_ms;
 
         set_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE);
     }
@@ -337,14 +361,6 @@ void c_usart::set_flow_control(e_flow_control a_flow_control)
     set_flag(&(this->p_usart->CR1), USART_CR1_UE);
 }
 
-void c_usart::set_mode(e_mode a_mode)
-{
-    _assert(e_mode::unknown != a_mode);
-
-    clear_flag(&(this->p_usart->CR1), USART_CR1_RE | USART_CR1_TE);
-    set_flag(&(this->p_usart->CR1), static_cast<uint32>(a_mode));
-}
-
 c_usart::e_baud_rate c_usart::get_baud_rate() const
 {
     return this->baud_rate;
@@ -368,11 +384,6 @@ c_usart::e_stop_bits c_usart::get_stop_bits() const
 c_usart::e_flow_control c_usart::get_flow_control() const
 {
     return static_cast<e_flow_control>(get_flag(this->p_usart->CR3, USART_CR3_RTSE | USART_CR3_CTSE));
-}
-
-c_usart::e_mode c_usart::get_mode() const
-{
-    return static_cast<e_mode>(get_flag(this->p_usart->CR1, (USART_CR1_TE_Msk | USART_CR1_RE_Msk)));
 }
 
 } // naespace stm32l011xx

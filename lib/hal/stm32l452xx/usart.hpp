@@ -12,6 +12,7 @@
 
 //cml
 #include <common/assert.hpp>
+#include <common/bit.hpp>
 #include <common/frequency.hpp>
 #include <common/integer.hpp>
 #include <common/time_tick.hpp>
@@ -93,15 +94,6 @@ public:
         unknown
     };
 
-
-    enum class e_mode : common::uint32
-    {
-        rx      = USART_CR1_RE,
-        tx      = USART_CR1_TE,
-        rxtx    = USART_CR1_RE | USART_CR1_TE,
-        unknown
-    };
-
     struct s_config
     {
         e_baud_rate baud_rate       = e_baud_rate::unknown;
@@ -110,7 +102,6 @@ public:
         e_stop_bits stop_bits       = e_stop_bits::unknown;
         e_flow_control flow_control = e_flow_control::unknown;
         e_parity parity             = e_parity::unknown;
-        e_mode mode                 = e_mode::unknown;
     };
 
     struct s_clock
@@ -163,7 +154,7 @@ public:
     c_usart& operator = (c_usart&&)      = default;
     c_usart& operator = (const c_usart&) = default;
 
-    void enable(const s_config& a_config, const s_clock& a_clock);
+    bool enable(const s_config& a_config, const s_clock& a_clock, common::time_tick a_timeout_ms);
     void disable();
 
     template<typename data_t>
@@ -173,9 +164,9 @@ public:
     }
 
     template<typename data_t>
-    bool write_polling(const data_t& a_data, common::time_tick a_timeout)
+    bool write_polling(const data_t& a_data, common::time_tick a_timeout_ms)
     {
-        return this->write_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout);
+        return this->write_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout_ms);
     }
 
     template<typename data_t>
@@ -185,28 +176,28 @@ public:
     }
 
     template<typename data_t>
-    bool read_polling(data_t* a_p_data, common::time_tick a_timeout)
+    bool read_polling(data_t* a_p_data, common::time_tick a_timeout_ms)
     {
-        return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(data_t), a_timeout);
+        return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(data_t), a_timeout_ms);
     }
 
-    void write_bytes_polling(const void* a_p_data, common::uint32 a_data_length);
-    bool write_bytes_polling(const void* a_p_data, common::uint32 a_data_length, common::time_tick a_timeout);
+    void write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes);
+    bool write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
 
-    void read_bytes_polling(void* a_p_data, common::uint32 a_data_length);
-    bool read_bytes_polling(void* a_p_data, common::uint32 a_data_length, common::time_tick a_timeout);
+    void read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes);
+    bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
 
     void write_bytes_it(const s_tx_callback& a_callback)
     {
         this->write_bytes_it(a_callback, common::time_tick_infinity);
     }
-    void write_bytes_it(const s_tx_callback& a_callback, common::time_tick a_timeout);
+    void write_bytes_it(const s_tx_callback& a_callback, common::time_tick a_timeout_ms);
 
     void read_bytes_it(const s_rx_callback& a_callback)
     {
         this->read_bytes_it(a_callback, common::time_tick_infinity);
     }
-    void read_bytes_it(const s_rx_callback& a_callback, common::time_tick a_timeout);
+    void read_bytes_it(const s_rx_callback& a_callback, common::time_tick a_timeout_ms);
 
     void set_baud_rate(e_baud_rate a_baud_rate);
     void set_oversampling(e_oversampling a_oversampling);
@@ -214,14 +205,12 @@ public:
     void set_parity(e_parity a_parity);
     void set_stop_bits(e_stop_bits a_stop_bits);
     void set_flow_control(e_flow_control a_flow_control);
-    void set_mode(e_mode a_mode);
 
     e_baud_rate    get_baud_rate()    const;
     e_oversampling get_oversampling() const;
     e_word_length  get_word_length()  const;
     e_stop_bits    get_stop_bits()    const;
     e_flow_control get_flow_control() const;
-    e_mode         get_mode()         const;
 
     e_periph get_periph() const
     {
@@ -243,6 +232,30 @@ private:
     common::uint32 to_index(e_periph a_periph) const
     {
         return static_cast<common::uint32>(a_periph);
+    }
+
+    bool is_isr_flag(common::uint32 a_flag)
+    {
+        return common::is_flag(this->p_usart->ISR, a_flag);
+    }
+
+    bool wait_until_isr(common::uint32 a_flag, bool a_status, common::time_tick a_start, common::time_tick a_timeout_ms)
+    {
+        bool status  = true;
+        bool timeout = false;
+
+        while (true == status && false == timeout)
+        {
+            status  = a_timeout_ms >= (c_systick::get_instance().get_counter() - a_start);
+            timeout = this->is_isr_flag(a_flag) == a_status;
+        }
+
+        return ((false == status) && (false == timeout));
+    }
+
+    void wait_until_isr(common::uint32 a_flag, bool a_status)
+    {
+        while (this->is_isr_flag(a_flag) == a_status);
     }
 
 private:

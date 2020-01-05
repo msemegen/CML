@@ -18,31 +18,6 @@ int main()
     using namespace cml::hal;
     using namespace cml::utils;
 
-    c_usart::s_config usart_config =
-    {
-        c_usart::e_baud_rate::_115200,
-        c_usart::e_oversampling::_16,
-        c_usart::e_word_length::_8_bits,
-        c_usart::e_stop_bits::_1,
-        c_usart::e_flow_control::none,
-        c_usart::e_parity::none,
-        c_usart::e_mode::rxtx
-    };
-
-    c_usart::s_clock usart_clock
-    {
-        c_usart::s_clock::e_source::sysclk,
-        MHz(16)
-    };
-
-    c_alternate_function_pin::s_config usart_pin_config =
-    {
-        c_gpio::e_mode::push_pull,
-        c_gpio::e_pull::up,
-        c_gpio::e_speed::low,
-        0x7u
-    };
-
     c_mcu::get_instance().enable_hsi_clock(c_mcu::e_hsi_frequency::_16_MHz);
     c_mcu::get_instance().set_sysclk(c_mcu::e_sysclk_source::hsi, { c_mcu::s_bus_prescalers::e_ahb::_1,
                                                                     c_mcu::s_bus_prescalers::e_apb1::_1,
@@ -51,6 +26,30 @@ int main()
 
     if (c_mcu::e_sysclk_source::hsi == c_mcu::get_instance().get_sysclk_source())
     {
+        c_usart::s_config usart_config =
+        {
+            c_usart::e_baud_rate::_115200,
+            c_usart::e_oversampling::_16,
+            c_usart::e_word_length::_8_bits,
+            c_usart::e_stop_bits::_1,
+            c_usart::e_flow_control::none,
+            c_usart::e_parity::none,
+        };
+
+        c_usart::s_clock usart_clock
+        {
+            c_usart::s_clock::e_source::sysclk,
+            SystemCoreClock
+        };
+
+        c_alternate_function_pin::s_config usart_pin_config =
+        {
+            c_gpio::e_mode::push_pull,
+            c_gpio::e_pull::up,
+            c_gpio::e_speed::low,
+            0x7u
+        };
+
         c_mcu::get_instance().disable_msi_clock();
         c_systick::get_instance().enable();
 
@@ -64,13 +63,16 @@ int main()
         console_usart_rx_pin.enable(usart_pin_config);
 
         c_usart console_usart(c_usart::e_periph::_2);
-        console_usart.enable(usart_config, usart_clock);
+        bool usart_ready = console_usart.enable(usart_config, usart_clock, 10);
 
-        c_console console(&console_usart);
-
-        while (true)
+        if (true == usart_ready)
         {
-            console.read_key(true);
+            c_console console(&console_usart);
+
+            while (true)
+            {
+                console.read_key(true);
+            }
         }
     }
 
