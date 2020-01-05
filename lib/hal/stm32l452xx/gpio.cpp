@@ -191,7 +191,7 @@ void c_output_pin::set_pull(c_gpio::e_pull a_pull)
 void c_output_pin::set_speed(c_gpio::e_speed a_speed)
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_speed) << (this->pin * 2));
+    set_flag(&(p_port->OSPEEDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_speed) << (this->pin * 2));
 }
 
 c_gpio::e_mode c_output_pin::get_mode() const
@@ -263,7 +263,6 @@ void c_alternate_function_pin::enable(const s_config& a_config)
     _assert(c_gpio::e_mode::unknown  != a_config.mode);
 
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-
     set_flag(&(p_port->MODER), 0x3u << (this->pin * 2), 0x2u << (this->pin * 2));
 
     this->set_speed(a_config.speed);
@@ -319,7 +318,7 @@ void c_alternate_function_pin::set_pull(c_gpio::e_pull a_pull)
 void c_alternate_function_pin::set_speed(c_gpio::e_speed a_speed)
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_speed) << (this->pin * 2));
+    set_flag(&(p_port->OSPEEDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_speed) << (this->pin * 2));
 }
 
 void c_alternate_function_pin::set_function(uint32 a_function)
