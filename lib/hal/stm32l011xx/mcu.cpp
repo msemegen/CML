@@ -14,7 +14,7 @@
 #include <common/assert.hpp>
 #include <common/bit.hpp>
 #include <common/frequency.hpp>
-#include <common/handy.hpp>
+#include <common/macros.hpp>
 
 namespace {
 
