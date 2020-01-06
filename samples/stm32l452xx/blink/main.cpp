@@ -15,22 +15,23 @@ int main()
     using namespace cml::common;
     using namespace cml::hal;
 
-    c_output_pin::s_config led_pin_config =
-    {
-        c_gpio::e_mode::push_pull,
-        c_gpio::e_pull::down,
-        c_gpio::e_speed::low
-    };
 
     c_mcu::get_instance().enable_hsi_clock(c_mcu::e_hsi_frequency::_16_MHz);
     c_mcu::get_instance().set_sysclk(c_mcu::e_sysclk_source::hsi, { c_mcu::s_bus_prescalers::e_ahb::_1,
                                                                     c_mcu::s_bus_prescalers::e_apb1::_1,
                                                                     c_mcu::s_bus_prescalers::e_apb2::_1 },
                                                                     { 0x00000003, 15 << 4 });
-    c_mcu::get_instance().disable_msi_clock();
 
     if (c_mcu::e_sysclk_source::hsi == c_mcu::get_instance().get_sysclk_source())
     {
+        c_output_pin::s_config led_pin_config =
+        {
+            c_gpio::e_mode::push_pull,
+            c_gpio::e_pull::down,
+            c_gpio::e_speed::low
+        };
+
+        c_mcu::get_instance().disable_msi_clock();
         c_systick::get_instance().enable();
 
         c_gpio gpio_port_a(c_gpio::e_periph::a);

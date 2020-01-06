@@ -23,7 +23,6 @@ int main()
     c_mcu::get_instance().set_sysclk(c_mcu::e_sysclk_source::pll, { c_mcu::s_bus_prescalers::e_ahb::_1,
                                                                     c_mcu::s_bus_prescalers::e_apb1::_1,
                                                                     c_mcu::s_bus_prescalers::e_apb2::_1 });
-    c_mcu::get_instance().disable_msi_clock();
 
     if (c_mcu::e_sysclk_source::pll == c_mcu::get_instance().get_sysclk_source())
     {
@@ -34,6 +33,7 @@ int main()
             c_gpio::e_speed::low
         };
 
+        c_mcu::get_instance().disable_msi_clock();
         c_systick::get_instance().enable();
 
         c_gpio gpio_port_b(c_gpio::e_periph::b);
