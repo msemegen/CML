@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: array_view.hpp
+    Name: array.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -12,14 +12,14 @@
 #include <common/integer.hpp>
 
 namespace cml {
-namespace common {
+namespace collection {
 
 template<typename type>
-class array_view
+class c_array
 {
 public:
 
-    array_view(type* a_p_buffer, uint32 a_capacity)
+    c_array(type* a_p_buffer, common::uint32 a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
     {
@@ -29,31 +29,31 @@ public:
         }
     }
 
-    array_view()                         = delete;
-    array_view(array_view<type>&&)       = default;
-    array_view(const array_view<type>&&) = default;
+    c_array()                      = delete;
+    c_array(c_array<type>&&)       = default;
+    c_array(const c_array<type>&&) = default;
 
-    array_view<type>& operator = (array_view<type>&&)      = default;
-    array_view<type>& operator = (const array_view<type>&) = default;
+    c_array<type>& operator = (c_array<type>&&)      = default;
+    c_array<type>& operator = (const c_array<type>&) = default;
 
-    uint32 get_capacity() const
+    common::uint32 get_capacity() const
     {
         return this->capacity;
     }
 
-    type& operator[](uint32 a_index)
+    type& operator[](common::uint32 a_index)
     {
         _assert(a_index < this->capacity);
         return this->p_buffer[a_index];
     }
 
-    const type& operator[](uint32 a_index) const
+    const type& operator[](common::uint32 a_index) const
     {
         _assert(a_index < this->capacity);
         return this->p_buffer[a_index];
     }
 
-    bool operator == (const array_view<type>& a_other) const
+    bool operator == (const c_array<type>& a_other) const
     {
         bool retval = this->capacity == a_other.capacity;
 
@@ -65,7 +65,7 @@ public:
         return retval;
     }
 
-    bool operator == (array_view<type>&& a_other) const
+    bool operator == (c_array<type>&& a_other) const
     {
         bool retval = this->capacity == a_other.capacity;
 
@@ -80,8 +80,8 @@ public:
 private:
 
     type* p_buffer;
-    uint32 capacity;
+    common::uint32 capacity;
 };
 
-} // namespace common
+} // namespace collection
 } // namespace cml

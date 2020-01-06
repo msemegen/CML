@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: vector_view.hpp
+    Name: vector.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -12,7 +12,7 @@
 #include <common/integer.hpp>
 
 namespace cml {
-namespace common {
+namespace collection {
 
 template<typename type>
 class c_vector_view
@@ -20,5 +20,5 @@ class c_vector_view
 
 };
 
-} // namespace common
+} // namespace collection
 } // namespace cml

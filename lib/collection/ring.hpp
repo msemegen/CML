@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: ring_view.hpp
+    Name: ring.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -11,10 +11,10 @@
 #include <common/assert.hpp>
 
 namespace cml {
-namespace common {
+namespace collection {
 
 template<typename data_type>
-class c_ring_view
+class c_ring
 {
 public:
 
@@ -46,13 +46,13 @@ public:
 private:
 
     data_type* p_buffer;
-    uint32 capacity;
+    common::uint32 capacity;
 
-    uint32 head;
-    uint32 tail;
+    common::uint32 head;
+    common::uint32 tail;
 
     bool full;
 };
 
-} // namespace common
+} // namespace collection
 } // namespace cml
