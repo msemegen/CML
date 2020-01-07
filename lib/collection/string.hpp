@@ -19,6 +19,16 @@ class c_string
 {
 public:
 
+    void  push_back(char c)
+    {
+
+    }
+
+    bool is_full() const
+    {
+        return false;
+    }
+
  };
 
 } // namespace collection

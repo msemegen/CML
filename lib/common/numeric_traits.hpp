@@ -8,6 +8,7 @@
 */
 
 //cml
+#include <common/assert.hpp>
 #include <common/integer.hpp>
 
 namespace cml {
@@ -28,11 +29,13 @@ public:
 
     static constexpr type get_min()
     {
+        _assert(false);
         return type();
     }
 
     static constexpr type get_max()
     {
+        _assert(false);
         return type();
     }
 };

@@ -11,7 +11,9 @@
 namespace cml {
 namespace common {
 
-void c_format::raw(c_string_view* a_p_out_string,
+using namespace collection;
+
+void c_format::raw(c_string* a_p_out_string,
                    const char* a_p_format,
                    const c_argument* a_p_argv,
                    uint32 a_argc)
@@ -27,24 +29,45 @@ void c_format::raw(c_string_view* a_p_out_string,
             {
                 case 'd':
                 case 'i':
+                {
+
+                }
                 break;
 
                 case 'u':
+                {
+
+                }
                 break;
 
                 case 'x':
+                {
+
+                }
                 break;
 
                 case 'X':
+                {
+
+                }
                 break;
 
                 case 'c':
+                {
+
+                }
                 break;
 
                 case 's':
+                {
+
+                }
                 break;
 
                 case 'p':
+                {
+
+                }
                 break;
             }
         }

@@ -11,7 +11,7 @@
 #include <common/assert.hpp>
 #include <common/integer.hpp>
 #include <common/memory.hpp>
-#include <common/string_view.hpp>
+#include <collection/string.hpp>
 
 namespace cml {
 namespace common {
@@ -28,7 +28,7 @@ public:
     c_format& operator = (const c_format&) = delete;
 
     template<typename ... types>
-    explicit c_format(c_string_view* a_p_buffer, const char* a_p_format, types ... a_params)
+    explicit c_format(collection::c_string* a_p_buffer, const char* a_p_format, types ... a_params)
     {
         const c_argument args[] = { c_argument{a_params}... };
         this->raw(a_p_buffer, a_p_format, args, sizeof...(a_params));
@@ -125,7 +125,7 @@ private:
         c_argument::e_type type = c_argument::e_type::unknown;
     };
 
-    void raw(c_string_view* a_p_out_string,
+    void raw(collection::c_string* a_p_out_string,
              const char* a_p_format,
              const c_argument* a_p_argv,
              uint32 a_argc);
