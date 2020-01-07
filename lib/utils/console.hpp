@@ -8,9 +8,9 @@
 */
 
 //cml
+#include <collection/string.hpp>
 #include <common/format.hpp>
 #include <common/integer.hpp>
-#include <common/string_view.hpp>
 #include <hal/usart.hpp>
 #include <utils/config.hpp>
 
@@ -69,7 +69,7 @@ private:
     hal::c_usart* p_io_stream;
 
     char line_buffer[s_config::s_console::line_buffer_capacity];
-    common::c_string_view line_buffer_view;
+    collection::c_string line_buffer_view;
 };
 
 } // namespace utils

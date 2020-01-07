@@ -8,10 +8,10 @@
 */
 
 //cml
+#include <collection/string.hpp>
 #include <common/bit.hpp>
 #include <common/format.hpp>
 #include <common/integer.hpp>
-#include <common/string_view.hpp>
 #include <hal/usart.hpp>
 #include <utils/config.hpp>
 
@@ -125,7 +125,7 @@ private:
     common::uint8 verbosity;
 
     char line_buffer[s_config::s_console::line_buffer_capacity];
-    common::c_string_view line_buffer_view;
+    collection::c_string line_buffer_view;
 };
 
 } // namepace hal
