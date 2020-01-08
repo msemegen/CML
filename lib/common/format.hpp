@@ -8,126 +8,126 @@
 */
 
 //cml
+#include <collection/string.hpp>
 #include <common/assert.hpp>
 #include <common/integer.hpp>
 #include <common/memory.hpp>
-#include <collection/string.hpp>
 
 namespace cml {
 namespace common {
 
-class c_format
+class format
 {
 public:
 
-    c_format()                = delete;
-    c_format(c_format&&)      = delete;
-    c_format(const c_format&) = delete;
+    format()               = delete;
+    format(format&&)      = delete;
+    format(const format&) = delete;
 
-    c_format& operator = (c_format&&)      = delete;
-    c_format& operator = (const c_format&) = delete;
+    format& operator = (format&&)      = delete;
+    format& operator = (const format&) = delete;
 
     template<typename ... types>
-    explicit c_format(collection::c_string* a_p_buffer, const char* a_p_format, types ... a_params)
+    explicit format(collection::String* a_p_buffer, const char* a_p_format, types ... a_params)
     {
-        const c_argument args[] = { c_argument{a_params}... };
+        const Argument args[] = { Argument{a_params}... };
         this->raw(a_p_buffer, a_p_format, args, sizeof...(a_params));
     }
 
 private:
 
-    class c_argument
+    class Argument
     {
     public:
 
-        c_argument()  = default;
-        ~c_argument() = default;
+        Argument()  = default;
+        ~Argument() = default;
 
-        c_argument& operator = (c_argument&&)      = delete;
-        c_argument& operator = (const c_argument&) = delete;
+        Argument& operator = (Argument&&)      = delete;
+        Argument& operator = (const Argument&) = delete;
 
-        c_argument(c_argument&& a_other)
+        Argument(Argument&& a_other)
             : type(a_other.type)
         {
             memory_copy(this->data, a_other.data, sizeof(a_other.data));
         }
 
-        c_argument(const c_argument& a_other)
+        Argument(const Argument& a_other)
             : type(a_other.type)
         {
             memory_copy(this->data, a_other.data, sizeof(a_other.data));
         }
 
-        explicit c_argument(uint32 a_value)
+        explicit Argument(uint32 a_value)
             : data { static_cast<uint8>((a_value >> 24) & 0xFF),
                      static_cast<uint8>((a_value >> 16) & 0xFF),
                      static_cast<uint8>((a_value >> 8 ) & 0xFF),
                      static_cast<uint8>(a_value & 0xFF) }
-            , type(c_argument::e_type::unsigned_int)
+            , type(Type::unsigned_int)
         {
             static_assert(sizeof(this->data) == 4);
         }
 
-        explicit c_argument(int32 a_value)
+        explicit Argument(int32 a_value)
             : data{ static_cast<uint8>((a_value >> 24) & 0xFF),
                     static_cast<uint8>((a_value >> 16) & 0xFF),
                     static_cast<uint8>((a_value >> 8) & 0xFF),
                     static_cast<uint8>(a_value & 0xFF) }
-            , type(c_argument::e_type::signed_int)
+            , type(Type::signed_int)
         {
             static_assert(sizeof(this->data) == 4);
         }
 
-        explicit c_argument(int8 a_value)
+        explicit Argument(int8 a_value)
             : data{ static_cast<uint8>(a_value), 0u, 0u, 0u }
-            , type(c_argument::e_type::character)
+            , type(Argument::Type::character)
         {
             static_assert(sizeof(this->data) == 4);
         }
 
-        explicit c_argument(const char* a_p_value)
+        explicit Argument(const char* a_p_value)
         {
 
         }
 
         uint32 get_uint32() const
         {
-            _assert(this->type == c_argument::e_type::unsigned_int);
+            assert(this->type == Type::unsigned_int);
             return this->data[0] | this->data[1] << 8u | this->data[2] << 16u << this->data[3] << 24;
         }
 
         int32 get_int32() const
         {
-            _assert(this->type == c_argument::e_type::signed_int);
+            assert(this->type == Type::signed_int);
             return this->data[0] | this->data[1] << 8u | this->data[2] << 16u << this->data[3] << 24;
         }
 
         char get_char() const
         {
-            _assert(this->type == c_argument::e_type::character);
+            assert(this->type == Type::character);
             return static_cast<char>(this->data[0]);
         }
 
     private:
 
-        enum class e_type
+        enum class Type
         {
-            unknown,
             unsigned_int,
             signed_int,
             character,
-            cstring
+            cstring,
+            unknown,
         };
 
     private:
 
         byte data[sizeof(uint32)] = { 0 };
-        c_argument::e_type type = c_argument::e_type::unknown;
+        Type type = Type::unknown;
     };
 
-    void raw(collection::c_string* a_p_out_string,
+    void raw(collection::String* a_p_out_string,
              const char* a_p_format,
-             const c_argument* a_p_argv,
+             const Argument* a_p_argv,
              uint32 a_argc);
 };
 

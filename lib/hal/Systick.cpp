@@ -27,7 +27,7 @@ using namespace cml::hal;
 
 void SysTick_Handler()
 {
-    systick_handle_interrupt(&(c_systick::get_instance()));
+    systick_handle_interrupt(&(Systick::get_instance()));
 }
 
 } // extern "C"
@@ -37,19 +37,19 @@ namespace hal {
 
 using namespace common;
 
-void c_systick::enable()
+void Systick::enable()
 {
     SysTick->CTRL = 0;
     SysTick->LOAD = SystemCoreClock / 1000;
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 }
 
-void c_systick::disable()
+void Systick::disable()
 {
     SysTick->CTRL = 0;
 }
 
-bool c_systick::is_enabled() const
+bool Systick::is_enabled() const
 {
     return is_flag(SysTick->CTRL, SysTick_CTRL_ENABLE_Msk);
 }

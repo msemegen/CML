@@ -24,7 +24,7 @@ using s_config = stm32l452xx::s_config;
 #endif // STM32L452xx
 
 #ifdef STM32L011xx
-using s_config = stm32l011xx::s_config;
+using config = stm32l011xx::config;
 #endif // STM32L452xx
 
 

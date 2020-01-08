@@ -15,55 +15,55 @@ namespace cml {
 namespace hal {
 namespace stm32l011xx {
 
-struct s_config
+struct config
 {
-    struct s_usart
+    struct usart
     {
-        static constexpr common::uint32 _2_interrupt_priority = 0;
+        static constexpr common::uint32 _2_INTERRUPT_PRIORITY = 0;
 
-        s_usart()               = delete;
-        s_usart(s_usart&&)      = delete;
-        s_usart(const s_usart&) = delete;
-        ~s_usart()              = delete;
+        usart()             = delete;
+        usart(usart&&)      = delete;
+        usart(const usart&) = delete;
+        ~usart()            = delete;
 
-        s_usart& operator = (s_usart&)       = delete;
-        s_usart& operator = (const s_usart&) = delete;
+        usart& operator = (usart&)       = delete;
+        usart& operator = (const usart&) = delete;
     };
 
-    struct s_mcu
+    struct mcu
     {
-        static constexpr common::uint8 device_id_length = 12;
+        static constexpr common::uint8 DEVICE_ID_LENGTH = 12;
 
-        s_mcu()             = delete;
-        s_mcu(s_mcu&&)      = delete;
-        s_mcu(const s_mcu&) = delete;
-        ~s_mcu()            = delete;
+        mcu()           = delete;
+        mcu(mcu&&)      = delete;
+        mcu(const mcu&) = delete;
+        ~mcu()          = delete;
 
-        s_mcu& operator = (s_mcu&)       = delete;
-        s_mcu& operator = (const s_mcu&) = delete;
+        mcu& operator = (mcu&)       = delete;
+        mcu& operator = (const mcu&) = delete;
     };
 
-    struct s_clock
+    struct clock
     {
-        static constexpr common::uint32 hsi_frequency_hz = common::MHz(16u);
-        static constexpr common::uint32 lsi_frequency_hz = common::kHz(37u);
+        static constexpr common::uint32 HSI_FREQUENCY_HZ = common::MHz(16u);
+        static constexpr common::uint32 LSI_FREQUENCY_HZ = common::kHz(37u);
 
-        s_clock()               = delete;
-        s_clock(s_clock&&)      = delete;
-        s_clock(const s_clock&) = delete;
-        ~s_clock()              = delete;
+        clock()               = delete;
+        clock(clock&&)      = delete;
+        clock(const clock&) = delete;
+        ~clock()              = delete;
 
-        s_clock& operator = (s_clock&)       = delete;
-        s_clock& operator = (const s_clock&) = delete;
+        clock& operator = (clock&)       = delete;
+        clock& operator = (const clock&) = delete;
     };
 
-    s_config()                = delete;
-    s_config(s_config&&)      = delete;
-    s_config(const s_config&) = delete;
-    ~s_config()               = delete;
+    config()              = delete;
+    config(config&&)      = delete;
+    config(const config&) = delete;
+    ~config()             = delete;
 
-    s_config& operator = (s_config&)       = delete;
-    s_config& operator = (const s_config&) = delete;
+    config& operator = (config&)       = delete;
+    config& operator = (const config&) = delete;
 };
 
 } // namesapace stm32l011xx

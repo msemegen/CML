@@ -13,10 +13,10 @@ namespace common {
 
 using namespace collection;
 
-void c_format::raw(c_string* a_p_out_string,
-                   const char* a_p_format,
-                   const c_argument* a_p_argv,
-                   uint32 a_argc)
+void format::raw(String* a_p_out_string,
+                 const char* a_p_format,
+                 const Argument* a_p_argv,
+                 uint32 a_argc)
 {
     bool out_string_full = a_p_out_string->is_full();
     bool argument = false;

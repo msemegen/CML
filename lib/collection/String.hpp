@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: string.hpp
+    Name: String.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -15,11 +15,11 @@
 namespace cml {
 namespace collection {
 
-class c_string
+class String
 {
 public:
 
-    c_string(char* a_p_buffer, common::uint32 a_capacity)
+    String(char* a_p_buffer, common::uint32 a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
         , length(0)

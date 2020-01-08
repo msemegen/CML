@@ -10,17 +10,17 @@
 //cml
 #include <common/assert.hpp>
 #include <common/time_tick.hpp>
-#include <hal/systick.hpp>
+#include <hal/Systick.hpp>
 
 namespace cml {
 namespace utils {
 
 void sleep(common::time_tick a_time_ms)
 {
-    _assert(true == hal::c_systick::get_instance().is_enabled());
+    assert(true == hal::Systick::get_instance().is_enabled());
 
-    common::time_tick start = hal::c_systick::get_instance().get_counter();
-    while (hal::c_systick::get_instance().get_counter() - start <= a_time_ms);
+    common::time_tick start = hal::Systick::get_instance().get_counter();
+    while (hal::Systick::get_instance().get_counter() - start <= a_time_ms);
 }
 
 } // namespace utils

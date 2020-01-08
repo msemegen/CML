@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: logger.hpp
+    Name: Logger.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -18,11 +18,11 @@
 namespace cml {
 namespace utils {
 
-class c_logger
+class Logger
 {
 public:
 
-    enum class e_stream_type : common::uint8
+    enum class Stream_type : common::uint8
     {
         inf,
         wrn,
@@ -32,7 +32,7 @@ public:
 
 public:
 
-    void enable(hal::c_usart* a_p_err_stream, bool a_inf, bool a_wrn, bool a_err, bool a_omg)
+    void enable(hal::USART* a_p_err_stream, bool a_inf, bool a_wrn, bool a_err, bool a_omg)
     {
         this->p_err_stream = a_p_err_stream;
         this->set_verbosity(a_inf, a_wrn, a_err, a_omg);
@@ -43,22 +43,22 @@ public:
         this->p_err_stream = nullptr;
     }
 
-    bool is_stream_enabled(e_stream_type a_type)
+    bool is_stream_enabled(Stream_type a_type)
     {
         return common::get_bit(this->verbosity, static_cast<common::uint32>(a_type));
     }
 
     void set_verbosity(bool a_inf, bool a_wrn, bool a_err, bool a_omg)
     {
-        common::clear_bit(&(this->verbosity), static_cast<common::int8>(e_stream_type::inf));
-        common::clear_bit(&(this->verbosity), static_cast<common::int8>(e_stream_type::wrn));
-        common::clear_bit(&(this->verbosity), static_cast<common::int8>(e_stream_type::err));
-        common::clear_bit(&(this->verbosity), static_cast<common::int8>(e_stream_type::omg));
+        common::clear_bit(&(this->verbosity), static_cast<common::int8>(Stream_type::inf));
+        common::clear_bit(&(this->verbosity), static_cast<common::int8>(Stream_type::wrn));
+        common::clear_bit(&(this->verbosity), static_cast<common::int8>(Stream_type::err));
+        common::clear_bit(&(this->verbosity), static_cast<common::int8>(Stream_type::omg));
 
-        if (true == a_inf) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(e_stream_type::inf)); }
-        if (true == a_wrn) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(e_stream_type::wrn)); }
-        if (true == a_err) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(e_stream_type::err)); }
-        if (true == a_omg) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(e_stream_type::omg)); }
+        if (true == a_inf) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::inf)); }
+        if (true == a_wrn) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::wrn)); }
+        if (true == a_err) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::err)); }
+        if (true == a_omg) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::omg)); }
     }
 
     void calm_down()
@@ -80,7 +80,7 @@ public:
     void inf(const char* a_p_format, params ... a_params)
     {
         this->line_buffer_view.clear();
-        common::c_format(&(this->line_buffer_view), a_p_format, a_params...);
+        common::format(&(this->line_buffer_view), a_p_format, a_params...);
         this->inf(this->line_buffer);
     }
 
@@ -88,7 +88,7 @@ public:
     void wrn(const char* a_p_format, params ... a_params)
     {
         this->line_buffer_view.clear();
-        common::c_format(&(this->line_buffer_view), a_p_format, a_params...);
+        common::format(&(this->line_buffer_view), a_p_format, a_params...);
         this->wrn(this->line_buffer);
     }
 
@@ -96,7 +96,7 @@ public:
     void err(const char* a_p_format, params ... a_params)
     {
         this->line_buffer_view.clear();
-        common::c_format(&(this->line_buffer_view), a_p_format, a_params...);
+        common::format(&(this->line_buffer_view), a_p_format, a_params...);
         this->err(this->line_buffer);
     }
 
@@ -104,28 +104,28 @@ public:
     void omg(const char* a_p_format, params ... a_params)
     {
         this->line_buffer_view.clear();
-        common::c_format(&(this->line_buffer_view), a_p_format, a_params...);
+        common::format(&(this->line_buffer_view), a_p_format, a_params...);
         this->omg(this->line_buffer);
     }
 
 private:
 
-    c_logger()                = default;
-    c_logger(c_logger&&)      = delete;
-    c_logger(const c_logger&) = delete;
+    Logger()              = default;
+    Logger(Logger&&)      = delete;
+    Logger(const Logger&) = delete;
 
-    c_logger& operator = (const c_logger&) = delete;
-    c_logger& operator = (c_logger&&)      = delete;
+    Logger& operator = (const Logger&) = delete;
+    Logger& operator = (Logger&&)      = delete;
 
-    void write(const char* a_p_message, e_stream_type a_type);
+    void write(const char* a_p_message, Stream_type a_type);
 
 private:
 
-    hal::c_usart* p_err_stream;
+    hal::USART* p_err_stream;
     common::uint8 verbosity;
 
-    char line_buffer[s_config::s_console::line_buffer_capacity];
-    collection::c_string line_buffer_view;
+    char line_buffer[config::console::LINE_BUFFER_CAPACITY];
+    collection::String line_buffer_view;
 };
 
 } // namepace hal

@@ -1,5 +1,5 @@
 /*
-    Name: usart.cpp
+    Name: USART.cpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -19,15 +19,15 @@ namespace {
 using namespace cml::common;
 using namespace cml::hal::stm32l011xx;
 
-void usart_2_enable(c_usart::s_clock::e_source a_clock_source)
+void usart_2_enable(USART::Clock::Source a_clock_source)
 {
-    _assert(a_clock_source != c_usart::s_clock::e_source::unknown);
+    assert(a_clock_source != USART::Clock::Source::unknown);
 
     constexpr uint32 clock_source_lut[] = { 0, RCC_CCIPR_USART2SEL_0, RCC_CCIPR_USART2SEL_1 };
     set_flag(&(RCC->CCIPR), RCC_CCIPR_USART2SEL, clock_source_lut[static_cast<uint32>(a_clock_source)]);
     set_flag(&(RCC->APB1ENR), RCC_APB1ENR_USART2EN);
 
-    NVIC_SetPriority(USART2_IRQn, s_config::s_usart::_2_interrupt_priority);
+    NVIC_SetPriority(USART2_IRQn, config::usart::_2_INTERRUPT_PRIORITY);
     NVIC_EnableIRQ(USART2_IRQn);
 }
 
@@ -37,16 +37,16 @@ void usart_2_disable()
     NVIC_DisableIRQ(USART2_IRQn);
 }
 
-struct s_ll_config_data
+struct Controller
 {
     USART_TypeDef* p_registers = nullptr;
-    c_usart* p_usart_handle    = nullptr;
+    USART* p_usart_handle    = nullptr;
 
-    void (*p_enable)(c_usart::s_clock::e_source a_clock_source)  = nullptr;
-    void (*p_disable)()                                          = nullptr;
+    void (*p_enable)(USART::Clock::Source a_clock_source) = nullptr;
+    void (*p_disable)()                                   = nullptr;
 };
 
-s_ll_config_data ll_configs[] =
+Controller controllers[] =
 {
     { USART2, nullptr, usart_2_enable, usart_2_disable },
 };
@@ -58,8 +58,8 @@ extern "C"
 
 void USART2_IRQHandler()
 {
-    _assert(nullptr != ll_configs[0].p_usart_handle);
-    usart_handle_interrupt(ll_configs[0].p_usart_handle);
+    assert(nullptr != controllers[0].p_usart_handle);
+    usart_handle_interrupt(controllers[0].p_usart_handle);
 }
 
 } // extern "C"
@@ -70,9 +70,9 @@ namespace stm32l011xx {
 
 using namespace cml::common;
 
-void usart_handle_interrupt(c_usart* a_p_this)
+void usart_handle_interrupt(USART* a_p_this)
 {
-    _assert(nullptr != a_p_this);
+    assert(nullptr != a_p_this);
 
     uint32 isr = a_p_this->p_usart->ISR;
     uint32 cr1 = a_p_this->p_usart->CR1;
@@ -81,7 +81,7 @@ void usart_handle_interrupt(c_usart* a_p_this)
     {
         byte data                    = 0;
         auto p_context               = &(a_p_this->tx_context);
-        const time_tick elapsed_time = c_systick::get_instance().get_counter() - p_context->start_timestamp;
+        const time_tick elapsed_time = Systick::get_instance().get_counter() - p_context->start_timestamp;
         const bool procceed          = p_context->callback.p_function(&data,
                                                                       p_context->callback.p_user_data,
                                                                       elapsed_time < p_context->timeout);
@@ -103,7 +103,7 @@ void usart_handle_interrupt(c_usart* a_p_this)
     if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
     {
         auto p_context               = &(a_p_this->rx_context);
-        const time_tick elapsed_time = c_systick::get_instance().get_counter() - p_context->start_timestamp;
+        const time_tick elapsed_time = Systick::get_instance().get_counter() - p_context->start_timestamp;
         const bool procceed          = p_context->callback.p_function(a_p_this->p_usart->RDR,
                                                                       p_context->callback.p_user_data,
                                                                       elapsed_time < p_context->timeout);
@@ -119,21 +119,21 @@ void usart_handle_interrupt(c_usart* a_p_this)
     }
 }
 
-bool c_usart::enable(const s_config& a_config, const s_clock &a_clock, time_tick a_timeout_ms)
+bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_timeout_ms)
 {
-    _assert(a_config.baud_rate    != e_baud_rate::unknown);
-    _assert(a_config.flow_control != e_flow_control::unknown);
-    _assert(a_config.parity       != e_parity::unknown);
-    _assert(a_config.stop_bits    != e_stop_bits::unknown);
-    _assert(a_config.word_length  != e_word_length::unknown);
+    assert(a_config.baud_rate    != Baud_rate::unknown);
+    assert(a_config.flow_control != Flow_control::unknown);
+    assert(a_config.parity       != Parity::unknown);
+    assert(a_config.stop_bits    != Stop_bits::unknown);
+    assert(a_config.word_length  != Word_length::unknown);
 
-    _assert(a_clock.source != s_clock::e_source::unknown);
-    _assert(0 != a_clock.frequency_hz);
+    assert(a_clock.source != Clock::Source::unknown);
+    assert(0 != a_clock.frequency_hz);
 
-    ll_configs[this->to_index(this->periph)].p_usart_handle = this;
-    this->p_usart = ll_configs[this->to_index(this->periph)].p_registers;
+    controllers[this->to_index(this->id)].p_usart_handle = this;
+    this->p_usart = controllers[this->to_index(this->id)].p_registers;
 
-    ll_configs[this->to_index(this->periph)].p_enable(a_clock.source);
+    controllers[this->to_index(this->id)].p_enable(a_clock.source);
 
     this->p_usart->CR1 = 0;
     this->p_usart->CR2 = 0;
@@ -144,22 +144,22 @@ bool c_usart::enable(const s_config& a_config, const s_clock &a_clock, time_tick
 
     switch (a_config.oversampling)
     {
-        case e_oversampling::_16:
+        case Oversampling::_16:
         {
             this->p_usart->BRR = a_clock.frequency_hz / static_cast<uint32>(a_config.baud_rate);
         }
         break;
 
-        case e_oversampling::_8:
+        case Oversampling::_8:
         {
             uint32 usartdiv = 2 * a_clock.frequency_hz / static_cast<uint32>(a_config.baud_rate);
             this->p_usart->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
 
-        case e_oversampling::unknown:
+        case Oversampling::unknown:
         {
-            _assert(a_config.oversampling != e_oversampling::unknown);
+            assert(a_config.oversampling != Oversampling::unknown);
         }
         break;
     }
@@ -174,26 +174,26 @@ bool c_usart::enable(const s_config& a_config, const s_clock &a_clock, time_tick
     this->baud_rate = a_config.baud_rate;
     return this->wait_until_isr(USART_ISR_REACK | USART_ISR_TEACK,
                                 false,
-                                c_systick::get_instance().get_counter(),
+                                Systick::get_instance().get_counter(),
                                 a_timeout_ms);
 }
 
-void c_usart::disable()
+void USART::disable()
 {
-    _assert(nullptr != this->p_usart);
+    assert(nullptr != this->p_usart);
 
     this->p_usart->CR1 = 0;
     this->p_usart->CR2 = 0;
     this->p_usart->CR3 = 0;
 
-    ll_configs[this->to_index(this->periph)].p_disable();
-    ll_configs[this->to_index(this->periph)].p_usart_handle = nullptr;
+    controllers[this->to_index(this->id)].p_disable();
+    controllers[this->to_index(this->id)].p_usart_handle = nullptr;
 }
 
-void c_usart::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes)
+void USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes)
 {
-    _assert(nullptr != a_p_data);
-    _assert(a_data_size_in_bytes > 0);
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0);
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
     {
@@ -205,14 +205,14 @@ void c_usart::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_by
     this->p_usart->ICR = USART_ICR_TCCF;
 }
 
-bool c_usart::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
+bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
 {
-    _assert(nullptr != a_p_data);
-    _assert(a_data_size_in_bytes > 0);
-    _assert(true == c_systick::get_instance().is_enabled());
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0);
+    assert(true == Systick::get_instance().is_enabled());
 
     bool timeout_occured = false;
-    time_tick start      = c_systick::get_instance().get_counter();
+    time_tick start      = Systick::get_instance().get_counter();
 
     set_flag(&(this->p_usart->CR1), USART_CR1_TE);
 
@@ -231,10 +231,10 @@ bool c_usart::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_by
     return false == timeout_occured;
 }
 
-void c_usart::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
+void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
 {
-    _assert(nullptr != a_p_data);
-    _assert(a_data_size_in_bytes > 0);
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0);
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
     {
@@ -243,14 +243,14 @@ void c_usart::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
     }
 }
 
-bool c_usart::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
+bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
 {
-    _assert(nullptr != a_p_data);
-    _assert(a_data_size_in_bytes > 0);
-    _assert(true == c_systick::get_instance().is_enabled());
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0);
+    assert(true == Systick::get_instance().is_enabled());
 
     bool timeout_occured = false;
-    time_tick start      = c_systick::get_instance().get_counter();
+    time_tick start      = Systick::get_instance().get_counter();
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && false == timeout_occured; i++)
     {
@@ -265,16 +265,16 @@ bool c_usart::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, ti
     return false == timeout_occured;
 }
 
-void c_usart::write_bytes_it(const s_tx_callback& a_callback, time_tick a_timeout_ms)
+void USART::write_bytes_IT(const TX_callback& a_callback, time_tick a_timeout_ms)
 {
-    _assert(true == c_systick::get_instance().is_enabled());
+    assert(true == Systick::get_instance().is_enabled());
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_TXEIE);
 
     if (nullptr != a_callback.p_function)
     {
         this->tx_context.callback        = a_callback;
-        this->tx_context.start_timestamp = c_systick::get_instance().get_counter();
+        this->tx_context.start_timestamp = Systick::get_instance().get_counter();
         this->tx_context.timeout         = a_timeout_ms;
 
         set_flag(&(this->p_usart->CR1), USART_CR1_TXEIE);
@@ -287,16 +287,16 @@ void c_usart::write_bytes_it(const s_tx_callback& a_callback, time_tick a_timeou
     }
 }
 
-void c_usart::read_bytes_it(const s_rx_callback& a_callback, time_tick a_timeout_ms)
+void USART::read_bytes_IT(const RX_callback& a_callback, time_tick a_timeout_ms)
 {
-    _assert(true == c_systick::get_instance().is_enabled());
+    assert(true == Systick::get_instance().is_enabled());
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE);
 
     if (nullptr != a_callback.p_function)
     {
         this->rx_context.callback        = a_callback;
-        this->rx_context.start_timestamp = c_systick::get_instance().get_counter();;
+        this->rx_context.start_timestamp = Systick::get_instance().get_counter();;
         this->rx_context.timeout         = a_timeout_ms;
 
         set_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE);
@@ -309,81 +309,81 @@ void c_usart::read_bytes_it(const s_rx_callback& a_callback, time_tick a_timeout
     }
 }
 
-void c_usart::set_baud_rate(e_baud_rate a_baud_rate)
+void USART::set_baud_rate(Baud_rate a_baud_rate)
 {
-    _assert(e_baud_rate::unknown != a_baud_rate);
+    assert(Baud_rate::unknown != a_baud_rate);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
     this->p_usart->BRR = SystemCoreClock / static_cast<uint32>(a_baud_rate);
     set_flag(&(this->p_usart->CR1), USART_CR1_UE);
 }
 
-void c_usart::set_oversampling(e_oversampling a_oversampling)
+void USART::set_oversampling(Oversampling a_oversampling)
 {
-    _assert(e_oversampling::unknown != a_oversampling);
+    assert(Oversampling::unknown != a_oversampling);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
     set_flag(&(this->p_usart->CR1), static_cast<uint32>(a_oversampling));
     set_flag(&(this->p_usart->CR1), USART_CR1_UE);
 }
 
-void c_usart::set_word_length(e_word_length a_word_length)
+void USART::set_word_length(Word_length a_word_length)
 {
-    _assert(e_word_length::unknown != a_word_length);
+    assert(Word_length::unknown != a_word_length);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
     set_flag(&(this->p_usart->CR1), static_cast<uint32>(a_word_length) | USART_CR1_UE);
 }
 
-void c_usart::set_parity(e_parity a_parity)
+void USART::set_parity(Parity a_parity)
 {
-    _assert(e_parity::unknown != a_parity);
+    assert(Parity::unknown != a_parity);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
     set_flag(&(this->p_usart->CR1), static_cast<uint32>(a_parity) | USART_CR1_UE);
 }
 
-void c_usart::set_stop_bits(e_stop_bits a_stop_bits)
+void USART::set_stop_bits(Stop_bits a_stop_bits)
 {
-    _assert(e_stop_bits::unknown != a_stop_bits);
+    assert(Stop_bits::unknown != a_stop_bits);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
     set_flag(&(this->p_usart->CR2), static_cast<uint32>(a_stop_bits));
     set_flag(&(this->p_usart->CR1), USART_CR1_UE);
 }
 
-void c_usart::set_flow_control(e_flow_control a_flow_control)
+void USART::set_flow_control(Flow_control a_flow_control)
 {
-    _assert(e_flow_control::unknown != a_flow_control);
+    assert(Flow_control::unknown != a_flow_control);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
     set_flag(&(this->p_usart->CR3), static_cast<uint32>(a_flow_control));
     set_flag(&(this->p_usart->CR1), USART_CR1_UE);
 }
 
-c_usart::e_baud_rate c_usart::get_baud_rate() const
+USART::Baud_rate USART::get_baud_rate() const
 {
     return this->baud_rate;
 }
 
-c_usart::e_oversampling c_usart::get_oversampling() const
+USART::Oversampling USART::get_oversampling() const
 {
-    return static_cast<e_oversampling>(get_flag(this->p_usart->CR1, static_cast<uint32>(USART_CR1_OVER8)));
+    return static_cast<Oversampling>(get_flag(this->p_usart->CR1, static_cast<uint32>(USART_CR1_OVER8)));
 }
 
-c_usart::e_word_length c_usart::get_word_length() const
+USART::Word_length USART::get_word_length() const
 {
-    return static_cast<e_word_length>(get_flag(this->p_usart->CR1, USART_CR1_M0 | USART_CR1_M1));
+    return static_cast<Word_length>(get_flag(this->p_usart->CR1, USART_CR1_M0 | USART_CR1_M1));
 }
 
-c_usart::e_stop_bits c_usart::get_stop_bits() const
+USART::Stop_bits USART::get_stop_bits() const
 {
-    return static_cast<e_stop_bits>(get_flag(this->p_usart->CR2, USART_CR2_STOP));
+    return static_cast<Stop_bits>(get_flag(this->p_usart->CR2, USART_CR2_STOP));
 }
 
-c_usart::e_flow_control c_usart::get_flow_control() const
+USART::Flow_control USART::get_flow_control() const
 {
-    return static_cast<e_flow_control>(get_flag(this->p_usart->CR3, USART_CR3_RTSE | USART_CR3_CTSE));
+    return static_cast<Flow_control>(get_flag(this->p_usart->CR3, USART_CR3_RTSE | USART_CR3_CTSE));
 }
 
 } // naespace stm32l011xx

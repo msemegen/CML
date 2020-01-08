@@ -9,13 +9,13 @@
 
 //cml
 #include <common/integer.hpp>
-#include <common/numeric_traits.hpp>
+#include <common/Numeric_traits.hpp>
 
 namespace cml {
 namespace common {
 
 using time_tick = uint64;
-constexpr time_tick time_tick_infinity = c_numeric_traits<time_tick>::get_max();
+constexpr time_tick time_tick_infinity = Numeric_traits<time_tick>::get_max();
 
 } // namespace common
 } // namespace cml

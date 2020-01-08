@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: array.hpp
+    Name: Array.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -15,11 +15,11 @@ namespace cml {
 namespace collection {
 
 template<typename type>
-class c_array
+class Array
 {
 public:
 
-    c_array(type* a_p_buffer, common::uint32 a_capacity)
+    Array(type* a_p_buffer, common::uint32 a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
     {
@@ -29,12 +29,12 @@ public:
         }
     }
 
-    c_array()                      = delete;
-    c_array(c_array<type>&&)       = default;
-    c_array(const c_array<type>&&) = default;
+    Array()                    = delete;
+    Array(Array<type>&&)       = default;
+    Array(const Array<type>&&) = default;
 
-    c_array<type>& operator = (c_array<type>&&)      = default;
-    c_array<type>& operator = (const c_array<type>&) = default;
+    Array<type>& operator = (Array<type>&&)      = default;
+    Array<type>& operator = (const Array<type>&) = default;
 
     common::uint32 get_capacity() const
     {
@@ -53,7 +53,7 @@ public:
         return this->p_buffer[a_index];
     }
 
-    bool operator == (const c_array<type>& a_other) const
+    bool operator == (const Array<type>& a_other) const
     {
         bool retval = this->capacity == a_other.capacity;
 
@@ -65,7 +65,7 @@ public:
         return retval;
     }
 
-    bool operator == (c_array<type>&& a_other) const
+    bool operator == (Array<type>&& a_other) const
     {
         bool retval = this->capacity == a_other.capacity;
 

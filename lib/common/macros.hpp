@@ -7,4 +7,4 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-#define _unused(variable)((void)variable)
+#define unused(variable)((void)variable)
