@@ -34,37 +34,37 @@ namespace utils {
 
 using namespace cml::common;
 
-void c_logger::inf(const char* a_p_message)
+void Logger::inf(const char* a_p_message)
 {
-    this->write(a_p_message, e_stream_type::inf);
+    this->write(a_p_message, Stream_type::inf);
 }
 
-void c_logger::wrn(const char* a_p_message)
+void Logger::wrn(const char* a_p_message)
 {
-    this->write(a_p_message, e_stream_type::wrn);
+    this->write(a_p_message, Stream_type::wrn);
 }
 
-void c_logger::err(const char* a_p_message)
+void Logger::err(const char* a_p_message)
 {
-    this->write(a_p_message, e_stream_type::err);
+    this->write(a_p_message, Stream_type::err);
 }
 
-void c_logger::omg(const char* a_p_message)
+void Logger::omg(const char* a_p_message)
 {
-    this->write(a_p_message, e_stream_type::omg);
+    this->write(a_p_message, Stream_type::omg);
 }
 
-void c_logger::write(const char* a_p_message, e_stream_type a_type)
+void Logger::write(const char* a_p_message, Stream_type a_type)
 {
-    _assert(nullptr != this->p_err_stream);
+    assert(nullptr != this->p_err_stream);
 
     if (true == this->is_stream_enabled(a_type))
     {
-        const uint32 message_length = cstring_length(a_p_message, s_config::s_console::line_buffer_capacity);
+        const uint32 message_length = cstring_length(a_p_message, config::console::LINE_BUFFER_CAPACITY);
 
         this->p_err_stream->write_bytes_polling(tags[static_cast<uint32>(a_type)], tag_length);
         this->p_err_stream->write_bytes_polling(a_p_message, message_length);
-        this->p_err_stream->write_bytes_polling(&(s_config::new_line_character), 1);
+        this->p_err_stream->write_bytes_polling(&(config::NEW_LINE_CHARACTER), 1);
     }
 }
 

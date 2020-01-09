@@ -14,7 +14,7 @@
 namespace cml {
 namespace hal {
 
-class c_systick
+class Systick
 {
 public:
 
@@ -33,23 +33,23 @@ public:
         return this->cnt;
     }
 
-    static c_systick& get_instance()
+    static Systick& get_instance()
     {
-        static c_systick instance;
+        static Systick instance;
         return instance;
     }
 
 private:
 
-    c_systick()
+    Systick()
         : cnt(static_cast<common::time_tick>(0))
     {}
 
-    c_systick(c_systick&&)      = default;
-    c_systick(const c_systick&) = default;
+    Systick(Systick&&)      = default;
+    Systick(const Systick&) = default;
 
-    c_systick& operator = (c_systick&&)      = delete;
-    c_systick& operator = (const c_systick&) = delete;
+    Systick& operator = (Systick&&)      = delete;
+    Systick& operator = (const Systick&) = delete;
 
 private:
 
@@ -57,9 +57,9 @@ private:
 
 private:
 
-    friend void systick_handle_interrupt(c_systick* a_p_this)
+    friend void systick_handle_interrupt(Systick* a_p_this)
     {
-        _assert(nullptr != a_p_this);
+        assert(nullptr != a_p_this);
         a_p_this->cnt++;
     }
 };

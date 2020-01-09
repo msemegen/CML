@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: vector.hpp
+    Name: Vector.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -15,7 +15,7 @@ namespace cml {
 namespace collection {
 
 template<typename type>
-class c_vector_view
+class Vector
 {
 
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: console.hpp
+    Name: Console.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -11,28 +11,28 @@
 #include <collection/string.hpp>
 #include <common/format.hpp>
 #include <common/integer.hpp>
-#include <hal/usart.hpp>
+#include <hal/USART.hpp>
 #include <utils/config.hpp>
 
 namespace cml {
 namespace utils {
 
-class c_console
+class Console
 {
 public:
 
-    c_console(hal::c_usart* a_p_io_stream)
+    Console(hal::USART* a_p_io_stream)
         : p_io_stream(a_p_io_stream)
-        , line_buffer_view(this->line_buffer, s_config::s_console::line_buffer_capacity)
+        , line_buffer_view(this->line_buffer, config::console::LINE_BUFFER_CAPACITY)
     {}
 
-    c_console()                 = delete;
-    c_console(c_console&&)      = default;
-    c_console(const c_console&) = default;
-    ~c_console()                = default;
+    Console()               = delete;
+    Console(Console&&)      = default;
+    Console(const Console&) = default;
+    ~Console()              = default;
 
-    c_console& operator = (c_console&&)      = default;
-    c_console& operator = (const c_console&) = default;
+    Console& operator = (Console&&)      = default;
+    Console& operator = (const Console&) = default;
 
     void write(char a_character);
     void write(const char* a_p_string);
@@ -41,7 +41,7 @@ public:
     void write(const char* a_p_format, params ... a_params)
     {
         this->line_buffer_view.clear();
-        common::c_format(&(this->line_buffer_view), a_p_format, a_params ...);
+        common::format(&(this->line_buffer_view), a_p_format, a_params ...);
         this->write(this->line_buffer);
     }
 
@@ -52,7 +52,7 @@ public:
     void write_line(const char* a_p_format, params ... a_params)
     {
         this->line_buffer_view.clear();
-        common::c_format(&(this->line_buffer_view), a_p_format, a_params ...);
+        common::format(&(this->line_buffer_view), a_p_format, a_params ...);
         this->write_line(this->line_buffer);
     }
 
@@ -66,10 +66,10 @@ public:
 
 private:
 
-    hal::c_usart* p_io_stream;
+    hal::USART* p_io_stream;
 
-    char line_buffer[s_config::s_console::line_buffer_capacity];
-    collection::c_string line_buffer_view;
+    char line_buffer[config::console::LINE_BUFFER_CAPACITY];
+    collection::String line_buffer_view;
 };
 
 } // namespace utils

@@ -6,12 +6,11 @@
 */
 
 //cml
-#include <hal/gpio.hpp>
-#include <hal/mcu.hpp>
-#include <hal/systick.hpp>
-#include <hal/usart.hpp>
-#include <utils/console.hpp>
-#include <utils/sleep.hpp>
+#include <hal/GPIO.hpp>
+#include <hal/MCU.hpp>
+#include <hal/Systick.hpp>
+#include <hal/USART.hpp>
+#include <utils/Console.hpp>
 
 int main()
 {
@@ -19,55 +18,55 @@ int main()
     using namespace cml::hal;
     using namespace cml::utils;
 
-    c_mcu::get_instance().enable_hsi_clock(c_mcu::e_hsi_frequency::_16_MHz);
-    c_mcu::get_instance().set_sysclk(c_mcu::e_sysclk_source::hsi, { c_mcu::s_bus_prescalers::e_ahb::_1,
-                                                                    c_mcu::s_bus_prescalers::e_apb1::_1,
-                                                                    c_mcu::s_bus_prescalers::e_apb2::_1 });
+    MCU::get_instance().enable_HSI_clock(MCU::HSI_frequency::_16_MHz);
+    MCU::get_instance().set_SYSCLK(MCU::SYSCLK_source::HSI, { MCU::Bus_prescalers::AHB::_1,
+                                                              MCU::Bus_prescalers::APB1::_1,
+                                                              MCU::Bus_prescalers::APB2::_1 });
 
-    if (c_mcu::e_sysclk_source::hsi == c_mcu::get_instance().get_sysclk_source())
+    if (MCU::SYSCLK_source::HSI == MCU::get_instance().get_SYSCLK_source())
     {
-        c_usart::s_config usart_config =
+        USART::Config usart_config =
         {
-            c_usart::e_baud_rate::_115200,
-            c_usart::e_oversampling::_16,
-            c_usart::e_word_length::_8_bits,
-            c_usart::e_stop_bits::_1,
-            c_usart::e_flow_control::none,
-            c_usart::e_parity::none,
+            USART::Baud_rate::_115200,
+            USART::Oversampling::_16,
+            USART::Word_length::_8_bits,
+            USART::Stop_bits::_1,
+            USART::Flow_control::none,
+            USART::Parity::none,
         };
 
-        c_usart::s_clock usart_clock
+        USART::Clock usart_clock
         {
-            c_usart::s_clock::e_source::sysclk,
+            USART::Clock::Source::SYSCLK,
             SystemCoreClock
         };
 
-        c_alternate_function_pin::s_config usart_pin_config =
+        Alternate_function_pin::Config usart_pin_config =
         {
-            c_gpio::e_mode::push_pull,
-            c_gpio::e_pull::up,
-            c_gpio::e_speed::ultra,
+            Alternate_function_pin::Mode::push_pull,
+            Alternate_function_pin::Pull::up,
+            Alternate_function_pin::Speed::ultra,
             0x4u
         };
 
-        c_mcu::get_instance().disable_msi_clock();
-        c_systick::get_instance().enable();
+        MCU::get_instance().disable_MSI_clock();
+        Systick::get_instance().enable();
 
-        c_gpio gpio_port_a(c_gpio::e_periph::a);
+        GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        c_alternate_function_pin console_usart_tx_pin(&gpio_port_a, 2);
-        c_alternate_function_pin console_usart_rx_pin(&gpio_port_a, 15);
+        Alternate_function_pin console_usart_tx_pin(&gpio_port_a, 2);
+        Alternate_function_pin console_usart_rx_pin(&gpio_port_a, 15);
 
         console_usart_tx_pin.enable(usart_pin_config);
         console_usart_rx_pin.enable(usart_pin_config);
 
-        c_usart console_usart(c_usart::e_periph::_2);
+        USART console_usart(USART::Id::_2);
         bool usart_ready = console_usart.enable(usart_config, usart_clock, 10);
 
         if (true == usart_ready)
         {
-            c_console console(&console_usart);
+            Console console(&console_usart);
 
             while (true)
             {

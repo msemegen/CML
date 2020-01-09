@@ -13,11 +13,11 @@
 namespace cml {
 namespace common {
 
-class c_assert
+class assert
 {
 public:
 
-    struct s_halt_callback
+    struct Halt_callback
     {
         using function = void(*)(void* a_p_user_data);
 
@@ -25,7 +25,7 @@ public:
         void* p_user_data   = nullptr;
     };
 
-    struct s_print_callback
+    struct Print_callback
     {
         using function = void(*)(void* a_p_user_data,
                                  const char* a_p_file,
@@ -36,12 +36,12 @@ public:
         void* p_user_data   = nullptr;
     };
 
-    void register_callback(const s_halt_callback& a_callback)
+    void register_callback(const Halt_callback& a_callback)
     {
         this->halt = a_callback;
     }
 
-    void register_callback(const s_print_callback& a_callback)
+    void register_callback(const Print_callback& a_callback)
     {
         this->print = a_callback;
     }
@@ -59,38 +59,38 @@ public:
         }
     }
 
-    static c_assert& get_instance()
+    static assert& get_instance()
     {
-        static c_assert instance;
+        static assert instance;
         return instance;
     }
 
 private:
 
-    c_assert()                = default;
-    c_assert(const c_assert&) = delete;
-    c_assert(c_assert&&)      = delete;
-    ~c_assert()               = default;
+    assert()              = default;
+    assert(const assert&) = delete;
+    assert(assert&&)      = delete;
+    ~assert()             = default;
 
-    c_assert& operator = (const c_assert&) = delete;
-    c_assert& operator = (c_assert&&)      = delete;
+    assert& operator = (const assert&) = delete;
+    assert& operator = (assert&&)      = delete;
 
 private:
 
-    s_halt_callback halt;
-    s_print_callback print;
+    Halt_callback  halt;
+    Print_callback print;
 };
 
 } // namespace common
 } // namespace cml
 
 #ifdef DEBUG
-#define _assert(expression) (false == (expression) ? cml::common::c_assert::get_instance().trap(__FILE__,    \
-                                                                                                __LINE__,    \
-                                                                                                #expression) \
-                                                   : static_cast<void>(0))
+#define assert(expression) (false == (expression) ? cml::common::assert::get_instance().trap(__FILE__,    \
+                                                                                             __LINE__,    \
+                                                                                             #expression) \
+                                                  : static_cast<void>(0))
 #endif
 
 #ifndef DEBUG
-#define _assert(expression)
+#define assert(expression)
 #endif

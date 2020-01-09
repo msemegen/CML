@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: ring.hpp
+    Name: Ring.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -14,7 +14,7 @@ namespace cml {
 namespace collection {
 
 template<typename data_type>
-class c_ring
+class Ring
 {
 public:
 

@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: usart.hpp
+    Name: USART.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -16,22 +16,22 @@
 #include <common/frequency.hpp>
 #include <common/integer.hpp>
 #include <common/time_tick.hpp>
-#include <hal/systick.hpp>
+#include <hal/Systick.hpp>
 
 namespace cml {
 namespace hal {
 namespace stm32l011xx {
 
-class c_usart
+class USART
 {
 public:
 
-    enum class e_periph : common::uint32
+    enum class Id : common::uint32
     {
         _2 = 0,
     };
 
-    enum class e_baud_rate : common::uint32
+    enum class Baud_rate : common::uint32
     {
         _110    = 110,
         _300    = 300,
@@ -51,14 +51,14 @@ public:
         unknown
     };
 
-    enum class e_oversampling : common::uint32
+    enum class Oversampling : common::uint32
     {
         _8  = USART_CR1_OVER8,
         _16 = 0,
         unknown
     };
 
-    enum class e_word_length : common::uint32
+    enum class Word_length : common::uint32
     {
         _7_bits = USART_CR1_M1,
         _8_bits = 0x0u,
@@ -66,7 +66,7 @@ public:
         unknown
     };
 
-    enum class e_stop_bits : common::uint32
+    enum class Stop_bits : common::uint32
     {
         _0_5 = USART_CR2_STOP_0,
         _1   = 0x0u,
@@ -75,7 +75,7 @@ public:
         unknown
     };
 
-    enum class e_flow_control : common::uint32
+    enum class Flow_control : common::uint32
     {
         none                          = 0x0u,
         request_to_send               = USART_CR3_RTSE,
@@ -84,7 +84,7 @@ public:
         unknown
     };
 
-    enum class e_parity : common::uint32
+    enum class Parity : common::uint32
     {
         none = 0x0u,
         even = USART_CR1_PCE,
@@ -92,31 +92,31 @@ public:
         unknown
     };
 
-    struct s_config
+    struct Config
     {
-        e_baud_rate baud_rate       = e_baud_rate::unknown;
-        e_oversampling oversampling = e_oversampling::unknown;
-        e_word_length word_length   = e_word_length::unknown;
-        e_stop_bits stop_bits       = e_stop_bits::unknown;
-        e_flow_control flow_control = e_flow_control::unknown;
-        e_parity parity             = e_parity::unknown;
+        Baud_rate baud_rate       = Baud_rate::unknown;
+        Oversampling oversampling = Oversampling::unknown;
+        Word_length word_length   = Word_length::unknown;
+        Stop_bits stop_bits       = Stop_bits::unknown;
+        Flow_control flow_control = Flow_control::unknown;
+        Parity parity             = Parity::unknown;
     };
 
-    struct s_clock
+    struct Clock
     {
-        enum class e_source : common::uint32
+        enum class Source : common::uint32
         {
-            pclk,
-            sysclk,
-            hsi,
+            PCLK,
+            SYSCLK,
+            HSI,
             unknown
         };
 
-        e_source source                = e_source::unknown;
+        Source source                  = Source::unknown;
         common::frequency frequency_hz = common::Hz(0);
     };
 
-    struct s_tx_callback
+    struct TX_callback
     {
         using function = bool(*)(common::byte* p_a_byte, void* a_p_user_data, bool a_timeout);
 
@@ -124,7 +124,7 @@ public:
         void* p_user_data   = nullptr;
     };
 
-    struct s_rx_callback
+    struct RX_callback
     {
         using function = bool(*)(common::byte a_byte, void* a_p_user_data, bool a_timeout);
 
@@ -134,25 +134,25 @@ public:
 
 public:
 
-    c_usart(e_periph a_periph)
-        : periph(a_periph)
+    USART(Id a_id)
+        : id(a_id)
         , p_usart(nullptr)
-        , baud_rate(e_baud_rate::unknown)
+        , baud_rate(Baud_rate::unknown)
     {}
 
-    ~c_usart()
+    ~USART()
     {
         this->disable();
     }
 
-    c_usart()               = default;
-    c_usart(c_usart&)       = default;
-    c_usart(const c_usart&) = default;
+    USART()               = default;
+    USART(USART&)       = default;
+    USART(const USART&) = default;
 
-    c_usart& operator = (c_usart&&)      = default;
-    c_usart& operator = (const c_usart&) = default;
+    USART& operator = (USART&&)      = default;
+    USART& operator = (const USART&) = default;
 
-    bool enable(const s_config& a_config, const s_clock& a_clock, common::time_tick a_timeout_ms);
+    bool enable(const Config& a_config, const Clock& a_clock, common::time_tick a_timeout_ms);
     void disable();
 
     template<typename data_t>
@@ -185,40 +185,40 @@ public:
     void read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes);
     bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
 
-    void write_bytes_it(const s_tx_callback& a_callback)
+    void write_bytes_IT(const TX_callback& a_callback)
     {
-        this->write_bytes_it(a_callback, common::time_tick_infinity);
+        this->write_bytes_IT(a_callback, common::TIME_TICK_INFINITY);
     }
-    void write_bytes_it(const s_tx_callback& a_callback, common::time_tick a_timeout_ms);
+    void write_bytes_IT(const TX_callback& a_callback, common::time_tick a_timeout_ms);
 
-    void read_bytes_it(const s_rx_callback& a_callback)
+    void read_bytes_IT(const RX_callback& a_callback)
     {
-        this->read_bytes_it(a_callback, common::time_tick_infinity);
+        this->read_bytes_IT(a_callback, common::TIME_TICK_INFINITY);
     }
-    void read_bytes_it(const s_rx_callback& a_callback, common::time_tick a_timeout_ms);
+    void read_bytes_IT(const RX_callback& a_callback, common::time_tick a_timeout_ms);
 
-    void set_baud_rate(e_baud_rate a_baud_rate);
-    void set_oversampling(e_oversampling a_oversampling);
-    void set_word_length(e_word_length a_word_length);
-    void set_parity(e_parity a_parity);
-    void set_stop_bits(e_stop_bits a_stop_bits);
-    void set_flow_control(e_flow_control a_flow_control);
+    void set_baud_rate(Baud_rate a_baud_rate);
+    void set_oversampling(Oversampling a_oversampling);
+    void set_word_length(Word_length a_word_length);
+    void set_parity(Parity a_parity);
+    void set_stop_bits(Stop_bits a_stop_bits);
+    void set_flow_control(Flow_control a_flow_control);
 
-    e_baud_rate    get_baud_rate()    const;
-    e_oversampling get_oversampling() const;
-    e_word_length  get_word_length()  const;
-    e_stop_bits    get_stop_bits()    const;
-    e_flow_control get_flow_control() const;
+    Baud_rate    get_baud_rate()    const;
+    Oversampling get_oversampling() const;
+    Word_length  get_word_length()  const;
+    Stop_bits    get_stop_bits()    const;
+    Flow_control get_flow_control() const;
 
-    e_periph get_periph() const
+    Id get_periph() const
     {
-        return this->periph;
+        return this->id;
     }
 
 private:
 
     template<typename callback_type>
-    struct s_it_context
+    struct IT_context
     {
         callback_type callback;
         common::time_tick timeout         = 0;
@@ -227,9 +227,9 @@ private:
 
 private:
 
-    common::uint32 to_index(e_periph a_periph) const
+    common::uint32 to_index(Id a_id) const
     {
-        return static_cast<common::uint32>(a_periph);
+        return static_cast<common::uint32>(a_id);
     }
 
     bool is_isr_flag(common::uint32 a_flag)
@@ -244,7 +244,7 @@ private:
 
         while (true == status && false == timeout)
         {
-            status  = a_timeout_ms >= (c_systick::get_instance().get_counter() - a_start);
+            status  = a_timeout_ms >= (Systick::get_instance().get_counter() - a_start);
             timeout = this->is_isr_flag(a_flag) == a_status;
         }
 
@@ -258,23 +258,23 @@ private:
 
 private:
 
-    using s_tx_it_context = s_it_context<s_tx_callback>;
-    using s_rx_it_context = s_it_context<s_rx_callback>;
+    using TX_IT_context = IT_context<TX_callback>;
+    using RX_IT_context = IT_context<RX_callback>;
 
 private:
 
-    e_periph periph;
+    Id id;
 
-    s_tx_it_context tx_context;
-    s_rx_it_context rx_context;
+    TX_IT_context tx_context;
+    RX_IT_context rx_context;
 
     USART_TypeDef* p_usart;
 
-    e_baud_rate baud_rate;
+    Baud_rate baud_rate;
 
 private:
 
-    friend void usart_handle_interrupt(c_usart* a_p_this);
+    friend void usart_handle_interrupt(USART* a_p_this);
 };
 
 } // namespace stm32l011xx
