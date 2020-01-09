@@ -20,7 +20,7 @@ namespace cml {
 namespace hal {
 
 #ifdef STM32L452xx
-using c_usart = stm32l452xx::c_usart;
+using USART = stm32l452xx::USART;
 #endif
 
 #ifdef STM32L011xx

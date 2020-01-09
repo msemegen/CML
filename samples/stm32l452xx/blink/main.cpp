@@ -7,49 +7,48 @@
 
 //cml
 #include <hal/gpio.hpp>
-#include <hal/mcu.hpp>
-#include <hal/systick.hpp>
+#include <hal/MCU.hpp>
+#include <hal/Systick.hpp>
 
 int main()
 {
     using namespace cml::common;
     using namespace cml::hal;
 
+    MCU::get_instance().enable_HSI_clock(MCU::HSI_frequency::_16_MHz);
+    MCU::get_instance().set_SYSCLK(MCU::SYSCLK_source::HSI, { MCU::Bus_prescalers::AHB::_1,
+                                                              MCU::Bus_prescalers::APB1::_1,
+                                                              MCU::Bus_prescalers::APB2::_1 },
+                                                              { 0x00000003, 15 << 4 });
 
-    c_mcu::get_instance().enable_hsi_clock(c_mcu::e_hsi_frequency::_16_MHz);
-    c_mcu::get_instance().set_sysclk(c_mcu::e_sysclk_source::hsi, { c_mcu::s_bus_prescalers::e_ahb::_1,
-                                                                    c_mcu::s_bus_prescalers::e_apb1::_1,
-                                                                    c_mcu::s_bus_prescalers::e_apb2::_1 },
-                                                                    { 0x00000003, 15 << 4 });
-
-    if (c_mcu::e_sysclk_source::hsi == c_mcu::get_instance().get_sysclk_source())
+    if (MCU::SYSCLK_source::HSI == MCU::get_instance().get_SYSCLK_source())
     {
-        c_output_pin::s_config led_pin_config =
+        Output_pin::Config led_pin_config =
         {
-            c_gpio::e_mode::push_pull,
-            c_gpio::e_pull::down,
-            c_gpio::e_speed::low
+            Output_pin::Mode::push_pull,
+            Output_pin::Pull::down,
+            Output_pin::Speed::low
         };
 
-        c_mcu::get_instance().disable_msi_clock();
-        c_systick::get_instance().enable();
+        MCU::get_instance().disable_MSI_clock();
+        Systick::get_instance().enable();
 
-        c_gpio gpio_port_a(c_gpio::e_periph::a);
+        GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        c_output_pin led_pin(&gpio_port_a, 5);
+        Output_pin led_pin(&gpio_port_a, 5);
         led_pin.enable(led_pin_config);
 
-        led_pin.set_level(c_gpio::e_level::low);
+        led_pin.set_level(Output_pin::Level::low);
 
-        time_tick start = c_systick::get_instance().get_counter();
+        time_tick start = Systick::get_instance().get_counter();
 
         while (true)
         {
-            if (c_systick::get_instance().get_counter() - start >= 500u)
+            if (Systick::get_instance().get_counter() - start >= 500u)
             {
                 led_pin.toggle_level();
-                start = c_systick::get_instance().get_counter();
+                start = Systick::get_instance().get_counter();
             }
         }
     }

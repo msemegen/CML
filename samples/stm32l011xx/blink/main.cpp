@@ -17,7 +17,7 @@ int main()
     using namespace cml::hal;
 
     MCU::get_instance().enable_HSI_clock(MCU::HSI_frequency::_16_MHz);
-    MCU::get_instance().enable_PLL(MCU::PLL_clock_source::hsi, { false,
+    MCU::get_instance().enable_PLL(MCU::PLL_clock_source::HSI, { false,
                                                                  MCU::PLL_config::Multiplier::_4,
                                                                  MCU::PLL_config::Divider::_2 });
     MCU::get_instance().set_SYSCLK(MCU::SYSCLK_source::PLL, { MCU::Bus_prescalers::AHB::_1,

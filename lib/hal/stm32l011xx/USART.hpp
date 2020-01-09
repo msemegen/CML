@@ -187,13 +187,13 @@ public:
 
     void write_bytes_IT(const TX_callback& a_callback)
     {
-        this->write_bytes_IT(a_callback, common::time_tick_infinity);
+        this->write_bytes_IT(a_callback, common::TIME_TICK_INFINITY);
     }
     void write_bytes_IT(const TX_callback& a_callback, common::time_tick a_timeout_ms);
 
     void read_bytes_IT(const RX_callback& a_callback)
     {
-        this->read_bytes_IT(a_callback, common::time_tick_infinity);
+        this->read_bytes_IT(a_callback, common::TIME_TICK_INFINITY);
     }
     void read_bytes_IT(const RX_callback& a_callback, common::time_tick a_timeout_ms);
 

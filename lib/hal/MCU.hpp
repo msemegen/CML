@@ -20,7 +20,7 @@ namespace cml {
 namespace hal {
 
 #ifdef STM32L452xx
-using c_mcu = stm32l452xx::c_mcu;
+using MCU = stm32l452xx::MCU;
 #endif // STM32L452xx
 
 #ifdef STM32L011xx

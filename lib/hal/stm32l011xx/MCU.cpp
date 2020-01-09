@@ -268,7 +268,7 @@ MCU::Voltage_scaling MCU::select_voltage_scaling(SYSCLK_source a_source, uint32 
 
     if (SYSCLK_source::PLL == a_source && a_sysclk_freq <= MHz(32))
     {
-        return Voltage_scaling::_3;
+        return Voltage_scaling::_1;
     }
 
     return Voltage_scaling::unknown;
