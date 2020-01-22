@@ -244,13 +244,13 @@ private:
         bool status  = true;
         bool timeout = false;
 
-        while (true == status && false == timeout)
+        while (false == status && false == timeout)
         {
-            status  = a_timeout_ms >= (Systick::get_instance().get_counter() - a_start);
-            timeout = this->is_isr_flag(a_flag) == a_status;
+            timeout = a_timeout_ms >= (Systick::get_instance().get_counter() - a_start);
+            status  = this->is_isr_flag(a_flag) == a_status;
         }
 
-        return ((false == status) && (false == timeout));
+        return ((true == status) && (false == timeout));
     }
 
     void wait_until_isr(common::uint32 a_flag, bool a_status)
