@@ -16,15 +16,15 @@ int main()
     using namespace cml::common;
     using namespace cml::hal;
 
-    MCU::get_instance().enable_HSI_clock(MCU::HSI_frequency::_16_MHz);
-    MCU::get_instance().enable_PLL(MCU::PLL_clock_source::HSI, { false,
-                                                                 MCU::PLL_config::Multiplier::_4,
-                                                                 MCU::PLL_config::Divider::_2 });
-    MCU::get_instance().set_SYSCLK(MCU::SYSCLK_source::PLL, { MCU::Bus_prescalers::AHB::_1,
+    MCU::get_instance().enable_hsi_clock(MCU::Hsi_frequency::_16_MHz);
+    MCU::get_instance().enable_pll(MCU::Pll_clock_source::hsi, { false,
+                                                                 MCU::Pll_config::Multiplier::_4,
+                                                                 MCU::Pll_config::Divider::_2 });
+    MCU::get_instance().set_sysclk(MCU::Sysclk_source::pll, { MCU::Bus_prescalers::AHB::_1,
                                                               MCU::Bus_prescalers::APB1::_1,
                                                               MCU::Bus_prescalers::APB2::_1 });
 
-    if (MCU::SYSCLK_source::PLL == MCU::get_instance().get_SYSCLK_source())
+    if (MCU::Sysclk_source::pll == MCU::get_instance().get_sysclk_source())
     {
         Output_pin::Config led_pin_config =
         {
@@ -33,7 +33,7 @@ int main()
             Output_pin::Speed::low
         };
 
-        MCU::get_instance().disable_MSI_clock();
+        MCU::get_instance().disable_msi_clock();
         Systick::get_instance().enable();
 
         GPIO gpio_port_b(GPIO::Id::b);

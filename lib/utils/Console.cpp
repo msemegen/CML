@@ -28,7 +28,7 @@ void Console::write(const char* a_p_string)
 {
     assert(nullptr != this->p_io_stream);
 
-    uint32 message_length = cstring_length(a_p_string, config::console::LINE_BUFFER_CAPACITY);
+    uint32 message_length = cstring_length(a_p_string, config::console::line_buffer_capacity);
     this->p_io_stream->write_bytes_polling(a_p_string, message_length);
 }
 
@@ -36,7 +36,7 @@ void Console::write_line(char a_character)
 {
     assert(nullptr != this->p_io_stream);
 
-    char b[2] = { a_character, config::NEW_LINE_CHARACTER };
+    char b[2] = { a_character, config::new_line_character };
     this->p_io_stream->write_bytes_polling(b, 2);
 }
 
@@ -44,9 +44,9 @@ void Console::write_line(const char* a_p_string)
 {
     assert(nullptr != this->p_io_stream);
 
-    uint32 message_length = cstring_length(a_p_string, config::console::LINE_BUFFER_CAPACITY);
+    uint32 message_length = cstring_length(a_p_string, config::console::line_buffer_capacity);
     this->p_io_stream->write_bytes_polling(a_p_string, message_length);
-    this->p_io_stream->write_bytes_polling(&config::NEW_LINE_CHARACTER, 1);
+    this->p_io_stream->write_bytes_polling(&config::new_line_character, 1);
 }
 
 char Console::read_key(bool a_echo)
@@ -71,7 +71,7 @@ void Console::read_line(char* a_p_buffer, uint32 a_max_characters_count, bool a_
 
     char character = 0;
 
-    for (uint32 i = 0; i < a_max_characters_count && config::NEW_LINE_CHARACTER != character; i++)
+    for (uint32 i = 0; i < a_max_characters_count && config::new_line_character != character; i++)
     {
         this->p_io_stream->read_bytes_polling(&character, 1);
         a_p_buffer[i] = character;
