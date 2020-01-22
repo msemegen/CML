@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: usart.hpp
+    Name: USART.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
