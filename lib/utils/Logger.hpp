@@ -124,7 +124,7 @@ private:
     hal::USART* p_err_stream;
     common::uint8 verbosity;
 
-    char line_buffer[config::console::LINE_BUFFER_CAPACITY];
+    char line_buffer[config::console::line_buffer_capacity];
     collection::String line_buffer_view;
 };
 

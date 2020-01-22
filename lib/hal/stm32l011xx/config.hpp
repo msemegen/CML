@@ -19,7 +19,7 @@ struct config
 {
     struct usart
     {
-        static constexpr common::uint32 _2_INTERRUPT_PRIORITY = 0;
+        static constexpr common::uint32 _2_interrupt_priority = 0;
 
         usart()             = delete;
         usart(usart&&)      = delete;
@@ -32,7 +32,7 @@ struct config
 
     struct mcu
     {
-        static constexpr common::uint8 DEVICE_ID_LENGTH = 12;
+        static constexpr common::uint8 device_id_length = 12;
 
         mcu()           = delete;
         mcu(mcu&&)      = delete;
@@ -45,8 +45,8 @@ struct config
 
     struct clock
     {
-        static constexpr common::uint32 HSI_FREQUENCY_HZ = common::MHz(16u);
-        static constexpr common::uint32 LSI_FREQUENCY_HZ = common::kHz(37u);
+        static constexpr common::uint32 hsi_frequency_hz = common::MHz(16u);
+        static constexpr common::uint32 lsi_frequency_hz = common::kHz(37u);
 
         clock()               = delete;
         clock(clock&&)      = delete;

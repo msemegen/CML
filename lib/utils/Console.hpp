@@ -23,7 +23,7 @@ public:
 
     Console(hal::USART* a_p_io_stream)
         : p_io_stream(a_p_io_stream)
-        , line_buffer_view(this->line_buffer, config::console::LINE_BUFFER_CAPACITY)
+        , line_buffer_view(this->line_buffer, config::console::line_buffer_capacity)
     {}
 
     Console()               = delete;
@@ -68,7 +68,7 @@ private:
 
     hal::USART* p_io_stream;
 
-    char line_buffer[config::console::LINE_BUFFER_CAPACITY];
+    char line_buffer[config::console::line_buffer_capacity];
     collection::String line_buffer_view;
 };
 

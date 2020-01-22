@@ -27,7 +27,7 @@ void usart_2_enable(USART::Clock::Source a_clock_source)
     set_flag(&(RCC->CCIPR), RCC_CCIPR_USART2SEL, clock_source_lut[static_cast<uint32>(a_clock_source)]);
     set_flag(&(RCC->APB1ENR), RCC_APB1ENR_USART2EN);
 
-    NVIC_SetPriority(USART2_IRQn, config::usart::_2_INTERRUPT_PRIORITY);
+    NVIC_SetPriority(USART2_IRQn, config::usart::_2_interrupt_priority);
     NVIC_EnableIRQ(USART2_IRQn);
 }
 

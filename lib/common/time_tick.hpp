@@ -15,7 +15,7 @@ namespace cml {
 namespace common {
 
 using time_tick = uint64;
-constexpr time_tick TIME_TICK_INFINITY = numeric_traits<time_tick>::get_max();
+constexpr time_tick time_tick_infinity = numeric_traits<time_tick>::get_max();
 
 } // namespace common
 } // namespace cml

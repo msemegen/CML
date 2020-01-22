@@ -300,6 +300,24 @@ void Alternate_function_pin::set_function(uint32 a_function)
     p_port->AFR[af_register_index] = af_register;
 }
 
+Alternate_function_pin::Mode Alternate_function_pin::get_mode() const
+{
+    const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+    return static_cast<Mode>(get_flag(p_port->OTYPER, static_cast<uint32>(0x1u << this->pin) << this->pin));
+}
+
+Alternate_function_pin::Pull Alternate_function_pin::get_pull() const
+{
+    const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+    return static_cast<Pull>(get_flag(p_port->PUPDR, static_cast<uint32>(0x1u << this->pin) << this->pin));
+}
+
+Alternate_function_pin::Speed Alternate_function_pin::get_speed() const
+{
+    const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+    return static_cast<Speed>(get_flag(p_port->OSPEEDR, static_cast<uint32>(0x1u << this->pin) << this->pin));
+}
+
 } // namespace stm32l011xx
 } // namespace hal
 } // namespace cml

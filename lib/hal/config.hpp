@@ -20,7 +20,7 @@ namespace cml {
 namespace hal {
 
 #ifdef STM32L452xx
-using s_config = stm32l452xx::s_config;
+using config = stm32l452xx::config;
 #endif // STM32L452xx
 
 #ifdef STM32L011xx

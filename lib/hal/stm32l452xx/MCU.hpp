@@ -24,26 +24,26 @@ public:
 
     enum class Clock : common::uint32
     {
-        MSI = RCC_CR_MSION,
-        HSI = RCC_CR_HSION,
-        PLL = RCC_CR_PLLON,
-        LSI
+        msi = RCC_CR_MSION,
+        hsi = RCC_CR_HSION,
+        pll = RCC_CR_PLLON,
+        lsi
     };
 
-    enum class SYSCLK_source : common::uint32
+    enum class Sysclk_source : common::uint32
     {
-        MSI = RCC_CFGR_SW_MSI,
-        HSI = RCC_CFGR_SW_HSI,
-        PLL = RCC_CFGR_SW_PLL,
+        msi = RCC_CFGR_SW_MSI,
+        hsi = RCC_CFGR_SW_HSI,
+        pll = RCC_CFGR_SW_PLL,
     };
 
-    enum class PLL_clock_source : common::uint32
+    enum class Pll_clock_source : common::uint32
     {
-        MSI = RCC_PLLCFGR_PLLSRC_MSI,
-        HSI = RCC_PLLCFGR_PLLSRC_HSI
+        msi = RCC_PLLCFGR_PLLSRC_MSI,
+        hsi = RCC_PLLCFGR_PLLSRC_HSI
     };
 
-    enum class MSI_frequency : common::uint32
+    enum class Msi_frequency : common::uint32
     {
         _100_kHz = 0,
         _200_kHz = 1,
@@ -59,12 +59,12 @@ public:
         _48_MHz  = 11,
     };
 
-    enum class HSI_frequency : common::uint32
+    enum class Hsi_frequency : common::uint32
     {
         _16_MHz,
     };
 
-    enum class LSI_frequency : common::uint32
+    enum class Lsi_frequency : common::uint32
     {
         _32_kHz,
     };
@@ -86,7 +86,7 @@ public:
         unkown
     };
 
-    struct PLL_config
+    struct Pll_config
     {
         enum class M_divider : common::uint32
         {
@@ -117,11 +117,11 @@ public:
 
     struct Id
     {
-        const common::uint8  serial_number[config::mcu::DEVICE_ID_LENGTH] = { 0 };
+        const common::uint8  serial_number[config::mcu::device_id_length] = { 0 };
         const common::uint32 type = 0;
     };
 
-    struct SYSCLK_frequency_change_callback
+    struct Sysclk_frequency_change_callback
     {
         void(*p_function)(void* a_p_user_data) = nullptr;
         void* a_p_user_data                    = nullptr;
@@ -176,22 +176,22 @@ public:
 
 public:
 
-    void enable_MSI_clock(MSI_frequency a_freq);
-    void enable_HSI_clock(HSI_frequency a_freq);
-    void enable_LSI_clock(LSI_frequency a_freq);
+    void enable_msi_clock(Msi_frequency a_freq);
+    void enable_hsi_clock(Hsi_frequency a_freq);
+    void enable_lsi_clock(Lsi_frequency a_freq);
 
-    void disable_MSI_clock();
-    void disable_HSI_clock();
-    void disable_LSI_clock();
+    void disable_msi_clock();
+    void disable_hsi_clock();
+    void disable_lsi_clock();
 
-    void enable_PLL(PLL_clock_source a_source, const PLL_config& a_pll_config);
-    void disable_PLL();
+    void enable_pll(Pll_clock_source a_source, const Pll_config& a_pll_config);
+    void disable_pll();
 
-    void set_SYSCLK(SYSCLK_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_NVIC_config);
+    void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_NVIC_config);
 
     Id get_id()
     {
-        static_assert(12 == config::mcu::DEVICE_ID_LENGTH);
+        static_assert(12 == config::mcu::device_id_length);
 
         common::uint8* p_id_location = reinterpret_cast<common::uint8*>(UID_BASE);
 
@@ -203,12 +203,12 @@ public:
         };
     }
 
-    SYSCLK_source get_SYSCLK_source() const
+    Sysclk_source get_sysclk_source() const
     {
-        return static_cast<SYSCLK_source>(common::get_flag(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
+        return static_cast<Sysclk_source>(common::get_flag(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
-    common::uint32 get_SYCLK_frequency_hz() const
+    common::uint32 get_syclk_frequency_hz() const
     {
         return SystemCoreClock;
     }
@@ -217,15 +217,15 @@ public:
     {
         switch (a_clock)
         {
-            case Clock::MSI:
-            case Clock::HSI:
-            case Clock::PLL:
+            case Clock::msi:
+            case Clock::hsi:
+            case Clock::pll:
             {
                 return common::is_flag(RCC->CR, static_cast<common::uint32>(a_clock));
             }
             break;
 
-            case Clock::LSI:
+            case Clock::lsi:
             {
                 return common::is_flag(RCC->CSR, RCC_CSR_LSION);
             }
@@ -245,14 +245,14 @@ public:
         return static_cast<Flash_latency>(common::get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
     }
 
-    void register_pre_SYSCLK_frequency_change_callback(const SYSCLK_frequency_change_callback& a_callback)
+    void register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback)
     {
-        this->pre_SYSCLK_frequency_change_callback = a_callback;
+        this->pre_sysclk_frequency_change_callback = a_callback;
     }
 
-    void register_post_SYSCLK_frequency_change_callback(const SYSCLK_frequency_change_callback& a_callback)
+    void register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback)
     {
-        this->post_SYSCLK_frequency_change_callback = a_callback;
+        this->post_sysclk_frequency_change_callback = a_callback;
     }
 
     static MCU& get_instance()
@@ -272,27 +272,27 @@ private:
     MCU& operator = (MCU&&)      = delete;
 
     Flash_latency select_flash_latency(common::uint32 a_syclk_freq, Voltage_scaling a_voltage_scaling);
-    Voltage_scaling select_voltage_scaling(SYSCLK_source a_source, common::uint32 a_sysclk_freq);
+    Voltage_scaling select_voltage_scaling(Sysclk_source a_source, common::uint32 a_sysclk_freq);
 
     void set_flash_latency(Flash_latency a_latency);
     void set_voltage_scaling(Voltage_scaling a_scaling);
-    void set_SYSCLK_source(SYSCLK_source a_sysclk_source);
+    void set_sysclk_source(Sysclk_source a_sysclk_source);
     void set_bus_prescalers(const Bus_prescalers& a_prescalers);
 
-    void increase_SYSCLK_frequency(SYSCLK_source a_source,
+    void increase_sysclk_frequency(Sysclk_source a_source,
                                    common::uint32 a_frequency_hz,
                                    const Bus_prescalers& a_prescalers);
 
-    void decrease_SYSCLK_frequency(SYSCLK_source a_source,
+    void decrease_sysclk_frequency(Sysclk_source a_source,
                                    common::uint32 a_frequency_hz,
                                    const Bus_prescalers& a_prescalers);
 
-    common::uint32 calculate_frequency_from_PLL_configuration();
+    common::uint32 calculate_frequency_from_pll_configuration();
 
 private:
 
-    SYSCLK_frequency_change_callback pre_SYSCLK_frequency_change_callback;
-    SYSCLK_frequency_change_callback post_SYSCLK_frequency_change_callback;
+    Sysclk_frequency_change_callback pre_sysclk_frequency_change_callback;
+    Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
 };
 
 } // namespace stm32l452xx

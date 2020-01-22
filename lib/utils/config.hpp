@@ -17,7 +17,7 @@ struct config
 {
     struct console
     {
-        static constexpr common::uint32 LINE_BUFFER_CAPACITY = 128u;
+        static constexpr common::uint32 line_buffer_capacity = 128u;
 
         console()               = delete;
         console(console&&)      = delete;
@@ -30,9 +30,9 @@ struct config
 
     struct command_line
     {
-        static constexpr common::uint32 CALLBACKS_MAX_COUNT           = 20;
-        static constexpr common::uint32 CALLBACK_PARAMETERS_MAX_COUNT = 4;
-        static constexpr common::uint32 INPUT_BUFFER_CAPACITY         = 10;
+        static constexpr common::uint32 callbacks_max_count           = 20;
+        static constexpr common::uint32 callback_parameters_max_count = 4;
+        static constexpr common::uint32 input_buffer_capacity         = 10;
 
         command_line()                    = delete;
         command_line(command_line&&)      = delete;
@@ -43,7 +43,7 @@ struct config
         command_line& operator = (const command_line&) = delete;
     };
 
-    inline static const char NEW_LINE_CHARACTER = '\n';
+    inline static const char new_line_character = '\n';
 
     config()              = delete;
     config(config&&)      = delete;

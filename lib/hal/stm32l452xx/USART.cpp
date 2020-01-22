@@ -27,7 +27,7 @@ void usart_1_enable(USART::Clock::Source a_clock_source)
     set_flag(&(RCC->CCIPR), RCC_CCIPR_USART1SEL, clock_source_lut[static_cast<uint32>(a_clock_source)]);
     set_flag(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN);
 
-    NVIC_SetPriority(USART1_IRQn, config::usart::_1_INTERRUPT_PRIORITY);
+    NVIC_SetPriority(USART1_IRQn, config::usart::_1_interrupt_priority);
     NVIC_EnableIRQ(USART1_IRQn);
 }
 
@@ -45,7 +45,7 @@ void usart_2_enable(USART::Clock::Source a_clock_source)
     set_flag(&(RCC->CCIPR), RCC_CCIPR_USART2SEL, clock_source_lut[static_cast<uint32>(a_clock_source)]);
     set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN);
 
-    NVIC_SetPriority(USART2_IRQn, config::usart::_2_INTERRUPT_PRIORITY);
+    NVIC_SetPriority(USART2_IRQn, config::usart::_2_interrupt_priority);
     NVIC_EnableIRQ(USART2_IRQn);
 }
 
@@ -61,7 +61,7 @@ void usart_3_enable(USART::Clock::Source a_clock_source)
     set_flag(&(RCC->CCIPR), RCC_CCIPR_USART3SEL, clock_source_lut[static_cast<int32>(a_clock_source)]);
     set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART3EN);
 
-    NVIC_SetPriority(USART3_IRQn, config::usart::_3_INTERRUPT_PRIORITY);
+    NVIC_SetPriority(USART3_IRQn, config::usart::_3_interrupt_priority);
     NVIC_EnableIRQ(USART3_IRQn);
 }
 
