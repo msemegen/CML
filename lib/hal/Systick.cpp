@@ -37,10 +37,15 @@ namespace hal {
 
 using namespace common;
 
-void Systick::enable()
+void Systick::enable(uint32 a_priority)
 {
+    assert(SystemCoreClock / 1000 > 1);
+
+    NVIC_SetPriority(SysTick_IRQn, a_priority);
+
     SysTick->CTRL = 0;
-    SysTick->LOAD = SystemCoreClock / 1000;
+    SysTick->LOAD = (SystemCoreClock / 1000) - 1;
+    SysTick->VAL  = 0;
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 }
 

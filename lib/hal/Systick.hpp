@@ -9,6 +9,7 @@
 
 //cml
 #include <common/assert.hpp>
+#include <common/integer.hpp>
 #include <common/time_tick.hpp>
 
 namespace cml {
@@ -18,7 +19,7 @@ class Systick
 {
 public:
 
-    void enable();
+    void enable(common::uint32 a_priority);
     void disable();
 
     bool is_enabled() const;

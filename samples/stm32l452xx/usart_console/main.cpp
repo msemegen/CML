@@ -51,7 +51,7 @@ int main()
         };
 
         MCU::get_instance().disable_msi_clock();
-        Systick::get_instance().enable();
+        Systick::get_instance().enable((1u << __NVIC_PRIO_BITS) - 1u);
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
