@@ -20,7 +20,7 @@ class format
 {
 public:
 
-    format()               = delete;
+    format()              = delete;
     format(format&&)      = delete;
     format(const format&) = delete;
 

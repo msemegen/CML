@@ -10,6 +10,7 @@
 //cml
 #include <common/assert.hpp>
 #include <common/cstring.hpp>
+#include <common/memory.hpp>
 #include <common/numeric_traits.hpp>
 
 namespace cml {
@@ -25,15 +26,30 @@ public:
         , length(0)
     {}
 
-    void  push_back(char c)
+    String(char* a_p_buffer, common::uint32 a_capacity, const char* a_p_init)
+        : p_buffer(a_p_buffer)
+        , capacity(a_capacity)
+        , length(common::cstring_length(a_p_init, a_capacity))
     {
+        assert(a_capacity > 0);
 
+        common::memory_copy(this->p_buffer, a_p_init, this->length + 1);
     }
 
-    bool is_full() const
+    void  push_back(char a_c)
     {
-        return false;
-    };
+        assert(this->length + 1 < this->capacity);
+
+        this->p_buffer[this->length++] = a_c;
+        this->p_buffer[this->length  ] = a_c;
+    }
+
+    void pop_back()
+    {
+        assert(this->length > 0);
+
+        this->p_buffer[this->length--] = 0;
+    }
 
     void clear()
     {
@@ -41,9 +57,20 @@ public:
         this->p_buffer[0] = 0;
     }
 
+    bool is_full() const
+    {
+        return this->length + 1 < this->capacity;
+    };
+
+    bool is_empty() const
+    {
+        return 0 == this->length;
+    }
+
 private:
 
     char* p_buffer;
+
     const common::uint32 capacity;
     common::uint32 length;
 
