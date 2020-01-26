@@ -46,17 +46,17 @@ uint32 cstring::join(char* a_p_destination,
     return i;
 }
 
-void cstring::format::raw(char* a_p_buffer,
-                          uint32 a_buffer_capacity,
-                          const char* a_p_format,
-                          const Argument* a_p_argv,
-                          uint32 a_argc)
+uint32 cstring::format_raw(Buffer* a_p_destinaition_buffer,
+                           Buffer* a_p_number_buffer,
+                           const char* a_p_format,
+                           const Argument* a_p_argv,
+                           uint32 a_argc)
 {
     bool argument          = false;
     uint32 argument_index  = 0;
     uint32 length          = 0;
 
-    while (*a_p_format != '\0' && length + 1 < a_buffer_capacity)
+    while (*a_p_format != '\0' && length + 1 < a_p_destinaition_buffer->capacity)
     {
         if (true == argument && argument_index < a_argc)
         {
@@ -66,13 +66,13 @@ void cstring::format::raw(char* a_p_buffer,
                 case 'i':
                 {
                     uint32 number_length = cstring::from_dec_integer(a_p_argv[argument_index++].get_int32(),
-                                                                     this->number_buffer,
-                                                                     number_buffer_capacity);
+                                                                     a_p_number_buffer->p_data,
+                                                                     a_p_number_buffer->capacity);
 
 
-                    length += cstring::join(a_p_buffer + length,
-                                            a_buffer_capacity - length,
-                                            this->number_buffer,
+                    length += cstring::join(a_p_destinaition_buffer->p_data + length,
+                                            a_p_destinaition_buffer->capacity - length,
+                                            a_p_number_buffer->p_data,
                                             number_length);
 
                     argument = false;
@@ -82,13 +82,13 @@ void cstring::format::raw(char* a_p_buffer,
                 case 'u':
                 {
                     uint32 number_length = cstring::from_dec_integer(a_p_argv[argument_index++].get_uint32(),
-                                                                     this->number_buffer,
-                                                                     number_buffer_capacity);
+                                                                     a_p_number_buffer->p_data,
+                                                                     a_p_number_buffer->capacity);
 
 
-                    length += cstring::join(a_p_buffer + length,
-                                            a_buffer_capacity - length,
-                                            this->number_buffer,
+                    length += cstring::join(a_p_destinaition_buffer->p_data + length,
+                                            a_p_destinaition_buffer->capacity - length,
+                                            a_p_number_buffer->p_data,
                                             number_length);
 
                     argument = false;
@@ -97,7 +97,7 @@ void cstring::format::raw(char* a_p_buffer,
 
                 case 'c':
                 {
-                    a_p_buffer[length++] = a_p_argv[argument_index++].get_char();
+                    a_p_destinaition_buffer->p_data[length++] = a_p_argv[argument_index++].get_char();
 
                     argument = false;
                 }
@@ -105,11 +105,11 @@ void cstring::format::raw(char* a_p_buffer,
 
                 case 's':
                 {
-                    length += cstring::join(a_p_buffer + length,
-                                            a_buffer_capacity - length,
+                    length += cstring::join(a_p_destinaition_buffer->p_data + length,
+                                            a_p_destinaition_buffer->capacity - length,
                                             a_p_argv[argument_index].get_cstring(),
                                             cstring::length(a_p_argv[argument_index].get_cstring(),
-                                            a_buffer_capacity - length));
+                                            a_p_destinaition_buffer->capacity - length));
 
                     argument_index++;
                     argument = false;
@@ -118,7 +118,7 @@ void cstring::format::raw(char* a_p_buffer,
 
                 case '%':
                 {
-                    a_p_buffer[length++] = '%';
+                    a_p_destinaition_buffer->p_data[length++] = '%';
                     argument = false;
                 }
                 break;
@@ -130,14 +130,16 @@ void cstring::format::raw(char* a_p_buffer,
 
             if (false == argument)
             {
-                a_p_buffer[length++] = *a_p_format;
+                a_p_destinaition_buffer->p_data[length++] = *a_p_format;
             }
         }
 
         a_p_format++;
     }
 
-    a_p_buffer[length] = 0;
+    a_p_destinaition_buffer->p_data[length] = 0;
+
+    return length;
 }
 
 
