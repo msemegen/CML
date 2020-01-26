@@ -189,6 +189,9 @@ public:
 
     void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_NVIC_config);
 
+    void reset();
+    void halt();
+
     Id get_id()
     {
         static_assert(12 == config::mcu::device_id_length);

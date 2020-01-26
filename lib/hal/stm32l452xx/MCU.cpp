@@ -232,6 +232,27 @@ void MCU::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers,
     }
 }
 
+void MCU::reset()
+{
+    NVIC_SystemReset();
+}
+
+void MCU::halt()
+{
+    uint32 new_basepri = 0;
+
+    __asm volatile
+    (
+        "mov %0, %1      \n" \
+        "msr basepri, %0 \n" \
+        "isb             \n" \
+        "dsb             \n" \
+        :"=r" (new_basepri) : "i" (80u)
+    );
+
+    while (true);
+}
+
 MCU::Flash_latency MCU::select_flash_latency(uint32 a_syclk_freq,
                                              Voltage_scaling a_voltage_scaling)
 {

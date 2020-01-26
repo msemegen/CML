@@ -15,6 +15,7 @@
 #include <common/bit.hpp>
 #include <common/frequency.hpp>
 #include <common/macros.hpp>
+#include "MCU.hpp"
 
 namespace {
 
@@ -201,6 +202,27 @@ void MCU::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
     {
         this->post_sysclk_frequency_change_callback.p_function(this->post_sysclk_frequency_change_callback.a_p_user_data);
     }
+}
+
+void MCU::reset()
+{
+    NVIC_SystemReset();
+}
+
+void MCU::halt()
+{
+    uint32 new_basepri = 0;
+
+    __asm volatile
+    (
+        "mov %0, %1      \n" \
+        "msr basepri, %0 \n" \
+        "isb             \n" \
+        "dsb             \n" \
+        :"=r" (new_basepri) : "i" (80u)
+    );
+
+    while (true);
 }
 
 MCU::Flash_latency MCU::select_flash_latency(uint32 a_syclk_freq, Voltage_scaling a_voltage_scaling)
