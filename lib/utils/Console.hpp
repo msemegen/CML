@@ -23,7 +23,6 @@ public:
 
     Console(hal::USART* a_p_io_stream)
         : p_io_stream(a_p_io_stream)
-        , line_buffer_view(this->line_buffer, config::console::line_buffer_capacity)
     {}
 
     Console()               = delete;
@@ -40,8 +39,7 @@ public:
     template<typename ... params>
     void write(const char* a_p_format, params ... a_params)
     {
-        this->line_buffer_view.clear();
-        common::format(&(this->line_buffer_view), a_p_format, a_params ...);
+        common::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params ...);
         this->write(this->line_buffer);
     }
 
@@ -51,8 +49,7 @@ public:
     template<typename ... params>
     void write_line(const char* a_p_format, params ... a_params)
     {
-        this->line_buffer_view.clear();
-        common::format(&(this->line_buffer_view), a_p_format, a_params ...);
+        common::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params ...);
         this->write_line(this->line_buffer);
     }
 
@@ -69,7 +66,6 @@ private:
     hal::USART* p_io_stream;
 
     char line_buffer[config::console::line_buffer_capacity];
-    collection::String line_buffer_view;
 };
 
 } // namespace utils

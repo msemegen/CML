@@ -10,6 +10,7 @@
 //cml
 #include <common/assert.hpp>
 #include <common/integer.hpp>
+#include <common/memory.hpp>
 
 namespace cml {
 namespace common {
@@ -40,6 +41,22 @@ static inline bool cstring_the_same(const char* a_p_string_1, const char* a_p_st
     return the_same;
 }
 
+static inline uint32 cstring_join(char* a_p_destination,
+                                  uint32 a_destination_capacity,
+                                  const char* a_p_source,
+                                  uint32 a_source_length)
+{
+    uint32 i = 0;
+    for (;i < a_source_length && i + 1 < a_destination_capacity; i++)
+    {
+        a_p_destination[i] = a_p_source[i];
+    }
+
+    a_p_destination[i] = 0;
+
+    return i;
+}
+
 template<typename type>
 static inline type cstring_dec_to_integer(const char* a_p_string)
 {
@@ -60,7 +77,7 @@ static inline type cstring_dec_to_integer(const char* a_p_string)
 }
 
 template<typename type>
-static inline char* cstring_from_dec_integer(type a_value, char* a_p_buffer, uint32 a_buffer_capacity)
+static inline uint32 cstring_from_dec_integer(type a_value, char* a_p_buffer, uint32 a_buffer_capacity)
 {
     decltype(a_buffer_capacity) index  = 0;
     decltype(a_buffer_capacity) start  = 0;
@@ -97,7 +114,9 @@ static inline char* cstring_from_dec_integer(type a_value, char* a_p_buffer, uin
         temp /= 10;
     }
 
-    return a_p_buffer;
+    a_p_buffer[length] = 0;
+
+    return length;
 }
 
 } // namespace common

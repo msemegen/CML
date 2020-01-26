@@ -6,67 +6,86 @@
 */
 
 //this
+#include <common/cstring.hpp>
 #include <common/format.hpp>
 
 namespace cml {
 namespace common {
 
-using namespace collection;
-
-void format::raw(String* a_p_out_string,
+void format::raw(char* a_p_buffer,
+                 uint32 a_buffer_capacity,
                  const char* a_p_format,
                  const Argument* a_p_argv,
                  uint32 a_argc)
 {
-    bool out_string_full = a_p_out_string->is_full();
-    bool argument = false;
+    bool argument          = false;
+    uint32 argument_index  = 0;
+    uint32 length          = 0;
 
-    while (*a_p_format != '\0' && false == out_string_full)
+    while (*a_p_format != '\0' && length + 1 < a_buffer_capacity)
     {
-        if (true == argument)
+        if (true == argument && argument_index < a_argc)
         {
             switch (*a_p_format)
             {
                 case 'd':
                 case 'i':
                 {
+                    uint32 number_length = cstring_from_dec_integer(a_p_argv[argument_index++].get_int32(),
+                                                                    this->number_buffer,
+                                                                    number_buffer_capacity);
 
+
+                    length += cstring_join(a_p_buffer + length,
+                                           a_buffer_capacity - length,
+                                           this->number_buffer,
+                                           number_length);
+
+                    argument = false;
                 }
                 break;
 
                 case 'u':
                 {
+                    uint32 number_length = cstring_from_dec_integer(a_p_argv[argument_index++].get_uint32(),
+                                                                    this->number_buffer,
+                                                                    number_buffer_capacity);
 
-                }
-                break;
 
-                case 'x':
-                {
+                    length += cstring_join(a_p_buffer + length,
+                                           a_buffer_capacity - length,
+                                           this->number_buffer,
+                                           number_length);
 
-                }
-                break;
-
-                case 'X':
-                {
-
+                    argument = false;
                 }
                 break;
 
                 case 'c':
                 {
+                    a_p_buffer[length++] = a_p_argv[argument_index++].get_char();
 
+                    argument = false;
                 }
                 break;
 
                 case 's':
                 {
+                    length += cstring_join(a_p_buffer + length,
+                                           a_buffer_capacity - length,
+                                           a_p_argv[argument_index].get_cstring(),
+                                           cstring_length(a_p_argv[argument_index].get_cstring(),
+                                           a_buffer_capacity - length));
 
+                    argument_index++;
+                    argument = false;
                 }
                 break;
 
-                case 'p':
+                case '%':
                 {
-
+                    a_p_buffer[length++] = '%';
+                    argument = false;
                 }
                 break;
             }
@@ -77,13 +96,14 @@ void format::raw(String* a_p_out_string,
 
             if (false == argument)
             {
-                a_p_out_string->push_back(*a_p_format);
-                out_string_full = a_p_out_string->is_full();
+                a_p_buffer[length++] = *a_p_format;
             }
         }
 
-        a_p_out_string++;
+        a_p_format++;
     }
+
+    a_p_buffer[length] = 0;
 }
 
 } // namespace common
