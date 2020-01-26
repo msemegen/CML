@@ -7,9 +7,9 @@
 
 //cml
 #include <common/assert.hpp>
-#include <hal/gpio.hpp>
-#include <hal/mcu.hpp>
-#include <hal/systick.hpp>
+#include <hal/GPIO.hpp>
+#include <hal/MCU.hpp>
+#include <hal/Systick.hpp>
 
 int main()
 {

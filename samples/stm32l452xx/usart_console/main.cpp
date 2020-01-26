@@ -6,11 +6,11 @@
 */
 
 //cml
-#include <hal/gpio.hpp>
-#include <hal/mcu.hpp>
-#include <hal/systick.hpp>
-#include <hal/usart.hpp>
-#include <utils/console.hpp>
+#include <hal/GPIO.hpp>
+#include <hal/MCU.hpp>
+#include <hal/Systick.hpp>
+#include <hal/USART.hpp>
+#include <utils/Console.hpp>
 
 int main()
 {

@@ -6,7 +6,7 @@
 */
 
 //cml
-#include <hal/gpio.hpp>
+#include <hal/GPIO.hpp>
 #include <hal/MCU.hpp>
 #include <hal/Systick.hpp>
 
