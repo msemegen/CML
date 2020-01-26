@@ -29,11 +29,11 @@ public:
     String(char* a_p_buffer, common::uint32 a_capacity, const char* a_p_init)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
-        , length(common::cstring_length(a_p_init, a_capacity))
+        , length(common::cstring::length(a_p_init, a_capacity))
     {
         assert(a_capacity > 0);
 
-        common::memory_copy(this->p_buffer, a_p_init, this->length + 1);
+        common::memory::copy(this->p_buffer, a_p_init, this->length + 1);
     }
 
     bool push_back(char a_c)

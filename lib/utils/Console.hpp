@@ -8,8 +8,7 @@
 */
 
 //cml
-#include <collection/string.hpp>
-#include <common/format.hpp>
+#include <common/cstring.hpp>
 #include <common/integer.hpp>
 #include <hal/USART.hpp>
 #include <utils/config.hpp>
@@ -39,7 +38,7 @@ public:
     template<typename ... params>
     void write(const char* a_p_format, params ... a_params)
     {
-        common::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params ...);
+        common::cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params ...);
         this->write(this->line_buffer);
     }
 
@@ -49,7 +48,7 @@ public:
     template<typename ... params>
     void write_line(const char* a_p_format, params ... a_params)
     {
-        common::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params ...);
+        common::cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params ...);
         this->write_line(this->line_buffer);
     }
 

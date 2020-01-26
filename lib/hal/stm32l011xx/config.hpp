@@ -48,10 +48,10 @@ struct config
         static constexpr common::uint32 hsi_frequency_hz = common::MHz(16u);
         static constexpr common::uint32 lsi_frequency_hz = common::kHz(37u);
 
-        clock()               = delete;
+        clock()             = delete;
         clock(clock&&)      = delete;
         clock(const clock&) = delete;
-        ~clock()              = delete;
+        ~clock()            = delete;
 
         clock& operator = (clock&)       = delete;
         clock& operator = (const clock&) = delete;

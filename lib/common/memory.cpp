@@ -11,7 +11,7 @@
 namespace cml {
 namespace common {
 
-void memory_copy(void* a_p_destination, const void* a_p_source, uint32 a_size_in_bytes)
+void memory::copy(void* a_p_destination, const void* a_p_source, uint32 a_size_in_bytes)
 {
     byte* p_destination = static_cast<byte*>(a_p_destination);
     const byte* p_source = static_cast<const byte*>(a_p_source);
@@ -22,7 +22,7 @@ void memory_copy(void* a_p_destination, const void* a_p_source, uint32 a_size_in
     }
 }
 
-void memory_set(void* a_p_destination, byte a_data, uint32 a_size_in_bytes)
+void memory::set(void* a_p_destination, byte a_data, uint32 a_size_in_bytes)
 {
     byte* p_destination = static_cast<byte*>(a_p_destination);
 
@@ -32,7 +32,7 @@ void memory_set(void* a_p_destination, byte a_data, uint32 a_size_in_bytes)
     }
 }
 
-void memory_clear(void* a_p_destination, uint32 a_size_in_bytes)
+void memory::clear(void* a_p_destination, uint32 a_size_in_bytes)
 {
     byte* p_destination = static_cast<byte*>(a_p_destination);
 
@@ -42,7 +42,7 @@ void memory_clear(void* a_p_destination, uint32 a_size_in_bytes)
     }
 }
 
-bool memory_equals(const void* a_p_first, const void* a_p_second, uint32 a_size_in_bytes)
+bool memory::equals(const void* a_p_first, const void* a_p_second, uint32 a_size_in_bytes)
 {
     bool retval = true;
 

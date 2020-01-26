@@ -8,9 +8,8 @@
 */
 
 //cml
-#include <collection/string.hpp>
 #include <common/bit.hpp>
-#include <common/format.hpp>
+#include <common/cstring.hpp>
 #include <common/integer.hpp>
 #include <hal/usart.hpp>
 #include <utils/config.hpp>
@@ -79,32 +78,28 @@ public:
     template<typename ... params>
     void inf(const char* a_p_format, params ... a_params)
     {
-        this->line_buffer_view.clear();
-        common::format(&(this->line_buffer_view), a_p_format, a_params...);
+        common::cstring::format(this->line_buffer, config::logger::line_buffer_capacity, a_p_format, a_params...);
         this->inf(this->line_buffer);
     }
 
     template<typename ... params>
     void wrn(const char* a_p_format, params ... a_params)
     {
-        this->line_buffer_view.clear();
-        common::format(&(this->line_buffer_view), a_p_format, a_params...);
+        common::cstring::format(this->line_buffer, config::logger::line_buffer_capacity, a_p_format, a_params...);
         this->wrn(this->line_buffer);
     }
 
     template<typename ... params>
     void err(const char* a_p_format, params ... a_params)
     {
-        this->line_buffer_view.clear();
-        common::format(&(this->line_buffer_view), a_p_format, a_params...);
+        common::cstring::format(this->line_buffer, config::logger::line_buffer_capacity, a_p_format, a_params...);
         this->err(this->line_buffer);
     }
 
     template<typename ... params>
     void omg(const char* a_p_format, params ... a_params)
     {
-        this->line_buffer_view.clear();
-        common::format(&(this->line_buffer_view), a_p_format, a_params...);
+        common::cstring::format(this->line_buffer, config::logger::line_buffer_capacity, a_p_format, a_params...);
         this->omg(this->line_buffer);
     }
 
@@ -124,8 +119,7 @@ private:
     hal::USART* p_err_stream;
     common::uint8 verbosity;
 
-    char line_buffer[config::console::line_buffer_capacity];
-    collection::String line_buffer_view;
+    char line_buffer[config::logger::line_buffer_capacity];
 };
 
 } // namepace hal

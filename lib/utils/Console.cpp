@@ -28,7 +28,7 @@ void Console::write(const char* a_p_string)
 {
     assert(nullptr != this->p_io_stream);
 
-    uint32 message_length = cstring_length(a_p_string, config::console::line_buffer_capacity);
+    uint32 message_length = cstring::length(a_p_string, config::console::line_buffer_capacity);
     this->p_io_stream->write_bytes_polling(a_p_string, message_length);
 }
 
@@ -44,7 +44,7 @@ void Console::write_line(const char* a_p_string)
 {
     assert(nullptr != this->p_io_stream);
 
-    uint32 message_length = cstring_length(a_p_string, config::console::line_buffer_capacity);
+    uint32 message_length = cstring::length(a_p_string, config::console::line_buffer_capacity);
     this->p_io_stream->write_bytes_polling(a_p_string, message_length);
     this->p_io_stream->write_bytes_polling(&config::new_line_character, 1);
 }

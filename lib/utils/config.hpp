@@ -43,6 +43,20 @@ struct config
         command_line& operator = (const command_line&) = delete;
     };
 
+    struct logger
+    {
+        static constexpr common::uint32 line_buffer_capacity = 128u;
+
+        logger()              = delete;
+        logger(logger&&)      = delete;
+        logger(const logger&) = delete;
+        ~logger()             = delete;
+
+        logger& operator = (logger&)       = delete;
+        logger& operator = (const logger&) = delete;
+    };
+
+
     inline static const char new_line_character = '\n';
 
     config()              = delete;
