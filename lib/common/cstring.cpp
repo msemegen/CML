@@ -12,7 +12,7 @@ uint32 cstring::length(const char* a_p_string, uint32 a_max_length)
     return i;
 }
 
-bool cstring::the_same(const char* a_p_string_1, const char* a_p_string_2, uint32 a_max_length)
+bool cstring::equals(const char* a_p_string_1, const char* a_p_string_2, uint32 a_max_length)
 {
     bool the_same = true;
 

@@ -18,7 +18,7 @@ namespace common {
 struct cstring
 {
     static uint32 length(const char* a_p_string, uint32 a_max_length);
-    static bool the_same(const char* a_p_string_1, const char* a_p_string_2, uint32 a_max_length);
+    static bool equals(const char* a_p_string_1, const char* a_p_string_2, uint32 a_max_length);
 
     static uint32 join(char* a_p_destination,
                        uint32 a_destination_capacity,

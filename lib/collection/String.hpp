@@ -49,7 +49,7 @@ public:
         return retval;
     }
 
-    common::uint32 push_back(const char* a_p_string, common::uint32 a_length)
+    common::uint32 append(const char* a_p_string, common::uint32 a_length)
     {
         const decltype(this->length) start = this->length;
 
