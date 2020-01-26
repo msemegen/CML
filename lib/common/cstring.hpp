@@ -111,8 +111,8 @@ private:
 
     struct Buffer
     {
-        char* p_data;
-        const uint32 capacity;
+        char* p_data          = nullptr;
+        const uint32 capacity = 0;
     };
 
     class Argument
@@ -138,20 +138,20 @@ private:
         }
 
         explicit Argument(uint32 a_value)
-            : data { static_cast<uint8>((a_value >> 24) & 0xFF),
-                     static_cast<uint8>((a_value >> 16) & 0xFF),
-                     static_cast<uint8>((a_value >> 8 ) & 0xFF),
-                     static_cast<uint8>(a_value & 0xFF) }
+            : data { static_cast<uint8>((a_value >> 24u) & 0xFF),
+                     static_cast<uint8>((a_value >> 16u) & 0xFF),
+                     static_cast<uint8>((a_value >> 8u)  & 0xFF),
+                     static_cast<uint8>((a_value >> 0u)  & 0xFF) }
             , type(Type::unsigned_int)
         {
             static_assert(sizeof(this->data) == 4);
         }
 
         explicit Argument(int32 a_value)
-            : data{ static_cast<uint8>((a_value >> 24) & 0xFF),
-                    static_cast<uint8>((a_value >> 16) & 0xFF),
-                    static_cast<uint8>((a_value >> 8) & 0xFF),
-                    static_cast<uint8>(a_value & 0xFF) }
+            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
+                    static_cast<uint8>((a_value >> 16u) & 0xFF),
+                    static_cast<uint8>((a_value >> 8u)  & 0xFF),
+                    static_cast<uint8>((a_value >> 0u)  & 0xFF) }
             , type(Type::signed_int)
         {
             static_assert(sizeof(this->data) == 4);
@@ -165,10 +165,10 @@ private:
         }
 
         explicit Argument(const char* a_p_value)
-            : data{ static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 24) & 0xFF),
-                    static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 16) & 0xFF),
-                    static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 8) & 0xFF),
-                    static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) & 0xFF)) }
+            : data{ static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 24u) & 0xFF),
+                    static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 16u) & 0xFF),
+                    static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 8u)  & 0xFF),
+                    static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 0u)  & 0xFF) }
             , type(Type::cstring)
         {
             static_assert(sizeof(this->data) == 4);
