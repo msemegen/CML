@@ -17,6 +17,14 @@ namespace common {
 
 struct cstring
 {
+    enum class Radix
+    {
+        bin = 2,
+        oct = 8,
+        dec = 10,
+        hex = 16
+    };
+
     static uint32 length(const char* a_p_string, uint32 a_max_length);
     static bool equals(const char* a_p_string_1, const char* a_p_string_2, uint32 a_max_length);
 
@@ -26,16 +34,16 @@ struct cstring
                        uint32 a_source_length);
 
     template<typename type>
-    static type dec_to_integer(const char* a_p_string)
+    static type to_integer(const char* a_p_string, uint32 a_length)
     {
         assert(nullptr != a_p_string && 0 != a_p_string[0]);
+        assert(a_length > 0);
 
         type retval = 0;
 
         const type min = '-' == a_p_string[0] ? 0 : 1;
-        const uint32 length = cstring::length(a_p_string, 22);
 
-        for (uint32 i = length - 1, m = 1; i + length + min != length; i--, m *= 10)
+        for (uint32 i = a_length - 1, m = 1; i + a_length + min != a_length; i--, m *= 10)
         {
             assert(a_p_string[i] >= '0' && a_p_string[i] <= '9');
             retval += (a_p_string[i] - '0') * m;
@@ -45,44 +53,35 @@ struct cstring
     }
 
     template<typename type>
-    static uint32 from_dec_integer(type a_value, char* a_p_buffer, uint32 a_buffer_capacity)
+    static uint32 from_integer(type a_value, char* a_p_buffer, uint32 a_buffer_capacity, Radix a_base)
     {
-        uint32 index  = 0;
-        uint32 start  = 0;
-        uint32 length = 0;
+        assert(a_buffer_capacity > 1);
 
-        type temp = a_value;
+        uint32 length      = a_value > 0 ? 0 : 1;
+        const uint32 start = a_value > 0 ? 0 : 1;
+
+        a_p_buffer[start] = 0;
 
         if (a_value < 0)
         {
-            assert(a_buffer_capacity > 1);
-
-            a_p_buffer[0] = '-';
-            a_p_buffer[1] = 0;
-            length = 1;
-            start  = 1;
-        }
-        else
-        {
-            assert(a_buffer_capacity > 0);
-
-            a_p_buffer[index] = 0;
+            a_value *= -1;
         }
 
-        while (0 != temp)
+        while (0 != a_value && length < a_buffer_capacity)
         {
-            char v = static_cast<char>(temp % 10);
-            char to_insert = v < 0 ? v * -1 + '0' : v + '0';
-
-            assert(to_insert >= '0' && to_insert <= '9');
+            char v = static_cast<char>(a_value % static_cast<byte>(a_base));
+            char to_insert = (v > 9) ? (v - 10) + 'a' : v + '0';
 
             memory::move(a_p_buffer + 1, a_p_buffer, ++length);
             a_p_buffer[start] = to_insert;
 
-            temp /= 10;
+            a_value /= static_cast<type>(a_base);
         }
 
-        a_p_buffer[length] = 0;
+        if (1 == start)
+        {
+            a_p_buffer[0] = '-';
+        }
 
         return length;
     }

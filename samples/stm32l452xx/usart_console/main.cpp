@@ -22,7 +22,7 @@ int main()
     MCU::get_instance().set_sysclk(MCU::Sysclk_source::hsi, { MCU::Bus_prescalers::AHB::_1,
                                                               MCU::Bus_prescalers::APB1::_1,
                                                               MCU::Bus_prescalers::APB2::_1 },
-                                                              { 0x00000003, 15 << 4 });
+                                                              { 0x3, 0xf0 });
 
     if (MCU::Sysclk_source::hsi == MCU::get_instance().get_sysclk_source())
     {
