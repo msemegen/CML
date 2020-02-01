@@ -6,6 +6,7 @@
 */
 
 //this
+#include <common/assert.hpp>
 #include <common/memory.hpp>
 
 namespace cml {
@@ -13,6 +14,10 @@ namespace common {
 
 void memory::copy(void* a_p_destination, const void* a_p_source, uint32 a_size_in_bytes)
 {
+    assert(a_size_in_bytes > 0);
+    assert(nullptr != a_p_destination);
+    assert(nullptr != a_p_source);
+
     byte* p_destination = static_cast<byte*>(a_p_destination);
     const byte* p_source = static_cast<const byte*>(a_p_source);
 
@@ -22,8 +27,38 @@ void memory::copy(void* a_p_destination, const void* a_p_source, uint32 a_size_i
     }
 }
 
+void memory::move(void* a_p_destination, const void* a_p_source, uint32 a_size_in_bytes)
+{
+    assert(a_size_in_bytes > 0);
+    assert(nullptr != a_p_destination);
+    assert(nullptr != a_p_source);
+
+    byte* p_destination  = static_cast<byte*>(a_p_destination);
+    const byte* p_source = static_cast<const byte*>(a_p_source);
+
+    if (p_source < p_destination)
+    {
+        uint32 size_in_bytes = a_size_in_bytes;
+
+        while (0 != (size_in_bytes--))
+        {
+            *(--p_destination) = *(--p_source);
+        }
+    }
+    else
+    {
+        for (decltype(a_size_in_bytes) i = 0; i < a_size_in_bytes; i++)
+        {
+            p_destination[i] = p_source[i];
+        }
+    }
+}
+
 void memory::set(void* a_p_destination, byte a_data, uint32 a_size_in_bytes)
 {
+    assert(a_size_in_bytes > 0);
+    assert(nullptr != a_p_destination);
+
     byte* p_destination = static_cast<byte*>(a_p_destination);
 
     for (decltype(a_size_in_bytes) i = 0; i < a_size_in_bytes; i++)
@@ -34,6 +69,9 @@ void memory::set(void* a_p_destination, byte a_data, uint32 a_size_in_bytes)
 
 void memory::clear(void* a_p_destination, uint32 a_size_in_bytes)
 {
+    assert(a_size_in_bytes > 0);
+    assert(nullptr != a_p_destination);
+
     byte* p_destination = static_cast<byte*>(a_p_destination);
 
     for (decltype(a_size_in_bytes) i = 0; i < a_size_in_bytes; i++)
@@ -44,6 +82,10 @@ void memory::clear(void* a_p_destination, uint32 a_size_in_bytes)
 
 bool memory::equals(const void* a_p_first, const void* a_p_second, uint32 a_size_in_bytes)
 {
+    assert(a_size_in_bytes > 0);
+    assert(nullptr != a_p_first);
+    assert(nullptr != a_p_second);
+
     bool retval = true;
 
     const byte* p_1 = static_cast<const byte*>(a_p_first);
