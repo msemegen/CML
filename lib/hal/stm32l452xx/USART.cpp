@@ -1,5 +1,5 @@
 /*
-    Name: usart.cpp
+    Name: USART.cpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -169,14 +169,14 @@ void usart_handle_interrupt(USART* a_p_this)
 
 bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_timeout_ms)
 {
-    assert(a_config.baud_rate    != Baud_rate::unknown);
+    assert(a_config.baud_rate    != 0);
     assert(a_config.flow_control != Flow_control::unknown);
     assert(a_config.parity       != Parity::unknown);
     assert(a_config.stop_bits    != Stop_bits::unknown);
     assert(a_config.word_length  != Word_length::unknown);
 
-    assert(a_clock.source != Clock::Source::unknown);
-    assert(0 != a_clock.frequency_hz);
+    assert(Clock::Source::unknown != a_clock.source);
+    assert(0                      != a_clock.frequency_hz);
 
     controllers[this->to_index(this->id)].p_usart_handle = this;
     this->p_usart = controllers[this->to_index(this->id)].p_registers;
@@ -191,16 +191,17 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_tim
     {
         case Oversampling::_16:
         {
-            this->p_usart->BRR = a_clock.frequency_hz / static_cast<uint32>(a_config.baud_rate);
+            this->p_usart->BRR = a_clock.frequency_hz / a_config.baud_rate;
         }
         break;
 
         case Oversampling::_8:
         {
-            uint32 usartdiv = 2 * a_clock.frequency_hz / static_cast<uint32>(a_config.baud_rate);
+            uint32 usartdiv = 2 * a_clock.frequency_hz / a_config.baud_rate;
             this->p_usart->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
+
         case Oversampling::unknown:
         {
             assert(a_config.oversampling != Oversampling::unknown);
@@ -219,6 +220,8 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_tim
     set_flag(&(this->p_usart->CR1), USART_CR1_TE | USART_CR1_RE);
 
     this->baud_rate = a_config.baud_rate;
+    this->clock     = a_clock;
+
     return this->wait_until_isr(USART_ISR_TEACK | USART_ISR_REACK,
                                 false,
                                 Systick::get_instance().get_counter(),
@@ -310,7 +313,7 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
     return false == timeout_occured;
 }
 
-void USART::write_bytes_IT(const TX_callback& a_callback, time_tick a_timeout_ms)
+void USART::write_bytes_it(const TX_callback& a_callback, time_tick a_timeout_ms)
 {
     assert(true == Systick::get_instance().is_enabled());
 
@@ -332,7 +335,7 @@ void USART::write_bytes_IT(const TX_callback& a_callback, time_tick a_timeout_ms
     }
 }
 
-void USART::read_bytes_IT(const RX_callback& a_callback, time_tick a_timeout_ms)
+void USART::read_bytes_it(const RX_callback& a_callback, time_tick a_timeout_ms)
 {
     assert(true == Systick::get_instance().is_enabled());
 
@@ -354,13 +357,33 @@ void USART::read_bytes_IT(const RX_callback& a_callback, time_tick a_timeout_ms)
     }
 }
 
-void USART::set_baud_rate(Baud_rate a_baud_rate)
+void USART::set_baud_rate(uint32 a_baud_rate)
 {
-    assert(Baud_rate::unknown != a_baud_rate);
+    assert(0 != a_baud_rate);
 
-    clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
-    this->p_usart->BRR = SystemCoreClock / static_cast<uint32>(a_baud_rate);
-    set_flag(&(this->p_usart->CR1), USART_CR1_UE);
+    const Oversampling oversampling = this->get_oversampling();
+
+    switch (oversampling)
+    {
+        case Oversampling::_8:
+        {
+            uint32 usartdiv = 2 * this->clock.frequency_hz / a_baud_rate;
+            this->p_usart->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
+        }
+        break;
+
+        case Oversampling::_16:
+        {
+            this->p_usart->BRR = this->clock.frequency_hz / a_baud_rate;
+        }
+        break;
+
+        case Oversampling::unknown:
+        {
+            assert(Oversampling::unknown != oversampling);
+        }
+        break;
+    }
 }
 
 void USART::set_oversampling(Oversampling a_oversampling)
@@ -404,11 +427,6 @@ void USART::set_flow_control(Flow_control a_flow_control)
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
     set_flag(&(this->p_usart->CR3), static_cast<uint32>(a_flow_control));
     set_flag(&(this->p_usart->CR1), USART_CR1_UE);
-}
-
-USART::Baud_rate USART::get_baud_rate() const
-{
-    return this->baud_rate;
 }
 
 USART::Oversampling USART::get_oversampling() const

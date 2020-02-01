@@ -28,7 +28,7 @@ int main()
     {
         USART::Config usart_config =
         {
-            USART::Baud_rate::_115200,
+            115200u,
             USART::Oversampling::_16,
             USART::Word_length::_8_bits,
             USART::Stop_bits::_1,

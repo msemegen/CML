@@ -31,26 +31,6 @@ public:
         _2 = 0,
     };
 
-    enum class Baud_rate : common::uint32
-    {
-        _110    = 110,
-        _300    = 300,
-        _600    = 600,
-        _1200   = 1200,
-        _2400   = 2400,
-        _4800   = 4800,
-        _9600   = 9600,
-        _14400  = 14400,
-        _19200  = 19200,
-        _38400  = 38400,
-        _57600  = 57600,
-        _115200 = 115200,
-        _230400 = 230400,
-        _460800 = 460800,
-        _921600 = 921600,
-        unknown
-    };
-
     enum class Oversampling : common::uint32
     {
         _8  = USART_CR1_OVER8,
@@ -94,7 +74,7 @@ public:
 
     struct Config
     {
-        Baud_rate baud_rate       = Baud_rate::unknown;
+        common::uint32 baud_rate  = 0;
         Oversampling oversampling = Oversampling::unknown;
         Word_length word_length   = Word_length::unknown;
         Stop_bits stop_bits       = Stop_bits::unknown;
@@ -137,7 +117,7 @@ public:
     USART(Id a_id)
         : id(a_id)
         , p_usart(nullptr)
-        , baud_rate(Baud_rate::unknown)
+        , baud_rate(0)
     {}
 
     ~USART()
@@ -185,30 +165,39 @@ public:
     void read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes);
     bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
 
-    void write_bytes_IT(const TX_callback& a_callback)
+    void write_bytes_it(const TX_callback& a_callback)
     {
-        this->write_bytes_IT(a_callback, common::time_tick_infinity);
+        this->write_bytes_it(a_callback, common::time_tick_infinity);
     }
-    void write_bytes_IT(const TX_callback& a_callback, common::time_tick a_timeout_ms);
+    void write_bytes_it(const TX_callback& a_callback, common::time_tick a_timeout_ms);
 
-    void read_bytes_IT(const RX_callback& a_callback)
+    void read_bytes_it(const RX_callback& a_callback)
     {
-        this->read_bytes_IT(a_callback, common::time_tick_infinity);
+        this->read_bytes_it(a_callback, common::time_tick_infinity);
     }
-    void read_bytes_IT(const RX_callback& a_callback, common::time_tick a_timeout_ms);
+    void read_bytes_it(const RX_callback& a_callback, common::time_tick a_timeout_ms);
 
-    void set_baud_rate(Baud_rate a_baud_rate);
+    void set_baud_rate(common::uint32 a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);
     void set_word_length(Word_length a_word_length);
     void set_parity(Parity a_parity);
     void set_stop_bits(Stop_bits a_stop_bits);
     void set_flow_control(Flow_control a_flow_control);
 
-    Baud_rate    get_baud_rate()    const;
     Oversampling get_oversampling() const;
     Word_length  get_word_length()  const;
     Stop_bits    get_stop_bits()    const;
     Flow_control get_flow_control() const;
+
+    common::uint32 get_baud_rate() const
+    {
+        return this->baud_rate;
+    }
+
+    Clock get_clock() const
+    {
+        return this->clock;
+    }
 
     Id get_periph() const
     {
@@ -270,7 +259,8 @@ private:
 
     USART_TypeDef* p_usart;
 
-    Baud_rate baud_rate;
+    common::uint32 baud_rate;
+    Clock clock;
 
 private:
 
