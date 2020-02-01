@@ -76,7 +76,7 @@ struct cstring
 
             assert(to_insert >= '0' && to_insert <= '9');
 
-            memory::copy(a_p_buffer + 1, a_p_buffer, ++length);
+            memory::move(a_p_buffer + 1, a_p_buffer, ++length);
             a_p_buffer[start] = to_insert;
 
             temp /= 10;
