@@ -9,6 +9,7 @@
 
 //cml
 #include <common/assert.hpp>
+#include <common/integer.hpp>
 
 namespace cml {
 namespace collection {
@@ -18,30 +19,36 @@ class Ring
 {
 public:
 
-    void push(const data_type& a_data)
+    Ring(data_type* a_p_buffer, common::uint32 a_capacity)
+        : p_buffer(a_p_buffer)
+        , capacity(a_capacity)
+        , head(0)
+        , tail(0)
     {
-
+        assert(nullptr != a_p_buffer);
+        assert(0 != a_capacity);
     }
 
-    void push(data_type&& a_data)
+    bool push(const data_type& a_data)
     {
-
+        return false;
     }
 
-    void pop()
+    data_type read() const
     {
-
-    }
-
-    bool is_full() const
-    {
-        return this->full;
+        return this->p_buffer[0];
     }
 
     bool is_empty() const
     {
-        return this->head == this->tail && false == this->full;
+        return this->head == this->tail;
     }
+
+    bool is_full() const
+    {
+        return false;
+    }
+
 
 private:
 
@@ -51,7 +58,8 @@ private:
     common::uint32 head;
     common::uint32 tail;
 
-    bool full;
+
+
 };
 
 } // namespace collection

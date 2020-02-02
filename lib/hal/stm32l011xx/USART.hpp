@@ -98,17 +98,17 @@ public:
 
     struct TX_callback
     {
-        using function = bool(*)(common::byte* p_a_byte, void* a_p_user_data, bool a_timeout);
+        using Function = bool(*)(common::byte* p_a_byte, void* a_p_user_data, bool a_timeout);
 
-        function p_function = nullptr;
+        Function p_function = nullptr;
         void* p_user_data   = nullptr;
     };
 
     struct RX_callback
     {
-        using function = bool(*)(common::byte a_byte, void* a_p_user_data, bool a_timeout);
+        using Function = bool(*)(common::byte a_byte, void* a_p_user_data, bool a_timeout);
 
-        function p_function = nullptr;
+        Function p_function = nullptr;
         void* p_user_data   = nullptr;
     };
 
@@ -247,15 +247,15 @@ private:
 
 private:
 
-    using TX_IT_context = IT_context<TX_callback>;
-    using RX_IT_context = IT_context<RX_callback>;
+    using TX_it_context = IT_context<TX_callback>;
+    using RX_it_context = IT_context<RX_callback>;
 
 private:
 
     Id id;
 
-    TX_IT_context tx_context;
-    RX_IT_context rx_context;
+    TX_it_context tx_context;
+    RX_it_context rx_context;
 
     USART_TypeDef* p_usart;
 

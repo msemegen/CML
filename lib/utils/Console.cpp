@@ -11,11 +11,43 @@
 //cml
 #include <common/assert.hpp>
 #include <common/cstring.hpp>
+#include <common/macros.hpp>
+
+namespace
+{
+
+using namespace cml::collection;
+using namespace cml::common;
+
+bool rx_callback(byte a_byte, void* a_p_user_data, bool a_timeout)
+{
+    unused(a_timeout);
+
+    return reinterpret_cast<Ring<char>*>(a_p_user_data)->push(static_cast<char>(a_byte));
+}
+
+} // namespace
 
 namespace cml {
 namespace utils {
 
 using namespace common;
+
+void Console::enable_buffered_input()
+{
+    this->rx_interrupt_callback.p_user_data = &(this->input_buffer_ring_view);
+    this->rx_interrupt_callback.p_function  = rx_callback;
+
+    this->p_io_stream->read_bytes_it(this->rx_interrupt_callback, time_tick_infinity);
+}
+
+void Console::disable_buffered_input()
+{
+    this->rx_interrupt_callback.p_user_data = nullptr;
+    this->rx_interrupt_callback.p_function  = nullptr;
+
+    this->p_io_stream->read_bytes_it(this->rx_interrupt_callback, time_tick_infinity);
+}
 
 void Console::write(char a_character)
 {
@@ -54,7 +86,16 @@ char Console::read_key(bool a_echo)
     assert(nullptr != this->p_io_stream);
 
     char character = 0;
-    this->p_io_stream->read_bytes_polling(&character, 1);
+
+    if (false == this->is_buffered_input())
+    {
+        this->p_io_stream->read_bytes_polling(&character, 1);
+    }
+    else
+    {
+        while (true == this->input_buffer_ring_view.is_empty());
+        character = this->input_buffer_ring_view.read();
+    }
 
     if (true == a_echo)
     {
@@ -71,14 +112,30 @@ void Console::read_line(char* a_p_buffer, uint32 a_max_characters_count, bool a_
 
     char character = 0;
 
-    for (uint32 i = 0; i < a_max_characters_count && config::new_line_character != character; i++)
+    if (false == this->is_buffered_input())
     {
-        this->p_io_stream->read_bytes_polling(&character, 1);
-        a_p_buffer[i] = character;
-
-        if (true == a_echo)
+        for (uint32 i = 0; i < a_max_characters_count && config::new_line_character != character; i++)
         {
-            this->p_io_stream->write_bytes_polling(&character, 1);
+            this->p_io_stream->read_bytes_polling(&character, 1);
+            a_p_buffer[i] = character;
+
+            if (true == a_echo)
+            {
+                this->p_io_stream->write_bytes_polling(&character, 1);
+            }
+        }
+    }
+    else
+    {
+        for (uint32 i = 0; i < a_max_characters_count && config::new_line_character != character; i++)
+        {
+            while (true == this->input_buffer_ring_view.is_empty());
+            a_p_buffer[i] = this->input_buffer_ring_view.read();
+
+            if (true == a_echo)
+            {
+                this->p_io_stream->write_bytes_polling(&character, 1);
+            }
         }
     }
 }
