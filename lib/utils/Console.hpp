@@ -21,7 +21,7 @@ class Console
 {
 public:
 
-    Console(hal::USART* a_p_io_stream, bool a_buffered_input)
+    Console(hal::USART* a_p_io_stream)
         : p_io_stream(a_p_io_stream)
         , input_buffer_ring_view(input_buffer, config::console::input_buffer_capacity)
     {}

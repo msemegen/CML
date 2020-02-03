@@ -68,6 +68,7 @@ int main()
         if (true == usart_ready)
         {
             Console console(&console_usart);
+            console.enable_buffered_input();
 
             while (true)
             {

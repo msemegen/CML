@@ -24,6 +24,7 @@ public:
         , capacity(a_capacity)
         , head(0)
         , tail(0)
+        , full(false)
     {
         assert(nullptr != a_p_buffer);
         assert(0 != a_capacity);
@@ -31,35 +32,56 @@ public:
 
     bool push(const data_type& a_data)
     {
-        return false;
+        bool add_new = false == this->is_full();
+
+        if (true == add_new)
+        {
+            this->p_buffer[this->head++] = a_data;
+
+            if (this->capacity == this->head)
+            {
+                this->head = 0;
+            }
+
+            this->full = this->tail == this->head;
+        }
+
+        return add_new;
     }
 
-    data_type read() const
+    const data_type& read() const
     {
-        return this->p_buffer[0];
+        assert(false == this->is_empty());
+
+        const data_type& r = this->p_buffer[this->tail++];
+        this->full         = false;
+
+        if (this->capacity == this->tail)
+        {
+            this->tail = 0;
+        }
+
+        return r;
     }
 
     bool is_empty() const
     {
-        return this->head == this->tail;
+        return false == this->full && this->head == this->tail;
     }
 
     bool is_full() const
     {
-        return false;
+        return this->full;
     }
-
 
 private:
 
     data_type* p_buffer;
-    common::uint32 capacity;
+    const common::uint32 capacity;
 
     common::uint32 head;
-    common::uint32 tail;
-
-
-
+    mutable common::uint32 tail;
+    mutable bool full;
 };
 
 } // namespace collection
