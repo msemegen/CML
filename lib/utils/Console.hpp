@@ -115,7 +115,6 @@ private:
 private:
 
     hal::USART* p_io_stream;
-
     hal::USART::RX_callback rx_interrupt_callback;
 
     char line_buffer[config::console::line_buffer_capacity];
