@@ -66,12 +66,12 @@ int main()
 
         if (true == usart_ready)
         {
-            Console console(&console_usart);
-            console.enable_buffered_input();
+            Console console(&console_usart, Console::Input_mode::buffered);
 
             while (true)
             {
-                console.read_key(true);
+                char c = console.read_key();
+                console.write(c);
             }
         }
     }

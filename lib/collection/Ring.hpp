@@ -30,6 +30,14 @@ public:
         assert(0 != a_capacity);
     }
 
+    Ring()            = delete;
+    Ring(Ring&&)      = default;
+    Ring(const Ring&) = default;
+    ~Ring()           = default;
+
+    Ring& operator = (Ring&&)      = default;
+    Ring& operator = (const Ring&) = default;
+
     bool push(const data_type& a_data)
     {
         bool add_new = false == this->is_full();
@@ -64,6 +72,14 @@ public:
         return r;
     }
 
+    void clear()
+    {
+        this->full = false;
+
+        this->tail = 0;
+        this->head = 0;
+    }
+
     bool is_empty() const
     {
         return false == this->full && this->head == this->tail;
@@ -72,6 +88,21 @@ public:
     bool is_full() const
     {
         return this->full;
+    }
+
+    common::uint32 get_head_index() const
+    {
+        return this->head;
+    }
+
+    common::uint32 get_tail_index() const
+    {
+        return this->tail;
+    }
+
+    common::uint32 get_capacity() const
+    {
+        return this->capacity;
     }
 
 private:
