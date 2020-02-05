@@ -136,6 +136,28 @@ private:
             memory::copy(this->data, a_other.data, sizeof(a_other.data));
         }
 
+        explicit Argument(long unsigned int a_value)
+            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
+                    static_cast<uint8>((a_value >> 16u) & 0xFF),
+                    static_cast<uint8>((a_value >> 8u) & 0xFF),
+                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
+            , type(Type::unsigned_int)
+        {
+            static_assert(sizeof(a_value)    == 4);
+            static_assert(sizeof(this->data) == 4);
+        }
+
+        explicit Argument(long int a_value)
+            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
+                    static_cast<uint8>((a_value >> 16u) & 0xFF),
+                    static_cast<uint8>((a_value >> 8u) & 0xFF),
+                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
+            , type(Type::signed_int)
+        {
+            static_assert(sizeof(a_value)    == 4);
+            static_assert(sizeof(this->data) == 4);
+        }
+
         explicit Argument(uint32 a_value)
             : data { static_cast<uint8>((a_value >> 24u) & 0xFF),
                      static_cast<uint8>((a_value >> 16u) & 0xFF),
@@ -143,6 +165,7 @@ private:
                      static_cast<uint8>((a_value >> 0u)  & 0xFF) }
             , type(Type::unsigned_int)
         {
+            static_assert(sizeof(a_value)    == 4);
             static_assert(sizeof(this->data) == 4);
         }
 
@@ -153,6 +176,7 @@ private:
                     static_cast<uint8>((a_value >> 0u)  & 0xFF) }
             , type(Type::signed_int)
         {
+            static_assert(sizeof(a_value)    == 4);
             static_assert(sizeof(this->data) == 4);
         }
 
@@ -160,6 +184,7 @@ private:
             : data{ static_cast<uint8>(a_value), 0u, 0u, 0u }
             , type(Argument::Type::character)
         {
+            static_assert(sizeof(a_value)    == 1);
             static_assert(sizeof(this->data) == 4);
         }
 
