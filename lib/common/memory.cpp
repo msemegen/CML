@@ -40,6 +40,9 @@ void memory::move(void* a_p_destination, const void* a_p_source, uint32 a_size_i
     {
         uint32 size_in_bytes = a_size_in_bytes;
 
+        p_destination += size_in_bytes;
+        p_source      += size_in_bytes;
+
         while (0 != (size_in_bytes--))
         {
             *(--p_destination) = *(--p_source);
