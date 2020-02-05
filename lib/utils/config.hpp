@@ -17,7 +17,8 @@ struct config
 {
     struct console
     {
-        static constexpr common::uint32 line_buffer_capacity = 128u;
+        static constexpr common::uint32 line_buffer_capacity  = 128u;
+        static constexpr common::uint32 input_buffer_capacity = 16u;
 
         console()               = delete;
         console(console&&)      = delete;

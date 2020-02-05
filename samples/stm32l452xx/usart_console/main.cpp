@@ -67,11 +67,12 @@ int main()
 
         if (true == usart_ready)
         {
-            Console console(&console_usart);
+            Console console(&console_usart, Console::Input_mode::polling);
 
             while (true)
             {
-                console.read_key(true);
+                char c = console.read_key();
+                console.write(c);
             }
         }
     }

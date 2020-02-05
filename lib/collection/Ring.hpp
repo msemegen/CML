@@ -9,6 +9,7 @@
 
 //cml
 #include <common/assert.hpp>
+#include <common/integer.hpp>
 
 namespace cml {
 namespace collection {
@@ -18,19 +19,70 @@ class Ring
 {
 public:
 
-    void push(const data_type& a_data)
+    Ring(data_type* a_p_buffer, common::uint32 a_capacity)
+        : p_buffer(a_p_buffer)
+        , capacity(a_capacity)
+        , head(0)
+        , tail(0)
+        , full(false)
     {
-
+        assert(nullptr != a_p_buffer);
+        assert(0 != a_capacity);
     }
 
-    void push(data_type&& a_data)
-    {
+    Ring()            = delete;
+    Ring(Ring&&)      = default;
+    Ring(const Ring&) = default;
+    ~Ring()           = default;
 
+    Ring& operator = (Ring&&)      = default;
+    Ring& operator = (const Ring&) = default;
+
+    bool push(const data_type& a_data)
+    {
+        bool add_new = false == this->is_full();
+
+        if (true == add_new)
+        {
+            this->p_buffer[this->head++] = a_data;
+
+            if (this->capacity == this->head)
+            {
+                this->head = 0;
+            }
+
+            this->full = this->tail == this->head;
+        }
+
+        return add_new;
     }
 
-    void pop()
+    const data_type& read() const
     {
+        assert(false == this->is_empty());
 
+        const data_type& r = this->p_buffer[this->tail++];
+        this->full         = false;
+
+        if (this->capacity == this->tail)
+        {
+            this->tail = 0;
+        }
+
+        return r;
+    }
+
+    void clear()
+    {
+        this->full = false;
+
+        this->tail = 0;
+        this->head = 0;
+    }
+
+    bool is_empty() const
+    {
+        return false == this->full && this->head == this->tail;
     }
 
     bool is_full() const
@@ -38,20 +90,29 @@ public:
         return this->full;
     }
 
-    bool is_empty() const
+    common::uint32 get_head_index() const
     {
-        return this->head == this->tail && false == this->full;
+        return this->head;
+    }
+
+    common::uint32 get_tail_index() const
+    {
+        return this->tail;
+    }
+
+    common::uint32 get_capacity() const
+    {
+        return this->capacity;
     }
 
 private:
 
     data_type* p_buffer;
-    common::uint32 capacity;
+    const common::uint32 capacity;
 
     common::uint32 head;
-    common::uint32 tail;
-
-    bool full;
+    mutable common::uint32 tail;
+    mutable bool full;
 };
 
 } // namespace collection
