@@ -38,8 +38,8 @@ public:
         {
             case Input_mode::buffered:
             {
-                this->p_read_key_function  = &(read_key_buffered);
-                this->p_read_line_function = &(read_line_buffered);
+                this->p_read_key_function  = read_key_buffered;
+                this->p_read_line_function = read_line_buffered;
 
                 this->enable_buffered_input();
             }
@@ -47,8 +47,8 @@ public:
 
             case Input_mode::polling:
             {
-                this->p_read_key_function  = &(read_key_polling);
-                this->p_read_line_function = &(read_line_polling);
+                this->p_read_key_function  = read_key_polling;
+                this->p_read_line_function = read_line_polling;
             }
             break;
         }
