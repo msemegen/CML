@@ -31,9 +31,11 @@ struct config
 
     struct command_line
     {
-        static constexpr common::uint32 callbacks_max_count           = 20;
-        static constexpr common::uint32 callback_parameters_max_count = 4;
-        static constexpr common::uint32 input_buffer_capacity         = 10;
+        static constexpr common::uint32 callbacks_buffer_capacity           = 20u;
+        static constexpr common::uint32 callback_parameters_buffer_capacity = 4u;
+        static constexpr common::uint32 input_buffer_capacity               = 16u;
+        static constexpr common::uint32 line_buffer_capacity                = 128u;
+        static constexpr common::uint32 commands_carousel_capacity          = 5u;
 
         command_line()                    = delete;
         command_line(command_line&&)      = delete;

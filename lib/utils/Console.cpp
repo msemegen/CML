@@ -68,10 +68,7 @@ void Console::write_line(const char* a_p_string)
 
 void Console::enable_buffered_input()
 {
-    this->rx_interrupt_callback.p_user_data = &(this->input_buffer_ring_view);
-    this->rx_interrupt_callback.p_function = rx_callback;
-
-    this->p_io_stream->read_bytes_it(this->rx_interrupt_callback, time_tick_infinity);
+    this->p_io_stream->read_bytes_it({ rx_callback, &(this->input_buffer_ring_view) }, time_tick_infinity);
 }
 
 char Console::read_key_polling(Console* a_p_this)

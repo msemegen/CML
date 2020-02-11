@@ -138,23 +138,15 @@ void MCU::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         set_flag(&(RCC->APB1ENR), RCC_APB1ENR_PWREN);
     }
 
+    uint32 frequency_hz = 0;
+
     switch (a_source)
     {
         case Sysclk_source::msi:
         {
             assert(true == this->is_clock_enabled(Clock::msi));
 
-            uint32 i = get_flag(RCC->ICSCR, RCC_ICSCR_MSIRANGE) >> RCC_ICSCR_MSIRANGE_Pos;
-            uint32 frequency_hz = msi_frequency_lut[i];
-
-            if (SystemCoreClock > frequency_hz)
-            {
-                this->decrease_sysclk_frequency(Sysclk_source::msi, frequency_hz, a_prescalers);
-            }
-            else if (SystemCoreClock < frequency_hz)
-            {
-                this->increase_sysclk_frequency(Sysclk_source::msi, frequency_hz, a_prescalers);
-            }
+            frequency_hz = msi_frequency_lut[get_flag(RCC->ICSCR, RCC_ICSCR_MSIRANGE) >> RCC_ICSCR_MSIRANGE_Pos];
         }
         break;
 
@@ -162,18 +154,7 @@ void MCU::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         {
             assert(true == this->is_clock_enabled(Clock::hsi));
 
-            if (SystemCoreClock > config::clock::hsi_frequency_hz)
-            {
-                this->decrease_sysclk_frequency(Sysclk_source::hsi,
-                                                config::clock::hsi_frequency_hz,
-                                                a_prescalers);
-            }
-            else if (SystemCoreClock < config::clock::hsi_frequency_hz)
-            {
-                this->increase_sysclk_frequency(Sysclk_source::hsi,
-                                                config::clock::hsi_frequency_hz,
-                                                a_prescalers);
-            }
+            frequency_hz = config::clock::hsi_frequency_hz;
         }
         break;
 
@@ -181,18 +162,18 @@ void MCU::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         {
             assert(true == this->is_clock_enabled(Clock::pll));
 
-            uint32 frequency_hz = this->calculate_frequency_from_pll_configuration();
-
-            if (SystemCoreClock > frequency_hz)
-            {
-                this->decrease_sysclk_frequency(Sysclk_source::pll, frequency_hz, a_prescalers);
-            }
-            else if (SystemCoreClock < frequency_hz)
-            {
-                this->increase_sysclk_frequency(Sysclk_source::pll, frequency_hz, a_prescalers);
-            }
+            frequency_hz = this->calculate_frequency_from_pll_configuration();
         }
         break;
+    }
+
+    if (SystemCoreClock > frequency_hz)
+    {
+        this->decrease_sysclk_frequency(a_source, frequency_hz, a_prescalers);
+    }
+    else if (SystemCoreClock < frequency_hz)
+    {
+        this->increase_sysclk_frequency(a_source, frequency_hz, a_prescalers);
     }
 
     set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_PRE_READ);

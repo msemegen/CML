@@ -99,8 +99,7 @@ public:
 
     bool is_buffered_input_enabled()
     {
-        return nullptr != this->rx_interrupt_callback.p_function &&
-               nullptr != this->rx_interrupt_callback.p_user_data;
+        return this->p_io_stream->is_rx_it_enabled();
     }
 
     Input_mode get_input_mode() const
@@ -114,8 +113,15 @@ private:
 
 private:
 
+    static char read_key_polling(Console* a_p_this);
+    static char read_key_buffered(Console* a_p_this);
+
+    static void read_line_polling(Console* a_p_this, char* a_p_buffer, common::uint32 a_max_characters_count);
+    static void read_line_buffered(Console* a_p_this, char* a_p_buffer, common::uint32 a_max_characters_count);
+
+private:
+
     hal::USART* p_io_stream;
-    hal::USART::RX_callback rx_interrupt_callback;
 
     char line_buffer[config::console::line_buffer_capacity];
     char input_buffer[config::console::input_buffer_capacity];
@@ -126,14 +132,6 @@ private:
 
     char(*p_read_key_function)(Console*);
     void(*p_read_line_function)(Console*, char*, common::uint32);
-
-private:
-
-    static char read_key_polling(Console* a_p_this);
-    static char read_key_buffered(Console* a_p_this);
-
-    static void read_line_polling(Console* a_p_this, char* a_p_buffer, common::uint32 a_max_characters_count);
-    static void read_line_buffered(Console* a_p_this, char* a_p_buffer, common::uint32 a_max_characters_count);
 };
 
 } // namespace utils

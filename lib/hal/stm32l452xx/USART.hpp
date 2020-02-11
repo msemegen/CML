@@ -201,6 +201,9 @@ public:
         return this->clock;
     }
 
+    bool is_rx_it_enabled() const;
+    bool is_tx_it_enabled() const;
+
     Id get_id() const
     {
         return this->id;
