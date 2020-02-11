@@ -108,7 +108,7 @@ public:
 private:
 
     data_type* p_buffer;
-    const common::uint32 capacity;
+    common::uint32 capacity;
 
     common::uint32 head;
     mutable common::uint32 tail;
