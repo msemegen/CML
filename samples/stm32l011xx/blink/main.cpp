@@ -48,7 +48,7 @@ int main()
 
         while (true)
         {
-            if (Systick::get_instance().get_counter() - start >= 500u)
+            if (time_tick_diff(Systick::get_instance().get_counter(), start) >= 500u)
             {
                 led_pin.toggle_level();
                 start = Systick::get_instance().get_counter();

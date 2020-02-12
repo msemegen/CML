@@ -43,13 +43,13 @@ public:
 
     type& operator[](common::uint32 a_index)
     {
-        _assert(a_index < this->capacity);
+        assert(a_index < this->capacity);
         return this->p_buffer[a_index];
     }
 
     const type& operator[](common::uint32 a_index) const
     {
-        _assert(a_index < this->capacity);
+        assert(a_index < this->capacity);
         return this->p_buffer[a_index];
     }
 

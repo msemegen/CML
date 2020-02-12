@@ -93,10 +93,7 @@ void Command_line::update()
             {
                 if (false == this->escape_sequence_buffer_view.is_empty())
                 {
-                    if (false == this->escape_sequence_buffer_view.is_full())
-                    {
-                        this->escape_sequence_buffer_view.push_back(c);
-                    }
+                    this->escape_sequence_buffer_view.push_back(c);
 
                     if (true == this->escape_sequence_buffer_view.is_full())
                     {
@@ -137,24 +134,24 @@ Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(
     auto contains = [](char a_character, const char* a_p_separators, uint32 a_separators_count)
     {
         bool ret = false;
-    
+
         for (decltype(a_separators_count) i = 0; i < a_separators_count && false == ret; i++)
         {
             ret = a_p_separators[i] == a_character;
         }
-    
+
         return ret;
     };
-    
+
     const char* p_begin = &(a_p_line[0]);
-    
+
     for (decltype(a_length) i = 0; i < a_length && false == ret.is_full(); i++)
     {
         if (nullptr != p_begin && true == contains(a_p_line[i], a_p_separators, a_separators_count))
         {
             assert(&(a_p_line[i]) > p_begin);
             ret.push_back({ p_begin, static_cast<uint32>(&(a_p_line[i]) - p_begin) });
-    
+
             a_p_line[i] = 0;
             p_begin     = nullptr;
         }
@@ -163,7 +160,7 @@ Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(
             p_begin = &(a_p_line[i]);
         }
     }
-    
+
     if (nullptr != p_begin && false == ret.is_full())
     {
         assert(&(a_p_line[a_length]) > p_begin);
@@ -175,23 +172,20 @@ Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(
 
 bool Command_line::execute_command(const Vector<Callback::Parameter>& a_parameters)
 {
-    auto find_command = [](const char* a_p_name, uint32 a_length, const Vector<Callback> &a_callbacks) -> uint32
+    uint32 index = this->callbacks_buffer_view.get_capacity();
+
+    for (uint32 i = 0; i < this->callbacks_buffer_view.get_length() &&
+                           this->callbacks_buffer_view.get_capacity() == index; i++)
     {
-        uint32 ret = a_callbacks.get_capacity();
-
-        for (uint32 i = 0; i < a_callbacks.get_length() && a_callbacks.get_capacity() == ret; i++)
+        if (true == cstring::equals(a_parameters[0].a_p_value,
+                                    this->callbacks_buffer_view[i].p_name,
+                                    a_parameters[0].length))
         {
-            if (true == cstring::equals(a_p_name, a_callbacks[i].p_name, a_length))
-            {
-                ret = i;
-            }
+            index = i;
         }
+    }
 
-        return ret;
-    };
-
-    uint32 index = find_command(a_parameters[0].a_p_value, a_parameters[0].length, this->callbacks_buffer_view);
-    bool ret     = index != this->callbacks_buffer_view.get_capacity();
+    bool ret = index != this->callbacks_buffer_view.get_capacity();
 
     if (true == ret)
     {
@@ -258,30 +252,14 @@ const Command_line::Commands_carousel::Command& Command_line::Commands_carousel:
 {
     assert(this->length > 0);
 
-    if (this->read_index == this->length)
-    {
-        this->read_index = 0;
-    }
-
-    return this->commands[this->read_index++];
+    return this->commands[this->read_index++ % this->length];
 }
 
 const Command_line::Commands_carousel::Command& Command_line::Commands_carousel::read_prev() const
 {
     assert(this->length > 0);
 
-    const Command_line::Commands_carousel::Command& ret = this->commands[this->read_index];
-
-    if (0 == this->read_index)
-    {
-        this->read_index = this->length - 1;
-    }
-    else
-    {
-        this->read_index--;
-    }
-
-    return ret;
+    return this->commands[this->read_index-- % this->length];
 }
 
 } // namespace utils

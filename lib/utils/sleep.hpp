@@ -20,7 +20,7 @@ void sleep(common::time_tick a_time_ms)
     assert(true == hal::Systick::get_instance().is_enabled());
 
     common::time_tick start = hal::Systick::get_instance().get_counter();
-    while (hal::Systick::get_instance().get_counter() - start <= a_time_ms);
+    while (common::time_tick_diff(hal::Systick::get_instance().get_counter(), start) <= a_time_ms);
 }
 
 } // namespace utils

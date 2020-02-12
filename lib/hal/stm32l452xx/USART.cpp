@@ -112,6 +112,17 @@ void USART3_IRQHandler()
 
 } // extern "C"
 
+namespace {
+
+using namespace cml::common;
+
+bool is_timeout(time_tick a_start, time_tick a_current, time_tick a_timeout)
+{
+    return time_tick_infinity == a_timeout ? false : time_tick_diff(a_current, a_start) < a_timeout;
+}
+
+} // namespace ::
+
 namespace cml {
 namespace hal {
 namespace stm32l452xx {
@@ -129,10 +140,11 @@ void usart_handle_interrupt(USART* a_p_this)
     {
         byte data                    = 0;
         auto p_context               = &(a_p_this->TX_context);
-        const time_tick elapsed_time = Systick::get_instance().get_counter() - p_context->start_timestamp;
         const bool procceed          = p_context->callback.p_function(&data,
                                                                       p_context->callback.p_user_data,
-                                                                      elapsed_time < p_context->timeout);
+                                                                      is_timeout(p_context->start_timestamp,
+                                                                                 Systick::get_instance().get_counter(),
+                                                                                 p_context->timeout));
 
         if (true == procceed)
         {
@@ -151,10 +163,11 @@ void usart_handle_interrupt(USART* a_p_this)
     if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
     {
         auto p_context               = &(a_p_this->RX_context);
-        const time_tick elapsed_time = Systick::get_instance().get_counter() - p_context->start_timestamp;
         const bool procceed          = p_context->callback.p_function(a_p_this->p_usart->RDR,
                                                                       p_context->callback.p_user_data,
-                                                                      elapsed_time < p_context->timeout);
+                                                                      is_timeout(p_context->start_timestamp,
+                                                                                 Systick::get_instance().get_counter(),
+                                                                                 p_context->timeout));
 
         if (false == procceed)
         {
