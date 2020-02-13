@@ -8,7 +8,7 @@
 #ifdef STM32L011xx
 
 //this
-#include <hal/stm32l011xx/usart.hpp>
+#include <hal/stm32l011xx/USART.hpp>
 
 //cml
 #include <common/assert.hpp>

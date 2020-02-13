@@ -8,7 +8,7 @@
 #ifdef STM32L452xx
 
 //this
-#include <hal/stm32l452xx/mcu.hpp>
+#include <hal/stm32l452xx/MCU.hpp>
 
 //external
 #include <stm32l452xx.h>
