@@ -8,12 +8,12 @@
 */
 
 #ifdef STM32L452xx
-#include <hal/stm32l452xx/gpio.hpp>
+#include <hal/stm32l452xx/GPIO.hpp>
 #endif // STM32L452xx
 
 #ifdef STM32L011xx
-#include <hal/stm32l011xx/gpio.hpp>
-#endif
+#include <hal/stm32l011xx/GPIO.hpp>
+#endif // STM32L011xx
 
 namespace cml {
 namespace hal {

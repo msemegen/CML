@@ -8,7 +8,7 @@
 #ifdef STM32L011xx
 
 //this
-#include <hal/stm32l011xx/gpio.hpp>
+#include <hal/stm32l011xx/GPIO.hpp>
 
 namespace
 {
