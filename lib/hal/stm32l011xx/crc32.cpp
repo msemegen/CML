@@ -8,7 +8,7 @@
 #ifdef STM32L011xx
 
 //this
-#include <hal/stm32l011xx/CRC32.hpp>
+#include <hal/stm32l011xx/crc32.hpp>
 
 namespace cml {
 namespace hal {
