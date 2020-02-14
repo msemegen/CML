@@ -183,7 +183,7 @@ public:
         return false;
     }
 
-    Id get_id()
+    Id get_id() const
     {
         static_assert(12 == config::mcu::device_id_length);
 

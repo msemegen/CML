@@ -21,38 +21,10 @@ class Console
 {
 public:
 
-    enum Input_mode
-    {
-        polling,
-        buffered
-    };
-
-public:
-
-    Console(hal::USART* a_p_io_stream, Input_mode a_input_mode)
+    Console(hal::USART* a_p_io_stream)
         : p_io_stream(a_p_io_stream)
         , input_buffer_ring_view(input_buffer, config::console::input_buffer_capacity)
-        , input_mode(a_input_mode)
-    {
-        switch (this->input_mode)
-        {
-            case Input_mode::buffered:
-            {
-                this->p_read_key_function  = read_key_buffered;
-                this->p_read_line_function = read_line_buffered;
-
-                this->enable_buffered_input();
-            }
-            break;
-
-            case Input_mode::polling:
-            {
-                this->p_read_key_function  = read_key_polling;
-                this->p_read_line_function = read_line_polling;
-            }
-            break;
-        }
-    }
+    {}
 
     Console()               = delete;
     Console(Console&&)      = default;
@@ -61,6 +33,9 @@ public:
 
     Console& operator = (Console&&)      = default;
     Console& operator = (const Console&) = default;
+
+    void enable();
+    void disable();
 
     void write(char a_character);
     void write(const char* a_p_string);
@@ -82,42 +57,13 @@ public:
         this->write_line(this->line_buffer);
     }
 
-    char read_key()
-    {
-        return this->p_read_key_function(this);
-    }
-
-    void read_line(char* a_p_buffer, common::uint32 a_max_characters_count)
-    {
-        this->p_read_line_function(this, a_p_buffer, a_max_characters_count);
-    }
+    char read_key();
+    void read_line(char* a_p_buffer, common::uint32 a_max_characters_count);
 
     bool is_enabled() const
     {
         return nullptr != this->p_io_stream;
     }
-
-    bool is_buffered_input_enabled()
-    {
-        return this->p_io_stream->is_rx_it_enabled();
-    }
-
-    Input_mode get_input_mode() const
-    {
-        return this->input_mode;
-    }
-
-private:
-
-    void enable_buffered_input();
-
-private:
-
-    static char read_key_polling(Console* a_p_this);
-    static char read_key_buffered(Console* a_p_this);
-
-    static void read_line_polling(Console* a_p_this, char* a_p_buffer, common::uint32 a_max_characters_count);
-    static void read_line_buffered(Console* a_p_this, char* a_p_buffer, common::uint32 a_max_characters_count);
 
 private:
 
@@ -127,11 +73,6 @@ private:
     char input_buffer[config::console::input_buffer_capacity];
 
     collection::Ring<char> input_buffer_ring_view;
-
-    Input_mode input_mode;
-
-    char(*p_read_key_function)(Console*);
-    void(*p_read_line_function)(Console*, char*, common::uint32);
 };
 
 } // namespace utils

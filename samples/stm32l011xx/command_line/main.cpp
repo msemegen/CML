@@ -13,6 +13,7 @@
 #include <hal/Systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Command_line.hpp>
+#include <utils/Console.hpp>
 
 namespace
 {
@@ -108,10 +109,14 @@ int main()
             Output_pin led_pin(&gpio_port_b, 3);
             led_pin.enable({ Output_pin::Mode::push_pull, Output_pin::Pull::down, Output_pin::Speed::low });
 
+            Console console(&console_usart);
+
+            console.enable();
+            console.write_line("\nCML CLI sample. CPU speed: %d MHz", SystemCoreClock / MHz(1));
+
             Command_line command_line(&console_usart, "cmd > ", "Command not found");
 
             command_line.register_callback({ "led", led_cli_callback, &led_pin });
-
             command_line.enable();
             command_line.write_prompt();
 

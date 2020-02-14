@@ -21,7 +21,8 @@ int main()
     MCU::get_instance().enable_hsi_clock(MCU::Hsi_frequency::_16_MHz);
     MCU::get_instance().set_sysclk(MCU::Sysclk_source::hsi, { MCU::Bus_prescalers::AHB::_1,
                                                               MCU::Bus_prescalers::APB1::_1,
-                                                              MCU::Bus_prescalers::APB2::_1 });
+                                                              MCU::Bus_prescalers::APB2::_1 },
+                                                              { 0x3, 0xf0 });
 
     if (MCU::Sysclk_source::hsi == MCU::get_instance().get_sysclk_source())
     {
@@ -45,28 +46,31 @@ int main()
         {
             Alternate_function_pin::Mode::push_pull,
             Alternate_function_pin::Pull::up,
-            Alternate_function_pin::Speed::ultra,
-            0x4u
+            Alternate_function_pin::Speed::low,
+            0x7u
         };
 
         MCU::get_instance().disable_msi_clock();
-        Systick::get_instance().enable((1u << __NVIC_PRIO_BITS) - 1u);
+        Systick::get_instance().enable(0x0);
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        Alternate_function_pin console_usart_tx_pin(&gpio_port_a, 2);
-        Alternate_function_pin console_usart_rx_pin(&gpio_port_a, 15);
+        Alternate_function_pin console_usart_TX_pin(&gpio_port_a, 2);
+        Alternate_function_pin console_usart_RX_pin(&gpio_port_a, 3);
 
-        console_usart_tx_pin.enable(usart_pin_config);
-        console_usart_rx_pin.enable(usart_pin_config);
+        console_usart_TX_pin.enable(usart_pin_config);
+        console_usart_RX_pin.enable(usart_pin_config);
 
         USART console_usart(USART::Id::_2);
         bool usart_ready = console_usart.enable(usart_config, usart_clock, 10);
 
         if (true == usart_ready)
         {
-            Console console(&console_usart, Console::Input_mode::buffered);
+            Console console(&console_usart);
+            console.enable();
+
+            console.write_line("CML Console sample. CPU speed: %d MHz", SystemCoreClock / MHz(1));
 
             while (true)
             {

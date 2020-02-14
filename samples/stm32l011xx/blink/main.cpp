@@ -27,13 +27,6 @@ int main()
 
     if (MCU::Sysclk_source::pll == MCU::get_instance().get_sysclk_source())
     {
-        Output_pin::Config led_pin_config =
-        {
-            Output_pin::Mode::push_pull,
-            Output_pin::Pull::down,
-            Output_pin::Speed::low
-        };
-
         MCU::get_instance().disable_msi_clock();
         Systick::get_instance().enable((1u << __NVIC_PRIO_BITS) - 1u);
 
@@ -41,7 +34,7 @@ int main()
         gpio_port_b.enable();
 
         Output_pin led_pin(&gpio_port_b, 3);
-        led_pin.enable(led_pin_config);
+        led_pin.enable({ Output_pin::Mode::push_pull, Output_pin::Pull::down, Output_pin::Speed::low });
 
         led_pin.set_level(Output_pin::Level::low);
 

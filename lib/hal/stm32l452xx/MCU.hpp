@@ -174,55 +174,6 @@ public:
         common::uint32 base_priority     = 0;
     };
 
-    class Cycles_counter
-    {
-    public:
-
-        void enable()
-        {
-            common::set_flag(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
-
-            DWT->CYCCNT = 0;
-            common::set_flag(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
-        }
-
-        void disable()
-        {
-            common::clear_flag(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
-            common::clear_flag(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
-        }
-
-        void reset()
-        {
-            DWT->CYCCNT = 0;
-        }
-
-        common::uint32 get_count() const
-        {
-            return DWT->CYCCNT;
-        }
-
-        bool is_enabled() const
-        {
-            return true == common::is_flag(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
-                           common::is_flag(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
-        }
-
-    private:
-
-        Cycles_counter()                      = default;
-        Cycles_counter(Cycles_counter&&)      = default;
-        Cycles_counter(const Cycles_counter&) = default;
-        ~Cycles_counter()                     = default;
-
-        Cycles_counter& operator = (Cycles_counter&&)      = default;
-        Cycles_counter& operator = (const Cycles_counter&) = default;
-
-    private:
-
-        friend MCU;
-    };
-
 public:
 
     void enable_msi_clock(Msi_frequency a_freq);
@@ -363,8 +314,6 @@ private:
 
     Sysclk_frequency_change_callback pre_sysclk_frequency_change_callback;
     Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
-
-    Cycles_counter cycles_counter;
 };
 
 } // namespace stm32l452xx

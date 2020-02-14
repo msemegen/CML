@@ -34,6 +34,16 @@ namespace utils {
 
 using namespace common;
 
+void Console::enable()
+{
+    this->p_io_stream->read_bytes_it({ rx_callback, &(this->input_buffer_ring_view) }, time_tick_infinity);
+}
+
+void Console::disable()
+{
+    this->p_io_stream->read_bytes_it({ nullptr, nullptr }, time_tick_infinity);
+}
+
 void Console::write(char a_character)
 {
     assert(nullptr != this->p_io_stream);
@@ -66,56 +76,22 @@ void Console::write_line(const char* a_p_string)
     this->p_io_stream->write_bytes_polling(&config::new_line_character, 1);
 }
 
-void Console::enable_buffered_input()
+char Console::read_key()
 {
-    this->p_io_stream->read_bytes_it({ rx_callback, &(this->input_buffer_ring_view) }, time_tick_infinity);
+    assert(nullptr != this->p_io_stream);
+
+    while (true == this->input_buffer_ring_view.is_empty());
+    return this->input_buffer_ring_view.read();
 }
 
-char Console::read_key_polling(Console* a_p_this)
+void Console::read_line(char* a_p_buffer, uint32 a_max_characters_count)
 {
-    assert(nullptr != a_p_this);
-    assert(nullptr != a_p_this->p_io_stream);
-    assert(Input_mode::polling == a_p_this->input_mode);
-
-    char character = 0;
-
-    a_p_this->p_io_stream->read_bytes_polling(&character, 1);
-
-    return character;
-}
-
-char Console::read_key_buffered(Console* a_p_this)
-{
-    assert(nullptr != a_p_this);
-    assert(nullptr != a_p_this->p_io_stream);
-    assert(Input_mode::buffered == a_p_this->input_mode);
-
-    while (true == a_p_this->input_buffer_ring_view.is_empty());
-    return a_p_this->input_buffer_ring_view.read();
-}
-
-void Console::read_line_polling(Console* a_p_this, char* a_p_buffer, uint32 a_max_characters_count)
-{
-    assert(nullptr != a_p_this);
-    assert(nullptr != a_p_this->p_io_stream);
-    assert(Input_mode::polling == a_p_this->input_mode);
+    assert(nullptr != this->p_io_stream);
 
     for (uint32 i = 0; i < a_max_characters_count && config::new_line_character != a_p_buffer[i]; i++)
     {
-        a_p_this->p_io_stream->read_bytes_polling(&(a_p_buffer[i]), 1);
-    }
-}
-
-void Console::read_line_buffered(Console* a_p_this, char* a_p_buffer, uint32 a_max_characters_count)
-{
-    assert(nullptr != a_p_this);
-    assert(nullptr != a_p_this->p_io_stream);
-    assert(Input_mode::buffered == a_p_this->input_mode);
-
-    for (uint32 i = 0; i < a_max_characters_count && config::new_line_character != a_p_buffer[i]; i++)
-    {
-        while (true == a_p_this->input_buffer_ring_view.is_empty());
-        a_p_buffer[i] = a_p_this->input_buffer_ring_view.read();
+        while (true == this->input_buffer_ring_view.is_empty());
+        a_p_buffer[i] = this->input_buffer_ring_view.read();
     }
 }
 
