@@ -45,8 +45,6 @@ int main()
 
         led_pin.set_level(Output_pin::Level::low);
 
-        MCU::get_instance().enable_dwt();
-
         while (true)
         {
             sleep::ms(1000);
