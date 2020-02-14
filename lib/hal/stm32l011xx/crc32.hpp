@@ -1,7 +1,7 @@
 #pragma once
 
 /*
-    Name: CRC32.hpp
+    Name: crc32.hpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
@@ -18,7 +18,7 @@ namespace cml {
 namespace hal {
 namespace stm32l011xx {
 
-class CRC32
+class crc32
 {
 public:
 
@@ -36,55 +36,43 @@ public:
         enabled = CRC_CR_REV_OUT
     };
 
-    void enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse);
-    void disable();
+    static void enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse);
+    static void disable();
 
     void update_uint8(common::uint8 a_value)
     {
-        this->p_crc->DR = a_value;
+        CRC->DR = a_value;
     }
 
     void update_uint16(common::uint16 a_value)
     {
-        this->p_crc->DR = a_value;
+        CRC->DR = a_value;
     }
 
     void update_uint32(common::uint32 a_value)
     {
-        this->p_crc->DR = a_value;
+        CRC->DR = a_value;
     }
 
     common::uint32 get_value() const
     {
-        return this->p_crc->DR;
+        return CRC->DR;
     }
 
     void reset()
     {
-        common::set_flag(&(this->p_crc->CR), CRC_CR_RESET);
-    }
-
-    static CRC32& get_instance()
-    {
-        static CRC32 instance;
-        return instance;
+        common::set_flag(&(CRC->CR), CRC_CR_RESET);
     }
 
 private:
 
-    CRC32()
-        : p_crc(CRC)
-    {}
+    crc32()             = delete;
+    crc32(crc32&&)      = delete;
+    crc32(const crc32&) = delete;
+    ~crc32()            = default;
 
-    CRC32(CRC32&&)      = delete;
-    CRC32(const CRC32&) = delete;
-
-    CRC32& operator = (CRC32&&)      = delete;
-    CRC32& operator = (const CRC32&) = delete;
-
-private:
-
-    CRC_TypeDef *p_crc;
+    crc32& operator = (crc32&&)      = delete;
+    crc32& operator = (const crc32&) = delete;
 };
 
 } // namespace stm32l011xx
