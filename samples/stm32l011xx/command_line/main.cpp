@@ -10,7 +10,7 @@
 #include <common/cstring.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
-#include <hal/Systick.hpp>
+#include <hal/systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Command_line.hpp>
 #include <utils/Console.hpp>

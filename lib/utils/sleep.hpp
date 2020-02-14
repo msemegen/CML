@@ -13,7 +13,7 @@
 #include <common/macros.hpp>
 #include <common/time_tick.hpp>
 #include <hal/mcu.hpp>
-#include <hal/Systick.hpp>
+#include <hal/systick.hpp>
 
 
 namespace cml {

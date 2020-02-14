@@ -35,7 +35,6 @@ private:
 
     systick& operator = (systick&&)      = delete;
     systick& operator = (const systick&) = delete;
-
 };
 
 } // namespace hal

@@ -16,7 +16,7 @@
 #include <common/frequency.hpp>
 #include <common/integer.hpp>
 #include <common/time_tick.hpp>
-#include <hal/Systick.hpp>
+#include <hal/systick.hpp>
 
 namespace cml {
 namespace hal {
