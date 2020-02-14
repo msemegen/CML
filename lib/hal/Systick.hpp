@@ -15,54 +15,27 @@
 namespace cml {
 namespace hal {
 
-class Systick
+class systick
 {
 public:
 
-    void enable(common::uint32 a_priority);
-    void disable();
+    static void enable(common::uint32 a_priority);
+    static void disable();
+    static void reset_counter();
 
-    bool is_enabled() const;
-
-    void reset_counter()
-    {
-        this->cnt = 0;
-    }
-
-    common::time_tick get_counter()
-    {
-        return this->cnt;
-    }
-
-    static Systick& get_instance()
-    {
-        static Systick instance;
-        return instance;
-    }
+    static bool is_enabled();
+    static common::time_tick get_counter();
 
 private:
 
-    Systick()
-        : cnt(static_cast<common::time_tick>(0))
-    {}
+    systick()               = delete;
+    systick(systick&&)      = delete;
+    systick(const systick&) = delete;
+    ~systick()              = default;
 
-    Systick(Systick&&)      = default;
-    Systick(const Systick&) = default;
+    systick& operator = (systick&&)      = delete;
+    systick& operator = (const systick&) = delete;
 
-    Systick& operator = (Systick&&)      = delete;
-    Systick& operator = (const Systick&) = delete;
-
-private:
-
-    volatile common::time_tick cnt;
-
-private:
-
-    friend void systick_handle_interrupt(Systick* a_p_this)
-    {
-        assert(nullptr != a_p_this);
-        a_p_this->cnt++;
-    }
 };
 
 } // namespace hal

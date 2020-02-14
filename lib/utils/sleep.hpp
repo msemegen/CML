@@ -23,10 +23,10 @@ struct sleep
 {
     static void ms(common::time_tick a_time)
     {
-        assert(true == hal::Systick::get_instance().is_enabled());
+        assert(true == hal::systick::is_enabled());
 
-        common::time_tick start = hal::Systick::get_instance().get_counter();
-        while (common::time_tick_diff(hal::Systick::get_instance().get_counter(), start) <= a_time);
+        common::time_tick start = hal::systick::get_counter();
+        while (common::time_tick_diff(hal::systick::get_counter(), start) <= a_time);
     }
 
     inline static void us(common::time_tick a_time)

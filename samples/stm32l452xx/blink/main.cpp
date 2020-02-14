@@ -28,7 +28,7 @@ int main()
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
         mcu::disable_msi_clock();
-        Systick::get_instance().enable(0x0);
+        systick::enable(0x0);
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();

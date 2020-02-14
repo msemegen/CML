@@ -88,7 +88,7 @@ int main()
         };
 
         mcu::disable_msi_clock();
-        Systick::get_instance().enable(0x0);
+        systick::enable(0x0);
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
@@ -110,7 +110,7 @@ int main()
             Console console(&console_usart);
 
             console.enable();
-            console.write_line("\nCML CLI sample. CPU speed: %d MHz", SystemCoreClock / MHz(1));
+            console.write_line("\nCML CLI sample. CPU speed: %d MHz", mcu::get_syclk_frequency_hz() / MHz(1));
 
             Command_line command_line(&console_usart, "cmd > ", "Command not found");
 

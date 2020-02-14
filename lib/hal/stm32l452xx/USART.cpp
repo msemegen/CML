@@ -143,7 +143,7 @@ void usart_handle_interrupt(USART* a_p_this)
         const bool procceed          = p_context->callback.p_function(&data,
                                                                       p_context->callback.p_user_data,
                                                                       is_timeout(p_context->start_timestamp,
-                                                                                 Systick::get_instance().get_counter(),
+                                                                                 systick::get_counter(),
                                                                                  p_context->timeout));
 
         if (true == procceed)
@@ -166,7 +166,7 @@ void usart_handle_interrupt(USART* a_p_this)
         const bool procceed          = p_context->callback.p_function(a_p_this->p_usart->RDR,
                                                                       p_context->callback.p_user_data,
                                                                       is_timeout(p_context->start_timestamp,
-                                                                                 Systick::get_instance().get_counter(),
+                                                                                 systick::get_counter(),
                                                                                  p_context->timeout));
 
         if (false == procceed)
@@ -237,7 +237,7 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_tim
 
     return this->wait_until_isr(USART_ISR_TEACK | USART_ISR_REACK,
                                 false,
-                                Systick::get_instance().get_counter(),
+                                systick::get_counter(),
                                 a_timeout_ms);
 }
 
@@ -272,10 +272,10 @@ bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
 {
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
-    assert(true == Systick::get_instance().is_enabled());
+    assert(true == systick::is_enabled());
 
     bool timeout_occured = false;
-    time_tick start      = Systick::get_instance().get_counter();
+    time_tick start      = systick::get_counter();
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && false == timeout_occured; i++)
     {
@@ -308,10 +308,10 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
 {
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
-    assert(true == Systick::get_instance().is_enabled());
+    assert(true == systick::is_enabled());
 
     bool timeout_occured = false;
-    time_tick start      = Systick::get_instance().get_counter();
+    time_tick start      = systick::get_counter();
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && false == timeout_occured; i++)
     {
@@ -328,14 +328,14 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
 
 void USART::write_bytes_it(const TX_callback& a_callback, time_tick a_timeout_ms)
 {
-    assert(true == Systick::get_instance().is_enabled());
+    assert(true == systick::is_enabled());
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_TXEIE);
 
     if (nullptr != a_callback.p_function)
     {
         this->TX_context.callback        = a_callback;
-        this->TX_context.start_timestamp = Systick::get_instance().get_counter();
+        this->TX_context.start_timestamp = systick::get_counter();
         this->TX_context.timeout         = a_timeout_ms;
 
         set_flag(&(this->p_usart->CR1), USART_CR1_TXEIE);
@@ -350,14 +350,14 @@ void USART::write_bytes_it(const TX_callback& a_callback, time_tick a_timeout_ms
 
 void USART::read_bytes_it(const RX_callback& a_callback, time_tick a_timeout_ms)
 {
-    assert(true == Systick::get_instance().is_enabled());
+    assert(true == systick::is_enabled());
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE);
 
     if (nullptr != a_callback.p_function)
     {
         this->RX_context.callback        = a_callback;
-        this->RX_context.start_timestamp = Systick::get_instance().get_counter();;
+        this->RX_context.start_timestamp = systick::get_counter();;
         this->RX_context.timeout         = a_timeout_ms;
 
         set_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE);

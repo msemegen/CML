@@ -18,8 +18,22 @@
 #include <stm32l0xx.h>
 #endif
 
-//mhl
+//cml
 #include <common/bit.hpp>
+
+namespace
+{
+
+using namespace cml::common;
+
+uint32 cnt = 0;
+
+void systick_handle_interrupt()
+{
+    cnt++;
+}
+
+} // namespace ::
 
 extern "C"
 {
@@ -27,7 +41,7 @@ using namespace cml::hal;
 
 void SysTick_Handler()
 {
-    systick_handle_interrupt(&(Systick::get_instance()));
+    systick_handle_interrupt();
 }
 
 } // extern "C"
@@ -35,9 +49,9 @@ void SysTick_Handler()
 namespace cml {
 namespace hal {
 
-using namespace common;
+using namespace cml::common;
 
-void Systick::enable(uint32 a_priority)
+void systick::enable(uint32 a_priority)
 {
     assert(SystemCoreClock / 1000 > 1);
 
@@ -49,14 +63,24 @@ void Systick::enable(uint32 a_priority)
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 }
 
-void Systick::disable()
+void systick::disable()
 {
     SysTick->CTRL = 0;
 }
 
-bool Systick::is_enabled() const
+void systick::reset_counter()
+{
+    cnt = 0;
+}
+
+bool systick::is_enabled()
 {
     return is_flag(SysTick->CTRL, SysTick_CTRL_ENABLE_Msk);
+}
+
+common::time_tick systick::get_counter()
+{
+    return cnt;
 }
 
 } // namespace hal

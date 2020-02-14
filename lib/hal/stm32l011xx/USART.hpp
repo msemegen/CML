@@ -236,7 +236,7 @@ private:
 
         while (false == status && false == timeout)
         {
-            timeout = a_timeout_ms >= common::time_tick_diff(Systick::get_instance().get_counter(), a_start);
+            timeout = a_timeout_ms >= common::time_tick_diff(systick::get_counter(), a_start);
             status  = this->is_isr_flag(a_flag) == a_status;
         }
 

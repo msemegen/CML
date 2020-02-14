@@ -28,7 +28,7 @@ int main()
     if (mcu::Sysclk_source::pll == mcu::get_sysclk_source())
     {
         mcu::disable_msi_clock();
-        Systick::get_instance().enable((1u << __NVIC_PRIO_BITS) - 1u);
+        systick::enable((1u << __NVIC_PRIO_BITS) - 1u);
 
         GPIO gpio_port_b(GPIO::Id::b);
         gpio_port_b.enable();
