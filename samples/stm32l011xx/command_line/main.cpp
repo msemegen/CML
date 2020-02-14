@@ -9,7 +9,7 @@
 #include <collection/Vector.hpp>
 #include <common/cstring.hpp>
 #include <hal/GPIO.hpp>
-#include <hal/MCU.hpp>
+#include <hal/mcu.hpp>
 #include <hal/Systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Command_line.hpp>

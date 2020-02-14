@@ -7,7 +7,7 @@
 
 //cml
 #include <hal/GPIO.hpp>
-#include <hal/MCU.hpp>
+#include <hal/mcu.hpp>
 #include <utils/sleep.hpp>
 
 #include <common/bit.hpp>

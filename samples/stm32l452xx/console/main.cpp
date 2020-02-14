@@ -7,7 +7,7 @@
 
 //cml
 #include <hal/GPIO.hpp>
-#include <hal/MCU.hpp>
+#include <hal/mcu.hpp>
 #include <hal/Systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Console.hpp>

@@ -8,7 +8,7 @@
 //cml
 #include <common/assert.hpp>
 #include <hal/GPIO.hpp>
-#include <hal/MCU.hpp>
+#include <hal/mcu.hpp>
 #include <utils/sleep.hpp>
 
 int main()

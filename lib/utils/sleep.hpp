@@ -12,7 +12,7 @@
 #include <common/frequency.hpp>
 #include <common/macros.hpp>
 #include <common/time_tick.hpp>
-#include <hal/MCU.hpp>
+#include <hal/mcu.hpp>
 #include <hal/Systick.hpp>
 
 
