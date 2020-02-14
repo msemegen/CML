@@ -17,17 +17,17 @@ int main()
     using namespace cml::hal;
     using namespace cml::utils;
 
-    MCU::get_instance().enable_hsi_clock(MCU::Hsi_frequency::_16_MHz);
-    MCU::get_instance().enable_pll(MCU::Pll_clock_source::hsi, { false,
-                                                                 MCU::Pll_config::Multiplier::_4,
-                                                                 MCU::Pll_config::Divider::_2 });
-    MCU::get_instance().set_sysclk(MCU::Sysclk_source::pll, { MCU::Bus_prescalers::AHB::_1,
-                                                              MCU::Bus_prescalers::APB1::_1,
-                                                              MCU::Bus_prescalers::APB2::_1 });
+    mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
+    mcu::enable_pll(mcu::Pll_clock_source::hsi, { false,
+                                                  mcu::Pll_config::Multiplier::_4,
+                                                  mcu::Pll_config::Divider::_2 });
+    mcu::set_sysclk(mcu::Sysclk_source::pll, { mcu::Bus_prescalers::AHB::_1,
+                                               mcu::Bus_prescalers::APB1::_1,
+                                               mcu::Bus_prescalers::APB2::_1 });
 
-    if (MCU::Sysclk_source::pll == MCU::get_instance().get_sysclk_source())
+    if (mcu::Sysclk_source::pll == mcu::get_sysclk_source())
     {
-        MCU::get_instance().disable_msi_clock();
+        mcu::disable_msi_clock();
         Systick::get_instance().enable((1u << __NVIC_PRIO_BITS) - 1u);
 
         GPIO gpio_port_b(GPIO::Id::b);

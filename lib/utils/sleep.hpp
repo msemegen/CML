@@ -31,7 +31,7 @@ struct sleep
 
     inline static void us(common::time_tick a_time)
     {
-        assert(true == hal::MCU::get_instance().is_dwt_enabled());
+        assert(true == hal::mcu::is_dwt_enabled());
         assert(a_time > 0);
 
 #ifdef CML_DWT_PRESENT

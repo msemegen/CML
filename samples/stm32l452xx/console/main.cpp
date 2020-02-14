@@ -18,13 +18,13 @@ int main()
     using namespace cml::hal;
     using namespace cml::utils;
 
-    MCU::get_instance().enable_hsi_clock(MCU::Hsi_frequency::_16_MHz);
-    MCU::get_instance().set_sysclk(MCU::Sysclk_source::hsi, { MCU::Bus_prescalers::AHB::_1,
-                                                              MCU::Bus_prescalers::APB1::_1,
-                                                              MCU::Bus_prescalers::APB2::_1 },
-                                                              { 0x3, 0xf0 });
+    mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
+    mcu::set_sysclk(mcu::Sysclk_source::hsi, { mcu::Bus_prescalers::AHB::_1,
+                                               mcu::Bus_prescalers::APB1::_1,
+                                               mcu::Bus_prescalers::APB2::_1 },
+                                               { 0x3, 0xf0 });
 
-    if (MCU::Sysclk_source::hsi == MCU::get_instance().get_sysclk_source())
+    if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
         USART::Config usart_config =
         {
@@ -50,7 +50,7 @@ int main()
             0x7u
         };
 
-        MCU::get_instance().disable_msi_clock();
+        mcu::disable_msi_clock();
         Systick::get_instance().enable(0x0);
 
         GPIO gpio_port_a(GPIO::Id::a);

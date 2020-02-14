@@ -55,12 +55,12 @@ int main()
     using namespace cml::hal;
     using namespace cml::utils;
 
-    MCU::get_instance().enable_hsi_clock(MCU::Hsi_frequency::_16_MHz);
-    MCU::get_instance().set_sysclk(MCU::Sysclk_source::hsi, { MCU::Bus_prescalers::AHB::_1,
-                                                              MCU::Bus_prescalers::APB1::_1,
-                                                              MCU::Bus_prescalers::APB2::_1 });
+    mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
+    mcu::set_sysclk(mcu::Sysclk_source::hsi, { mcu::Bus_prescalers::AHB::_1,
+                                               mcu::Bus_prescalers::APB1::_1,
+                                               mcu::Bus_prescalers::APB2::_1 });
 
-    if (MCU::Sysclk_source::hsi == MCU::get_instance().get_sysclk_source())
+    if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
         USART::Config usart_config =
         {
@@ -86,7 +86,7 @@ int main()
             0x4u
         };
 
-        MCU::get_instance().disable_msi_clock();
+        mcu::disable_msi_clock();
         Systick::get_instance().enable((1u << __NVIC_PRIO_BITS) - 1u);
 
         GPIO gpio_port_a(GPIO::Id::a);
@@ -112,7 +112,7 @@ int main()
             Console console(&console_usart);
 
             console.enable();
-            console.write_line("\nCML CLI sample. CPU speed: %d MHz", SystemCoreClock / MHz(1));
+            console.write_line("\nCML CLI sample. CPU speed: %d MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             Command_line command_line(&console_usart, "cmd > ", "Command not found");
 

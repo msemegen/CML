@@ -18,7 +18,7 @@ namespace cml {
 namespace hal {
 namespace stm32l452xx {
 
-class MCU
+class mcu
 {
 public:
 
@@ -176,41 +176,44 @@ public:
 
 public:
 
-    void enable_msi_clock(Msi_frequency a_freq);
-    void enable_hsi_clock(Hsi_frequency a_freq);
-    void enable_lsi_clock(Lsi_frequency a_freq);
+    static void enable_msi_clock(Msi_frequency a_freq);
+    static void enable_hsi_clock(Hsi_frequency a_freq);
+    static void enable_lsi_clock(Lsi_frequency a_freq);
 
-    void disable_msi_clock();
-    void disable_hsi_clock();
-    void disable_lsi_clock();
+    static void disable_msi_clock();
+    static void disable_hsi_clock();
+    static void disable_lsi_clock();
 
-    void enable_pll(Pll_clock_source a_source, const Pll_config& a_pll_config);
-    void disable_pll();
+    static void enable_pll(Pll_clock_source a_source, const Pll_config& a_pll_config);
+    static void disable_pll();
 
-    void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_NVIC_config);
+    static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_NVIC_config);
 
-    void enable_dwt()
+    static void enable_dwt()
     {
         common::set_flag(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
         common::set_flag(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
     }
 
-    void disable_dwt()
+    static void disable_dwt()
     {
         common::clear_flag(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
         common::clear_flag(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
     }
 
-    void reset();
-    void halt();
+    static void reset();
+    static void halt();
 
-    bool is_dwt_enabled() const
+    static void register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
+    static void register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
+
+    static bool is_dwt_enabled()
     {
         return true == common::is_flag(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
                        common::is_flag(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
     }
 
-    Id get_id() const
+    static Id get_id()
     {
         static_assert(12 == config::mcu::device_id_length);
 
@@ -224,17 +227,17 @@ public:
         };
     }
 
-    Sysclk_source get_sysclk_source() const
+    static Sysclk_source get_sysclk_source()
     {
         return static_cast<Sysclk_source>(common::get_flag(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
-    common::uint32 get_syclk_frequency_hz() const
+    static common::uint32 get_syclk_frequency_hz()
     {
         return SystemCoreClock;
     }
 
-    bool is_clock_enabled(Clock a_clock) const
+    static bool is_clock_enabled(Clock a_clock)
     {
         switch (a_clock)
         {
@@ -256,64 +259,43 @@ public:
         return false;
     }
 
-    Voltage_scaling get_voltage_scaling() const
+    static Voltage_scaling get_voltage_scaling()
     {
         return static_cast<Voltage_scaling>(common::get_flag(PWR->CR1, PWR_CR1_VOS));
     }
 
-    Flash_latency get_flash_latency() const
+    static Flash_latency get_flash_latency()
     {
         return static_cast<Flash_latency>(common::get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
     }
 
-    void register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback)
-    {
-        this->pre_sysclk_frequency_change_callback = a_callback;
-    }
-
-    void register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback)
-    {
-        this->post_sysclk_frequency_change_callback = a_callback;
-    }
-
-    static MCU& get_instance()
-    {
-        static MCU instance;
-        return instance;
-    }
-
 private:
 
-    MCU()           = default;
-    MCU(const MCU&) = delete;
-    MCU(MCU&&)      = delete;
-    ~MCU()          = default;
+    mcu()           = delete;
+    mcu(const mcu&) = delete;
+    mcu(mcu&&)      = delete;
+    ~mcu()          = default;
 
-    MCU& operator = (const MCU&) = delete;
-    MCU& operator = (MCU&&)      = delete;
+    mcu& operator = (const mcu&) = delete;
+    mcu& operator = (mcu&&)      = delete;
 
-    Flash_latency select_flash_latency(common::uint32 a_syclk_freq, Voltage_scaling a_voltage_scaling);
-    Voltage_scaling select_voltage_scaling(Sysclk_source a_source, common::uint32 a_sysclk_freq);
+    static Flash_latency select_flash_latency(common::uint32 a_syclk_freq, Voltage_scaling a_voltage_scaling);
+    static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, common::uint32 a_sysclk_freq);
 
-    void set_flash_latency(Flash_latency a_latency);
-    void set_voltage_scaling(Voltage_scaling a_scaling);
-    void set_sysclk_source(Sysclk_source a_sysclk_source);
-    void set_bus_prescalers(const Bus_prescalers& a_prescalers);
+    static void set_flash_latency(Flash_latency a_latency);
+    static void set_voltage_scaling(Voltage_scaling a_scaling);
+    static void set_sysclk_source(Sysclk_source a_sysclk_source);
+    static void set_bus_prescalers(const Bus_prescalers& a_prescalers);
 
-    void increase_sysclk_frequency(Sysclk_source a_source,
-                                   common::uint32 a_frequency_hz,
-                                   const Bus_prescalers& a_prescalers);
+    static void increase_sysclk_frequency(Sysclk_source a_source,
+                                          common::uint32 a_frequency_hz,
+                                          const Bus_prescalers& a_prescalers);
 
-    void decrease_sysclk_frequency(Sysclk_source a_source,
-                                   common::uint32 a_frequency_hz,
-                                   const Bus_prescalers& a_prescalers);
+    static void decrease_sysclk_frequency(Sysclk_source a_source,
+                                          common::uint32 a_frequency_hz,
+                                          const Bus_prescalers& a_prescalers);
 
-    common::uint32 calculate_frequency_from_pll_configuration();
-
-private:
-
-    Sysclk_frequency_change_callback pre_sysclk_frequency_change_callback;
-    Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
+    static common::uint32 calculate_frequency_from_pll_configuration();
 };
 
 } // namespace stm32l452xx
