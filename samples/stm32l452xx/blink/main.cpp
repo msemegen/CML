@@ -8,12 +8,16 @@
 //cml
 #include <hal/GPIO.hpp>
 #include <hal/MCU.hpp>
-#include <hal/Systick.hpp>
+#include <utils/sleep.hpp>
+
+#include <common/bit.hpp>
+#include <common/frequency.hpp>
 
 int main()
 {
     using namespace cml::common;
     using namespace cml::hal;
+    using namespace cml::utils;
 
     MCU::get_instance().enable_hsi_clock(MCU::Hsi_frequency::_16_MHz);
     MCU::get_instance().set_sysclk(MCU::Sysclk_source::hsi, { MCU::Bus_prescalers::AHB::_1,
@@ -41,15 +45,12 @@ int main()
 
         led_pin.set_level(Output_pin::Level::low);
 
-        time_tick start = Systick::get_instance().get_counter();
+        MCU::get_instance().enable_dwt();
 
         while (true)
         {
-            if (time_tick_diff(Systick::get_instance().get_counter(), start) >= 500u)
-            {
-                led_pin.toggle_level();
-                start = Systick::get_instance().get_counter();
-            }
+            sleep::ms(1000);
+            led_pin.toggle_level();
         }
     }
 

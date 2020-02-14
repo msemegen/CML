@@ -9,12 +9,13 @@
 #include <common/assert.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/MCU.hpp>
-#include <hal/Systick.hpp>
+#include <utils/sleep.hpp>
 
 int main()
 {
     using namespace cml::common;
     using namespace cml::hal;
+    using namespace cml::utils;
 
     MCU::get_instance().enable_hsi_clock(MCU::Hsi_frequency::_16_MHz);
     MCU::get_instance().enable_pll(MCU::Pll_clock_source::hsi, { false,
@@ -44,15 +45,10 @@ int main()
 
         led_pin.set_level(Output_pin::Level::low);
 
-        time_tick start = Systick::get_instance().get_counter();
-
         while (true)
         {
-            if (time_tick_diff(Systick::get_instance().get_counter(), start) >= 500u)
-            {
-                led_pin.toggle_level();
-                start = Systick::get_instance().get_counter();
-            }
+            sleep::ms(1000);
+            led_pin.toggle_level();
         }
     }
 

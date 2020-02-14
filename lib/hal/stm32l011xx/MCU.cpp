@@ -1,5 +1,5 @@
 /*
-    Name: mcu.cpp
+    Name: MCU.cpp
 
     Copyright(c) 2019 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)

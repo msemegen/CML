@@ -84,13 +84,13 @@ private:
 } // namespace common
 } // namespace cml
 
-#ifdef DEBUG
+#ifdef CML_DEBUG
 #define assert(expression) (false == (expression) ? cml::common::assert::get_instance().trap(__FILE__,    \
                                                                                              __LINE__,    \
                                                                                              #expression) \
                                                   : static_cast<void>(0))
 #endif
 
-#ifndef DEBUG
+#ifndef CML_DEBUG
 #define assert(expression)
 #endif
