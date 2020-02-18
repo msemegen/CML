@@ -19,11 +19,11 @@ namespace cml {
 namespace hal {
 
 #ifdef STM32L452xx
-using CRC32 = stm32l452xx::crc32;
+using crc32 = stm32l452xx::crc32;
 #endif // STM32L452xx
 
 #ifdef STM32L011xx
-using CRC32 = stm32l011xx::crc32;
+using crc32 = stm32l011xx::crc32;
 #endif
 
 } // namespace cml
