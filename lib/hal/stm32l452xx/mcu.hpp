@@ -232,7 +232,7 @@ public:
         return static_cast<Sysclk_source>(common::get_flag(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
-    static common::uint32 get_syclk_frequency_hz()
+    static common::uint32 get_sysclk_frequency_hz()
     {
         return SystemCoreClock;
     }

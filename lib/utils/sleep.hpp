@@ -31,15 +31,27 @@ struct sleep
 
     inline static void us(common::time_tick a_time)
     {
-        assert(true == hal::mcu::is_dwt_enabled());
+        assert(hal::mcu::get_sysclk_frequency_hz() >= common::MHz(1));
         assert(a_time > 0);
 
 #ifdef CML_DWT_PRESENT
+        assert(true == hal::mcu::is_dwt_enabled());
+
         DWT->CYCCNT = 0;
-        const common::uint32 max = DWT->CYCCNT + (SystemCoreClock / common::MHz(1) * (a_time - 1));
+        const common::uint32 max = DWT->CYCCNT + (hal::mcu::get_sysclk_frequency_hz() / common::MHz(1) * (a_time - 1));
 
         while (DWT->CYCCNT < max);
-#endif
+#endif // CMLDWT_PRESENT
+
+#ifndef CML_DWT_PRESENT
+        common::uint32 count = ((((hal::mcu::get_sysclk_frequency_hz() / common::MHz(1))) / 4) * (a_time - 1));
+
+        __asm__ __volatile__("1: sub %0, #1 \n"
+                             "   cmp %0, #0 \n"
+                             "   bne  1b    \n"
+                             : "+r" (count));
+
+#endif // !CML_DWT_PRESENT
     }
 
     sleep()             = delete;
@@ -49,13 +61,7 @@ struct sleep
 
     sleep& operator = (sleep&&)      = delete;
     sleep& operator = (const sleep&) = delete;
-
-private:
-
-    static common::uint32 x;
 };
-
-common::uint32 sleep::x = 0;
 
 } // namespace utils
 } // namespace cml

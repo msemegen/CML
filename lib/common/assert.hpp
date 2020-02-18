@@ -13,10 +13,8 @@
 namespace cml {
 namespace common {
 
-class assert
+struct assert
 {
-public:
-
     struct Halt_callback
     {
         using function = void(*)(void* a_p_user_data);
@@ -36,58 +34,26 @@ public:
         void* p_user_data   = nullptr;
     };
 
-    void register_callback(const Halt_callback& a_callback)
-    {
-        this->halt = a_callback;
-    }
+    static void register_callback(const Halt_callback& a_callback);
+    static void register_callback(const Print_callback& a_callback);
+    static void trap(const char* a_p_file, int32 a_line, const char* a_p_expression);
 
-    void register_callback(const Print_callback& a_callback)
-    {
-        this->print = a_callback;
-    }
-
-    void trap(const char* a_p_file, int32 a_line, const char* a_p_expression)
-    {
-        if (nullptr != this->print.p_function)
-        {
-            this->print.p_function(this->print.p_user_data, a_p_file, a_line, a_p_expression);
-        }
-
-        if (nullptr != this->halt.p_function)
-        {
-            this->halt.p_function(this->halt.p_user_data);
-        }
-    }
-
-    static assert& get_instance()
-    {
-        static assert instance;
-        return instance;
-    }
-
-private:
-
-    assert()              = default;
+    assert()              = delete;
     assert(const assert&) = delete;
     assert(assert&&)      = delete;
     ~assert()             = default;
 
     assert& operator = (const assert&) = delete;
     assert& operator = (assert&&)      = delete;
-
-private:
-
-    Halt_callback  halt;
-    Print_callback print;
 };
 
 } // namespace common
 } // namespace cml
 
 #ifdef CML_DEBUG
-#define assert(expression) (false == (expression) ? cml::common::assert::get_instance().trap(__FILE__,    \
-                                                                                             __LINE__,    \
-                                                                                             #expression) \
+#define assert(expression) (false == (expression) ? cml::common::assert::trap(__FILE__,    \
+                                                                              __LINE__,    \
+                                                                              #expression) \
                                                   : static_cast<void>(0))
 #endif
 
