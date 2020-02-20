@@ -284,6 +284,7 @@ public:
     Alternate_function_pin(GPIO* a_p_port, common::uint8 a_pin)
         : p_port(a_p_port)
         , pin(a_pin)
+        , function(0)
     {
         assert(nullptr != a_p_port);
         assert(a_pin < 16);
@@ -309,15 +310,21 @@ public:
     void set_speed(Speed a_speed);
     void set_function(common::uint32 a_function);
 
-    Mode           get_mode()     const;
-    Pull           get_pull()     const;
-    Speed          get_speed()    const;
-    common::uint32 get_function() const;
+    Mode  get_mode()  const;
+    Pull  get_pull()  const;
+    Speed get_speed() const;
+
+    common::uint32 get_function() const
+    {
+        return this->function;
+    }
 
 private:
 
     GPIO* p_port;
     const common::uint8 pin;
+
+    common::uint32 function;
 };
 
 } // namespace stm32l452xx

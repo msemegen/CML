@@ -298,6 +298,7 @@ void Alternate_function_pin::set_function(uint32 a_function)
     af_register |= a_function << ((this->pin - (af_register_index * 8u)) * 4u);
 
     p_port->AFR[af_register_index] = af_register;
+    this->function = a_function;
 }
 
 Alternate_function_pin::Mode Alternate_function_pin::get_mode() const
