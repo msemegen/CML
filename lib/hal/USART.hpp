@@ -9,11 +9,11 @@
 
 //cml
 #ifdef STM32L452xx
-#include <hal/stm32l452xx/usart.hpp>
+#include <hal/stm32l452xx/USART.hpp>
 #endif
 
 #ifdef STM32L011xx
-#include <hal/stm32l011xx/usart.hpp>
+#include <hal/stm32l011xx/USART.hpp>
 #endif
 
 namespace cml {

@@ -14,12 +14,12 @@
 namespace cml {
 namespace collection {
 
-template<typename data_type>
+template<typename Type_t>
 class Ring
 {
 public:
 
-    Ring(data_type* a_p_buffer, common::uint32 a_capacity)
+    Ring(Type_t* a_p_buffer, common::uint32 a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
         , head(0)
@@ -38,7 +38,7 @@ public:
     Ring& operator = (Ring&&)      = default;
     Ring& operator = (const Ring&) = default;
 
-    bool push(const data_type& a_data)
+    bool push(const Type_t& a_data)
     {
         bool add_new = false == this->is_full();
 
@@ -57,11 +57,11 @@ public:
         return add_new;
     }
 
-    const data_type& read() const
+    const Type_t& read() const
     {
         assert(false == this->is_empty());
 
-        const data_type& r = this->p_buffer[this->tail++];
+        const Type_t& r = this->p_buffer[this->tail++];
         this->full         = false;
 
         if (this->capacity == this->tail)
@@ -107,7 +107,7 @@ public:
 
 private:
 
-    data_type* p_buffer;
+    Type_t* p_buffer;
     common::uint32 capacity;
 
     common::uint32 head;

@@ -14,7 +14,7 @@
 namespace cml {
 namespace common {
 
-template<typename type>
+template<typename Type_t>
 class numeric_traits
 {
 public:
@@ -27,16 +27,16 @@ public:
     numeric_traits& operator = (numeric_traits&&)      = delete;
     numeric_traits& operator = (const numeric_traits&) = delete;
 
-    static constexpr type get_min()
+    static constexpr Type_t get_min()
     {
         assert(false);
-        return type();
+        return Type_t();
     }
 
-    static constexpr type get_max()
+    static constexpr Type_t get_max()
     {
         assert(false);
-        return type();
+        return Type_t();
     }
 };
 

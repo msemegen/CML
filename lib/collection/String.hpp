@@ -107,7 +107,6 @@ private:
 
     const common::uint32 capacity;
     common::uint32 length;
-
  };
 
 } // namespace collection

@@ -15,46 +15,46 @@
 namespace cml {
 namespace collection {
 
-template<typename type>
+template<typename Type_t>
 class Array
 {
 public:
 
-    Array(type* a_p_buffer, common::uint32 a_capacity)
+    Array(Type_t* a_p_buffer, common::uint32 a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
     {
         for (decltype(this->capacity) i = 0; i < this->capacity; i++)
         {
-            this->p_buffer[i] = type();
+            this->p_buffer[i] = Type_t();
         }
     }
 
-    Array()                    = delete;
-    Array(Array<type>&&)       = default;
-    Array(const Array<type>&&) = default;
+    Array()                      = delete;
+    Array(Array<Type_t>&&)       = default;
+    Array(const Array<Type_t>&&) = default;
 
-    Array<type>& operator = (Array<type>&&)      = default;
-    Array<type>& operator = (const Array<type>&) = default;
+    Array<Type_t>& operator = (Array<Type_t>&&)      = default;
+    Array<Type_t>& operator = (const Array<Type_t>&) = default;
 
     common::uint32 get_capacity() const
     {
         return this->capacity;
     }
 
-    type& operator[](common::uint32 a_index)
+    Type_t& operator[](common::uint32 a_index)
     {
         assert(a_index < this->capacity);
         return this->p_buffer[a_index];
     }
 
-    const type& operator[](common::uint32 a_index) const
+    const Type_t& operator[](common::uint32 a_index) const
     {
         assert(a_index < this->capacity);
         return this->p_buffer[a_index];
     }
 
-    bool operator == (const Array<type>& a_other) const
+    bool operator == (const Array<Type_t>& a_other) const
     {
         bool retval = this->capacity == a_other.capacity;
 
@@ -66,7 +66,7 @@ public:
         return retval;
     }
 
-    bool operator == (Array<type>&& a_other) const
+    bool operator == (Array<Type_t>&& a_other) const
     {
         bool retval = this->capacity == a_other.capacity;
 
@@ -80,7 +80,7 @@ public:
 
 private:
 
-    type* p_buffer;
+    Type_t* p_buffer;
     common::uint32 capacity;
 };
 

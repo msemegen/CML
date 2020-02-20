@@ -14,12 +14,12 @@
 namespace cml {
 namespace collection {
 
-template<typename data_type>
+template<typename Type_t>
 class Vector
 {
 public:
 
-    Vector(data_type* a_p_buffer, common::uint32 a_capacity)
+    Vector(Type_t* a_p_buffer, common::uint32 a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
         , length()
@@ -36,7 +36,7 @@ public:
     Vector& operator = (Vector&& a_other) = default;
     Vector& operator = (const Vector&)    = default;
 
-    bool push_back(const data_type& a_data)
+    bool push_back(const Type_t& a_data)
     {
         bool retval = this->length < this->capacity;
 
@@ -65,13 +65,13 @@ public:
         this->length = 0;
     }
 
-    data_type& operator[] (common::uint32 a_index)
+    Type_t& operator[] (common::uint32 a_index)
     {
         assert(a_index < this->length);
         return this->p_buffer[a_index];
     }
 
-    const data_type& operator[] (common::uint32 a_index) const
+    const Type_t& operator[] (common::uint32 a_index) const
     {
         assert(a_index < this->length);
         return this->p_buffer[a_index];
@@ -99,7 +99,7 @@ public:
 
 private:
 
-    data_type* p_buffer;
+    Type_t* p_buffer;
     common::uint32 capacity;
 
     common::uint32 length;
