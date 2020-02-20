@@ -10,9 +10,9 @@
 //cml
 #include <collection/Ring.hpp>
 #include <collection/Vector.hpp>
-#include <common/assert.hpp>
 #include <common/cstring.hpp>
 #include <common/integer.hpp>
+#include <debug/assert.hpp>
 #include <hal/USART.hpp>
 #include <utils/config.hpp>
 

@@ -11,8 +11,8 @@
 #include <hal/stm32l452xx/USART.hpp>
 
 //cml
-#include <common/assert.hpp>
 #include <hal/stm32l452xx/config.hpp>
+#include <debug/assert.hpp>
 
 namespace {
 

@@ -8,10 +8,10 @@
 */
 
 //cml
-#include <common/assert.hpp>
 #include <common/frequency.hpp>
 #include <common/macros.hpp>
 #include <common/time_tick.hpp>
+#include <debug/assert.hpp>
 #include <hal/mcu.hpp>
 #include <hal/systick.hpp>
 

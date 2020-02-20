@@ -11,7 +11,7 @@
 #include <common/integer.hpp>
 
 namespace cml {
-namespace common {
+namespace debug {
 
 struct assert
 {
@@ -27,7 +27,7 @@ struct assert
     {
         using function = void(*)(void* a_p_user_data,
                                  const char* a_p_file,
-                                 int32 a_line,
+                                 common::int32 a_line,
                                  const char* a_p_expression);
 
         function p_function = nullptr;
@@ -36,7 +36,7 @@ struct assert
 
     static void register_callback(const Halt_callback& a_callback);
     static void register_callback(const Print_callback& a_callback);
-    static void trap(const char* a_p_file, int32 a_line, const char* a_p_expression);
+    static void trap(const char* a_p_file, common::int32 a_line, const char* a_p_expression);
 
     assert()              = delete;
     assert(const assert&) = delete;
@@ -47,13 +47,13 @@ struct assert
     assert& operator = (assert&&)      = delete;
 };
 
-} // namespace common
+} // namespace debug
 } // namespace cml
 
 #ifdef CML_DEBUG
-#define assert(expression) (false == (expression) ? cml::common::assert::trap(__FILE__,    \
-                                                                              __LINE__,    \
-                                                                              #expression) \
+#define assert(expression) (false == (expression) ? cml::debug::assert::trap(__FILE__,    \
+                                                                             __LINE__,    \
+                                                                             #expression) \
                                                   : static_cast<void>(0))
 #endif
 

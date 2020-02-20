@@ -8,9 +8,9 @@
 */
 
 //cml
-#include <common/assert.hpp>
 #include <common/integer.hpp>
 #include <common/time_tick.hpp>
+#include <debug/assert.hpp>
 
 namespace cml {
 namespace hal {

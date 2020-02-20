@@ -8,10 +8,10 @@
 */
 
 //cml
-#include <common/assert.hpp>
 #include <common/cstring.hpp>
 #include <common/memory.hpp>
 #include <common/numeric_traits.hpp>
+#include <debug/assert.hpp>
 
 namespace cml {
 namespace collection {

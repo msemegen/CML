@@ -11,10 +11,10 @@
 #include <hal/stm32l011xx/mcu.hpp>
 
 //cml
-#include <common/assert.hpp>
 #include <common/bit.hpp>
 #include <common/frequency.hpp>
 #include <common/macros.hpp>
+#include <debug/assert.hpp>
 
 namespace {
 

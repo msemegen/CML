@@ -9,9 +9,9 @@
 #include <utils/Command_line.hpp>
 
 //cml
-#include <common/assert.hpp>
 #include <common/macros.hpp>
 #include <common/memory.hpp>
+#include <debug/assert.hpp>
 #include <hal/usart.hpp>
 
 namespace

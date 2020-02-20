@@ -6,7 +6,6 @@
 */
 
 //cml
-#include <common/assert.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
 #include <utils/sleep.hpp>

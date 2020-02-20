@@ -6,11 +6,11 @@
 */
 
 //this
-#include <common/assert.hpp>
+#include <debug/assert.hpp>
 
 namespace {
 
-using namespace cml::common;
+using namespace cml::debug;
 
 assert::Halt_callback  halt{ nullptr, nullptr };
 assert::Print_callback print{ nullptr, nullptr };
@@ -18,7 +18,9 @@ assert::Print_callback print{ nullptr, nullptr };
 } // namespace ::
 
 namespace cml {
-namespace common {
+namespace debug {
+
+using namespace cml::common;
 
 void assert::register_callback(const Halt_callback& a_callback)
 {
@@ -45,5 +47,5 @@ void assert::trap(const char* a_p_file, int32 a_line, const char* a_p_expression
     while (true);
 }
 
-} // namespace common
+} // namespace debug
 } // namespace cml

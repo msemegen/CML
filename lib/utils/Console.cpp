@@ -9,9 +9,9 @@
 #include <utils/Console.hpp>
 
 //cml
-#include <common/assert.hpp>
 #include <common/cstring.hpp>
 #include <common/macros.hpp>
+#include <debug/assert.hpp>
 
 namespace
 {

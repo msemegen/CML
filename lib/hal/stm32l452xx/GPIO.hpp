@@ -11,9 +11,9 @@
 #include <stm32l4xx.h>
 
 //cml
-#include <common/assert.hpp>
 #include <common/bit.hpp>
 #include <common/integer.hpp>
+#include <debug/assert.hpp>
 
 namespace cml {
 namespace hal {

@@ -8,8 +8,9 @@
 */
 
 //cml
-#include <common/assert.hpp>
 #include <common/integer.hpp>
+#include <debug/assert.hpp>
+
 
 namespace cml {
 namespace collection {

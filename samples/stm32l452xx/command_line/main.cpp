@@ -110,7 +110,7 @@ int main()
             Console console(&console_usart);
 
             console.enable();
-            console.write_line("\nCML CLI sample. CPU speed: %d MHz", mcu::get_syclk_frequency_hz() / MHz(1));
+            console.write_line("\nCML CLI sample. CPU speed: %d MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             Command_line command_line(&console_usart, "cmd > ", "Command not found");
 
