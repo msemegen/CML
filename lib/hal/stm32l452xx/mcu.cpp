@@ -124,8 +124,9 @@ void mcu::enable_pll(const Pll_config& a_config)
 
     disable_pll();
 
-    RCC->PLLCFGR = static_cast<uint32>(a_config.source)    |
-                   static_cast<uint32>(a_config.m_divider) |
+    RCC->PLLCFGR = static_cast<uint32>(a_config.source)     |
+                   static_cast<uint32>(a_config.m)          |
+                   (a_config.pll.n << RCC_PLLCFGR_PLLN_Pos) |
                    get_pll_register_config_from_factor(a_config.pll.p, RCC_PLLCFGR_PLLPEN) |
                    get_pll_register_config_from_factor(a_config.pll.q, RCC_PLLCFGR_PLLQEN) |
                    get_pll_register_config_from_factor(a_config.pll.r, RCC_PLLCFGR_PLLREN);
@@ -191,7 +192,7 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers,
         {
             assert(true == is_clock_enabled(Clock::pll));
 
-            frequency_hz = calculate_pll_frequency();
+            frequency_hz = calculate_pll_r_output_frequency();
         }
         break;
     }
@@ -430,7 +431,7 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source,
     SystemCoreClock = a_frequency_hz;
 }
 
-uint32 mcu::calculate_pll_frequency()
+uint32 mcu::calculate_pll_r_output_frequency()
 {
     uint32 pllm = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
     uint32 plln = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN)) >> RCC_PLLCFGR_PLLN_Pos);
@@ -463,7 +464,7 @@ uint32 mcu::calculate_pll_frequency()
         break;
     }
 
-    assert(pllvco >= 96 && pllvco <= 344);
+    assert(pllvco >= MHz(96) && pllvco <= MHz(344));
 
     uint32 pllr = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
     return pllvco / pllr;

@@ -89,7 +89,7 @@ public:
             unknown
         };
 
-        enum class M_divider : common::uint32
+        enum class M : common::uint32
         {
             _1 = 0,
             _2 = RCC_PLLCFGR_PLLM_0,
@@ -112,10 +112,10 @@ public:
                     _4 = RCC_PLLCFGR_PLLR_0,
                     _6 = RCC_PLLCFGR_PLLR_1,
                     _8 = RCC_PLLCFGR_PLLR_0 | RCC_PLLCFGR_PLLR_1,
-                    uknown
+                    unknown
                 };
 
-                Divider divider     = Divider::uknown;
+                Divider divider     = Divider::unknown;
                 bool output_enabled = false;
             };
 
@@ -147,11 +147,11 @@ public:
                 bool output_enabled = false;
             };
 
+            common::uint32 n = 0;
+
             R r;
             Q q;
             P p;
-
-            common::uint32 n = 0;
         };
 
         struct PLLSAI1
@@ -164,10 +164,10 @@ public:
                     _4 = RCC_PLLSAI1CFGR_PLLSAI1R_0,
                     _6 = RCC_PLLSAI1CFGR_PLLSAI1R_1,
                     _8 = RCC_PLLSAI1CFGR_PLLSAI1R,
-                    uknown
+                    unknown
                 };
 
-                Divider divider     = Divider::uknown;
+                Divider divider     = Divider::unknown;
                 bool output_enabled = false;
             };
 
@@ -199,15 +199,15 @@ public:
                 bool output_enabled = false;
             };
 
+            common::uint32 n = 0;
+
             R r;
             Q q;
             P p;
-
-            common::uint32 n = 0;
         };
 
-        Source source       = Source::unknown;
-        M_divider m_divider = M_divider::uknown;
+        Source source = Source::unknown;
+        M m           = M::uknown;
 
         PLL pll;
         PLLSAI1 pllsai1;
@@ -393,7 +393,7 @@ private:
                                           common::uint32 a_frequency_hz,
                                           const Bus_prescalers& a_prescalers);
 
-    static common::uint32 calculate_pll_frequency();
+    static common::uint32 calculate_pll_r_output_frequency();
 };
 
 } // namespace stm32l452xx
