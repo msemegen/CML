@@ -18,9 +18,10 @@ int main()
     using namespace cml::utils;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
-    mcu::enable_pll(mcu::Pll_clock_source::hsi, { false,
-                                                  mcu::Pll_config::Multiplier::_4,
-                                                  mcu::Pll_config::Divider::_2 });
+    mcu::enable_pll({ mcu::Pll_config::Source::hsi,
+                      false,
+                      mcu::Pll_config::Multiplier::_4,
+                      mcu::Pll_config::Divider::_2 });
     mcu::set_sysclk(mcu::Sysclk_source::pll, { mcu::Bus_prescalers::AHB::_1,
                                                mcu::Bus_prescalers::APB1::_1,
                                                mcu::Bus_prescalers::APB2::_1 });

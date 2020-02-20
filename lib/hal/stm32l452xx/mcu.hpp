@@ -37,12 +37,6 @@ public:
         pll = RCC_CFGR_SW_PLL,
     };
 
-    enum class Pll_clock_source : common::uint32
-    {
-        msi = RCC_PLLCFGR_PLLSRC_MSI,
-        hsi = RCC_PLLCFGR_PLLSRC_HSI
-    };
-
     enum class Msi_frequency : common::uint32
     {
         _100_kHz = 0,
@@ -88,6 +82,13 @@ public:
 
     struct Pll_config
     {
+        enum class Source : common::uint32
+        {
+            msi = RCC_PLLCFGR_PLLSRC_MSI,
+            hsi = RCC_PLLCFGR_PLLSRC_HSI,
+            unknown
+        };
+
         enum class M_divider : common::uint32
         {
             _1 = 0,
@@ -101,18 +102,115 @@ public:
             uknown
         };
 
-        enum class R_divider : common::uint32
+        struct PLL
         {
-            _2 = 0,
-            _4 = RCC_PLLCFGR_PLLR_0,
-            _6 = RCC_PLLCFGR_PLLR_1,
-            _8 = RCC_PLLCFGR_PLLR,
-            uknown
+            struct R
+            {
+                enum class Divider : common::uint32
+                {
+                    _2 = 0,
+                    _4 = RCC_PLLCFGR_PLLR_0,
+                    _6 = RCC_PLLCFGR_PLLR_1,
+                    _8 = RCC_PLLCFGR_PLLR_0 | RCC_PLLCFGR_PLLR_1,
+                    uknown
+                };
+
+                Divider divider     = Divider::uknown;
+                bool output_enabled = false;
+            };
+
+            struct Q
+            {
+                enum class Divider : common::uint32
+                {
+                    _2 = 0,
+                    _4 = RCC_PLLCFGR_PLLQ_0,
+                    _6 = RCC_PLLCFGR_PLLQ_1,
+                    _8 = RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1,
+                    unknown
+                };
+
+                Divider divider     = Divider::unknown;
+                bool output_enabled = false;
+            };
+
+            struct P
+            {
+                enum class Divider : common::uint32
+                {
+                    _7  = 0u,
+                    _17 = RCC_PLLCFGR_PLLP_Msk,
+                    unknown
+                };
+
+                Divider divider     = Divider::unknown;
+                bool output_enabled = false;
+            };
+
+            R r;
+            Q q;
+            P p;
+
+            common::uint32 n = 0;
         };
 
-        M_divider m_divider      = M_divider::uknown;
-        common::uint32 n_divider = 0;
-        R_divider r_divider      = R_divider::uknown;
+        struct PLLSAI1
+        {
+            struct R
+            {
+                enum class Divider : common::uint32
+                {
+                    _2 = 0,
+                    _4 = RCC_PLLSAI1CFGR_PLLSAI1R_0,
+                    _6 = RCC_PLLSAI1CFGR_PLLSAI1R_1,
+                    _8 = RCC_PLLSAI1CFGR_PLLSAI1R,
+                    uknown
+                };
+
+                Divider divider     = Divider::uknown;
+                bool output_enabled = false;
+            };
+
+            struct Q
+            {
+                enum class Divider : common::uint32
+                {
+                    _2 = 0,
+                    _4 = RCC_PLLSAI1CFGR_PLLSAI1Q_0,
+                    _6 = RCC_PLLSAI1CFGR_PLLSAI1Q_1,
+                    _8 = RCC_PLLSAI1CFGR_PLLSAI1Q_0 | RCC_PLLSAI1CFGR_PLLSAI1Q_1,
+                    unknown
+                };
+
+                Divider divider     = Divider::unknown;
+                bool output_enabled = false;
+            };
+
+            struct P
+            {
+                enum class Divider : common::uint32
+                {
+                    _7  = 0u,
+                    _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk,
+                    unknown
+                };
+
+                Divider divider     = Divider::unknown;
+                bool output_enabled = false;
+            };
+
+            R r;
+            Q q;
+            P p;
+
+            common::uint32 n = 0;
+        };
+
+        Source source       = Source::unknown;
+        M_divider m_divider = M_divider::uknown;
+
+        PLL pll;
+        PLLSAI1 pllsai1;
     };
 
     struct Id
@@ -184,7 +282,7 @@ public:
     static void disable_hsi_clock();
     static void disable_lsi_clock();
 
-    static void enable_pll(Pll_clock_source a_source, const Pll_config& a_pll_config);
+    static void enable_pll(const Pll_config& a_config);
     static void disable_pll();
 
     static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_NVIC_config);
@@ -295,7 +393,7 @@ private:
                                           common::uint32 a_frequency_hz,
                                           const Bus_prescalers& a_prescalers);
 
-    static common::uint32 calculate_frequency_from_pll_configuration();
+    static common::uint32 calculate_pll_frequency();
 };
 
 } // namespace stm32l452xx
