@@ -34,15 +34,15 @@ struct cstring
                        const char* a_p_source,
                        uint32 a_source_length);
 
-    template<typename type>
-    static type to_integer(const char* a_p_string, uint32 a_length)
+    template<typename Type_t>
+    static Type_t to_integer(const char* a_p_string, uint32 a_length)
     {
         assert(nullptr != a_p_string && 0 != a_p_string[0]);
         assert(a_length > 0);
 
-        type retval = 0;
+        Type_t retval = 0;
 
-        const type min = '-' == a_p_string[0] ? 0 : 1;
+        const Type_t min = '-' == a_p_string[0] ? 0 : 1;
 
         for (uint32 i = a_length - 1, m = 1; i + a_length + min != a_length; i--, m *= 10)
         {
@@ -53,8 +53,8 @@ struct cstring
         return retval * ('-' == a_p_string[0] ? -1 : 1);
     }
 
-    template<typename type>
-    static uint32 from_integer(type a_value, char* a_p_buffer, uint32 a_buffer_capacity, Radix a_base)
+    template<typename Type_t>
+    static uint32 from_integer(Type_t a_value, char* a_p_buffer, uint32 a_buffer_capacity, Radix a_base)
     {
         assert(a_buffer_capacity > 1);
 
@@ -76,7 +76,7 @@ struct cstring
             memory::move(a_p_buffer + 1, a_p_buffer, ++length);
             a_p_buffer[start] = to_insert;
 
-            a_value /= static_cast<type>(a_base);
+            a_value /= static_cast<Type_t>(a_base);
         }
 
         if (1 == start)
@@ -87,8 +87,8 @@ struct cstring
         return length;
     }
 
-    template<typename ... types>
-    static uint32 format(char* a_p_buffer, uint32 a_buffer_capacity, const char* a_p_format, types ... a_params)
+    template<typename ... Types_t>
+    static uint32 format(char* a_p_buffer, uint32 a_buffer_capacity, const char* a_p_format, Types_t ... a_params)
     {
         const Argument args[] = { Argument{a_params}... };
         char number_buffer_data[22];

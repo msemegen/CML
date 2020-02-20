@@ -40,8 +40,8 @@ public:
     void write(char a_character);
     void write(const char* a_p_string);
 
-    template<typename ... params>
-    void write(const char* a_p_format, params ... a_params)
+    template<typename ... Params_t>
+    void write(const char* a_p_format, Params_t ... a_params)
     {
         common::cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params ...);
         this->write(this->line_buffer);
@@ -50,8 +50,8 @@ public:
     void write_line(char a_character);
     void write_line(const char* a_p_string);
 
-    template<typename ... params>
-    void write_line(const char* a_p_format, params ... a_params)
+    template<typename ... Params_t>
+    void write_line(const char* a_p_format, Params_t ... a_params)
     {
         common::cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params ...);
         this->write_line(this->line_buffer);

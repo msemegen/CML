@@ -137,28 +137,28 @@ public:
     bool enable(const Config& a_config, const Clock& a_clock, common::time_tick a_timeout_ms);
     void disable();
 
-    template<typename data>
-    void write_polling(const data& a_data)
+    template<typename Data_t>
+    void write_polling(const Data_t& a_data)
     {
         this->write_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data));
     }
 
-    template<typename data>
-    bool write_polling(const data& a_data, common::time_tick a_timeout_ms)
+    template<typename Data_t>
+    bool write_polling(const Data_t& a_data, common::time_tick a_timeout_ms)
     {
         return this->write_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout_ms);
     }
 
-    template<typename data>
-    void read_polling(data* a_p_data)
+    template<typename Data_t>
+    void read_polling(Data_t* a_p_data)
     {
-        this->read_bytes_polling(static_cast<void*>(a_p_data), sizeof(data));
+        this->read_bytes_polling(static_cast<void*>(a_p_data), sizeof(Data_t));
     }
 
-    template<typename data>
-    bool read_polling(data* a_p_data, common::time_tick a_timeout_ms)
+    template<typename Data_t>
+    bool read_polling(Data_t* a_p_data, common::time_tick a_timeout_ms)
     {
-        return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(data), a_timeout_ms);
+        return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms);
     }
 
     void write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes);
@@ -211,10 +211,10 @@ public:
 
 private:
 
-    template<typename callback_type>
+    template<typename Callback_t>
     struct IT_context
     {
-        callback_type callback;
+        Callback_t callback;
         common::time_tick timeout         = 0;
         common::time_tick start_timestamp = 0;
     };

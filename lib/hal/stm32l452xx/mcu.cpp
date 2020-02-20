@@ -42,10 +42,10 @@ constexpr frequency msi_frequency_lut[]
 mcu::Sysclk_frequency_change_callback pre_sysclk_frequency_change_callback;
 mcu::Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
 
-template<typename Config>
-uint32 get_pll_register_config_from_factor(const Config& a_config, uint32 a_enable_flag)
+template<typename Config_t>
+uint32 get_pll_register_config_from_factor(const Config_t& a_config, uint32 a_enable_flag)
 {
-    return (Config::Divider::unknown != a_config.divider
+    return (Config_t::Divider::unknown != a_config.divider
             ? (static_cast<uint32>(a_config.divider) | (true == a_config.output_enabled
                                                         ? a_enable_flag
                                                         : 0))

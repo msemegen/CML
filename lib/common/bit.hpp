@@ -30,7 +30,7 @@ bool is_flag(Register_t a_register, Flag_t a_flag)
 template<typename Register_t, typename Mask_t>
 Mask_t get_flag(Register_t a_register, Mask_t a_mask)
 {
-    static_assert(sizeof(Register_t) == sizeof(mask_type));
+    static_assert(sizeof(Register_t) == sizeof(Mask_t));
     return (a_register & a_mask);
 }
 
@@ -55,7 +55,6 @@ void set_flag(Register_t *a_p_register, Clear_mask_t a_clear_mask, Flag_t a_set_
 
     (*a_p_register) = (((*a_p_register) & (~a_clear_mask)) | a_set_flag);
 }
-
 
 template<typename Register_t>
 void clear_bit(Register_t *a_p_register, uint8 a_index)
