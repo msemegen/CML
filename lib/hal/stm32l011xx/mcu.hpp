@@ -36,11 +36,6 @@ struct mcu
         pll = RCC_CFGR_SW_PLL
     };
 
-    enum class Pll_clock_source : common::uint32
-    {
-        hsi = RCC_CFGR_PLLSRC_HSI
-    };
-
     enum class Msi_frequency : common::uint32
     {
         _65536_Hz  = 0,
@@ -79,6 +74,11 @@ struct mcu
 
     struct Pll_config
     {
+        enum class Source : common::uint32
+        {
+            hsi = RCC_CFGR_PLLSRC_HSI
+        };
+
         enum class Multiplier
         {
             _3 = RCC_CFGR_PLLMUL3,
@@ -100,6 +100,8 @@ struct mcu
             _4 = RCC_CFGR_PLLDIV4,
             unknown
         };
+
+        Source source;
 
         bool hsidiv_enabled   = false;
         Multiplier multiplier = Multiplier::unknown;
@@ -166,7 +168,7 @@ struct mcu
     static void disable_hsi_clock();
     static void disable_lsi_clock();
 
-    static void enable_pll(Pll_clock_source a_source, const Pll_config& a_pll_config);
+    static void enable_pll(const Pll_config& a_pll_config);
     static void disable_pll();
 
     static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);

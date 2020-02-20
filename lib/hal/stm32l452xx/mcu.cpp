@@ -17,6 +17,7 @@
 #include <common/assert.hpp>
 #include <common/frequency.hpp>
 #include <common/macros.hpp>
+#include "mcu.hpp"
 
 namespace {
 
@@ -41,6 +42,16 @@ constexpr frequency msi_frequency_lut[]
 
 mcu::Sysclk_frequency_change_callback pre_sysclk_frequency_change_callback;
 mcu::Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
+
+template<typename Config>
+uint32 get_pll_register_config_from_factor(const Config& a_config, uint32 a_enable_flag)
+{
+    return (Config::Divider::unknown != a_config.divider
+            ? (static_cast<uint32>(a_config.divider) | (true == a_config.output_enabled
+                                                        ? a_enable_flag
+                                                        : 0))
+            : 0);
+}
 
 } // namespace ::
 
@@ -105,44 +116,39 @@ void mcu::disable_lsi_clock()
     while (true == is_flag(RCC->CSR, RCC_CSR_LSIRDY));
 }
 
-void mcu::enable_pll(Pll_clock_source a_source, const Pll_config& a_pll_config)
+void mcu::enable_pll(const Pll_config& a_config)
 {
-    uint32 pllcfgr = static_cast<uint32>(a_pll_config.m_divider)    |
-                     a_pll_config.n_divider << RCC_PLLCFGR_PLLN_Pos |
-                     static_cast<uint32>(a_pll_config.r_divider);
+    assert((true == is_clock_enabled(Clock::msi) && a_config.source == Pll_config::Source::msi) ||
+           (true == is_clock_enabled(Clock::hsi) && a_config.source == Pll_config::Source::hsi));
+    assert((a_config.pll.n >= 8 && a_config.pll.n <= 86) && (a_config.pllsai1.n >= 8 && a_config.pllsai1.n <= 86));
 
-    switch (a_source)
-    {
-        case Pll_clock_source::msi:
-        {
-            assert(true == is_clock_enabled(Clock::msi));
+    disable_pll();
 
-            set_flag(&pllcfgr, RCC_PLLCFGR_PLLSRC_MSI);
-        }
-        break;
-
-        case Pll_clock_source::hsi:
-        {
-            assert(true == is_clock_enabled(Clock::hsi));
-
-            set_flag(&pllcfgr, RCC_PLLCFGR_PLLSRC_HSI);
-        }
-        break;
-    }
-
-    set_flag(&(RCC->PLLCFGR), RCC_PLLCFGR_PLLSRC | RCC_PLLCFGR_PLLM | RCC_PLLCFGR_PLLN | RCC_PLLCFGR_PLLR, pllcfgr);
+    RCC->PLLCFGR = static_cast<uint32>(a_config.source)     |
+                   static_cast<uint32>(a_config.m)          |
+                   (a_config.pll.n << RCC_PLLCFGR_PLLN_Pos) |
+                   get_pll_register_config_from_factor(a_config.pll.p, RCC_PLLCFGR_PLLPEN) |
+                   get_pll_register_config_from_factor(a_config.pll.q, RCC_PLLCFGR_PLLQEN) |
+                   get_pll_register_config_from_factor(a_config.pll.r, RCC_PLLCFGR_PLLREN);
 
     set_flag(&(RCC->CR), RCC_CR_PLLON);
-    set_flag(&(RCC->PLLCFGR), RCC_PLLCFGR_PLLREN);
-
     while (false == get_flag(RCC->CR, RCC_CR_PLLRDY));
+
+    RCC->PLLSAI1CFGR = get_pll_register_config_from_factor(a_config.pllsai1.p, RCC_PLLSAI1CFGR_PLLSAI1PEN) |
+                       get_pll_register_config_from_factor(a_config.pllsai1.q, RCC_PLLSAI1CFGR_PLLSAI1QEN) |
+                       get_pll_register_config_from_factor(a_config.pllsai1.r, RCC_PLLSAI1CFGR_PLLSAI1REN);
+
+    set_flag(&(RCC->CR), RCC_CR_PLLSAI1ON);
+    while (false == get_flag(RCC->CR, RCC_CR_PLLSAI1RDY));
 }
 
 void mcu::disable_pll()
 {
     clear_flag(&(RCC->CR), RCC_CR_PLLON);
-
     while (true == is_flag(RCC->CR, RCC_CR_PLLRDY));
+
+    clear_flag(&(RCC->CR), RCC_CR_PLLSAI1ON);
+    while (true == is_flag(RCC->CR, RCC_CR_PLLSAI1RDY));
 }
 
 void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_nvic_settings)
@@ -186,7 +192,7 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers,
         {
             assert(true == is_clock_enabled(Clock::pll));
 
-            frequency_hz = calculate_frequency_from_pll_configuration();
+            frequency_hz = calculate_pll_r_output_frequency();
         }
         break;
     }
@@ -311,7 +317,7 @@ mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq,
 
         case Voltage_scaling::unkown:
         {
-            assert(false);
+            assert(Voltage_scaling::unkown != a_voltage_scaling);
         }
         break;
     }
@@ -363,7 +369,7 @@ void mcu::set_sysclk_source(Sysclk_source a_sysclk_source)
 
 void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
 {
-    assert(Bus_prescalers::AHB::unknown != a_prescalers.ahb);
+    assert(Bus_prescalers::AHB::unknown  != a_prescalers.ahb);
     assert(Bus_prescalers::APB1::unknown != a_prescalers.apb1);
     assert(Bus_prescalers::APB2::unknown != a_prescalers.apb2);
 
@@ -408,7 +414,7 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source,
     auto new_flash_latency   = select_flash_latency(a_frequency_hz, new_voltage_scaling);
 
     assert(Voltage_scaling::unkown != new_voltage_scaling);
-    assert(Flash_latency::unknown != new_flash_latency);
+    assert(Flash_latency::unknown  != new_flash_latency);
 
     if (new_flash_latency != get_flash_latency())
     {
@@ -425,16 +431,16 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source,
     SystemCoreClock = a_frequency_hz;
 }
 
-uint32 mcu::calculate_frequency_from_pll_configuration()
+uint32 mcu::calculate_pll_r_output_frequency()
 {
     uint32 pllm = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
     uint32 plln = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN)) >> RCC_PLLCFGR_PLLN_Pos);
 
     uint32 pllvco = 0;
 
-    switch (static_cast<Pll_clock_source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
+    switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
     {
-        case Pll_clock_source::msi:
+        case Pll_config::Source::msi:
         {
             assert(true == is_clock_enabled(Clock::msi));
 
@@ -443,14 +449,22 @@ uint32 mcu::calculate_frequency_from_pll_configuration()
         }
         break;
 
-        case Pll_clock_source::hsi:
+        case Pll_config::Source::hsi:
         {
             assert(true == is_clock_enabled(Clock::hsi));
 
             pllvco = (config::clock::hsi_frequency_hz / pllm) * plln;
         }
         break;
+
+        default:
+        {
+            assert(false);
+        }
+        break;
     }
+
+    assert(pllvco >= MHz(96) && pllvco <= MHz(344));
 
     uint32 pllr = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
     return pllvco / pllr;

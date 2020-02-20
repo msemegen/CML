@@ -95,14 +95,13 @@ void mcu::disable_lsi_clock()
     while (true == is_flag(RCC->CSR, RCC_CSR_LSIRDY));
 }
 
-void mcu::enable_pll(Pll_clock_source a_source, const Pll_config& a_pll_config)
+void mcu::enable_pll(const Pll_config& a_config)
 {
-    unused(a_source);
     assert(true == is_clock_enabled(Clock::hsi));
-    assert(Pll_config::Divider::unknown != a_pll_config.divider);
-    assert(Pll_config::Multiplier::unknown != a_pll_config.multiplier);
+    assert(Pll_config::Divider::unknown != a_config.divider);
+    assert(Pll_config::Multiplier::unknown != a_config.multiplier);
 
-    if (true == a_pll_config.hsidiv_enabled)
+    if (true == a_config.hsidiv_enabled)
     {
         set_flag(&(RCC->CR), RCC_CR_HSIDIVEN);
     }
@@ -114,9 +113,9 @@ void mcu::enable_pll(Pll_clock_source a_source, const Pll_config& a_pll_config)
     while (false == is_flag(RCC->CR, RCC_CR_HSIRDY));
 
     set_flag(&(RCC->CFGR), RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL | RCC_CFGR_PLLDIV,
-                           static_cast<uint32>(a_source)             |
-                           static_cast<uint32>(a_pll_config.divider) |
-                           static_cast<uint32>(a_pll_config.multiplier));
+                           static_cast<uint32>(a_config.source)  |
+                           static_cast<uint32>(a_config.divider) |
+                           static_cast<uint32>(a_config.multiplier));
 
     set_flag(&(RCC->CR), RCC_CR_PLLON);
 
