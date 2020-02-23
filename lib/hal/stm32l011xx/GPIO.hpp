@@ -133,7 +133,7 @@ private:
     friend class Output_pin;
     friend class Input_pin;
     friend class Alternate_function_pin;
-    friend class c_analog_pin;
+    friend class Analog_pin;
 };
 
 class Output_pin
@@ -309,13 +309,23 @@ public:
     void set_speed(Speed a_speed);
     void set_function(common::uint32 a_function);
 
-    GPIO::Mode  get_mode()  const;
-    GPIO::Pull  get_pull()  const;
-    GPIO::Speed get_speed() const;
+    Mode  get_mode()  const;
+    Pull  get_pull()  const;
+    Speed get_speed() const;
 
     common::uint32 get_function() const
     {
         return this->function;
+    }
+
+    GPIO* get_port() const
+    {
+        return this->p_port;
+    }
+
+    common::uint8 get_pin() const
+    {
+        return this->pin;
     }
 
 private:
@@ -324,6 +334,45 @@ private:
     const common::uint8 pin;
 
     common::uint32 function;
+};
+
+class Analog_pin
+{
+public:
+
+    using Pull = GPIO::Pull;
+
+public:
+
+    Analog_pin(GPIO* a_p_port, common::uint8 a_pin)
+        : p_port(a_p_port)
+        , pin(a_pin)
+    {
+        assert(nullptr != a_p_port);
+        assert(a_pin < 16);
+    }
+
+    void enable(Pull a_pull);
+    void disable();
+
+    void set_pull(Pull a_pull);
+
+    Pull get_pull() const;
+
+    GPIO* get_port() const
+    {
+        return this->p_port;
+    }
+
+    common::uint8 get_pin() const
+    {
+        return this->pin;
+    }
+
+private:
+
+    GPIO* p_port;
+    const common::uint8 pin;
 };
 
 } // namespace stm32l011xx

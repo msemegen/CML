@@ -353,6 +353,41 @@ Alternate_function_pin::Speed Alternate_function_pin::get_speed() const
     return static_cast<Speed>(get_flag(p_port->OSPEEDR, static_cast<uint32>(0x1u << this->pin) << this->pin));
 }
 
+void Analog_pin::enable(Pull a_pull)
+{
+    assert(false == this->p_port->is_pin_taken(this->pin));
+
+    assert(Pull::unknown != a_pull);
+
+    this->set_pull(a_pull);
+
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+    set_flag(&(p_port->MODER), 0x3u << (this->pin * 2), 0x3u << (this->pin * 2));
+
+    this->p_port->take_pin(this->pin);
+}
+
+void Analog_pin::disable()
+{
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+
+    clear_flag(&(p_port->PUPDR), (0x3u << (this->pin * 2)));
+
+    this->p_port->give_pin(this->pin);
+}
+
+void Analog_pin::set_pull(Pull a_pull)
+{
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_pull) << (this->pin * 2));
+}
+
+Analog_pin::Pull Analog_pin::get_pull() const
+{
+    const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
+    return static_cast<Pull>(get_flag(p_port->PUPDR, static_cast<uint32>(0x1u << this->pin) << this->pin));
+}
+
 } // namespace stm32l452xx
 } // namespace hal
 } // namespace cml
