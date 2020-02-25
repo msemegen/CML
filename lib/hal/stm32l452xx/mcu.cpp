@@ -263,6 +263,11 @@ mcu::Bus_prescalers mcu::get_bus_prescalers()
              static_cast<Bus_prescalers::APB2>(get_flag(RCC->CFGR, RCC_CFGR_PPRE2)) };
 }
 
+mcu::Pll_config mcu::get_pll_config()
+{
+    return Pll_config();
+}
+
 mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq,
                                              Voltage_scaling a_voltage_scaling)
 {
