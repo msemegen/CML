@@ -256,6 +256,13 @@ void mcu::register_post_sysclk_frequency_change_callback(const Sysclk_frequency_
     post_sysclk_frequency_change_callback = a_callback;
 }
 
+mcu::Bus_prescalers mcu::get_bus_prescalers()
+{
+    return { static_cast<Bus_prescalers::AHB> (get_flag(RCC->CFGR, RCC_CFGR_HPRE )),
+             static_cast<Bus_prescalers::APB1>(get_flag(RCC->CFGR, RCC_CFGR_PPRE1)),
+             static_cast<Bus_prescalers::APB2>(get_flag(RCC->CFGR, RCC_CFGR_PPRE2)) };
+}
+
 mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq,
                                              Voltage_scaling a_voltage_scaling)
 {

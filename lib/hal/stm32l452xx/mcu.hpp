@@ -311,6 +311,8 @@ public:
                        common::is_flag(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
     }
 
+    static Bus_prescalers get_bus_prescalers();
+
     static Id get_id()
     {
         static_assert(12 == config::mcu::device_id_length);
