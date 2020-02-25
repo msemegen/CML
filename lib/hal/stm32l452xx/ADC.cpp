@@ -12,11 +12,11 @@
 
 //cml
 #include <common/bit.hpp>
-#include <debug/assert.hpp>
 #include <hal/systick.hpp>
 #include <utils/sleep.hpp>
 
 #ifdef CML_DEBUG
+#include <debug/assert.hpp>
 #include <hal/stm32l452xx/mcu.hpp>
 #endif // CML_DEBUG
 
@@ -100,6 +100,66 @@ void ADC::disable()
     ADC1_COMMON->CCR = 0;
 
     clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+}
+
+void ADC::set_channels(const Channel* a_p_channels, uint32 a_channels_count)
+{
+    assert(nullptr != a_p_channels);
+    assert(a_channels_count > 0);
+
+    this->clear_channels();
+
+    ADC1->SQR1 = a_channels_count - 1;
+
+    for (uint32 i = 0; i < a_channels_count && i < 4; i++)
+    {
+        assert(Channel::Id::unknown != a_p_channels[i].id);
+        set_flag(&(ADC1->SQR1), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
+    }
+
+    for (uint32 i = 4; i < a_channels_count && i < 9; i++)
+    {
+        assert(Channel::Id::unknown != a_p_channels[i].id);
+        set_flag(&(ADC1->SQR2), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
+    }
+
+    for (uint32 i = 9; i < a_channels_count && i < 14; i++)
+    {
+        assert(Channel::Id::unknown != a_p_channels[i].id);
+        set_flag(&(ADC1->SQR3), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
+    }
+
+    for (uint32 i = 14; i < a_channels_count && i < 16; i++)
+    {
+        assert(Channel::Id::unknown != a_p_channels[i].id);
+        set_flag(&(ADC1->SQR4), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
+    }
+
+    for (uint32 i = 0; i < a_channels_count; i++)
+    {
+        const uint32 channel_sampling_time = static_cast<uint32_t>(a_p_channels[i].sampling_time) << (static_cast<uint32_t>(a_p_channels[i].id) * 3);
+
+        if (static_cast<uint32_t>(a_p_channels[i].id) <= 9)
+        {
+            set_flag(&(ADC1->SMPR1), channel_sampling_time);
+        }
+        else
+        {
+            set_flag(&(ADC1->SMPR2), channel_sampling_time);
+        }
+    }
+}
+
+void ADC::clear_channels()
+{
+    ADC1->SQR1 = 0;
+
+    ADC1->SQR2 = 0;
+    ADC1->SQR3 = 0;
+    ADC1->SQR4 = 0;
+
+    ADC1->SMPR1 = 0;
+    ADC1->SMPR2 = 0;
 }
 
 } // namespace stm32l452xx
