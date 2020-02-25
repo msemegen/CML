@@ -41,6 +41,9 @@ bool ADC::enable(Resolution a_resolution, const Clock& a_clock, time_tick a_time
     {
         case Clock::Source::asynchronous:
         {
+            assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
+                   true == mcu::get_pll_config().pllsai1.r.output_enabled);
+
             clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
             set_flag(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<uint32>(a_clock.asynchronous.source));
         }
@@ -160,6 +163,27 @@ void ADC::clear_channels()
 
     ADC1->SMPR1 = 0;
     ADC1->SMPR2 = 0;
+}
+
+void ADC::read_polling(uint16* a_p_data, uint32 a_count)
+{
+    assert(nullptr != a_p_data);
+    assert(a_count > 0);
+    assert((ADC1->SQR1 & 0xFu) >= a_count);
+
+    set_flag(&(ADC1->CR), ADC_CR_ADSTART);
+
+    for (uint32 i = 0; i < a_count; i++)
+    {
+        sleep::wait_until(ADC1->ISR, ADC_ISR_EOC, false);
+        a_p_data[i] = static_cast<uint16_t>(ADC1->DR);
+    }
+
+    sleep::wait_until(ADC1->ISR, ADC_ISR_EOS, false);
+    set_flag(&(ADC1->ISR), ADC_ISR_EOS);
+
+    set_flag(&(ADC1->CR), ADC_CR_ADSTP);
+    clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
 }
 
 } // namespace stm32l452xx

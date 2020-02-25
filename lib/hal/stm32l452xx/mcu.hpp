@@ -312,6 +312,7 @@ public:
     }
 
     static Bus_prescalers get_bus_prescalers();
+    static Pll_config get_pll_config();
 
     static Id get_id()
     {
