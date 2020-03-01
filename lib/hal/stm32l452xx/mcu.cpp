@@ -453,8 +453,6 @@ uint32 mcu::calculate_pll_r_output_frequency()
     {
         case Pll_config::Source::msi:
         {
-            assert(true == is_clock_enabled(Clock::msi));
-
             uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             pllvco = (msi_frequency_lut[msi_range] / pllm) * plln;
         }
@@ -462,13 +460,11 @@ uint32 mcu::calculate_pll_r_output_frequency()
 
         case Pll_config::Source::hsi:
         {
-            assert(true == is_clock_enabled(Clock::hsi));
-
             pllvco = (config::clock::hsi_frequency_hz / pllm) * plln;
         }
         break;
 
-        default:
+        case Pll_config::Source::unknown:
         {
             assert(false);
         }

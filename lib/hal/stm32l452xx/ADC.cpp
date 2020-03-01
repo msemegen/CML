@@ -71,22 +71,14 @@ bool ADC::enable(Resolution a_resolution, const Clock& a_clock, time_tick a_time
     clear_flag(&(ADC1->CR), ADC_CR_ADCALDIF);
     set_flag(&(ADC1->CR), ADC_CR_ADCAL);
 
-    bool ret = sleep::wait_until(ADC1->CR,
-                                 ADC_CR_ADCAL,
-                                 true,
-                                 systick::get_counter(),
-                                 a_timeout - (systick::get_counter() - start));
+    bool ret = sleep::wait_until(ADC1->CR, ADC_CR_ADCAL, true, start, a_timeout);
 
     if (true == ret)
     {
         set_flag(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
         set_flag(&(ADC1->CR), ADC_CR_ADEN);
 
-        ret = sleep::wait_until(ADC1->ISR,
-                                ADC_ISR_ADRDY,
-                                false,
-                                systick::get_counter(),
-                                a_timeout - (systick::get_counter() - start));
+        ret = sleep::wait_until(ADC1->ISR, ADC_ISR_ADRDY, false, start, a_timeout);
     }
 
     if (false == ret)
@@ -105,12 +97,12 @@ void ADC::disable()
     clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
 }
 
-void ADC::set_channels(const Channel* a_p_channels, uint32 a_channels_count)
+void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_count)
 {
     assert(nullptr != a_p_channels);
     assert(a_channels_count > 0);
 
-    this->clear_channels();
+    this->clear_active_channels();
 
     ADC1->SQR1 = a_channels_count - 1;
 
@@ -153,7 +145,7 @@ void ADC::set_channels(const Channel* a_p_channels, uint32 a_channels_count)
     }
 }
 
-void ADC::clear_channels()
+void ADC::clear_active_channels()
 {
     ADC1->SQR1 = 0;
 
@@ -169,7 +161,8 @@ void ADC::read_polling(uint16* a_p_data, uint32 a_count)
 {
     assert(nullptr != a_p_data);
     assert(a_count > 0);
-    assert((ADC1->SQR1 & 0xFu) >= a_count);
+
+    assert(this->get_active_channels_count() == a_count);
 
     set_flag(&(ADC1->CR), ADC_CR_ADSTART);
 
@@ -184,6 +177,45 @@ void ADC::read_polling(uint16* a_p_data, uint32 a_count)
 
     set_flag(&(ADC1->CR), ADC_CR_ADSTP);
     clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
+}
+
+bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
+{
+    assert(nullptr != a_p_data);
+    assert(a_count > 0);
+
+    assert(this->get_active_channels_count() == a_count);
+    assert(true == systick::is_enabled());
+
+    set_flag(&(ADC1->CR), ADC_CR_ADSTART);
+
+    bool ret        = true;
+    time_tick start = systick::get_counter();
+
+    for (uint32 i = 0; i < a_count && true == ret; i++)
+    {
+        ret = sleep::wait_until(ADC1->ISR, ADC_ISR_EOC, false, start, a_timeout);
+
+        if (true == ret)
+        {
+            a_p_data[i] = static_cast<uint16_t>(ADC1->DR);
+        }
+    }
+
+    if (true == ret)
+    {
+        ret = sleep::wait_until(ADC1->ISR, ADC_ISR_EOS, false, start, a_timeout);
+
+        if (true == ret)
+        {
+            set_flag(&(ADC1->ISR), ADC_ISR_EOS);
+        }
+    }
+
+    set_flag(&(ADC1->CR), ADC_CR_ADSTP);
+    clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
+
+    return ret;
 }
 
 } // namespace stm32l452xx

@@ -168,14 +168,19 @@ public:
     bool enable(Resolution a_resolution, const Clock& a_clock, common::time_tick a_timeout);
     void disable();
 
-    void set_channels(const Channel* a_p_channels, common::uint32 a_channels_count);
-    void clear_channels();
+    void set_active_channels(const Channel* a_p_channels, common::uint32 a_channels_count);
+    void clear_active_channels();
 
     void read_polling(common::uint16* a_p_data, common::uint32 a_count);
     bool read_polling(common::uint16* a_p_data, common::uint32 a_count, common::time_tick a_timeout);
 
     void read_it(IT_callback a_callback);
     void read_it(IT_callback a_callback, common::time_tick a_timeout);
+
+    common::uint32 get_active_channels_count() const
+    {
+        return (ADC1->SQR1 & 0xFu);
+    }
 
     Id get_id() const
     {

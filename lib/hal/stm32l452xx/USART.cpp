@@ -240,11 +240,7 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_tim
     this->baud_rate = a_config.baud_rate;
     this->clock     = a_clock;
 
-    bool ret = sleep::wait_until(this->p_usart->ISR,
-                                 USART_ISR_TEACK | USART_ISR_REACK,
-                                 false,
-                                 systick::get_counter(),
-                                 a_timeout_ms - (systick::get_counter() - start));
+    bool ret = sleep::wait_until(this->p_usart->ISR, USART_ISR_TEACK | USART_ISR_REACK, false, start, a_timeout_ms);
 
     if (false == ret)
     {
@@ -287,25 +283,25 @@ bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
     assert(a_data_size_in_bytes > 0);
     assert(true == systick::is_enabled());
 
-    bool timeout_occured = false;
-    time_tick start      = systick::get_counter();
+    bool ret        = true;
+    time_tick start = systick::get_counter();
 
-    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && false == timeout_occured; i++)
+    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
     {
-        timeout_occured = sleep::wait_until(this->p_usart->ISR, USART_ISR_TXE, false, start, a_timeout_ms);
+        ret = sleep::wait_until(this->p_usart->ISR, USART_ISR_TXE, false, start, a_timeout_ms);
 
-        if (false == timeout_occured)
+        if (true == ret)
         {
             this->p_usart->TDR = static_cast<const uint8*>(a_p_data)[i];
         }
     }
 
-    if (false == timeout_occured)
+    if (true == ret)
     {
-        timeout_occured = sleep::wait_until(this->p_usart->ISR, USART_ISR_TC, false, start, a_timeout_ms);
+        ret = sleep::wait_until(this->p_usart->ISR, USART_ISR_TC, false, start, a_timeout_ms);
     }
 
-    return false == timeout_occured;
+    return ret;
 }
 
 void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
@@ -326,20 +322,20 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
     assert(a_data_size_in_bytes > 0);
     assert(true == systick::is_enabled());
 
-    bool timeout_occured = false;
-    time_tick start      = systick::get_counter();
+    bool ret        = true;
+    time_tick start = systick::get_counter();
 
-    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && false == timeout_occured; i++)
+    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
     {
-        timeout_occured = sleep::wait_until(this->p_usart->ISR, USART_ISR_RXNE, false, start, a_timeout_ms);
+        ret = sleep::wait_until(this->p_usart->ISR, USART_ISR_RXNE, false, start, a_timeout_ms);
 
-        if (false == timeout_occured)
+        if (true == ret)
         {
             static_cast<uint8*>(a_p_data)[i] = this->p_usart->RDR;
         }
     }
 
-    return false == timeout_occured;
+    return ret;
 }
 
 void USART::write_bytes_it(const TX_callback& a_callback, time_tick a_timeout_ms)
