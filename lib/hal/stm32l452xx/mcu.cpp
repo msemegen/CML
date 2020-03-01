@@ -133,7 +133,8 @@ void mcu::enable_pll(const Pll_config& a_config)
     set_flag(&(RCC->CR), RCC_CR_PLLON);
     while (false == get_flag(RCC->CR, RCC_CR_PLLRDY));
 
-    RCC->PLLSAI1CFGR = get_pll_register_config_from_factor(a_config.pllsai1.p, RCC_PLLSAI1CFGR_PLLSAI1PEN) |
+    RCC->PLLSAI1CFGR = (a_config.pllsai1.n << RCC_PLLSAI1CFGR_PLLSAI1N_Pos)                                |
+                       get_pll_register_config_from_factor(a_config.pllsai1.p, RCC_PLLSAI1CFGR_PLLSAI1PEN) |
                        get_pll_register_config_from_factor(a_config.pllsai1.q, RCC_PLLSAI1CFGR_PLLSAI1QEN) |
                        get_pll_register_config_from_factor(a_config.pllsai1.r, RCC_PLLSAI1CFGR_PLLSAI1REN);
 
@@ -265,7 +266,34 @@ mcu::Bus_prescalers mcu::get_bus_prescalers()
 
 mcu::Pll_config mcu::get_pll_config()
 {
-    return Pll_config();
+    return
+
+    { static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)),
+      static_cast<Pll_config::M>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)),
+      { get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN),
+        { static_cast<Pll_config::PLL::R::Divider>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR)),
+          is_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLREN)
+        },
+        { static_cast<Pll_config::PLL::Q::Divider>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ)),
+          is_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQEN)
+        },
+        { static_cast<Pll_config::PLL::P::Divider>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLP)),
+          is_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLPEN)
+        }
+      },
+
+      { get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N),
+        { static_cast<Pll_config::PLLSAI1::R::Divider>(get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1R)),
+          is_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1REN)
+        },
+        { static_cast<Pll_config::PLLSAI1::Q::Divider>(get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1Q)),
+          is_flag(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1QEN)
+        },
+        { static_cast<Pll_config::PLLSAI1::P::Divider>(get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1P)),
+          is_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1PEN)
+        }
+      }
+    };
 }
 
 mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq,

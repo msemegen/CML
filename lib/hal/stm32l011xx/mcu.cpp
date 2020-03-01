@@ -101,6 +101,8 @@ void mcu::enable_pll(const Pll_config& a_config)
     assert(Pll_config::Divider::unknown != a_config.divider);
     assert(Pll_config::Multiplier::unknown != a_config.multiplier);
 
+    disable_pll();
+
     if (true == a_config.hsidiv_enabled)
     {
         set_flag(&(RCC->CR), RCC_CR_HSIDIVEN);
@@ -227,7 +229,13 @@ mcu::Bus_prescalers mcu::get_bus_prescalers()
 
 mcu::Pll_config mcu::get_pll_config()
 {
-    return Pll_config();
+    return
+
+    { static_cast<Pll_config::Source>(get_flag(RCC->CFGR, RCC_CFGR_PLLSRC)),
+      is_flag(RCC->CR, RCC_CR_HSIDIVEN),
+      static_cast<Pll_config::Multiplier>(get_flag(RCC->CFGR, RCC_CFGR_PLLMUL)),
+      static_cast<Pll_config::Divider>(get_flag(RCC->CFGR, RCC_CFGR_PLLDIV))
+    };
 }
 
 mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq, Voltage_scaling a_voltage_scaling)
