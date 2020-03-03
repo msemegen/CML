@@ -21,11 +21,12 @@ int main()
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
     mcu::set_sysclk(mcu::Sysclk_source::hsi, { mcu::Bus_prescalers::AHB::_1,
                                                mcu::Bus_prescalers::APB1::_1,
-                                               mcu::Bus_prescalers::APB2::_1 },
-                                               { 0x3, 0xf0 });
+                                               mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
+        mcu::set_nvic({ mcu::NVIC_config::Grouping::_4, 16u << 4u });
+
         USART::Config usart_config =
         {
             115200u,

@@ -151,7 +151,7 @@ void mcu::disable_pll()
     while (true == is_flag(RCC->CR, RCC_CR_PLLSAI1RDY));
 }
 
-void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_nvic_settings)
+void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
 {
     if (nullptr != pre_sysclk_frequency_change_callback.p_function)
     {
@@ -217,13 +217,16 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers,
         set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
     }
 
-    NVIC_SetPriorityGrouping(a_nvic_settings.priority_grouping);
-    __set_BASEPRI(a_nvic_settings.base_priority);
-
     if (nullptr != post_sysclk_frequency_change_callback.p_function)
     {
         post_sysclk_frequency_change_callback.p_function(post_sysclk_frequency_change_callback.a_p_user_data);
     }
+}
+
+void mcu::set_nvic(const NVIC_config& a_config)
+{
+    NVIC_SetPriorityGrouping(static_cast<uint32>(a_config.grouping));
+    __set_BASEPRI(a_config.base_priority);
 }
 
 void mcu::reset()
@@ -233,17 +236,7 @@ void mcu::reset()
 
 void mcu::halt()
 {
-    uint32 new_basepri = 0;
-
-    __asm volatile
-    (
-        "mov %0, %1      \n" \
-        "msr basepri, %0 \n" \
-        "isb             \n" \
-        "dsb             \n" \
-        :"=r" (new_basepri) : "i" (80u)
-    );
-
+    __disable_irq();
     while (true);
 }
 

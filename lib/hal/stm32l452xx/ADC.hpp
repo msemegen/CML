@@ -22,7 +22,7 @@ class ADC
 {
 public:
 
-    using IT_callback = bool(*)(common::uint16 a_value, bool a_end_of_group_conversion, bool a_timeout);
+    using Conversion_callback = bool(*)(common::uint16 a_value, bool a_conversion_end, bool a_timeout);
 
     enum class Id : common::uint32
     {
@@ -98,11 +98,8 @@ public:
 
         Source source = Source::unknown;
 
-        union
-        {
-            Synchronous synchronous;
-            Asynchronous asynchronous;
-        };
+        Synchronous synchronous;
+        Asynchronous asynchronous;
     };
 
     struct Channel
@@ -150,7 +147,6 @@ public:
 
     ADC(Id a_id)
         : id(a_id)
-        , callaback(nullptr)
     {}
 
     ~ADC()
@@ -174,12 +170,16 @@ public:
     void read_polling(common::uint16* a_p_data, common::uint32 a_count);
     bool read_polling(common::uint16* a_p_data, common::uint32 a_count, common::time_tick a_timeout);
 
-    void read_it(IT_callback a_callback);
-    void read_it(IT_callback a_callback, common::time_tick a_timeout);
+    void read_it(Conversion_callback a_callback, common::time_tick a_timeout);
+
+    void read_it(Conversion_callback a_callback)
+    {
+        this->read_it(a_callback, common::time_tick_infinity);
+    }
 
     common::uint32 get_active_channels_count() const
     {
-        return (ADC1->SQR1 & 0xFu);
+        return (ADC1->SQR1 & 0xFu) + 1;
     }
 
     Id get_id() const
@@ -189,8 +189,20 @@ public:
 
 private:
 
+    struct IT_callback
+    {
+        Conversion_callback function = nullptr;
+        common::time_tick   timeout  = 0;
+    };
+
+private:
+
     Id id;
     IT_callback callaback;
+
+private:
+
+    friend void adc_handle_interrupt(ADC* a_p_this);
 };
 
 } // namespace stm32l452xx

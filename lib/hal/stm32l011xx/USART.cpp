@@ -192,7 +192,7 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_tim
     this->baud_rate = a_config.baud_rate;
     this->clock     = a_clock;
 
-    bool ret = sleep::wait_until(this->p_usart->ISR, USART_ISR_REACK | USART_ISR_TEACK, false, start, a_timeout_ms);
+    bool ret = sleep::until(&(this->p_usart->ISR), USART_ISR_REACK | USART_ISR_TEACK, false, start, a_timeout_ms);
 
     if (false == ret)
     {
@@ -221,11 +221,11 @@ void USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
     {
-        sleep::wait_until(this->p_usart->ISR, USART_ISR_TXE, false);
+        sleep::until(&(this->p_usart->ISR), USART_ISR_TXE, false);
         this->p_usart->TDR = static_cast<const uint8*>(a_p_data)[i];
     }
 
-    sleep::wait_until(this->p_usart->ISR, USART_ISR_TC, false);
+    sleep::until(&(this->p_usart->ISR), USART_ISR_TC, false);
     this->p_usart->ICR = USART_ICR_TCCF;
 }
 
@@ -242,7 +242,7 @@ bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
     {
-        ret = sleep::wait_until(this->p_usart->ISR, USART_ISR_TXE, false, start, a_timeout_ms);
+        ret = sleep::until(&(this->p_usart->ISR), USART_ISR_TXE, false, start, a_timeout_ms);
 
         if (false == ret)
         {
@@ -252,7 +252,7 @@ bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
 
     if (true == ret)
     {
-        ret = sleep::wait_until(this->p_usart->ISR, USART_ISR_TC, false, start, a_timeout_ms);
+        ret = sleep::until(&(this->p_usart->ISR), USART_ISR_TC, false, start, a_timeout_ms);
     }
 
     return ret;
@@ -265,7 +265,7 @@ void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
     {
-        sleep::wait_until(this->p_usart->ISR, USART_ISR_RXNE, false);
+        sleep::until(&(this->p_usart->ISR), USART_ISR_RXNE, false);
         static_cast<uint8*>(a_p_data)[i] = this->p_usart->RDR;
     }
 }
@@ -281,7 +281,7 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
     {
-        ret = sleep::wait_until(this->p_usart->ISR, USART_ISR_RXNE, false, start, a_timeout_ms);
+        ret = sleep::until(&(this->p_usart->ISR), USART_ISR_RXNE, false, start, a_timeout_ms);
 
         if (false == ret)
         {

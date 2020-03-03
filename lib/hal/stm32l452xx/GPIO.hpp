@@ -213,11 +213,6 @@ public:
     using Pull = GPIO::Pull;
     using Level = GPIO::Level;
 
-    struct Config
-    {
-        Pull pull = Pull::unknown;
-    };
-
 public:
 
     Input_pin(GPIO* a_p_port, common::uint8 a_pin)
@@ -240,7 +235,7 @@ public:
     Input_pin& operator = (Input_pin&&)      = default;
     Input_pin& operator = (const Input_pin&) = default;
 
-    void enable(const Config& a_config);
+    void enable(Pull a_pull);
     void disable();
 
     void set_pull(Pull a_pull);

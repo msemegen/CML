@@ -9,6 +9,7 @@
 
 //cml
 #include <common/bit.hpp>
+#include <common/cc_attributes.hpp>
 #include <common/frequency.hpp>
 #include <common/macros.hpp>
 #include <common/time_tick.hpp>
@@ -54,27 +55,29 @@ struct sleep
 #endif // !CML_DWT_PRESENT
     }
 
-    static void wait_until(common::uint32 a_register, common::uint32 a_flag, bool a_status)
+    template<typename Register_t>
+    static void until(const Register_t* a_p_register, common::uint32 a_flag, bool a_status)
     {
-        while (a_status == common::is_flag(a_register, a_flag));
+        while (a_status == common::is_flag(*a_p_register, a_flag));
     }
 
-    static bool wait_until(common::uint32 a_register,
-                           common::uint32 a_flag,
-                           bool a_status,
-                           common::time_tick a_start,
-                           common::time_tick a_timeout_ms)
+    template<typename Register_t>
+    static bool until(const Register_t* a_p_register,
+                      common::uint32 a_flag,
+                      bool a_status,
+                      common::time_tick a_start,
+                      common::time_tick a_timeout_ms)
     {
         bool status  = true;
         bool timeout = false;
 
-        while (false == status && false == timeout)
+        while (true == status && false == timeout)
         {
-            timeout = a_timeout_ms >= common::time_tick_diff(hal::systick::get_counter(), a_start);
-            status  = common::is_flag(a_register, a_flag) == a_status;
+            timeout = a_timeout_ms <= common::time_tick_diff(hal::systick::get_counter(), a_start);
+            status  = common::is_flag(*a_p_register, a_flag) == a_status;
         }
 
-        return ((true == status) && (false == timeout));
+        return ((false == status) && (false == timeout));
     }
 
     sleep()             = delete;

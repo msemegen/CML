@@ -196,16 +196,7 @@ void mcu::reset()
 
 void mcu::halt()
 {
-    uint32 new_basepri = 0;
-
-    __asm volatile
-    (
-        "mov %0, %1      \n" \
-        "msr basepri, %0 \n" \
-        "isb             \n" \
-        "dsb             \n" \
-        :"=r" (new_basepri) : "i" (80u)
-    );
+    __disable_irq();
 
     while (true);
 }
