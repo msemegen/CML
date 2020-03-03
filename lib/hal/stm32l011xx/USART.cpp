@@ -18,7 +18,13 @@
 namespace {
 
 using namespace cml::common;
+using namespace cml::hal;
 using namespace cml::hal::stm32l011xx;
+
+bool is_timeout(time_tick a_start, time_tick a_timeout)
+{
+    return time_tick_infinity == a_timeout ? false : time_tick_diff(systick::get_counter(), a_start) < a_timeout;
+}
 
 void usart_2_enable(USART::Clock::Source a_clock_source)
 {
@@ -65,17 +71,6 @@ void USART2_IRQHandler()
 
 } // extern "C"
 
-namespace {
-
-using namespace cml::common;
-
-bool is_timeout(time_tick a_start, time_tick a_current, time_tick a_timeout)
-{
-    return time_tick_infinity == a_timeout ? false : time_tick_diff(a_current, a_start) < a_timeout;
-}
-
-} // namespace ::
-
 namespace cml {
 namespace hal {
 namespace stm32l011xx {
@@ -97,7 +92,6 @@ void usart_handle_interrupt(USART* a_p_this)
         const bool procceed = p_context->callback.p_function(&data,
                                                              p_context->callback.p_user_data,
                                                              is_timeout(p_context->start_timestamp,
-                                                                        systick::get_counter(),
                                                                         p_context->timeout));
 
         if (true == procceed)
@@ -120,7 +114,6 @@ void usart_handle_interrupt(USART* a_p_this)
         const bool procceed          = p_context->callback.p_function(a_p_this->p_usart->RDR,
                                                                       p_context->callback.p_user_data,
                                                                       is_timeout(p_context->start_timestamp,
-                                                                                 systick::get_counter(),
                                                                                  p_context->timeout));
 
         if (false == procceed)

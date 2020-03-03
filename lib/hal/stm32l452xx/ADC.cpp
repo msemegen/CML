@@ -20,6 +20,25 @@
 #include <hal/stm32l452xx/mcu.hpp>
 #endif // CML_DEBUG
 
+namespace
+{
+using namespace cml::hal::stm32l452xx;
+
+ADC* p_adc1 = nullptr;
+
+} // namespace
+
+extern "C"
+{
+
+void ADC1_IRQHandler()
+{
+    assert(nullptr != p_adc1);
+    adc_handle_interrupt(p_adc1);
+}
+
+} // extern "C"
+
 namespace cml {
 namespace hal {
 namespace stm32l452xx {
@@ -27,21 +46,31 @@ namespace stm32l452xx {
 using namespace cml::common;
 using namespace cml::utils;
 
+bool is_timeout(time_tick a_start, time_tick a_timeout)
+{
+    return time_tick_infinity == a_timeout ? false : time_tick_diff(systick::get_counter(), a_start) < a_timeout;
+}
+
 void adc_handle_interrupt(ADC* a_p_this)
 {
     uint32 isr = ADC1->ISR;
 
     if (true == is_flag(isr, ADC_ISR_EOC))
     {
-        if (time_tick_infinity != a_p_this->callaback.timeout)
+        bool timeout = is_timeout(a_p_this->callaback.start_timestamp, a_p_this->callaback.timeout);
+        bool series_end = is_flag(isr, ADC_ISR_EOS);
+
+        a_p_this->callaback.function(ADC1->DR, series_end, timeout);
+
+        if (true == series_end)
         {
-
+            set_flag(&(ADC1->CR), ADC_ISR_EOS);
         }
-    }
 
-    if (true == is_flag(isr, ADC_ISR_EOS))
-    {
-
+        if (true == series_end || true == timeout)
+        {
+            clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
+        }
     }
 }
 
@@ -54,6 +83,10 @@ bool ADC::enable(Resolution a_resolution, const Clock& a_clock, time_tick a_time
     this->disable();
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+
+    p_adc1 = this;
+    NVIC_SetPriority(USART2_IRQn, config::adc::_1_interrupt_priority);
+    NVIC_EnableIRQ(USART2_IRQn);
 
     switch (a_clock.source)
     {
@@ -115,6 +148,8 @@ void ADC::disable()
 
     set_flag(&(ADC1->CR), ADC_CR_DEEPPWD);
     clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+
+    p_adc1 = nullptr;
 }
 
 void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_count)
@@ -240,12 +275,16 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
 
 void ADC::read_it(Conversion_callback a_callback, time_tick a_timeout)
 {
+    assert(true == systick::is_enabled());
+
     clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
 
     if (nullptr != a_callback)
     {
         this->callaback.function = a_callback;
-        this->callaback.timeout  = a_timeout;
+
+        this->callaback.timeout         = a_timeout;
+        this->callaback.start_timestamp = systick::get_counter();
 
         set_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
     }

@@ -22,7 +22,7 @@ class ADC
 {
 public:
 
-    using Conversion_callback = bool(*)(common::uint16 a_value, bool a_conversion_end, bool a_timeout);
+    using Conversion_callback = bool(*)(common::uint16 a_value, bool a_series_end, bool a_timeout);
 
     enum class Id : common::uint32
     {
@@ -192,7 +192,9 @@ private:
     struct IT_callback
     {
         Conversion_callback function = nullptr;
-        common::time_tick   timeout  = 0;
+
+        common::time_tick start_timestamp = 0;
+        common::time_tick timeout         = 0;
     };
 
 private:
