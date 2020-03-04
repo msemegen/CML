@@ -60,17 +60,24 @@ void adc_handle_interrupt(ADC* a_p_this)
         bool timeout = is_timeout(a_p_this->callaback.start_timestamp, a_p_this->callaback.timeout);
         bool series_end = is_flag(isr, ADC_ISR_EOS);
 
-        a_p_this->callaback.function(ADC1->DR, series_end, timeout);
+        bool ret = a_p_this->callaback.function(ADC1->DR, series_end, timeout);
 
         if (true == series_end)
         {
-            set_flag(&(ADC1->CR), ADC_ISR_EOS);
+            set_flag(&(ADC1->ISR), ADC_ISR_EOS);
         }
 
-        if (true == series_end || true == timeout)
+        if (true == series_end || true == timeout || false == ret)
         {
+            set_flag(&(ADC1->CR), ADC_CR_ADSTP);
             clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
         }
+    }
+
+    if (true == is_flag(isr, ADC_ISR_OVR))
+    {
+        isr = isr;
+        while (true);
     }
 }
 
@@ -85,8 +92,8 @@ bool ADC::enable(Resolution a_resolution, const Clock& a_clock, time_tick a_time
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
 
     p_adc1 = this;
-    NVIC_SetPriority(USART2_IRQn, config::adc::_1_interrupt_priority);
-    NVIC_EnableIRQ(USART2_IRQn);
+    NVIC_SetPriority(ADC1_IRQn, config::adc::_1_interrupt_priority);
+    NVIC_EnableIRQ(ADC1_IRQn);
 
     switch (a_clock.source)
     {
@@ -133,6 +140,11 @@ bool ADC::enable(Resolution a_resolution, const Clock& a_clock, time_tick a_time
         ret = sleep::until(&(ADC1->ISR), ADC_ISR_ADRDY, false, start, a_timeout);
     }
 
+    if (true == ret)
+    {
+        set_flag(&(ADC1->ISR), ADC_ISR_ADRDY);
+    }
+
     if (false == ret)
     {
         this->disable();
@@ -148,6 +160,8 @@ void ADC::disable()
 
     set_flag(&(ADC1->CR), ADC_CR_DEEPPWD);
     clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+
+    NVIC_DisableIRQ(ADC1_IRQn);
 
     p_adc1 = nullptr;
 }
@@ -277,8 +291,6 @@ void ADC::read_it(Conversion_callback a_callback, time_tick a_timeout)
 {
     assert(true == systick::is_enabled());
 
-    clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
-
     if (nullptr != a_callback)
     {
         this->callaback.function = a_callback;
@@ -287,6 +299,7 @@ void ADC::read_it(Conversion_callback a_callback, time_tick a_timeout)
         this->callaback.start_timestamp = systick::get_counter();
 
         set_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
+        set_flag(&(ADC1->CR), ADC_CR_ADSTART);
     }
     else
     {
