@@ -106,7 +106,7 @@ public:
     {
         enum class Id : common::uint32
         {
-            _0,
+            voltage_reference,
             _1,
             _2,
             _3,
@@ -123,6 +123,8 @@ public:
             _14,
             _15,
             _16,
+            temperature_sensor,
+            battery_voltage,
             unknown
         };
 
@@ -141,6 +143,12 @@ public:
 
         Id id                       = Id::unknown;
         Sampling_time sampling_time = Sampling_time::unknown;
+    };
+
+    struct Temperature_sensor_calibration_data
+    {
+        common::uint16 data       = 0;
+        common::uint8 temperature = 0;
     };
 
 public:
@@ -180,6 +188,16 @@ public:
     common::uint32 get_active_channels_count() const
     {
         return (ADC1->SQR1 & 0xFu) + 1;
+    }
+
+    Temperature_sensor_calibration_data get_temperature_sensor_calibration_data_1() const
+    {
+        return { *(reinterpret_cast<const common::uint16*>(0x1FFF75A8)), 30 };
+    }
+
+    Temperature_sensor_calibration_data get_temperature_sensor_calibration_data_2() const
+    {
+        return { *(reinterpret_cast<const common::uint16*>(0x1FFF75CA)), 130 };
     }
 
     Id get_id() const

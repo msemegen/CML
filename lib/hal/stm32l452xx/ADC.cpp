@@ -22,9 +22,23 @@
 
 namespace
 {
+
+using namespace cml::common;
 using namespace cml::hal::stm32l452xx;
 
 ADC* p_adc1 = nullptr;
+
+bool find_channel(ADC::Channel::Id a_type, const ADC::Channel* a_p_channels, uint32 a_channels_count)
+{
+    bool found = false;
+
+    for (uint32 i = 0; i < a_channels_count && false == found; i++)
+    {
+        found = a_type == a_p_channels[i].id;
+    }
+
+    return found;
+}
 
 } // namespace
 
@@ -199,18 +213,35 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_cou
         set_flag(&(ADC1->SQR4), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
+    volatile uint32* p_SMPRs = reinterpret_cast<volatile uint32*>(&(ADC1->SMPR1));
+
     for (uint32 i = 0; i < a_channels_count; i++)
     {
-        const uint32 channel_sampling_time = static_cast<uint32_t>(a_p_channels[i].sampling_time) << (static_cast<uint32_t>(a_p_channels[i].id) * 3);
+        const uint32 channel_id        = static_cast<uint32_t>(a_p_channels[i].id);
+        const uint32 sampling_time_val = static_cast<uint32_t>(a_p_channels[i].sampling_time);
+        const uint32 register_index    = channel_id / 10;
 
-        if (static_cast<uint32_t>(a_p_channels[i].id) <= 9)
-        {
-            set_flag(&(ADC1->SMPR1), channel_sampling_time);
-        }
-        else
-        {
-            set_flag(&(ADC1->SMPR2), channel_sampling_time);
-        }
+        set_flag(&(p_SMPRs[register_index]), sampling_time_val << ((channel_id - (register_index * 10)) * 3));
+    }
+
+    bool enable_temperature_sensor = find_channel(Channel::Id::temperature_sensor, a_p_channels, a_channels_count);
+    bool enable_voltage_reference  = find_channel(Channel::Id::voltage_reference, a_p_channels, a_channels_count);
+    bool enable_battery_voltage    = find_channel(Channel::Id::battery_voltage, a_p_channels, a_channels_count);
+
+    if (true == enable_temperature_sensor)
+    {
+        set_flag(&(ADC1_COMMON->CCR), ADC_CCR_TSEN);
+        sleep::us(120);
+    }
+
+    if (true == enable_voltage_reference)
+    {
+        set_flag(&(ADC1_COMMON->CCR), ADC_CCR_VREFEN);
+    }
+
+    if (true == enable_battery_voltage)
+    {
+        set_flag(&(ADC1_COMMON->CCR), ADC_CCR_VBATEN);
     }
 }
 
@@ -224,6 +255,8 @@ void ADC::clear_active_channels()
 
     ADC1->SMPR1 = 0;
     ADC1->SMPR2 = 0;
+
+    clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN);
 }
 
 void ADC::read_polling(uint16* a_p_data, uint32 a_count)
