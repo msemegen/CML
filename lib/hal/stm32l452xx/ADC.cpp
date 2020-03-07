@@ -11,8 +11,6 @@
 #include <hal/stm32l452xx/ADC.hpp>
 
 //cml
-#include <common/bit.hpp>
-#include <hal/systick.hpp>
 #include <utils/sleep.hpp>
 
 #ifdef CML_DEBUG
@@ -95,76 +93,39 @@ void adc_handle_interrupt(ADC* a_p_this)
     }
 }
 
-bool ADC::enable(Resolution a_resolution, const Clock& a_clock, time_tick a_timeout)
+bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, time_tick a_timeout)
 {
     assert(true == systick::is_enabled());
+    assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
+           true == mcu::get_pll_config().pllsai1.r.output_enabled);
 
     time_tick start = systick::get_counter();
 
     this->disable();
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+    clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
+    set_flag(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<common::uint32>(a_clock.divider));
 
-    p_adc1 = this;
-    NVIC_SetPriority(ADC1_IRQn, config::adc::_1_interrupt_priority);
-    NVIC_EnableIRQ(ADC1_IRQn);
+    return this->enable(a_resolution, start, a_timeout);
+}
 
-    switch (a_clock.source)
-    {
-        case Clock::Source::asynchronous:
-        {
-            assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
-                   true == mcu::get_pll_config().pllsai1.r.output_enabled);
+bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, time_tick a_timeout)
+{
+    assert(true == systick::is_enabled());
+    assert(Synchronous_clock::Divider::unknown != a_clock.divider);
+    assert(Synchronous_clock::Divider::_1 == a_clock.divider ?
+           mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
+           true);
 
-            clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
-            set_flag(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<uint32>(a_clock.asynchronous.source));
-        }
-        break;
+    time_tick start = systick::get_counter();
 
-        case Clock::Source::synchronous:
-        {
-            assert(Clock::Synchronous::Divider::_1 == a_clock.synchronous.divider ?
-                   mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
-                   true);
+    this->disable();
 
-            set_flag(&(ADC1_COMMON->CCR), static_cast<uint32>(a_clock.synchronous.divider));
-        }
-        break;
+    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+    set_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<common::uint32>(a_clock.divider));
 
-        case Clock::Source::unknown:
-        {
-            assert(a_clock.source != Clock::Source::unknown);
-        }
-    }
-
-    clear_flag(&(ADC1->CR), ADC_CR_DEEPPWD);
-    set_flag(&(ADC1->CR), ADC_CR_ADVREGEN);
-    sleep::us(21u);
-
-    clear_flag(&(ADC1->CR), ADC_CR_ADCALDIF);
-    set_flag(&(ADC1->CR), ADC_CR_ADCAL);
-
-    bool ret = sleep::until(&(ADC1->CR), ADC_CR_ADCAL, true, start, a_timeout);
-
-    if (true == ret)
-    {
-        set_flag(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
-        set_flag(&(ADC1->CR), ADC_CR_ADEN);
-
-        ret = sleep::until(&(ADC1->ISR), ADC_ISR_ADRDY, false, start, a_timeout);
-    }
-
-    if (true == ret)
-    {
-        set_flag(&(ADC1->ISR), ADC_ISR_ADRDY);
-    }
-
-    if (false == ret)
-    {
-        this->disable();
-    }
-
-    return ret;
+    return this->enable(a_resolution, start, a_timeout);
 }
 
 void ADC::disable()
@@ -341,8 +302,44 @@ void ADC::read_it(Conversion_callback a_callback, time_tick a_timeout)
     }
 }
 
+bool ADC::enable(Resolution a_resolution, time_tick a_start, time_tick a_timeout)
+{
+    p_adc1 = this;
+    NVIC_SetPriority(ADC1_IRQn, config::adc::_1_interrupt_priority);
+    NVIC_EnableIRQ(ADC1_IRQn);
+
+    clear_flag(&(ADC1->CR), ADC_CR_DEEPPWD);
+    set_flag(&(ADC1->CR), ADC_CR_ADVREGEN);
+    sleep::us(21u);
+
+    clear_flag(&(ADC1->CR), ADC_CR_ADCALDIF);
+    set_flag(&(ADC1->CR), ADC_CR_ADCAL);
+
+    bool ret = sleep::until(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
+
+    if (true == ret)
+    {
+        set_flag(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
+        set_flag(&(ADC1->CR), ADC_CR_ADEN);
+
+        ret = sleep::until(&(ADC1->ISR), ADC_ISR_ADRDY, false, a_start, a_timeout);
+    }
+
+    if (true == ret)
+    {
+        set_flag(&(ADC1->ISR), ADC_ISR_ADRDY);
+    }
+
+    if (false == ret)
+    {
+        this->disable();
+    }
+
+    return ret;
+}
+
 } // namespace stm32l452xx
 } // namespace hal
 } // namespace cml
 
-#endif
+#endif // STM32L452xx

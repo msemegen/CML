@@ -12,6 +12,7 @@
 
 //cml
 #include <common/integer.hpp>
+#include <common/macros.hpp>
 #include <common/time_tick.hpp>
 
 namespace cml {
@@ -35,71 +36,6 @@ public:
         _8_bit  = ADC_CFGR_RES_1,
         _10_bit = ADC_CFGR_RES_0,
         _12_bit = 0u,
-        unknown
-    };
-
-    struct Clock
-    {
-        struct Synchronous
-        {
-            enum class Source : common::uint32
-            {
-                sysclk,
-                unknown
-            };
-
-            enum class Divider : common::uint32
-            {
-                _1 = ADC_CCR_CKMODE_0,
-                _2 = ADC_CCR_CKMODE_1,
-                _4 = ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1,
-                unknown
-            };
-
-            Source source   = Source::unknown;
-            Divider divider = Divider::unknown;
-        };
-
-        struct Asynchronous
-        {
-            enum class Source : common::uint32
-            {
-                pllsai,
-                unknown
-            };
-
-            enum class Divider : common::uint32
-            {
-                _1   = 0x0u,
-                _2   = ADC_CCR_PRESC_0,
-                _4   = ADC_CCR_PRESC_1,
-                _6   = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1,
-                _8   = ADC_CCR_PRESC_2,
-                _10  = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_2,
-                _12  = ADC_CCR_PRESC_1 | ADC_CCR_PRESC_2,
-                _16  = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1 | ADC_CCR_PRESC_2,
-                _32  = ADC_CCR_PRESC_3,
-                _64  = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_3,
-                _128 = ADC_CCR_PRESC_1 | ADC_CCR_PRESC_3,
-                _256 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1 | ADC_CCR_PRESC_3,
-                unknown
-            };
-
-            Source source   = Source::unknown;
-            Divider divider = Divider::unknown;
-        };
-
-        enum class Source : common::uint32
-        {
-            synchronous,
-            asynchronous,
-            unknown
-        };
-
-        Source source = Source::unknown;
-
-        Synchronous synchronous;
-        Asynchronous asynchronous;
     };
 
     struct Channel
@@ -145,6 +81,55 @@ public:
         Sampling_time sampling_time = Sampling_time::unknown;
     };
 
+    struct Synchronous_clock
+    {
+        enum class Divider : common::uint32
+        {
+            _1 = ADC_CCR_CKMODE_0,
+            _2 = ADC_CCR_CKMODE_1,
+            _4 = ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1,
+            unknown
+        };
+
+        enum class Source
+        {
+            pclk,
+            unknown
+        };
+
+        Source source   = Source::unknown;
+        Divider divider = Divider::unknown;
+    };
+
+    struct Asynchronous_clock
+    {
+        enum class Divider : common::uint32
+        {
+            _1 = 0x0u,
+            _2 = ADC_CCR_PRESC_0,
+            _4 = ADC_CCR_PRESC_1,
+            _6 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1,
+            _8 = ADC_CCR_PRESC_2,
+            _10 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_2,
+            _12 = ADC_CCR_PRESC_1 | ADC_CCR_PRESC_2,
+            _16 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1 | ADC_CCR_PRESC_2,
+            _32 = ADC_CCR_PRESC_3,
+            _64 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_3,
+            _128 = ADC_CCR_PRESC_1 | ADC_CCR_PRESC_3,
+            _256 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1 | ADC_CCR_PRESC_3,
+            unknown
+        };
+
+        enum class Source
+        {
+            pllsai,
+            unknown
+        };
+
+        Source source   = Source::unknown;
+        Divider divider = Divider::unknown;
+    };
+
     struct Temperature_sensor_calibration_data
     {
         common::uint16 data       = 0;
@@ -154,8 +139,9 @@ public:
 public:
 
     ADC(Id a_id)
-        : id(a_id)
-    {}
+    {
+        unused(a_id);
+    }
 
     ~ADC()
     {
@@ -169,7 +155,9 @@ public:
     ADC& operator = (const ADC&) = default;
     ADC& operator = (ADC&&) = default;
 
-    bool enable(Resolution a_resolution, const Clock& a_clock, common::time_tick a_timeout);
+    bool enable(Resolution a_resolution, const Asynchronous_clock& a_clock, common::time_tick a_timeout);
+    bool enable(Resolution a_resolution, const Synchronous_clock& a_clock, common::time_tick a_timeout);
+
     void disable();
 
     void set_active_channels(const Channel* a_p_channels, common::uint32 a_channels_count);
@@ -202,8 +190,12 @@ public:
 
     Id get_id() const
     {
-        return this->id;
+        return Id::_1;
     }
+
+private:
+
+    bool enable(Resolution a_resolution, common::time_tick a_start, common::time_tick a_timeout);
 
 private:
 
@@ -217,7 +209,6 @@ private:
 
 private:
 
-    Id id;
     IT_callback callaback;
 
 private:
