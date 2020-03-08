@@ -130,10 +130,10 @@ public:
         Divider divider = Divider::unknown;
     };
 
-    struct Temperature_sensor_calibration_data
+    struct Calibration_data
     {
         common::uint16 data       = 0;
-        common::uint8 temperature = 0;
+        common::uint8  nvirovment = 0;
     };
 
 public:
@@ -178,24 +178,25 @@ public:
         return (ADC1->SQR1 & 0xFu) + 1;
     }
 
-    Temperature_sensor_calibration_data get_temperature_sensor_calibration_data_1() const
+    constexpr Calibration_data get_temperature_sensor_calibration_data_1() const
     {
         return { *(reinterpret_cast<const common::uint16*>(0x1FFF75A8)), 30 };
     }
 
-    Temperature_sensor_calibration_data get_temperature_sensor_calibration_data_2() const
+    constexpr Calibration_data get_temperature_sensor_calibration_data_2() const
     {
         return { *(reinterpret_cast<const common::uint16*>(0x1FFF75CA)), 130 };
     }
 
-    Id get_id() const
+    constexpr Calibration_data get_internal_voltage_reference_calibration_data() const
+    {
+        return { *(reinterpret_cast<const common::uint16*>(0x1FFF75AA)), 3000 };
+    }
+
+    constexpr Id get_id() const
     {
         return Id::_1;
     }
-
-private:
-
-    bool enable(Resolution a_resolution, common::time_tick a_start, common::time_tick a_timeout);
 
 private:
 
@@ -206,6 +207,11 @@ private:
         common::time_tick start_timestamp = 0;
         common::time_tick timeout         = 0;
     };
+
+private:
+
+    bool enable(Resolution a_resolution, common::time_tick a_start, common::time_tick a_timeout);
+
 
 private:
 

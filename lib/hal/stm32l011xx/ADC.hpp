@@ -23,6 +23,8 @@ class ADC
 {
 public:
 
+    using Conversion_callback = bool(*)(common::uint16 a_value, bool a_series_end, bool a_timeout);
+
     enum class Id
     {
         _1 = 0
@@ -113,6 +115,12 @@ public:
         Divider divider = Divider::unknown;
     };
 
+    struct Calibration_data
+    {
+        common::uint16 data = 0;
+        common::uint8  nvirovment = 0;
+    };
+
 public:
 
     ADC(Id a_id)
@@ -137,16 +145,57 @@ public:
 
     void disable();
 
-    void set_active_channels(Sampling_time a_sampling_time, const Channel* a_p_channels);
+    void set_active_channels(Sampling_time a_sampling_time, const Channel* a_p_channels, common::uint32 a_channels_count);
     void clear_active_channels();
 
     void read_polling(common::uint16* a_p_data, common::uint32 a_count);
     bool read_polling(common::uint16* a_p_data, common::uint32 a_count, common::time_tick a_timeout);
 
+    void read_it(Conversion_callback a_callback, common::time_tick a_timeout);
+
+    void read_it(Conversion_callback a_callback)
+    {
+        this->read_it(a_callback, common::time_tick_infinity);
+    }
+
+    common::uint32 get_active_channels_count() const;
+
+    constexpr Calibration_data get_temperature_sensor_calibration_data_2() const
+    {
+        return { *(reinterpret_cast<const common::uint16*>(0x1FF8007E)), 130 };
+    }
+
+    constexpr Calibration_data get_internal_voltage_reference_calibration_data() const
+    {
+        return { *(reinterpret_cast<const common::uint16*>(0x1FF80078)), 3000 };
+    }
+
+    constexpr Id get_id() const
+    {
+        return Id::_1;
+    }
+
+private:
+
+    struct IT_callback
+    {
+        Conversion_callback function = nullptr;
+
+        common::time_tick start_timestamp = 0;
+        common::time_tick timeout         = 0;
+    };
+
 private:
 
     bool enable(Resolution a_resolution, common::time_tick a_start, common::time_tick a_timeout);
 
+private:
+
+    IT_callback callaback;
+
+private:
+
+    friend void adc_handle_interrupt(ADC* a_p_this);
 };
 
 } // namespace cml

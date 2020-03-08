@@ -26,7 +26,7 @@ using namespace cml::hal::stm32l452xx;
 
 ADC* p_adc1 = nullptr;
 
-bool find_channel(ADC::Channel::Id a_type, const ADC::Channel* a_p_channels, uint32 a_channels_count)
+bool is_channel(ADC::Channel::Id a_type, const ADC::Channel* a_p_channels, uint32 a_channels_count)
 {
     bool found = false;
 
@@ -185,9 +185,9 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_cou
         set_flag(&(p_SMPRs[register_index]), sampling_time_val << ((channel_id - (register_index * 10)) * 3));
     }
 
-    bool enable_temperature_sensor = find_channel(Channel::Id::temperature_sensor, a_p_channels, a_channels_count);
-    bool enable_voltage_reference  = find_channel(Channel::Id::voltage_reference, a_p_channels, a_channels_count);
-    bool enable_battery_voltage    = find_channel(Channel::Id::battery_voltage, a_p_channels, a_channels_count);
+    bool enable_temperature_sensor = is_channel(Channel::Id::temperature_sensor, a_p_channels, a_channels_count);
+    bool enable_voltage_reference  = is_channel(Channel::Id::voltage_reference, a_p_channels, a_channels_count);
+    bool enable_battery_voltage    = is_channel(Channel::Id::battery_voltage, a_p_channels, a_channels_count);
 
     if (true == enable_temperature_sensor)
     {
@@ -305,6 +305,7 @@ void ADC::read_it(Conversion_callback a_callback, time_tick a_timeout)
 bool ADC::enable(Resolution a_resolution, time_tick a_start, time_tick a_timeout)
 {
     p_adc1 = this;
+
     NVIC_SetPriority(ADC1_IRQn, config::adc::_1_interrupt_priority);
     NVIC_EnableIRQ(ADC1_IRQn);
 
