@@ -36,7 +36,7 @@ bool is_channel(ADC::Channel a_type, const ADC::Channel* a_p_channels, uint32 a_
     return found;
 }
 
-} // namespace
+} // namespace ::
 
 extern "C"
 {
