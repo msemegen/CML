@@ -132,8 +132,9 @@ public:
 
     struct Calibration_data
     {
-        common::uint16 data        = 0;
-        common::uint16 environment = 0;
+        common::uint16 temperature_sensor_data_1  = 0;
+        common::uint16 temperature_sensor_data_2  = 0;
+        common::uint16 internal_voltage_reference = 0;
     };
 
 public:
@@ -178,19 +179,12 @@ public:
         return (ADC1->SQR1 & 0xFu) + 1;
     }
 
-    constexpr Calibration_data get_temperature_sensor_calibration_data_1() const
+    constexpr Calibration_data get_calibration_data() const
     {
-        return { *(reinterpret_cast<const common::uint16*>(0x1FFF75A8)), 30 };
-    }
-
-    constexpr Calibration_data get_temperature_sensor_calibration_data_2() const
-    {
-        return { *(reinterpret_cast<const common::uint16*>(0x1FFF75CA)), 130 };
-    }
-
-    constexpr Calibration_data get_internal_voltage_reference_calibration_data() const
-    {
-        return { *(reinterpret_cast<const common::uint16*>(0x1FFF75AA)), 3000 };
+        return { *(reinterpret_cast<const common::uint16*>(0x1FFF75A8)),
+                 *(reinterpret_cast<const common::uint16*>(0x1FFF75CA)),
+                 *(reinterpret_cast<const common::uint16*>(0x1FFF75AA))
+        };
     }
 
     constexpr Id get_id() const
