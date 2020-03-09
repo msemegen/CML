@@ -84,12 +84,6 @@ void adc_handle_interrupt(ADC* a_p_this)
             clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
         }
     }
-
-    if (true == is_flag(isr, ADC_ISR_OVR))
-    {
-        isr = isr;
-        while (true);
-    }
 }
 
 bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, time_tick a_timeout)
@@ -109,6 +103,7 @@ bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, time
 bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, time_tick a_timeout)
 {
     assert(true == systick::is_enabled());
+    assert(true == mcu::is_clock_enabled(mcu::Clock::hsi));
 
     time_tick start = systick::get_counter();
 
@@ -142,12 +137,12 @@ void ADC::set_active_channels(Sampling_time a_sampling_time, const Channel* a_p_
     }
 
     bool is_temperature_sensor = is_channel(Channel::temperature_sensor, a_p_channels, a_channels_count);
-    bool is_voltage_reference = is_channel(Channel::voltage_reference, a_p_channels, a_channels_count);
+    bool is_voltage_reference  = is_channel(Channel::voltage_reference, a_p_channels, a_channels_count);
 
     if (true == is_temperature_sensor)
     {
         set_flag(&(ADC1_COMMON->CCR), ADC_CCR_TSEN);
-        sleep::us(10);
+        sleep::ms(10);
     }
 
     if (true == is_voltage_reference)
@@ -271,18 +266,26 @@ bool ADC::enable(Resolution a_resolution, time_tick a_start, time_tick a_timeout
     }
 
     set_flag(&(ADC1->CR), ADC_CR_ADVREGEN);
-    sleep::us(2);
+    sleep::ms(2);
 
-    set_flag(&(ADC1->CFGR1), static_cast<uint32>(a_resolution) | ADC_CFGR1_WAIT);
-    set_flag(&(ADC1->CR), ADC_CR_ADEN);
+    set_flag(&(ADC1->CR), ADC_CR_ADCAL);
 
-    bool ret = sleep::until(&(ADC1->CR), ADC_CR_ADEN, false, a_start, a_timeout);
+    bool ret = sleep::until(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
 
     if (true == ret)
     {
-        set_flag(&(ADC1->ISR), ADC_ISR_ADRDY);
+        set_flag(&(ADC1->CFGR1), static_cast<uint32>(a_resolution));
+        set_flag(&(ADC1->CR), ADC_CR_ADEN);
+
+        ret = sleep::until(&(ADC1->CR), ADC_CR_ADEN, false, a_start, a_timeout);
+
+        if (true == ret)
+        {
+            set_flag(&(ADC1->ISR), ADC_ISR_ADRDY);
+        }
     }
-    else
+
+    if (false == ret)
     {
         this->disable();
     }

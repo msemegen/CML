@@ -50,8 +50,15 @@ public:
         _7,
         _8,
         _9,
-        temperature_sensor,
-        voltage_reference
+        _10,
+        _11,
+        _12,
+        _13,
+        _14,
+        _15,
+        _16,
+        voltage_reference,
+        temperature_sensor
     };
 
     enum class Sampling_time : common::uint32
@@ -107,7 +114,7 @@ public:
 
         enum class Source
         {
-            hsi,
+            plck,
             unknown
         };
 
@@ -117,8 +124,8 @@ public:
 
     struct Calibration_data
     {
-        common::uint16 data = 0;
-        common::uint8  nvirovment = 0;
+        common::uint16 data        = 0;
+        common::uint16 environment = 0;
     };
 
 public:
@@ -159,6 +166,11 @@ public:
     }
 
     common::uint32 get_active_channels_count() const;
+
+    constexpr Calibration_data get_temperature_sensor_calibration_data_1() const
+    {
+        return { *(reinterpret_cast<const common::uint16*>(0x1FF8007A)), 30 };
+    }
 
     constexpr Calibration_data get_temperature_sensor_calibration_data_2() const
     {

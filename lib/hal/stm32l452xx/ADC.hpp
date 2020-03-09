@@ -132,8 +132,8 @@ public:
 
     struct Calibration_data
     {
-        common::uint16 data       = 0;
-        common::uint8  nvirovment = 0;
+        common::uint16 data        = 0;
+        common::uint16 environment = 0;
     };
 
 public:

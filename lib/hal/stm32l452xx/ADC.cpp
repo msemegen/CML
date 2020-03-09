@@ -85,12 +85,6 @@ void adc_handle_interrupt(ADC* a_p_this)
             clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
         }
     }
-
-    if (true == is_flag(isr, ADC_ISR_OVR))
-    {
-        isr = isr;
-        while (true);
-    }
 }
 
 bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, time_tick a_timeout)
