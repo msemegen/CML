@@ -75,7 +75,7 @@ int main()
         USART::Clock usart_clock
         {
             USART::Clock::Source::sysclk,
-            SystemCoreClock
+            mcu::get_sysclk_frequency_hz(),
         };
 
         Alternate_function_pin::Config usart_pin_config =
@@ -99,7 +99,7 @@ int main()
         console_usart_RX_pin.enable(usart_pin_config);
 
         USART console_usart(USART::Id::_2);
-        bool usart_ready = console_usart.enable(usart_config, usart_clock, 10);
+        bool usart_ready = console_usart.enable(usart_config, usart_clock, 0x1u, 10);
 
         if (true == usart_ready)
         {

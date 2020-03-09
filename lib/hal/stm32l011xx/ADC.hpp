@@ -148,8 +148,15 @@ public:
     ADC& operator = (const ADC&) = default;
     ADC& operator = (ADC&&)      = default;
 
-    bool enable(Resolution a_resolution, const Synchronous_clock& a_clock, common::time_tick a_timeout);
-    bool enable(Resolution a_resolution, const Asynchronous_clock& a_clock, common::time_tick a_timeout);
+    bool enable(Resolution a_resolution,
+                const Synchronous_clock& a_clock,
+                common::uint32 a_irq_priority,
+                common::time_tick a_timeout);
+
+    bool enable(Resolution a_resolution,
+                const Asynchronous_clock& a_clock,
+                common::uint32 a_irq_priority,
+                common::time_tick a_timeout);
 
     void disable();
 
@@ -193,7 +200,10 @@ private:
 
 private:
 
-    bool enable(Resolution a_resolution, common::time_tick a_start, common::time_tick a_timeout);
+    bool enable(Resolution a_resolution,
+                common::time_tick a_start,
+                common::uint32 a_irq_priority,
+                common::time_tick a_timeout);
 
 private:
 

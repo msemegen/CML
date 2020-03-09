@@ -26,7 +26,7 @@ bool is_timeout(time_tick a_start, time_tick a_timeout)
     return time_tick_infinity == a_timeout ? false : time_tick_diff(systick::get_counter(), a_start) < a_timeout;
 }
 
-void usart_1_enable(USART::Clock::Source a_clock_source)
+void usart_1_enable(USART::Clock::Source a_clock_source, uint32 a_irq_priority)
 {
     assert(a_clock_source != USART::Clock::Source::unknown);
 
@@ -34,7 +34,7 @@ void usart_1_enable(USART::Clock::Source a_clock_source)
     set_flag(&(RCC->CCIPR), RCC_CCIPR_USART1SEL, clock_source_lut[static_cast<uint32>(a_clock_source)]);
     set_flag(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN);
 
-    NVIC_SetPriority(USART1_IRQn, config::usart::_1_interrupt_priority);
+    NVIC_SetPriority(USART1_IRQn, a_irq_priority);
     NVIC_EnableIRQ(USART1_IRQn);
 }
 
@@ -44,7 +44,7 @@ void usart_1_disable()
     NVIC_DisableIRQ(USART1_IRQn);
 }
 
-void usart_2_enable(USART::Clock::Source a_clock_source)
+void usart_2_enable(USART::Clock::Source a_clock_source, uint32 a_irq_priority)
 {
     assert(a_clock_source != USART::Clock::Source::unknown);
 
@@ -52,7 +52,7 @@ void usart_2_enable(USART::Clock::Source a_clock_source)
     set_flag(&(RCC->CCIPR), RCC_CCIPR_USART2SEL, clock_source_lut[static_cast<uint32>(a_clock_source)]);
     set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN);
 
-    NVIC_SetPriority(USART2_IRQn, config::usart::_2_interrupt_priority);
+    NVIC_SetPriority(USART2_IRQn, a_irq_priority);
     NVIC_EnableIRQ(USART2_IRQn);
 }
 
@@ -62,13 +62,13 @@ void usart_2_disable()
     NVIC_DisableIRQ(USART2_IRQn);
 }
 
-void usart_3_enable(USART::Clock::Source a_clock_source)
+void usart_3_enable(USART::Clock::Source a_clock_source, uint32 a_irq_priority)
 {
     constexpr uint32 clock_source_lut[] = { 0, RCC_CCIPR_USART3SEL_0, RCC_CCIPR_USART3SEL_1 };
     set_flag(&(RCC->CCIPR), RCC_CCIPR_USART3SEL, clock_source_lut[static_cast<int32>(a_clock_source)]);
     set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_USART3EN);
 
-    NVIC_SetPriority(USART3_IRQn, config::usart::_3_interrupt_priority);
+    NVIC_SetPriority(USART3_IRQn, a_irq_priority);
     NVIC_EnableIRQ(USART3_IRQn);
 }
 
@@ -83,8 +83,8 @@ struct Controller
     USART_TypeDef* p_registers = nullptr;
     USART* p_usart_handle      = nullptr;
 
-    void (*p_enable)(USART::Clock::Source a_clock_source) = nullptr;
-    void (*p_disable)()                                   = nullptr;
+    void (*p_enable)(USART::Clock::Source a_clock_source, uint32 a_irq_priority) = nullptr;
+    void (*p_disable)()                                                          = nullptr;
 };
 
 Controller controllers[] =
@@ -175,7 +175,7 @@ void usart_handle_interrupt(USART* a_p_this)
     }
 }
 
-bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_timeout_ms)
+bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irqn_priority, time_tick a_timeout_ms)
 {
     assert(a_config.baud_rate    != 0);
     assert(a_config.flow_control != Flow_control::unknown);
@@ -192,7 +192,7 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_tim
     this->p_usart = controllers[this->to_index(this->id)].p_registers;
 
     controllers[this->to_index(this->id)].p_disable();
-    controllers[this->to_index(this->id)].p_enable(a_clock.source);
+    controllers[this->to_index(this->id)].p_enable(a_clock.source, a_irqn_priority);
 
     this->p_usart->CR1 = 0;
     this->p_usart->CR2 = 0;

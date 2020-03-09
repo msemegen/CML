@@ -60,7 +60,7 @@ int main()
         USART::Clock usart_clock
         {
             USART::Clock::Source::sysclk,
-            SystemCoreClock
+            mcu::get_sysclk_frequency_hz(),
         };
 
         Alternate_function_pin::Config usart_pin_config =
@@ -83,7 +83,8 @@ int main()
 
         bool periph_ready = adc.enable(ADC::Resolution::_12_bit, { ADC::Synchronous_clock::Source::pclk,
                                                                    ADC::Synchronous_clock::Divider::_1 },
-                                       20);
+                                       20,
+                                       1);
 
         if (true == periph_ready)
         {
@@ -97,7 +98,7 @@ int main()
             console_usart_RX_pin.enable(usart_pin_config);
 
             USART console_usart(USART::Id::_2);
-            bool preiph_ready = console_usart.enable(usart_config, usart_clock, 10);
+            bool preiph_ready = console_usart.enable(usart_config, usart_clock, 0x1u, 10);
 
             if (true == preiph_ready)
             {
@@ -109,20 +110,19 @@ int main()
                 Console console(&console_usart);
                 console.enable();
 
-                console.write_line("CML ADC sample. CPU speed: %d MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
+                console.write_line("CML ADC sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
                 while (true)
                 {
                     uint16 r = 0;
                     adc.read_polling(&r, 1);
 
-                    console.write_line("temp: %d, adc: %u\r", compute_temperature(adc.get_calibration_data(), r), r);
+                    console.write_line("temp: %d, adc: %d\r", compute_temperature(adc.get_calibration_data(), r), r);
                     sleep::ms(10);
                 }
             }
         }
     }
-
 
     while (true);
 }

@@ -48,7 +48,8 @@ int main()
 
         bool periph_ready = adc.enable(ADC::Resolution::_12_bit,
                                        { ADC::Asynchronous_clock::Source::hsi, ADC::Asynchronous_clock::Divider::_1 },
-                                       30);
+                                       0x1u,
+                                       10);
 
         if (true == periph_ready)
         {
@@ -65,7 +66,7 @@ int main()
             USART::Clock usart_clock
             {
                 USART::Clock::Source::sysclk,
-                SystemCoreClock
+                mcu::get_sysclk_frequency_hz()
             };
 
             Alternate_function_pin::Config usart_pin_config =
@@ -86,7 +87,7 @@ int main()
             console_usart_rx_pin.enable(usart_pin_config);
 
             USART console_usart(USART::Id::_2);
-            periph_ready = console_usart.enable(usart_config, usart_clock, 10);
+            periph_ready = console_usart.enable(usart_config, usart_clock, 0x1u, 10);
 
             if (true == periph_ready)
             {

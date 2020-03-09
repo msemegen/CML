@@ -14,6 +14,7 @@
 #include <common/bit.hpp>
 #include <common/frequency.hpp>
 #include <common/integer.hpp>
+#include <common/macros.hpp>
 #include <common/time_tick.hpp>
 #include <debug/assert.hpp>
 #include <hal/systick.hpp>
@@ -115,24 +116,28 @@ public:
 public:
 
     USART(Id a_id)
-        : id(a_id)
-        , p_usart(nullptr)
-        , baud_rate(0)
-    {}
+        : baud_rate(0)
+    {
+        unused(a_id);
+    }
 
     ~USART()
     {
         this->disable();
     }
 
-    USART()               = default;
+    USART()             = default;
     USART(USART&)       = default;
     USART(const USART&) = default;
 
     USART& operator = (USART&&)      = default;
     USART& operator = (const USART&) = default;
 
-    bool enable(const Config& a_config, const Clock& a_clock, common::time_tick a_timeout_ms);
+    bool enable(const Config& a_config,
+                const Clock& a_clock,
+                common::uint32 a_irq_priority,
+                common::time_tick a_timeout_ms);
+
     void disable();
 
     template<typename Data_t>
@@ -202,9 +207,9 @@ public:
     bool is_rx_it_enabled() const;
     bool is_tx_it_enabled() const;
 
-    Id get_id() const
+    constexpr Id get_id() const
     {
-        return this->id;
+        return Id::_2;
     }
 
 private:
@@ -219,24 +224,13 @@ private:
 
 private:
 
-    common::uint32 to_index(Id a_id) const
-    {
-        return static_cast<common::uint32>(a_id);
-    }
-
-private:
-
     using TX_it_context = IT_context<TX_callback>;
     using RX_it_context = IT_context<RX_callback>;
 
 private:
 
-    Id id;
-
     TX_it_context tx_context;
     RX_it_context rx_context;
-
-    USART_TypeDef* p_usart;
 
     common::uint32 baud_rate;
     Clock clock;

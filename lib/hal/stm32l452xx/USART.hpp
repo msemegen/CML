@@ -134,7 +134,11 @@ public:
     USART& operator = (USART&&)      = default;
     USART& operator = (const USART&) = default;
 
-    bool enable(const Config& a_config, const Clock& a_clock, common::time_tick a_timeout_ms);
+    bool enable(const Config& a_config,
+                const Clock& a_clock,
+                common::uint32 a_irq_priority,
+                common::time_tick a_timeout_ms);
+
     void disable();
 
     template<typename Data_t>

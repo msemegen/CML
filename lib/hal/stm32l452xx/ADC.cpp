@@ -24,7 +24,7 @@ namespace
 using namespace cml::common;
 using namespace cml::hal::stm32l452xx;
 
-ADC* p_adc1 = nullptr;
+ADC* p_adc_1 = nullptr;
 
 bool is_channel(ADC::Channel::Id a_type, const ADC::Channel* a_p_channels, uint32 a_channels_count)
 {
@@ -45,8 +45,8 @@ extern "C"
 
 void ADC1_IRQHandler()
 {
-    assert(nullptr != p_adc1);
-    adc_handle_interrupt(p_adc1);
+    assert(nullptr != p_adc_1);
+    adc_handle_interrupt(p_adc_1);
 }
 
 } // extern "C"
@@ -87,7 +87,7 @@ void adc_handle_interrupt(ADC* a_p_this)
     }
 }
 
-bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, time_tick a_timeout)
+bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, uint32 a_irq_priority, time_tick a_timeout)
 {
     assert(true == systick::is_enabled());
     assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
@@ -101,10 +101,10 @@ bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, tim
     clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
     set_flag(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<common::uint32>(a_clock.divider));
 
-    return this->enable(a_resolution, start, a_timeout);
+    return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
 
-bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, time_tick a_timeout)
+bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32 a_irq_priority, time_tick a_timeout)
 {
     assert(true == systick::is_enabled());
     assert(Synchronous_clock::Divider::unknown != a_clock.divider);
@@ -119,7 +119,7 @@ bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, time
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
     set_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<common::uint32>(a_clock.divider));
 
-    return this->enable(a_resolution, start, a_timeout);
+    return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
 
 void ADC::disable()
@@ -132,7 +132,7 @@ void ADC::disable()
 
     NVIC_DisableIRQ(ADC1_IRQn);
 
-    p_adc1 = nullptr;
+    p_adc_1 = nullptr;
 }
 
 void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_count)
@@ -296,11 +296,11 @@ void ADC::read_it(Conversion_callback a_callback, time_tick a_timeout)
     }
 }
 
-bool ADC::enable(Resolution a_resolution, time_tick a_start, time_tick a_timeout)
+bool ADC::enable(Resolution a_resolution, time_tick a_start, uint32 a_irq_priority, time_tick a_timeout)
 {
-    p_adc1 = this;
+    p_adc_1 = this;
 
-    NVIC_SetPriority(ADC1_IRQn, config::adc::_1_interrupt_priority);
+    NVIC_SetPriority(ADC1_IRQn, a_irq_priority);
     NVIC_EnableIRQ(ADC1_IRQn);
 
     clear_flag(&(ADC1->CR), ADC_CR_DEEPPWD);

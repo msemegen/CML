@@ -17,34 +17,6 @@ namespace stm32l452xx{
 
 struct config
 {
-    struct adc
-    {
-        static constexpr common::uint32 _1_interrupt_priority = 0;
-
-        adc()           = delete;
-        adc(adc&&)      = delete;
-        adc(const adc&) = delete;
-        ~adc()          = delete;
-
-        adc& operator = (adc&)       = delete;
-        adc& operator = (const adc&) = delete;
-    };
-
-    struct usart
-    {
-        static constexpr common::uint32 _1_interrupt_priority = 0;
-        static constexpr common::uint32 _2_interrupt_priority = 0;
-        static constexpr common::uint32 _3_interrupt_priority = 0;
-
-        usart()             = delete;
-        usart(usart&&)      = delete;
-        usart(const usart&) = delete;
-        ~usart()            = delete;
-
-        usart& operator = (usart&)       = delete;
-        usart& operator = (const usart&) = delete;
-    };
-
     struct mcu
     {
         static constexpr common::uint8 device_id_length = 12;
