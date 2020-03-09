@@ -176,7 +176,7 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         {
             assert(true == is_clock_enabled(Clock::hsi));
 
-            frequency_hz = config::clock::hsi_frequency_hz;
+            frequency_hz = get_hsi_frequency_hz();
         }
         break;
 
@@ -481,7 +481,7 @@ uint32 mcu::calculate_pll_r_output_frequency()
 
         case Pll_config::Source::hsi:
         {
-            pllvco = (config::clock::hsi_frequency_hz / pllm) * plln;
+            pllvco = (get_hsi_frequency_hz() / pllm) * plln;
         }
         break;
 

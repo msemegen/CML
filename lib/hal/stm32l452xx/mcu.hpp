@@ -12,7 +12,8 @@
 
 //cml
 #include <common/bit.hpp>
-#include <hal/stm32l452xx/config.hpp>
+#include <common/frequency.hpp>
+#include <common/integer.hpp>
 
 namespace cml {
 namespace hal {
@@ -213,10 +214,10 @@ public:
         PLLSAI1 pllsai1;
     };
 
-    struct Id
+    struct Device_id
     {
-        const common::uint8  serial_number[config::mcu::device_id_length] = { 0 };
-        const common::uint32 type = 0;
+        const common::uint8  serial_number[12] = { 0 };
+        const common::uint32 type              = 0;
     };
 
     struct Sysclk_frequency_change_callback
@@ -325,10 +326,8 @@ public:
     static Bus_prescalers get_bus_prescalers();
     static Pll_config get_pll_config();
 
-    static Id get_id()
+    static Device_id get_device_id()
     {
-        static_assert(12 == config::mcu::device_id_length);
-
         common::uint8* p_id_location = reinterpret_cast<common::uint8*>(UID_BASE);
 
         return { { p_id_location[0], p_id_location[1], p_id_location[2],  p_id_location[3],
@@ -347,6 +346,16 @@ public:
     static common::uint32 get_sysclk_frequency_hz()
     {
         return SystemCoreClock;
+    }
+
+    static constexpr common::uint32 get_hsi_frequency_hz()
+    {
+        return common::MHz(16u);
+    }
+
+    static constexpr common::uint32 get_lsi_frequency_hz()
+    {
+        return common::kHz(32);
     }
 
     static bool is_clock_enabled(Clock a_clock)

@@ -11,7 +11,6 @@
 #include <hal/stm32l452xx/USART.hpp>
 
 //cml
-#include <hal/stm32l452xx/config.hpp>
 #include <debug/assert.hpp>
 #include <utils/sleep.hpp>
 

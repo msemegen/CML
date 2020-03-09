@@ -158,7 +158,7 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         {
             assert(true == is_clock_enabled(Clock::hsi));
 
-            frequency_hz = config::clock::hsi_frequency_hz;
+            frequency_hz = get_hsi_frequency_hz();
         }
         break;
 
@@ -424,7 +424,7 @@ uint32 mcu::calculate_frequency_from_pll_configuration()
     assert(di < sizeof(d_lut) / sizeof(d_lut[0]));
     assert(mi < sizeof(m_lut) / sizeof(m_lut[0]));
 
-    return config::clock::hsi_frequency_hz / (true == is_flag(RCC->CR, RCC_CR_HSIDIVEN) ? 4 : 1) * m_lut[mi] / d_lut[di];
+    return get_hsi_frequency_hz() / (true == is_flag(RCC->CR, RCC_CR_HSIDIVEN) ? 4 : 1) * m_lut[mi] / d_lut[di];
 }
 
 } // namespace stm32l011xx

@@ -14,7 +14,6 @@
 #include <common/bit.hpp>
 #include <debug/assert.hpp>
 #include <hal/mcu.hpp>
-#include <hal/stm32l011xx/config.hpp>
 #include <hal/systick.hpp>
 #include <utils/sleep.hpp>
 
