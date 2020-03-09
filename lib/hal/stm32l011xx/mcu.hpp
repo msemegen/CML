@@ -184,6 +184,9 @@ struct mcu
         return false;
     }
 
+    static Bus_prescalers get_bus_prescalers();
+    static Pll_config get_pll_config();
+
     static Id get_id()
     {
         static_assert(12 == config::mcu::device_id_length);

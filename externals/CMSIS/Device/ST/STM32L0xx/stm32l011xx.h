@@ -556,7 +556,7 @@ typedef struct
 #define ADC1                ((ADC_TypeDef *) ADC1_BASE)
 #define ADC1_COMMON         ((ADC_Common_TypeDef *) ADC_BASE)
 /* Legacy defines */
-#define ADC                 ADC1_COMMON
+//#define ADC                 ADC1_COMMON
 #define SPI1                ((SPI_TypeDef *) SPI1_BASE)
 #define DBGMCU              ((DBGMCU_TypeDef *) DBGMCU_BASE)
 

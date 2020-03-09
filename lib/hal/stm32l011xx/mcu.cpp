@@ -101,6 +101,8 @@ void mcu::enable_pll(const Pll_config& a_config)
     assert(Pll_config::Divider::unknown != a_config.divider);
     assert(Pll_config::Multiplier::unknown != a_config.multiplier);
 
+    disable_pll();
+
     if (true == a_config.hsidiv_enabled)
     {
         set_flag(&(RCC->CR), RCC_CR_HSIDIVEN);
@@ -194,16 +196,7 @@ void mcu::reset()
 
 void mcu::halt()
 {
-    uint32 new_basepri = 0;
-
-    __asm volatile
-    (
-        "mov %0, %1      \n" \
-        "msr basepri, %0 \n" \
-        "isb             \n" \
-        "dsb             \n" \
-        :"=r" (new_basepri) : "i" (80u)
-    );
+    __disable_irq();
 
     while (true);
 }
@@ -216,6 +209,24 @@ void mcu::register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_c
 void mcu::register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback)
 {
     post_sysclk_frequency_change_callback = a_callback;
+}
+
+mcu::Bus_prescalers mcu::get_bus_prescalers()
+{
+    return { static_cast<Bus_prescalers::AHB> (get_flag(RCC->CFGR, RCC_CFGR_HPRE)),
+             static_cast<Bus_prescalers::APB1>(get_flag(RCC->CFGR, RCC_CFGR_PPRE1)),
+             static_cast<Bus_prescalers::APB2>(get_flag(RCC->CFGR, RCC_CFGR_PPRE2)) };
+}
+
+mcu::Pll_config mcu::get_pll_config()
+{
+    return
+
+    { static_cast<Pll_config::Source>(get_flag(RCC->CFGR, RCC_CFGR_PLLSRC)),
+      is_flag(RCC->CR, RCC_CR_HSIDIVEN),
+      static_cast<Pll_config::Multiplier>(get_flag(RCC->CFGR, RCC_CFGR_PLLMUL)),
+      static_cast<Pll_config::Divider>(get_flag(RCC->CFGR, RCC_CFGR_PLLDIV))
+    };
 }
 
 mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq, Voltage_scaling a_voltage_scaling)

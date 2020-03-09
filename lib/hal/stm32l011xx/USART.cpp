@@ -13,11 +13,18 @@
 //cml
 #include <hal/stm32l011xx/config.hpp>
 #include <debug/assert.hpp>
+#include <utils/sleep.hpp>
 
 namespace {
 
 using namespace cml::common;
+using namespace cml::hal;
 using namespace cml::hal::stm32l011xx;
+
+bool is_timeout(time_tick a_start, time_tick a_timeout)
+{
+    return time_tick_infinity == a_timeout ? false : time_tick_diff(systick::get_counter(), a_start) < a_timeout;
+}
 
 void usart_2_enable(USART::Clock::Source a_clock_source)
 {
@@ -64,22 +71,12 @@ void USART2_IRQHandler()
 
 } // extern "C"
 
-namespace {
-
-using namespace cml::common;
-
-bool is_timeout(time_tick a_start, time_tick a_current, time_tick a_timeout)
-{
-    return time_tick_infinity == a_timeout ? false : time_tick_diff(a_current, a_start) < a_timeout;
-}
-
-} // namespace ::
-
 namespace cml {
 namespace hal {
 namespace stm32l011xx {
 
 using namespace cml::common;
+using namespace cml::utils;
 
 void usart_handle_interrupt(USART* a_p_this)
 {
@@ -95,7 +92,6 @@ void usart_handle_interrupt(USART* a_p_this)
         const bool procceed = p_context->callback.p_function(&data,
                                                              p_context->callback.p_user_data,
                                                              is_timeout(p_context->start_timestamp,
-                                                                        systick::get_counter(),
                                                                         p_context->timeout));
 
         if (true == procceed)
@@ -118,7 +114,6 @@ void usart_handle_interrupt(USART* a_p_this)
         const bool procceed          = p_context->callback.p_function(a_p_this->p_usart->RDR,
                                                                       p_context->callback.p_user_data,
                                                                       is_timeout(p_context->start_timestamp,
-                                                                                 systick::get_counter(),
                                                                                  p_context->timeout));
 
         if (false == procceed)
@@ -143,9 +138,12 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_tim
     assert(Clock::Source::unknown != a_clock.source);
     assert(0                      != a_clock.frequency_hz);
 
+    time_tick start = systick::get_counter();
+
     controllers[this->to_index(this->id)].p_usart_handle = this;
     this->p_usart = controllers[this->to_index(this->id)].p_registers;
 
+    controllers[this->to_index(this->id)].p_disable();
     controllers[this->to_index(this->id)].p_enable(a_clock.source);
 
     this->p_usart->CR1 = 0;
@@ -187,10 +185,14 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, time_tick a_tim
     this->baud_rate = a_config.baud_rate;
     this->clock     = a_clock;
 
-    return this->wait_until_isr(USART_ISR_REACK | USART_ISR_TEACK,
-                                false,
-                                systick::get_counter(),
-                                a_timeout_ms);
+    bool ret = sleep::until(&(this->p_usart->ISR), USART_ISR_REACK | USART_ISR_TEACK, false, start, a_timeout_ms);
+
+    if (false == ret)
+    {
+        this->disable();
+    }
+
+    return ret;
 }
 
 void USART::disable()
@@ -212,11 +214,11 @@ void USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
     {
-        this->wait_until_isr(USART_ISR_TXE, false);
+        sleep::until(&(this->p_usart->ISR), USART_ISR_TXE, false);
         this->p_usart->TDR = static_cast<const uint8*>(a_p_data)[i];
     }
 
-    this->wait_until_isr(USART_ISR_TC, false);
+    sleep::until(&(this->p_usart->ISR), USART_ISR_TC, false);
     this->p_usart->ICR = USART_ICR_TCCF;
 }
 
@@ -226,24 +228,27 @@ bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
     assert(a_data_size_in_bytes > 0);
     assert(true == systick::is_enabled());
 
-    bool timeout_occured = false;
-    time_tick start      = systick::get_counter();
+    bool ret        = true;
+    time_tick start = systick::get_counter();
 
     set_flag(&(this->p_usart->CR1), USART_CR1_TE);
 
-    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && false == timeout_occured; i++)
+    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
     {
-        timeout_occured = this->wait_until_isr(USART_ISR_TXE, false, start, a_timeout_ms);
+        ret = sleep::until(&(this->p_usart->ISR), USART_ISR_TXE, false, start, a_timeout_ms);
 
-        if (false == timeout_occured)
+        if (false == ret)
         {
             this->p_usart->TDR = static_cast<const uint8*>(a_p_data)[i];
         }
     }
 
-    timeout_occured = this->wait_until_isr(USART_ISR_TC, false, start, a_timeout_ms);
+    if (true == ret)
+    {
+        ret = sleep::until(&(this->p_usart->ISR), USART_ISR_TC, false, start, a_timeout_ms);
+    }
 
-    return false == timeout_occured;
+    return ret;
 }
 
 void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
@@ -253,7 +258,7 @@ void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
     {
-        this->wait_until_isr(USART_ISR_RXNE, false);
+        sleep::until(&(this->p_usart->ISR), USART_ISR_RXNE, false);
         static_cast<uint8*>(a_p_data)[i] = this->p_usart->RDR;
     }
 }
@@ -264,20 +269,20 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
     assert(a_data_size_in_bytes > 0);
     assert(true == systick::is_enabled());
 
-    bool timeout_occured = false;
-    time_tick start      = systick::get_counter();
+    bool ret        = false;
+    time_tick start = systick::get_counter();
 
-    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && false == timeout_occured; i++)
+    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
     {
-        timeout_occured = this->wait_until_isr(USART_ISR_RXNE, false, start, a_timeout_ms);
+        ret = sleep::until(&(this->p_usart->ISR), USART_ISR_RXNE, false, start, a_timeout_ms);
 
-        if (false == timeout_occured)
+        if (false == ret)
         {
             static_cast<uint8*>(a_p_data)[i] = this->p_usart->RDR;
         }
     }
 
-    return false == timeout_occured;
+    return ret;
 }
 
 void USART::write_bytes_it(const TX_callback& a_callback, time_tick a_timeout_ms)

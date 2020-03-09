@@ -133,7 +133,8 @@ void mcu::enable_pll(const Pll_config& a_config)
     set_flag(&(RCC->CR), RCC_CR_PLLON);
     while (false == get_flag(RCC->CR, RCC_CR_PLLRDY));
 
-    RCC->PLLSAI1CFGR = get_pll_register_config_from_factor(a_config.pllsai1.p, RCC_PLLSAI1CFGR_PLLSAI1PEN) |
+    RCC->PLLSAI1CFGR = (a_config.pllsai1.n << RCC_PLLSAI1CFGR_PLLSAI1N_Pos)                                |
+                       get_pll_register_config_from_factor(a_config.pllsai1.p, RCC_PLLSAI1CFGR_PLLSAI1PEN) |
                        get_pll_register_config_from_factor(a_config.pllsai1.q, RCC_PLLSAI1CFGR_PLLSAI1QEN) |
                        get_pll_register_config_from_factor(a_config.pllsai1.r, RCC_PLLSAI1CFGR_PLLSAI1REN);
 
@@ -150,7 +151,7 @@ void mcu::disable_pll()
     while (true == is_flag(RCC->CR, RCC_CR_PLLSAI1RDY));
 }
 
-void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_nvic_settings)
+void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
 {
     if (nullptr != pre_sysclk_frequency_change_callback.p_function)
     {
@@ -216,13 +217,16 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers,
         set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
     }
 
-    NVIC_SetPriorityGrouping(a_nvic_settings.priority_grouping);
-    __set_BASEPRI(a_nvic_settings.base_priority);
-
     if (nullptr != post_sysclk_frequency_change_callback.p_function)
     {
         post_sysclk_frequency_change_callback.p_function(post_sysclk_frequency_change_callback.a_p_user_data);
     }
+}
+
+void mcu::set_nvic(const NVIC_config& a_config)
+{
+    NVIC_SetPriorityGrouping(static_cast<uint32>(a_config.grouping));
+    __set_BASEPRI(a_config.base_priority);
 }
 
 void mcu::reset()
@@ -232,17 +236,7 @@ void mcu::reset()
 
 void mcu::halt()
 {
-    uint32 new_basepri = 0;
-
-    __asm volatile
-    (
-        "mov %0, %1      \n" \
-        "msr basepri, %0 \n" \
-        "isb             \n" \
-        "dsb             \n" \
-        :"=r" (new_basepri) : "i" (80u)
-    );
-
+    __disable_irq();
     while (true);
 }
 
@@ -254,6 +248,45 @@ void mcu::register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_c
 void mcu::register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback)
 {
     post_sysclk_frequency_change_callback = a_callback;
+}
+
+mcu::Bus_prescalers mcu::get_bus_prescalers()
+{
+    return { static_cast<Bus_prescalers::AHB> (get_flag(RCC->CFGR, RCC_CFGR_HPRE )),
+             static_cast<Bus_prescalers::APB1>(get_flag(RCC->CFGR, RCC_CFGR_PPRE1)),
+             static_cast<Bus_prescalers::APB2>(get_flag(RCC->CFGR, RCC_CFGR_PPRE2)) };
+}
+
+mcu::Pll_config mcu::get_pll_config()
+{
+    return
+
+    { static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)),
+      static_cast<Pll_config::M>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)),
+      { get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN),
+        { static_cast<Pll_config::PLL::R::Divider>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR)),
+          is_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLREN)
+        },
+        { static_cast<Pll_config::PLL::Q::Divider>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ)),
+          is_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQEN)
+        },
+        { static_cast<Pll_config::PLL::P::Divider>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLP)),
+          is_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLPEN)
+        }
+      },
+
+      { get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N),
+        { static_cast<Pll_config::PLLSAI1::R::Divider>(get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1R)),
+          is_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1REN)
+        },
+        { static_cast<Pll_config::PLLSAI1::Q::Divider>(get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1Q)),
+          is_flag(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1QEN)
+        },
+        { static_cast<Pll_config::PLLSAI1::P::Divider>(get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1P)),
+          is_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1PEN)
+        }
+      }
+    };
 }
 
 mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq,
@@ -441,8 +474,6 @@ uint32 mcu::calculate_pll_r_output_frequency()
     {
         case Pll_config::Source::msi:
         {
-            assert(true == is_clock_enabled(Clock::msi));
-
             uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             pllvco = (msi_frequency_lut[msi_range] / pllm) * plln;
         }
@@ -450,13 +481,11 @@ uint32 mcu::calculate_pll_r_output_frequency()
 
         case Pll_config::Source::hsi:
         {
-            assert(true == is_clock_enabled(Clock::hsi));
-
             pllvco = (config::clock::hsi_frequency_hz / pllm) * plln;
         }
         break;
 
-        default:
+        case Pll_config::Source::unknown:
         {
             assert(false);
         }

@@ -58,11 +58,12 @@ int main()
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
     mcu::set_sysclk(mcu::Sysclk_source::hsi, { mcu::Bus_prescalers::AHB::_1,
                                                mcu::Bus_prescalers::APB1::_1,
-                                               mcu::Bus_prescalers::APB2::_1 },
-                                               { 0x3, 0xf0 });
+                                               mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
+        mcu::set_nvic({ mcu::NVIC_config::Grouping::_4, 16u << 4u });
+
         USART::Config usart_config =
         {
             115200u,
@@ -110,13 +111,16 @@ int main()
             Console console(&console_usart);
 
             console.enable();
-            console.write_line("\nCML CLI sample. CPU speed: %d MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
+            console.write_line("\nCML CLI sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             Command_line command_line(&console_usart, "cmd > ", "Command not found");
 
             command_line.register_callback({ "led", led_cli_callback, &led_pin });
             command_line.enable();
             command_line.write_prompt();
+
+            //mcu::halt();
+            //__set_BASEPRI(0);
 
             while (true)
             {

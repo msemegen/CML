@@ -17,6 +17,19 @@ namespace stm32l011xx {
 
 struct config
 {
+    struct adc
+    {
+        static constexpr common::uint32 _1_interrupt_priority = 0;
+
+        adc()           = delete;
+        adc(adc&&)      = delete;
+        adc(const adc&) = delete;
+        ~adc()          = delete;
+
+        adc& operator = (adc&)       = delete;
+        adc& operator = (const adc&) = delete;
+    };
+
     struct usart
     {
         static constexpr common::uint32 _2_interrupt_priority = 0;

@@ -268,8 +268,18 @@ public:
 
     struct NVIC_config
     {
-        common::uint32 priority_grouping = 0;
-        common::uint32 base_priority     = 0;
+        enum class Grouping : common::uint32
+        {
+            _0 = 0x7,
+            _1 = 0x6,
+            _2 = 0x5,
+            _3 = 0x4,
+            _4 = 0x3,
+            unknown
+        };
+
+        Grouping grouping            = Grouping::unknown;
+        common::uint32 base_priority = 0;
     };
 
 public:
@@ -285,7 +295,8 @@ public:
     static void enable_pll(const Pll_config& a_config);
     static void disable_pll();
 
-    static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, const NVIC_config& a_NVIC_config);
+    static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
+    static void set_nvic(const NVIC_config& a_config);
 
     static void enable_dwt()
     {
@@ -310,6 +321,9 @@ public:
         return true == common::is_flag(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
                        common::is_flag(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
     }
+
+    static Bus_prescalers get_bus_prescalers();
+    static Pll_config get_pll_config();
 
     static Id get_id()
     {

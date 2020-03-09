@@ -23,6 +23,7 @@ using GPIO                   = stm32l452xx::GPIO;
 using Output_pin             = stm32l452xx::Output_pin;
 using Input_pin              = stm32l452xx::Input_pin;
 using Alternate_function_pin = stm32l452xx::Alternate_function_pin;
+using Analog_pin             = stm32l452xx::Analog_pin;
 #endif // STM32L452xx
 
 #ifdef STM32L011xx
@@ -30,6 +31,7 @@ using GPIO                   = stm32l011xx::GPIO;
 using Output_pin             = stm32l011xx::Output_pin;
 using Input_pin              = stm32l011xx::Input_pin;
 using Alternate_function_pin = stm32l011xx::Alternate_function_pin;
+using Analog_pin             = stm32l011xx::Analog_pin;
 #endif
 
 } // namespace hal

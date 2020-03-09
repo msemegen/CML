@@ -224,30 +224,6 @@ private:
         return static_cast<common::uint32>(a_id);
     }
 
-    bool is_isr_flag(common::uint32 a_flag)
-    {
-        return common::is_flag(this->p_usart->ISR, a_flag);
-    }
-
-    bool wait_until_isr(common::uint32 a_flag, bool a_status, common::time_tick a_start, common::time_tick a_timeout_ms)
-    {
-        bool status  = true;
-        bool timeout = false;
-
-        while (false == status && false == timeout)
-        {
-            timeout = a_timeout_ms >= common::time_tick_diff(systick::get_counter(), a_start);
-            status  = this->is_isr_flag(a_flag) == a_status;
-        }
-
-        return ((true == status) && (false == timeout));
-    }
-
-    void wait_until_isr(common::uint32 a_flag, bool a_status)
-    {
-        while (this->is_isr_flag(a_flag) == a_status);
-    }
-
 private:
 
     using TX_it_context = IT_context<TX_callback>;

@@ -6,12 +6,11 @@
 */
 
 //cml
+#include <common/bit.hpp>
+#include <common/frequency.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
 #include <utils/sleep.hpp>
-
-#include <common/bit.hpp>
-#include <common/frequency.hpp>
 
 int main()
 {
@@ -22,13 +21,14 @@ int main()
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
     mcu::set_sysclk(mcu::Sysclk_source::hsi, { mcu::Bus_prescalers::AHB::_1,
                                                mcu::Bus_prescalers::APB1::_1,
-                                               mcu::Bus_prescalers::APB2::_1 },
-                                               { 0x00000003, 15 << 4 });
+                                               mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
+        mcu::set_nvic({ mcu::NVIC_config::Grouping::_4, 10u << 4u });
+
         mcu::disable_msi_clock();
-        systick::enable(0x0);
+        systick::enable(9u);
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();

@@ -75,7 +75,6 @@
   #define HSI_VALUE    ((uint32_t)16000000U) /*!< Value of the Internal oscillator in Hz*/
 #endif /* HSI_VALUE */
 
-
 /**
   * @}
   */
@@ -123,9 +122,6 @@
                variable is updated automatically.
   */
   uint32_t SystemCoreClock = 2000000U;
-  const uint8_t AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
-  const uint8_t APBPrescTable[8] = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
-  const uint8_t PLLMulTable[9] = {3U, 4U, 6U, 8U, 12U, 16U, 24U, 32U, 48U};
 
 /**
   * @}
@@ -179,95 +175,6 @@ void SystemInit (void)
 #endif
 }
 
-/**
-  * @brief  Update SystemCoreClock according to Clock Register Values
-  *         The SystemCoreClock variable contains the core clock (HCLK), it can
-  *         be used by the user application to setup the SysTick timer or configure
-  *         other parameters.
-  *
-  * @note   Each time the core clock (HCLK) changes, this function must be called
-  *         to update SystemCoreClock variable value. Otherwise, any configuration
-  *         based on this variable will be incorrect.
-  *
-  * @note   - The system frequency computed by this function is not the real
-  *           frequency in the chip. It is calculated based on the predefined
-  *           constant and the selected clock source:
-  *
-  *           - If SYSCLK source is MSI, SystemCoreClock will contain the MSI
-  *             value as defined by the MSI range.
-  *
-  *           - If SYSCLK source is HSI, SystemCoreClock will contain the HSI_VALUE(*)
-  *
-  *           - If SYSCLK source is HSE, SystemCoreClock will contain the HSE_VALUE(**)
-  *
-  *           - If SYSCLK source is PLL, SystemCoreClock will contain the HSE_VALUE(**)
-  *             or HSI_VALUE(*) multiplied/divided by the PLL factors.
-  *
-  *         (*) HSI_VALUE is a constant defined in stm32l0xx_hal.h file (default value
-  *             16 MHz) but the real value may vary depending on the variations
-  *             in voltage and temperature.
-  *
-  *         (**) HSE_VALUE is a constant defined in stm32l0xx_hal.h file (default value
-  *              8 MHz), user has to ensure that HSE_VALUE is same as the real
-  *              frequency of the crystal used. Otherwise, this function may
-  *              have wrong result.
-  *
-  *         - The result of this function could be not correct when using fractional
-  *           value for HSE crystal.
-  * @param  None
-  * @retval None
-  */
-void SystemCoreClockUpdate (void)
-{
-  uint32_t tmp = 0U, pllmul = 0U, plldiv = 0U, pllsource = 0U, msirange = 0U;
-
-  /* Get SYSCLK source -------------------------------------------------------*/
-  tmp = RCC->CFGR & RCC_CFGR_SWS;
-
-  switch (tmp)
-  {
-    case 0x00U:  /* MSI used as system clock */
-      msirange = (RCC->ICSCR & RCC_ICSCR_MSIRANGE) >> 13U;
-      SystemCoreClock = (32768U * (1U << (msirange + 1U)));
-      break;
-    case 0x04U:  /* HSI used as system clock */
-      SystemCoreClock = HSI_VALUE;
-      break;
-    case 0x08U:  /* HSE used as system clock */
-      SystemCoreClock = HSE_VALUE;
-      break;
-    case 0x0CU:  /* PLL used as system clock */
-      /* Get PLL clock source and multiplication factor ----------------------*/
-      pllmul = RCC->CFGR & RCC_CFGR_PLLMUL;
-      plldiv = RCC->CFGR & RCC_CFGR_PLLDIV;
-      pllmul = PLLMulTable[(pllmul >> 18U)];
-      plldiv = (plldiv >> 22U) + 1U;
-
-      pllsource = RCC->CFGR & RCC_CFGR_PLLSRC;
-
-      if (pllsource == 0x00U)
-      {
-        /* HSI oscillator clock selected as PLL clock entry */
-        SystemCoreClock = (((HSI_VALUE) * pllmul) / plldiv);
-      }
-      else
-      {
-        /* HSE selected as PLL clock entry */
-        SystemCoreClock = (((HSE_VALUE) * pllmul) / plldiv);
-      }
-      break;
-    default: /* MSI used as system clock */
-      msirange = (RCC->ICSCR & RCC_ICSCR_MSIRANGE) >> 13U;
-      SystemCoreClock = (32768U * (1U << (msirange + 1U)));
-      break;
-  }
-  /* Compute HCLK clock frequency --------------------------------------------*/
-  /* Get HCLK prescaler */
-  tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4U)];
-  /* HCLK clock frequency */
-  SystemCoreClock >>= tmp;
-}
-
 __attribute__((weak)) int _init()
 {
     return 0;
@@ -277,7 +184,6 @@ __attribute__((used)) void _fini(void)
 {
 
 }
-
 
 /**
   * @}

@@ -211,12 +211,12 @@ Output_pin::Speed Output_pin::get_speed() const
     return static_cast<Speed>((get_flag(p_port->OSPEEDR, static_cast<uint32>(0x1u << this->pin) << this->pin)));
 }
 
-void Input_pin::enable(const Config& a_config)
+void Input_pin::enable(Pull a_pull)
 {
     assert(false == this->p_port->is_pin_taken(this->pin));
-    assert(Pull::unknown != a_config.pull);
+    assert(Pull::unknown != a_pull);
 
-    this->set_pull(a_config.pull);
+    this->set_pull(a_pull);
 
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
     clear_flag(&(p_port->MODER), 0x3u << (this->pin * 2));
