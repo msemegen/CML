@@ -30,7 +30,7 @@ int32 compute_temperature(const ADC::Calibration_data& a_calibration_data, uint3
     return temperature + 30;
 }
 
-} // namespace
+} // namespace ::
 
 int main()
 {
@@ -117,7 +117,7 @@ int main()
                     uint16 r = 0;
                     adc.read_polling(&r, 1);
 
-                    console.write_line("temp: %d, adc: %d\r", compute_temperature(adc.get_calibration_data(), r), r);
+                    console.write_line("temp: %d, adc: %u\r", compute_temperature(adc.get_calibration_data(), r), r);
                     sleep::ms(10);
                 }
             }

@@ -26,7 +26,7 @@ int32 compute_temperature(const ADC::Calibration_data& a_calibration_data, uint3
     return temperature + 30;
 }
 
-} // namespace
+} // namespace ::
 
 int main()
 {
@@ -108,10 +108,6 @@ int main()
                     sleep::ms(10);
                 }
             }
-        }
-        else
-        {
-            while (true);
         }
     }
 
