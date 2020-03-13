@@ -264,7 +264,7 @@ struct mcu
 
     static Reset_source get_reset_source()
     {
-        uint32_t flag = (common::get_flag(RCC->CSR, 0xFB000000u));
+        uint32_t flag = common::get_flag(RCC->CSR, 0xFB000000u);
 
         if (flag == 0x0u)
         {
