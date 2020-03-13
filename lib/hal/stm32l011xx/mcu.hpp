@@ -72,6 +72,17 @@ struct mcu
         unknown
     };
 
+    enum class Reset_source : common::uint32
+    {
+        illegal_low_power           = RCC_CSR_LPWRRSTF,
+        window_watchdog             = RCC_CSR_WWDGRSTF,
+        independent_window_watchdog = RCC_CSR_IWDGRSTF,
+        software                    = RCC_CSR_SFTRSTF,
+        por_bdr                     = RCC_CSR_PORRSTF,
+        pin                         = RCC_CSR_PINRSTF,
+        option_byte_loader          = RCC_CSR_OBLRSTF
+    };
+
     struct Pll_config
     {
         enum class Source : common::uint32
@@ -249,6 +260,20 @@ struct mcu
     static Flash_latency get_flash_latency()
     {
         return static_cast<Flash_latency>(common::get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
+    }
+
+    static Reset_source get_reset_source()
+    {
+        uint32_t flag = (common::get_flag(RCC->CSR, 0xFB000000u));
+
+        if (flag == 0x0u)
+        {
+            flag = RCC_CSR_PINRSTF;
+        }
+
+        common::set_flag(&(RCC->CSR), RCC_CSR_RMVF);
+
+        return static_cast<Reset_source>(flag);
     }
 
 private:
