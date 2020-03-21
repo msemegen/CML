@@ -1,14 +1,14 @@
 #pragma once
 
 /*
-    Name: watchdog.hpp
+    Name: iwdg.hpp
 
     Copyright(c) 2020 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
 //externals
-#include <stm32l011xx.h>
+#include <stm32l452xx.h>
 
 //cml
 #include <common/integer.hpp>
@@ -16,9 +16,9 @@
 
 namespace cml {
 namespace hal {
-namespace stm32l011xx {
+namespace stm32l452xx {
 
-class independent_watchdog
+class iwdg
 {
 public:
 
@@ -41,12 +41,12 @@ public:
 
 public:
 
-    independent_watchdog()                            = delete;
-    independent_watchdog(independent_watchdog&&)      = delete;
-    independent_watchdog(const independent_watchdog&) = delete;
+    iwdg()            = delete;
+    iwdg(iwdg&&)      = delete;
+    iwdg(const iwdg&) = delete;
 
-    independent_watchdog& operator = (independent_watchdog&&)      = delete;
-    independent_watchdog& operator = (const independent_watchdog&) = delete;
+    iwdg& operator = (iwdg&&)      = delete;
+    iwdg& operator = (const iwdg&) = delete;
 
     static bool enable(Prescaler a_prescaler,
                        common::uint16 a_reload,
@@ -57,6 +57,6 @@ public:
     static void feed();
 };
 
-} // namespace stm32l011xx
+} // namespace stm32l452xx
 } // namespace hal
 } // namespace cml
