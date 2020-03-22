@@ -218,6 +218,6 @@ private:
     friend void adc_handle_interrupt(ADC* a_p_this);
 };
 
-} // namespace cml
-} // namespace hal
 } // namespace stm32l011xx
+} // namespace hal
+} // namespace cml
