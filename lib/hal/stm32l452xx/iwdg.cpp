@@ -72,17 +72,7 @@ bool iwdg::enable(Prescaler a_prescaler,
         }
     }
 
-    if (false == ret)
-    {
-        disable();
-    }
-
     return ret;
-}
-
-void iwdg::disable()
-{
-    IWDG->KR = 0;
 }
 
 void iwdg::feed()
