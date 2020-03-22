@@ -1,5 +1,12 @@
 #pragma once
 
+/*
+    Name: wwdg.hpp
+
+    Copyright(c) 2020 Mateusz Semegen
+    This code is licensed under MIT license (see LICENSE file for details)
+*/
+
 //externals
 #include <stm32l452xx.h>
 

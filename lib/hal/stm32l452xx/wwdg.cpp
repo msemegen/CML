@@ -1,3 +1,10 @@
+/*
+    Name: wwdg.hpp
+
+    Copyright(c) 2020 Mateusz Semegen
+    This code is licensed under MIT license (see LICENSE file for details)
+*/
+
 //this
 #include <hal/stm32l452xx/wwdg.hpp>
 
