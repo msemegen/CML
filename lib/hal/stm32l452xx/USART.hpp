@@ -171,17 +171,20 @@ public:
     void read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes);
     bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
 
-    void write_bytes_it(const TX_callback& a_callback)
+    void start_write_bytes_it(const TX_callback& a_callback)
     {
-        this->write_bytes_it(a_callback, common::time_tick_infinity);
+        this->start_write_bytes_it(a_callback, common::time_tick_infinity);
     }
-    void write_bytes_it(const TX_callback& a_callback, common::time_tick a_timeout_ms);
+    void start_write_bytes_it(const TX_callback& a_callback, common::time_tick a_timeout_ms);
 
-    void read_bytes_it(const RX_callback& a_callback)
+    void start_read_bytes_it(const RX_callback& a_callback)
     {
-        this->read_bytes_it(a_callback, common::time_tick_infinity);
+        this->start_read_bytes_it(a_callback, common::time_tick_infinity);
     }
-    void read_bytes_it(const RX_callback& a_callback, common::time_tick a_timeout_ms);
+    void start_read_bytes_it(const RX_callback& a_callback, common::time_tick a_timeout_ms);
+
+    void stop_write_bytes_it();
+    void stop_read_bytes_it();
 
     void set_baud_rate(common::uint32 a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);

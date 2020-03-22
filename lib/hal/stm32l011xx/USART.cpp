@@ -255,48 +255,46 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
     return ret;
 }
 
-void USART::write_bytes_it(const TX_callback& a_callback, time_tick a_timeout_ms)
+void USART::start_write_bytes_it(const TX_callback& a_callback, time_tick a_timeout_ms)
 {
     assert(true == systick::is_enabled());
+    assert(nullptr != a_callback.p_function);
 
-    clear_flag(&(USART2->CR1), USART_CR1_TXEIE);
+    this->tx_context.callback        = a_callback;
+    this->tx_context.start_timestamp = systick::get_counter();
+    this->tx_context.timeout         = a_timeout_ms;
 
-    if (nullptr != a_callback.p_function)
-    {
-        this->tx_context.callback        = a_callback;
-        this->tx_context.start_timestamp = systick::get_counter();
-        this->tx_context.timeout         = a_timeout_ms;
-
-        set_flag(&(USART2->CR1), USART_CR1_TXEIE);
-    }
-    else
-    {
-        this->tx_context.callback        = { nullptr, nullptr };
-        this->tx_context.start_timestamp = 0;
-        this->tx_context.timeout         = 0;
-    }
+    set_flag(&(USART2->CR1), USART_CR1_TXEIE);
 }
 
-void USART::read_bytes_it(const RX_callback& a_callback, time_tick a_timeout_ms)
+void USART::start_read_bytes_it(const RX_callback& a_callback, time_tick a_timeout_ms)
 {
     assert(true == systick::is_enabled());
+    assert(nullptr != a_callback.p_function);
 
+    this->rx_context.callback        = a_callback;
+    this->rx_context.start_timestamp = systick::get_counter();;
+    this->rx_context.timeout         = a_timeout_ms;
+
+    set_flag(&(USART2->CR1), USART_CR1_RXNEIE);
+}
+
+void USART::stop_write_bytes_it()
+{
+    clear_flag(&(USART2->CR1), USART_CR1_TXEIE);
+
+    this->tx_context.callback        = { nullptr, nullptr };
+    this->tx_context.start_timestamp = 0;
+    this->tx_context.timeout         = 0;
+}
+
+void USART::stop_read_bytes_it()
+{
     clear_flag(&(USART2->CR1), USART_CR1_RXNEIE);
 
-    if (nullptr != a_callback.p_function)
-    {
-        this->rx_context.callback        = a_callback;
-        this->rx_context.start_timestamp = systick::get_counter();;
-        this->rx_context.timeout         = a_timeout_ms;
-
-        set_flag(&(USART2->CR1), USART_CR1_RXNEIE);
-    }
-    else
-    {
-        this->rx_context.callback        = { nullptr, nullptr };
-        this->rx_context.start_timestamp = 0;
-        this->rx_context.timeout         = 0;
-    }
+    this->rx_context.callback        = { nullptr, nullptr };
+    this->rx_context.start_timestamp = 0;
+    this->rx_context.timeout         = 0;
 }
 
 void USART::set_baud_rate(uint32 a_baud_rate)

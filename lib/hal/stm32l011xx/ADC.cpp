@@ -16,6 +16,7 @@
 #include <hal/mcu.hpp>
 #include <hal/systick.hpp>
 #include <utils/sleep.hpp>
+#include "ADC.hpp"
 
 namespace {
 
@@ -221,24 +222,42 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
     return ret;
 }
 
-void ADC::read_it(Conversion_callback a_callback, time_tick a_timeout)
+void ADC::start_read_it(Conversion_callback a_callback, time_tick a_timeout)
 {
     assert(true == systick::is_enabled());
+    assert(nullptr != a_callback);
 
-    if (nullptr != a_callback)
+   this->callaback.function        = a_callback;
+   this->callaback.timeout         = a_timeout;
+   this->callaback.start_timestamp = systick::get_counter();
+
+   set_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
+   set_flag(&(ADC1->CR), ADC_CR_ADSTART);
+}
+
+void ADC::stop_read_it()
+{
+    clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
+    clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
+
+    this->callaback.function = nullptr;
+    this->callaback.timeout  = time_tick_infinity;
+}
+
+void ADC::set_resolution(Resolution a_resolution)
+{
+    bool is_started = is_flag(ADC1->CR, ADC_CR_ADSTART);
+
+    if (true == is_started)
     {
-        this->callaback.function = a_callback;
-
-        this->callaback.timeout         = a_timeout;
-        this->callaback.start_timestamp = systick::get_counter();
-
-        set_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
-        set_flag(&(ADC1->CR), ADC_CR_ADSTART);
+        clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
     }
-    else
+
+    set_flag(&(ADC1->CFGR1), static_cast<uint32>(a_resolution));
+
+    if (true == is_started)
     {
-        this->callaback.function = nullptr;
-        this->callaback.timeout = time_tick_infinity;
+        set_flag(&(ADC1->CR), ADC_CR_ADSTART);
     }
 }
 

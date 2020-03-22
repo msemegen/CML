@@ -275,9 +275,10 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
     return ret;
 }
 
-void ADC::read_it(Conversion_callback a_callback, time_tick a_timeout)
+void ADC::start_read_it(Conversion_callback a_callback, time_tick a_timeout)
 {
     assert(true == systick::is_enabled());
+    assert(nullptr != a_callback);
 
     if (nullptr != a_callback)
     {
@@ -292,7 +293,33 @@ void ADC::read_it(Conversion_callback a_callback, time_tick a_timeout)
     else
     {
         this->callaback.function = nullptr;
-        this->callaback.timeout = time_tick_infinity;
+        this->callaback.timeout  = time_tick_infinity;
+    }
+}
+
+void ADC::stop_read_it()
+{
+    clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
+    clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
+
+    this->callaback.function = nullptr;
+    this->callaback.timeout  = time_tick_infinity;
+}
+
+void ADC::set_resolution(Resolution a_resolution)
+{
+    bool is_started = is_flag(ADC1->CR, ADC_CR_ADSTART);
+
+    if (true == is_started)
+    {
+        clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
+    }
+
+    set_flag(&(ADC1->CFGR), static_cast<uint32>(a_resolution));
+
+    if (true == is_started)
+    {
+        set_flag(&(ADC1->CR), ADC_CR_ADSTART);
     }
 }
 

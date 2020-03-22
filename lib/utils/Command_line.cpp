@@ -115,12 +115,12 @@ void Command_line::update()
 
 void Command_line::enable()
 {
-    this->p_io_stream->read_bytes_it({ rx_callback, &(this->input_buffer_view) }, time_tick_infinity);
+    this->p_io_stream->start_read_bytes_it({ rx_callback, &(this->input_buffer_view) }, time_tick_infinity);
 }
 
 void Command_line::disable()
 {
-    this->p_io_stream->read_bytes_it({ nullptr, nullptr });
+    this->p_io_stream->stop_read_bytes_it();
 }
 
 Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(char* a_p_line,

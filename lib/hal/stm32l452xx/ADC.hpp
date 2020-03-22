@@ -174,17 +174,21 @@ public:
     void read_polling(common::uint16* a_p_data, common::uint32 a_count);
     bool read_polling(common::uint16* a_p_data, common::uint32 a_count, common::time_tick a_timeout);
 
-    void read_it(Conversion_callback a_callback, common::time_tick a_timeout);
+    void start_read_it(Conversion_callback a_callback, common::time_tick a_timeout);
 
-    void read_it(Conversion_callback a_callback)
+    void start_read_it(Conversion_callback a_callback)
     {
-        this->read_it(a_callback, common::time_tick_infinity);
+        this->start_read_it(a_callback, common::time_tick_infinity);
     }
+
+    void stop_read_it();
 
     common::uint32 get_active_channels_count() const
     {
         return (ADC1->SQR1 & 0xFu) + 1;
     }
+
+    void set_resolution(Resolution a_resolution);
 
     constexpr Calibration_data get_calibration_data() const
     {

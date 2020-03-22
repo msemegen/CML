@@ -36,12 +36,12 @@ using namespace common;
 
 void Console::enable()
 {
-    this->p_io_stream->read_bytes_it({ rx_callback, &(this->input_buffer_ring_view) }, time_tick_infinity);
+    this->p_io_stream->start_read_bytes_it({ rx_callback, &(this->input_buffer_ring_view) }, time_tick_infinity);
 }
 
 void Console::disable()
 {
-    this->p_io_stream->read_bytes_it({ nullptr, nullptr }, time_tick_infinity);
+    this->p_io_stream->stop_read_bytes_it();
 }
 
 void Console::write(char a_character)
