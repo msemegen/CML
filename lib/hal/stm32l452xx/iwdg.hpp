@@ -53,7 +53,6 @@ public:
                        const Window& a_window,
                        common::time_tick a_timeout);
 
-    static void disable();
     static void feed();
 };
 
