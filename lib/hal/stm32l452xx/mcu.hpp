@@ -28,6 +28,7 @@ public:
         msi = RCC_CR_MSION,
         hsi = RCC_CR_HSION,
         pll = RCC_CR_PLLON,
+        hsi48,
         lsi
     };
 
@@ -36,6 +37,14 @@ public:
         msi = RCC_CFGR_SW_MSI,
         hsi = RCC_CFGR_SW_HSI,
         pll = RCC_CFGR_SW_PLL,
+    };
+
+    enum class Clk48_mux_source : common::uint32
+    {
+        hsi48      = 0x0u,
+        pll_sai1_q = RCC_CCIPR_CLK48SEL_0,
+        pll_q      = RCC_CCIPR_CLK48SEL_1,
+        msi        = RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1,
     };
 
     enum class Msi_frequency : common::uint32
@@ -64,6 +73,11 @@ public:
         _32_kHz,
     };
 
+    enum class Hsi48_frequency : common::uint32
+    {
+        _48_MHz
+    };
+
     enum class Flash_latency : common::uint32
     {
         _0 = FLASH_ACR_LATENCY_0WS,
@@ -83,14 +97,14 @@ public:
 
     enum class Reset_source : common::uint32
     {
-        illegal_low_power           = RCC_CSR_LPWRRSTF,
-        window_watchdog             = RCC_CSR_WWDGRSTF,
-        independent_window_watchdog = RCC_CSR_IWDGRSTF,
-        software                    = RCC_CSR_SFTRSTF,
-        bor                         = RCC_CSR_BORRSTF,
-        pin                         = RCC_CSR_PINRSTF,
-        option_byte_loader          = RCC_CSR_OBLRSTF,
-        firewall                    = RCC_CSR_FWRSTF
+        illegal_low_power    = RCC_CSR_LPWRRSTF,
+        window_watchdog      = RCC_CSR_WWDGRSTF,
+        independent_watchdog = RCC_CSR_IWDGRSTF,
+        software             = RCC_CSR_SFTRSTF,
+        bor                  = RCC_CSR_BORRSTF,
+        pin                  = RCC_CSR_PINRSTF,
+        option_byte_loader   = RCC_CSR_OBLRSTF,
+        firewall             = RCC_CSR_FWRSTF
     };
 
     struct Pll_config
@@ -137,9 +151,9 @@ public:
                 enum class Divider : common::uint32
                 {
                     _2 = 0,
-                    _4 = RCC_PLLCFGR_PLLQ_0,
-                    _6 = RCC_PLLCFGR_PLLQ_1,
-                    _8 = RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1,
+                    _4 = RCC_PLLCFGR_PLLQ_0 >> RCC_PLLCFGR_PLLQ_Pos,
+                    _6 = RCC_PLLCFGR_PLLQ_1 >> RCC_PLLCFGR_PLLQ_Pos,
+                    _8 = (RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1) >> RCC_PLLCFGR_PLLQ_Pos,
                     unknown
                 };
 
@@ -300,13 +314,17 @@ public:
     static void enable_msi_clock(Msi_frequency a_freq);
     static void enable_hsi_clock(Hsi_frequency a_freq);
     static void enable_lsi_clock(Lsi_frequency a_freq);
+    static void enable_hsi48_clock(Hsi48_frequency a_freq);
 
     static void disable_msi_clock();
     static void disable_hsi_clock();
     static void disable_lsi_clock();
+    static void disable_hsi48_clock();
 
     static void enable_pll(const Pll_config& a_config);
     static void disable_pll();
+
+    static void set_clk48_clock_mux_source(Clk48_mux_source a_source);
 
     static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
     static void set_nvic(const NVIC_config& a_config);
@@ -337,6 +355,11 @@ public:
 
     static Bus_prescalers get_bus_prescalers();
     static Pll_config get_pll_config();
+
+    static Clk48_mux_source get_clk48_mux_source()
+    {
+        return static_cast<Clk48_mux_source>(common::get_flag(RCC->CCIPR, RCC_CCIPR_CLK48SEL));
+    }
 
     static Device_id get_device_id()
     {
@@ -385,6 +408,12 @@ public:
             case Clock::lsi:
             {
                 return common::is_flag(RCC->CSR, RCC_CSR_LSION);
+            }
+            break;
+
+            case Clock::hsi48:
+            {
+                return common::is_flag(RCC->CRRCR, RCC_CRRCR_HSI48ON);
             }
             break;
         }
@@ -443,6 +472,11 @@ private:
                                           const Bus_prescalers& a_prescalers);
 
     static common::uint32 calculate_pll_r_output_frequency();
+
+#ifdef CML_DEBUG
+    static common::uint32 calculate_pll_q_output_frequency();
+    static common::uint32 calculate_pllsai1_q_output_frequency();
+#endif // CML_DEBUG
 };
 
 } // namespace stm32l452xx
