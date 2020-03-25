@@ -1,3 +1,9 @@
+/*
+    Name: rng.cpp
+
+    Copyright(c) 2020 Mateusz Semegen
+    This code is licensed under MIT license (see LICENSE file for details)
+*/
 
 //this
 #include <hal/stm32l452xx/rng.hpp>
@@ -6,6 +12,41 @@
 #include <hal/stm32l452xx/mcu.hpp>
 #include <hal/systick.hpp>
 #include <utils/sleep.hpp>
+
+namespace {
+
+using namespace cml::hal::stm32l452xx;
+
+rng::New_value_callback new_value_callback = nullptr;
+
+} // namespace ::
+
+extern "C"
+{
+
+using namespace cml::common;
+
+void RNG_IRQHandler()
+{
+    assert(nullptr != new_value_callback);
+
+    uint32 isr = RNG->SR;
+    uint32 val = 0;
+
+    if (true == is_flag(isr, RNG_SR_DRDY))
+    {
+        val = RNG->DR;
+    }
+
+    new_value_callback(val, is_flag(isr, RNG_SR_CECS), is_flag(isr, RNG_SR_SECS));
+
+    NVIC_ClearPendingIRQ(RNG_IRQn);
+
+    clear_flag(&(RNG->CR), RNG_CR_IE);
+    new_value_callback = nullptr;
+}
+
+} // extern "C"
 
 namespace cml {
 namespace hal {
@@ -28,9 +69,8 @@ bool rng::enable(uint32 a_irq_priority, time_tick a_timeout_ms)
 
     if (true == ret)
     {
-        ret = sleep::until(&(RNG->SR), RNG_SR_SECS , true, start, a_timeout_ms) &&
+        ret = sleep::until(&(RNG->SR), RNG_SR_SECS, true, start, a_timeout_ms) &&
               sleep::until(&(RNG->SR), RNG_SR_CECS, true, start, a_timeout_ms);
-        ;
     }
 
     if (true == ret)
@@ -62,6 +102,12 @@ bool rng::get_value_polling(uint32* a_p_value, time_tick a_timeout_ms)
     }
 
     return ret;
+}
+
+void rng::get_value_it(New_value_callback a_callback)
+{
+    new_value_callback = a_callback;
+    set_flag(&(RNG->CR), RNG_CR_IE);
 }
 
 } // namespace stm32l452xx
