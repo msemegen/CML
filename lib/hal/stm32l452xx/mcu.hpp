@@ -361,6 +361,8 @@ public:
         return static_cast<Clk48_mux_source>(common::get_flag(RCC->CCIPR, RCC_CCIPR_CLK48SEL));
     }
 
+    static common::uint32 get_clk48_mux_freqency_hz();
+
     static Device_id get_device_id()
     {
         common::uint8* p_id_location = reinterpret_cast<common::uint8*>(UID_BASE);
@@ -472,11 +474,8 @@ private:
                                           const Bus_prescalers& a_prescalers);
 
     static common::uint32 calculate_pll_r_output_frequency();
-
-#ifdef CML_DEBUG
     static common::uint32 calculate_pll_q_output_frequency();
     static common::uint32 calculate_pllsai1_q_output_frequency();
-#endif // CML_DEBUG
 };
 
 } // namespace stm32l452xx

@@ -16,7 +16,6 @@
 #include <hal/mcu.hpp>
 #include <hal/systick.hpp>
 #include <utils/sleep.hpp>
-#include "ADC.hpp"
 
 namespace {
 
