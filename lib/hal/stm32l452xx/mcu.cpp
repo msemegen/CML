@@ -10,13 +10,11 @@
 //this
 #include <hal/stm32l452xx/mcu.hpp>
 
-//external
-#include <stm32l452xx.h>
-
 //cml
 #include <common/frequency.hpp>
 #include <common/macros.hpp>
 #include <debug/assert.hpp>
+#include <utils/sleep.hpp>
 
 namespace {
 
@@ -58,7 +56,8 @@ namespace cml {
 namespace hal {
 namespace stm32l452xx {
 
-using namespace common;
+using namespace cml::common;
+using namespace cml::utils;
 
 void mcu::enable_msi_clock(Msi_frequency a_freq)
 {
@@ -68,12 +67,12 @@ void mcu::enable_msi_clock(Msi_frequency a_freq)
 
     set_flag(&(RCC->CR), RCC_CR_MSION);
 
-    while (false == is_flag(RCC->CR, RCC_CR_MSIRDY));
+    sleep::until(&(RCC->CR), RCC_CR_MSIRDY, false);
 
     clear_flag(&(RCC->ICSCR), RCC_ICSCR_MSITRIM);
     set_flag(&(RCC->CR), RCC_CR_MSIRGSEL);
 
-    while (false == is_flag(RCC->CR, RCC_CR_MSIRDY));
+    sleep::until(&(RCC->CR), RCC_CR_MSIRDY, false);
 }
 
 void mcu::enable_hsi_clock(Hsi_frequency a_freq)
@@ -82,7 +81,7 @@ void mcu::enable_hsi_clock(Hsi_frequency a_freq)
 
     set_flag(&(RCC->CR), RCC_CR_HSION, RCC_CR_HSION);
 
-    while (false == is_flag(RCC->CR, RCC_CR_HSIRDY));
+    sleep::until(&(RCC->CR), RCC_CR_HSIRDY, false);
 }
 
 void mcu::enable_lsi_clock(Lsi_frequency a_freq)
@@ -91,28 +90,44 @@ void mcu::enable_lsi_clock(Lsi_frequency a_freq)
 
     set_flag(&(RCC->CSR), RCC_CSR_LSION, RCC_CSR_LSION);
 
-    while (false == is_flag(RCC->CSR, RCC_CSR_LSIRDY));
+    sleep::until(&(RCC->CSR), RCC_CSR_LSIRDY, false);
+}
+
+void mcu::enable_hsi48_clock(Hsi48_frequency a_freq)
+{
+    unused(a_freq);
+
+    set_flag(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
+
+    sleep::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, false);
 }
 
 void mcu::disable_msi_clock()
 {
     clear_flag(&(RCC->CR), RCC_CR_MSION);
 
-    while (true == is_flag(RCC->CR, RCC_CR_MSIRDY));
+    sleep::until(&(RCC->CR), RCC_CR_MSIRDY, true);
 }
 
 void mcu::disable_hsi_clock()
 {
     clear_flag(&(RCC->CR), RCC_CR_HSION);
 
-    while (true == is_flag(RCC->CR, RCC_CR_HSIRDY));
+    sleep::until(&(RCC->CR), RCC_CR_HSIRDY, true);
 }
 
 void mcu::disable_lsi_clock()
 {
     clear_flag(&(RCC->CSR), RCC_CSR_LSION);
 
-    while (true == is_flag(RCC->CSR, RCC_CSR_LSIRDY));
+    sleep::until(&(RCC->CSR), RCC_CSR_LSIRDY, true);
+}
+
+void mcu::disable_hsi48_clock()
+{
+    clear_flag(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
+
+    sleep::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, true);
 }
 
 void mcu::enable_pll(const Pll_config& a_config)
@@ -149,6 +164,21 @@ void mcu::disable_pll()
 
     clear_flag(&(RCC->CR), RCC_CR_PLLSAI1ON);
     while (true == is_flag(RCC->CR, RCC_CR_PLLSAI1RDY));
+}
+
+void mcu::set_clk48_clock_mux_source(Clk48_mux_source a_source)
+{
+    assert((a_source == Clk48_mux_source::hsi48 && is_clock_enabled(Clock::hsi48)) ||
+           (a_source == Clk48_mux_source::msi && is_clock_enabled(Clock::msi))     ||
+
+           ((a_source == Clk48_mux_source::pll_q && is_clock_enabled(Clock::pll)) &&
+             true == get_pll_config().pll.q.output_enabled)  ||
+           ((a_source == Clk48_mux_source::pll_sai1_q && is_clock_enabled(Clock::pll)) &&
+             true == get_pll_config().pllsai1.q.output_enabled));
+
+    assert(get_clk48_mux_freqency_hz() <= MHz(48));
+
+    set_flag(&(RCC->CCIPR), RCC_CCIPR_CLK48SEL, static_cast<uint32>(a_source));
 }
 
 void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
@@ -287,6 +317,42 @@ mcu::Pll_config mcu::get_pll_config()
         }
       }
     };
+}
+
+uint32 mcu::get_clk48_mux_freqency_hz()
+{
+    Clk48_mux_source source = get_clk48_mux_source();
+
+    switch (source)
+    {
+        case Clk48_mux_source::hsi48:
+        {
+            return MHz(48);
+        }
+        break;
+
+        case Clk48_mux_source::pll_sai1_q:
+        {
+            return calculate_pllsai1_q_output_frequency();
+        }
+        break;
+
+        case mcu::Clk48_mux_source::pll_q:
+        {
+            calculate_pll_q_output_frequency();
+        }
+        break;
+
+        case mcu::Clk48_mux_source::msi:
+        {
+            uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            return msi_frequency_lut[msi_range];
+
+        }
+        break;
+    }
+
+    return 0;
 }
 
 mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq,
@@ -465,8 +531,8 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source,
 
 uint32 mcu::calculate_pll_r_output_frequency()
 {
-    uint32 pllm = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
-    uint32 plln = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN)) >> RCC_PLLCFGR_PLLN_Pos);
+    uint32 m = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
+    uint32 n = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN)) >> RCC_PLLCFGR_PLLN_Pos);
 
     uint32 pllvco = 0;
 
@@ -475,13 +541,13 @@ uint32 mcu::calculate_pll_r_output_frequency()
         case Pll_config::Source::msi:
         {
             uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
-            pllvco = (msi_frequency_lut[msi_range] / pllm) * plln;
+            pllvco = (msi_frequency_lut[msi_range] / m) * n;
         }
         break;
 
         case Pll_config::Source::hsi:
         {
-            pllvco = (get_hsi_frequency_hz() / pllm) * plln;
+            pllvco = (get_hsi_frequency_hz() / m) * n;
         }
         break;
 
@@ -496,6 +562,72 @@ uint32 mcu::calculate_pll_r_output_frequency()
 
     uint32 pllr = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
     return pllvco / pllr;
+}
+
+uint32 mcu::calculate_pll_q_output_frequency()
+{
+    uint32 m =  (get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
+    uint32 n =   get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN) >> RCC_PLLCFGR_PLLN_Pos;
+    uint32 q = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ) >> RCC_PLLCFGR_PLLQ_Pos) * 2u) + 2u;
+
+    uint32 ret = 0;
+
+    switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
+    {
+        case Pll_config::Source::msi:
+        {
+            uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            ret = ((msi_frequency_lut[msi_range] / m) * n) / q;
+        }
+        break;
+
+        case Pll_config::Source::hsi:
+        {
+            ret = ((get_hsi_frequency_hz() / m) * n) / q;
+        }
+        break;
+
+        case Pll_config::Source::unknown:
+        {
+            assert(false);
+        }
+        break;
+    }
+
+    return ret;
+}
+
+uint32 mcu::calculate_pllsai1_q_output_frequency()
+{
+    uint32 m = (get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
+    uint32 n = (get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N) >> RCC_PLLSAI1CFGR_PLLSAI1N_Pos) + 1u;
+    uint32 q = ((get_flag(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1Q) >> RCC_PLLSAI1CFGR_PLLSAI1Q_Pos) * 2u) + 2u;
+
+    uint32 ret = 0;
+
+    switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
+    {
+        case Pll_config::Source::msi:
+        {
+            uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            ret = ((msi_frequency_lut[msi_range] / m) * n) / q;
+        }
+        break;
+
+        case Pll_config::Source::hsi:
+        {
+            ret = ((get_hsi_frequency_hz() / m) * n) / q;
+        }
+        break;
+
+        default:
+        {
+            assert(false);
+        }
+        break;
+    }
+
+    return ret;
 }
 
 } // namespace stm32l452xx
