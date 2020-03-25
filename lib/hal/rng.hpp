@@ -19,5 +19,5 @@ namespace hal {
 using rng = stm32l452xx::rng;
 #endif // STM32L452xx
 
-} // namespace cml
 } // namespace hal
+} // namespace cml
