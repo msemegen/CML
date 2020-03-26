@@ -14,6 +14,7 @@
 #include <common/bit.hpp>
 #include <common/frequency.hpp>
 #include <common/integer.hpp>
+#include <common/Non_copyable.hpp>
 #include <common/time_tick.hpp>
 #include <debug/assert.hpp>
 #include <hal/systick.hpp>
@@ -22,7 +23,7 @@ namespace cml {
 namespace hal {
 namespace stm32l452xx {
 
-class USART
+class USART : private common::Non_copyable
 {
 public:
 
@@ -126,13 +127,6 @@ public:
     {
         this->disable();
     }
-
-    USART()             = default;
-    USART(USART&)       = default;
-    USART(const USART&) = default;
-
-    USART& operator = (USART&&)      = default;
-    USART& operator = (const USART&) = default;
 
     bool enable(const Config& a_config,
                 const Clock& a_clock,

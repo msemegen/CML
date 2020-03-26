@@ -13,13 +13,14 @@
 //cml
 #include <common/integer.hpp>
 #include <common/macros.hpp>
+#include <common/Non_copyable.hpp>
 #include <common/time_tick.hpp>
 
 namespace cml {
 namespace hal {
 namespace stm32l452xx {
 
-class ADC
+class ADC : private common::Non_copyable
 {
 public:
 
@@ -148,13 +149,6 @@ public:
     {
         this->disable();
     }
-
-    ADC()           = delete;
-    ADC(const ADC&) = default;
-    ADC(ADC&&)      = default;
-
-    ADC& operator = (const ADC&) = default;
-    ADC& operator = (ADC&&) = default;
 
     bool enable(Resolution a_resolution,
                 const Asynchronous_clock& a_clock,

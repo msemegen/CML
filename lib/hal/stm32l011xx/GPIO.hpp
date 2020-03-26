@@ -13,13 +13,14 @@
 //cml
 #include <common/bit.hpp>
 #include <common/integer.hpp>
+#include <common/Non_copyable.hpp>
 #include <debug/assert.hpp>
 
 namespace cml {
 namespace hal {
 namespace stm32l011xx {
 
-class GPIO
+class GPIO : private common::Non_copyable
 {
 public:
 
@@ -72,13 +73,6 @@ public:
     {
         this->disable();
     }
-
-    GPIO()            = delete;
-    GPIO(GPIO&&)      = default;
-    GPIO(const GPIO&) = default;
-
-    GPIO& operator = (GPIO&&)      = default;
-    GPIO& operator = (const GPIO&) = default;
 
     void enable();
     void disable();
@@ -136,7 +130,7 @@ private:
     friend class Analog_pin;
 };
 
-class Output_pin
+class Output_pin : private common::Non_copyable
 {
 public:
 
@@ -166,13 +160,6 @@ public:
     {
         this->disable();
     }
-
-    Output_pin()                  = delete;
-    Output_pin(Output_pin&&)      = default;
-    Output_pin(const Output_pin&) = default;
-
-    Output_pin& operator = (Output_pin&&)      = default;
-    Output_pin& operator = (const Output_pin&) = default;
 
     void enable(const Config& a_config);
     void disable();
@@ -204,7 +191,7 @@ private:
     const common::uint8 pin;
 };
 
-class Input_pin
+class Input_pin : private common::Non_copyable
 {
 public:
 
@@ -257,7 +244,7 @@ private:
     const common::uint8 pin;
 };
 
-class Alternate_function_pin
+class Alternate_function_pin : private common::Non_copyable
 {
 public:
 
@@ -331,7 +318,7 @@ private:
     common::uint32 function;
 };
 
-class Analog_pin
+class Analog_pin : private common::Non_copyable
 {
 public:
 

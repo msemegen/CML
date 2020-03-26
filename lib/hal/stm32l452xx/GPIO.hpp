@@ -13,13 +13,14 @@
 //cml
 #include <common/bit.hpp>
 #include <common/integer.hpp>
+#include <common/Non_copyable.hpp>
 #include <debug/assert.hpp>
 
 namespace cml {
 namespace hal {
 namespace stm32l452xx {
 
-class GPIO
+class GPIO : private common::Non_copyable
 {
 public:
 
@@ -76,13 +77,6 @@ public:
         this->disable();
     }
 
-    GPIO()            = delete;
-    GPIO(GPIO&&)      = default;
-    GPIO(const GPIO&) = default;
-
-    GPIO& operator = (GPIO&&)      = default;
-    GPIO& operator = (const GPIO&) = default;
-
     void enable();
     void disable();
 
@@ -138,7 +132,7 @@ private:
     friend class Analog_pin;
 };
 
-class Output_pin
+class Output_pin : private common::Non_copyable
 {
 public:
 
@@ -168,13 +162,6 @@ public:
     {
         this->disable();
     }
-
-    Output_pin()                  = delete;
-    Output_pin(Output_pin&&)      = default;
-    Output_pin(const Output_pin&) = default;
-
-    Output_pin& operator = (Output_pin&&)      = default;
-    Output_pin& operator = (const Output_pin&) = default;
 
     void enable(const Config& a_config);
     void disable();
@@ -206,7 +193,7 @@ private:
     const common::uint8 pin;
 };
 
-class Input_pin
+class Input_pin : private common::Non_copyable
 {
 public:
 
@@ -227,13 +214,6 @@ public:
     {
         this->disable();
     }
-
-    Input_pin()                 = delete;
-    Input_pin(Input_pin&&)      = default;
-    Input_pin(const Input_pin&) = default;
-
-    Input_pin& operator = (Input_pin&&)      = default;
-    Input_pin& operator = (const Input_pin&) = default;
 
     void enable(Pull a_pull);
     void disable();
@@ -259,7 +239,7 @@ private:
     const common::uint8 pin;
 };
 
-class Alternate_function_pin
+class Alternate_function_pin : private common::Non_copyable
 {
 public:
 
@@ -291,13 +271,6 @@ public:
         this->disable();
     }
 
-    Alternate_function_pin()                              = delete;
-    Alternate_function_pin(Alternate_function_pin&&)      = default;
-    Alternate_function_pin(const Alternate_function_pin&) = default;
-
-    Alternate_function_pin& operator = (Alternate_function_pin&&)      = default;
-    Alternate_function_pin& operator = (const Alternate_function_pin&) = default;
-
     void enable(const Config& a_config);
     void disable();
 
@@ -323,7 +296,7 @@ private:
     common::uint32 function;
 };
 
-class Analog_pin
+class Analog_pin : private common::Non_copyable
 {
 public:
 
@@ -337,6 +310,11 @@ public:
     {
         assert(nullptr != a_p_port);
         assert(a_pin < 16);
+    }
+
+    ~Analog_pin()
+    {
+        this->disable();
     }
 
     void enable(Pull a_pull);
@@ -361,7 +339,6 @@ private:
     GPIO* p_port;
     const common::uint8 pin;
 };
-
 
 } // namespace stm32l452xx
 } // namespace hal
