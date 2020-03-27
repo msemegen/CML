@@ -107,6 +107,13 @@ public:
         firewall             = RCC_CSR_FWRSTF
     };
 
+    enum class FPU_mode : common::uint32
+    {
+        disabled               = 0x0u,
+        privileged_access_only = 0xAu << 20u,
+        enabled                = 0xFu << 20u,
+    };
+
     struct Pll_config
     {
         enum class Source : common::uint32
@@ -329,6 +336,8 @@ public:
     static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
     static void set_nvic(const NVIC_config& a_config);
 
+    static void set_fpu_mode(FPU_mode a_mode);
+
     static void enable_dwt()
     {
         common::set_flag(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
@@ -346,6 +355,8 @@ public:
 
     static void register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
     static void register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
+
+    static FPU_mode get_fpu_mode();
 
     static bool is_dwt_enabled()
     {
