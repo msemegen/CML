@@ -259,11 +259,6 @@ void mcu::set_nvic(const NVIC_config& a_config)
     __set_BASEPRI(a_config.base_priority);
 }
 
-void mcu::set_fpu_mode(FPU_mode a_mode)
-{
-    set_flag(&(SCB->CPACR), ((3u << 10u * 2u) | (3u << 11u * 2u)), static_cast<uint32>(a_mode));
-}
-
 void mcu::reset()
 {
     NVIC_SystemReset();
@@ -283,11 +278,6 @@ void mcu::register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_c
 void mcu::register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback)
 {
     post_sysclk_frequency_change_callback = a_callback;
-}
-
-mcu::FPU_mode mcu::get_fpu_mode()
-{
-    return static_cast<FPU_mode>(SCB->CPACR);
 }
 
 mcu::Bus_prescalers mcu::get_bus_prescalers()

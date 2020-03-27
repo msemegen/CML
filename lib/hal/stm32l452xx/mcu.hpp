@@ -336,7 +336,10 @@ public:
     static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
     static void set_nvic(const NVIC_config& a_config);
 
-    static void set_fpu_mode(FPU_mode a_mode);
+    static void set_fpu_mode(FPU_mode a_mode)
+    {
+        common::set_flag(&(SCB->CPACR), ((3u << 10u * 2u) | (3u << 11u * 2u)), static_cast<common::uint32>(a_mode));
+    }
 
     static void enable_dwt()
     {
@@ -356,7 +359,10 @@ public:
     static void register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
     static void register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
 
-    static FPU_mode get_fpu_mode();
+    static FPU_mode get_fpu_mode()
+    {
+        return static_cast<FPU_mode>(SCB->CPACR);
+    }
 
     static bool is_dwt_enabled()
     {

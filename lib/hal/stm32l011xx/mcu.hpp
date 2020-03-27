@@ -171,6 +171,8 @@ struct mcu
         APB2 apb2 = APB2::unknown;
     };
 
+public:
+
     static void enable_msi_clock(Msi_frequency a_freq);
     static void enable_hsi_clock(Hsi_frequency a_freq);
     static void enable_lsi_clock(Lsi_frequency a_freq);
@@ -189,11 +191,6 @@ struct mcu
 
     static void register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
     static void register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
-
-    static bool is_dwt_enabled()
-    {
-        return false;
-    }
 
     static Bus_prescalers get_bus_prescalers();
     static Pll_config get_pll_config();
