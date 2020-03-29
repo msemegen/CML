@@ -144,7 +144,7 @@ void ADC::set_active_channels(Sampling_time a_sampling_time, const Channel* a_p_
     if (true == is_temperature_sensor)
     {
         set_flag(&(ADC1_COMMON->CCR), ADC_CCR_TSEN);
-        delay::ms(10);
+        delay::us(10);
     }
 
     if (true == is_voltage_reference)
@@ -282,7 +282,7 @@ bool ADC::enable(Resolution a_resolution, time_tick a_start, uint32 a_irq_priori
     }
 
     set_flag(&(ADC1->CR), ADC_CR_ADVREGEN);
-    delay::ms(2);
+    delay::us(2);
 
     set_flag(&(ADC1->CR), ADC_CR_ADCAL);
 

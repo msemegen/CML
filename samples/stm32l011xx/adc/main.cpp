@@ -105,7 +105,7 @@ int main()
                     adc.read_polling(&r, 1);
 
                     console.write_line("temp: %d, adc: %u\r", compute_temperature(adc.get_calibration_data(), r), r);
-                    delay::ms(10);
+                    delay::ms(1000);
                 }
             }
         }
