@@ -33,8 +33,8 @@ public:
     {
         using Function = void(*)(void* a_p_user_data);
 
-        Function p_function = nullptr;
-        void* p_user_data   = nullptr;
+        Function function = nullptr;
+        void* p_user_data = nullptr;
     };
 
 public:

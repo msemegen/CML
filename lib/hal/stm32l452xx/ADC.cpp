@@ -11,7 +11,9 @@
 #include <hal/stm32l452xx/ADC.hpp>
 
 //cml
-#include <utils/sleep.hpp>
+#include <hal/core/systick.hpp>
+#include <utils/delay.hpp>
+#include <utils/wait.hpp>
 
 #ifdef CML_DEBUG
 #include <debug/assert.hpp>
@@ -56,12 +58,8 @@ namespace hal {
 namespace stm32l452xx {
 
 using namespace cml::common;
+using namespace cml::hal::core;
 using namespace cml::utils;
-
-bool is_timeout(time_tick a_start, time_tick a_timeout)
-{
-    return time_tick_infinity == a_timeout ? false : time_tick_diff(systick::get_counter(), a_start) < a_timeout;
-}
 
 void adc_handle_interrupt(ADC* a_p_this)
 {
@@ -69,17 +67,15 @@ void adc_handle_interrupt(ADC* a_p_this)
 
     if (true == is_flag(isr, ADC_ISR_EOC))
     {
-        bool timeout = is_timeout(a_p_this->callaback.start_timestamp, a_p_this->callaback.timeout);
-        bool series_end = is_flag(isr, ADC_ISR_EOS);
-
-        bool ret = a_p_this->callaback.function(ADC1->DR, series_end, timeout);
+        const bool series_end = is_flag(isr, ADC_ISR_EOS);
+        const bool ret = a_p_this->callaback.function(ADC1->DR, series_end, a_p_this->callaback.p_user_data);
 
         if (true == series_end)
         {
             set_flag(&(ADC1->ISR), ADC_ISR_EOS);
         }
 
-        if (true == series_end || true == timeout || false == ret)
+        if (true == series_end || false == ret)
         {
             set_flag(&(ADC1->CR), ADC_CR_ADSTP);
             clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
@@ -186,7 +182,7 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_cou
     if (true == enable_temperature_sensor)
     {
         set_flag(&(ADC1_COMMON->CCR), ADC_CCR_TSEN);
-        sleep::us(120);
+        delay::us(120);
     }
 
     if (true == enable_voltage_reference)
@@ -225,11 +221,11 @@ void ADC::read_polling(uint16* a_p_data, uint32 a_count)
 
     for (uint32 i = 0; i < a_count; i++)
     {
-        sleep::until(&(ADC1->ISR), ADC_ISR_EOC, false);
+        wait::until(&(ADC1->ISR), ADC_ISR_EOC, false);
         a_p_data[i] = static_cast<uint16_t>(ADC1->DR);
     }
 
-    sleep::until(&(ADC1->ISR), ADC_ISR_EOS, false);
+    wait::until(&(ADC1->ISR), ADC_ISR_EOS, false);
     set_flag(&(ADC1->ISR), ADC_ISR_EOS);
 
     set_flag(&(ADC1->CR), ADC_CR_ADSTP);
@@ -251,7 +247,7 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
 
     for (uint32 i = 0; i < a_count && true == ret; i++)
     {
-        ret = sleep::until(&(ADC1->ISR), ADC_ISR_EOC, false, start, a_timeout);
+        ret = wait::until(&(ADC1->ISR), ADC_ISR_EOC, false, start, a_timeout);
 
         if (true == ret)
         {
@@ -261,7 +257,7 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
 
     if (true == ret)
     {
-        ret = sleep::until(&(ADC1->ISR), ADC_ISR_EOS, false, start, a_timeout);
+        ret = wait::until(&(ADC1->ISR), ADC_ISR_EOS, false, start, a_timeout);
 
         if (true == ret)
         {
@@ -275,26 +271,14 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
     return ret;
 }
 
-void ADC::start_read_it(Conversion_callback a_callback, time_tick a_timeout)
+void ADC::start_read_it(const Conversion_callback& a_callback)
 {
-    assert(true == systick::is_enabled());
-    assert(nullptr != a_callback);
+    assert(nullptr != a_callback.function);
 
-    if (nullptr != a_callback)
-    {
-        this->callaback.function = a_callback;
+    this->callaback = a_callback;
 
-        this->callaback.timeout         = a_timeout;
-        this->callaback.start_timestamp = systick::get_counter();
-
-        set_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
-        set_flag(&(ADC1->CR), ADC_CR_ADSTART);
-    }
-    else
-    {
-        this->callaback.function = nullptr;
-        this->callaback.timeout  = time_tick_infinity;
-    }
+    set_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
+    set_flag(&(ADC1->CR), ADC_CR_ADSTART);
 }
 
 void ADC::stop_read_it()
@@ -302,8 +286,7 @@ void ADC::stop_read_it()
     clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
     clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
 
-    this->callaback.function = nullptr;
-    this->callaback.timeout  = time_tick_infinity;
+    this->callaback = { nullptr, nullptr };
 }
 
 void ADC::set_resolution(Resolution a_resolution)
@@ -332,19 +315,19 @@ bool ADC::enable(Resolution a_resolution, time_tick a_start, uint32 a_irq_priori
 
     clear_flag(&(ADC1->CR), ADC_CR_DEEPPWD);
     set_flag(&(ADC1->CR), ADC_CR_ADVREGEN);
-    sleep::us(21u);
+    delay::us(21u);
 
     clear_flag(&(ADC1->CR), ADC_CR_ADCALDIF);
     set_flag(&(ADC1->CR), ADC_CR_ADCAL);
 
-    bool ret = sleep::until(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
+    bool ret = wait::until(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
 
     if (true == ret)
     {
         set_flag(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
         set_flag(&(ADC1->CR), ADC_CR_ADEN);
 
-        ret = sleep::until(&(ADC1->ISR), ADC_ISR_ADRDY, false, a_start, a_timeout);
+        ret = wait::until(&(ADC1->ISR), ADC_ISR_ADRDY, false, a_start, a_timeout);
     }
 
     if (true == ret)

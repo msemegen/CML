@@ -27,9 +27,9 @@ extern "C"
 
 void WWDG_IRQHandler()
 {
-    if (nullptr != callback.p_function)
+    if (nullptr != callback.function)
     {
-        callback.p_function(callback.p_user_data);
+        callback.function(callback.p_user_data);
     }
 }
 
