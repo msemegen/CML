@@ -6,7 +6,7 @@
 */
 
 //this
-#include <hal/systick.hpp>
+#include <hal/core/systick.hpp>
 
 //externals
 
@@ -48,6 +48,7 @@ void SysTick_Handler()
 
 namespace cml {
 namespace hal {
+namespace core {
 
 using namespace cml::common;
 
@@ -83,5 +84,6 @@ common::time_tick systick::get_counter()
     return cnt;
 }
 
+} // namespace core
 } // namespace hal
 } // namespace cml

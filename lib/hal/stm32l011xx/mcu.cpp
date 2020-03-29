@@ -132,9 +132,9 @@ void mcu::disable_pll()
 
 void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
 {
-    if (nullptr != pre_sysclk_frequency_change_callback.p_function)
+    if (nullptr != pre_sysclk_frequency_change_callback.function)
     {
-        pre_sysclk_frequency_change_callback.p_function(pre_sysclk_frequency_change_callback.a_p_user_data);
+        pre_sysclk_frequency_change_callback.function(pre_sysclk_frequency_change_callback.p_user_data);
     }
 
     if (false == is_flag(RCC->APB1ENR, RCC_APB1ENR_PWREN))
@@ -183,9 +183,9 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
     set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_PRE_READ);
     clear_flag(&(FLASH->ACR), FLASH_ACR_DISAB_BUF);
 
-    if (nullptr != post_sysclk_frequency_change_callback.p_function)
+    if (nullptr != post_sysclk_frequency_change_callback.function)
     {
-        post_sysclk_frequency_change_callback.p_function(post_sysclk_frequency_change_callback.a_p_user_data);
+        post_sysclk_frequency_change_callback.function(post_sysclk_frequency_change_callback.p_user_data);
     }
 }
 

@@ -10,7 +10,8 @@
 #include <common/frequency.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
-#include <utils/sleep.hpp>
+#include <hal/systick.hpp>
+#include <utils/delay.hpp>
 
 int main()
 {
@@ -40,7 +41,7 @@ int main()
 
         while (true)
         {
-            sleep::ms(1000);
+            delay::ms(1000);
             led_pin.toggle_level();
         }
     }

@@ -25,7 +25,7 @@ using mcu = stm32l452xx::mcu;
 
 #ifdef STM32L011xx
 using mcu = stm32l011xx::mcu;
-#endif
+#endif // STM32L011xx
 
 } // namespace cml
 } // namespace hal

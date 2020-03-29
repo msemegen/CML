@@ -13,7 +13,7 @@
 #include <hal/systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Console.hpp>
-#include <utils/sleep.hpp>
+#include <utils/delay.hpp>
 
 int main()
 {
@@ -115,7 +115,7 @@ int main()
                         uint32 sleep_value = 0;
                         rng::get_value_polling(&sleep_value, 30);
 
-                        sleep::ms(sleep_value % 1500);
+                        delay::ms(sleep_value % 1500);
                         iwdg::feed();
                     }
                 }

@@ -11,7 +11,7 @@
 #include <hal/mcu.hpp>
 #include <hal/USART.hpp>
 #include <utils/Console.hpp>
-#include <utils/sleep.hpp>
+#include <utils/delay.hpp>
 
 namespace {
 
@@ -105,7 +105,7 @@ int main()
                     adc.read_polling(&r, 1);
 
                     console.write_line("temp: %d, adc: %u\r", compute_temperature(adc.get_calibration_data(), r), r);
-                    sleep::ms(10);
+                    delay::ms(1000);
                 }
             }
         }

@@ -18,7 +18,7 @@ using namespace cml::hal::stm32l452xx;
 
 uint16 reload = 0;
 
-wwdg::Callback callback;
+wwdg::Early_wakeup_callback callback;
 
 } // namespace ::
 
@@ -27,9 +27,9 @@ extern "C"
 
 void WWDG_IRQHandler()
 {
-    if (nullptr != callback.p_function)
+    if (nullptr != callback.function)
     {
-        callback.p_function(callback.p_user_data);
+        callback.function(callback.p_user_data);
     }
 }
 
@@ -50,7 +50,7 @@ void wwdg::enable(Prescaler a_prescaler, uint16 a_reload, uint16 a_window, uint1
     NVIC_EnableIRQ(WWDG_IRQn);
 }
 
-void wwdg::register_early_wakeup_callback(const Callback& a_callback)
+void wwdg::register_early_wakeup_callback(const Early_wakeup_callback& a_callback)
 {
     callback = a_callback;
     set_flag(&(WWDG->CFR), WWDG_CFR_EWI);

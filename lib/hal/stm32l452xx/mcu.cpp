@@ -14,7 +14,7 @@
 #include <common/frequency.hpp>
 #include <common/macros.hpp>
 #include <debug/assert.hpp>
-#include <utils/sleep.hpp>
+#include <utils/wait.hpp>
 
 namespace {
 
@@ -67,12 +67,12 @@ void mcu::enable_msi_clock(Msi_frequency a_freq)
 
     set_flag(&(RCC->CR), RCC_CR_MSION);
 
-    sleep::until(&(RCC->CR), RCC_CR_MSIRDY, false);
+    wait::until(&(RCC->CR), RCC_CR_MSIRDY, false);
 
     clear_flag(&(RCC->ICSCR), RCC_ICSCR_MSITRIM);
     set_flag(&(RCC->CR), RCC_CR_MSIRGSEL);
 
-    sleep::until(&(RCC->CR), RCC_CR_MSIRDY, false);
+    wait::until(&(RCC->CR), RCC_CR_MSIRDY, false);
 }
 
 void mcu::enable_hsi_clock(Hsi_frequency a_freq)
@@ -81,7 +81,7 @@ void mcu::enable_hsi_clock(Hsi_frequency a_freq)
 
     set_flag(&(RCC->CR), RCC_CR_HSION, RCC_CR_HSION);
 
-    sleep::until(&(RCC->CR), RCC_CR_HSIRDY, false);
+    wait::until(&(RCC->CR), RCC_CR_HSIRDY, false);
 }
 
 void mcu::enable_lsi_clock(Lsi_frequency a_freq)
@@ -90,7 +90,7 @@ void mcu::enable_lsi_clock(Lsi_frequency a_freq)
 
     set_flag(&(RCC->CSR), RCC_CSR_LSION, RCC_CSR_LSION);
 
-    sleep::until(&(RCC->CSR), RCC_CSR_LSIRDY, false);
+    wait::until(&(RCC->CSR), RCC_CSR_LSIRDY, false);
 }
 
 void mcu::enable_hsi48_clock(Hsi48_frequency a_freq)
@@ -99,35 +99,35 @@ void mcu::enable_hsi48_clock(Hsi48_frequency a_freq)
 
     set_flag(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
 
-    sleep::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, false);
+    wait::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, false);
 }
 
 void mcu::disable_msi_clock()
 {
     clear_flag(&(RCC->CR), RCC_CR_MSION);
 
-    sleep::until(&(RCC->CR), RCC_CR_MSIRDY, true);
+    wait::until(&(RCC->CR), RCC_CR_MSIRDY, true);
 }
 
 void mcu::disable_hsi_clock()
 {
     clear_flag(&(RCC->CR), RCC_CR_HSION);
 
-    sleep::until(&(RCC->CR), RCC_CR_HSIRDY, true);
+    wait::until(&(RCC->CR), RCC_CR_HSIRDY, true);
 }
 
 void mcu::disable_lsi_clock()
 {
     clear_flag(&(RCC->CSR), RCC_CSR_LSION);
 
-    sleep::until(&(RCC->CSR), RCC_CSR_LSIRDY, true);
+    wait::until(&(RCC->CSR), RCC_CSR_LSIRDY, true);
 }
 
 void mcu::disable_hsi48_clock()
 {
     clear_flag(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
 
-    sleep::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, true);
+    wait::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, true);
 }
 
 void mcu::enable_pll(const Pll_config& a_config)
@@ -183,9 +183,9 @@ void mcu::set_clk48_clock_mux_source(Clk48_mux_source a_source)
 
 void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
 {
-    if (nullptr != pre_sysclk_frequency_change_callback.p_function)
+    if (nullptr != pre_sysclk_frequency_change_callback.function)
     {
-        pre_sysclk_frequency_change_callback.p_function(pre_sysclk_frequency_change_callback.a_p_user_data);
+        pre_sysclk_frequency_change_callback.function(pre_sysclk_frequency_change_callback.p_user_data);
     }
 
     if (false == is_flag(RCC->APB1ENR1, RCC_APB1ENR1_PWREN))
@@ -247,9 +247,9 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
     }
 
-    if (nullptr != post_sysclk_frequency_change_callback.p_function)
+    if (nullptr != post_sysclk_frequency_change_callback.function)
     {
-        post_sysclk_frequency_change_callback.p_function(post_sysclk_frequency_change_callback.a_p_user_data);
+        post_sysclk_frequency_change_callback.function(post_sysclk_frequency_change_callback.p_user_data);
     }
 }
 

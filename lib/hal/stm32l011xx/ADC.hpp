@@ -24,8 +24,6 @@ class ADC : private common::Non_copyable
 {
 public:
 
-    using Conversion_callback = bool(*)(common::uint16 a_value, bool a_series_end, bool a_timeout);
-
     enum class Id
     {
         _1 = 0
@@ -130,6 +128,14 @@ public:
         common::uint16 internal_voltage_reference = 0;
     };
 
+    struct Conversion_callback
+    {
+        using Function = bool(*)(common::uint16 a_value, bool a_series_end, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
 public:
 
     ADC(Id a_id)
@@ -160,13 +166,7 @@ public:
     void read_polling(common::uint16* a_p_data, common::uint32 a_count);
     bool read_polling(common::uint16* a_p_data, common::uint32 a_count, common::time_tick a_timeout);
 
-    void start_read_it(Conversion_callback a_callback, common::time_tick a_timeout);
-
-    void start_read_it(Conversion_callback a_callback)
-    {
-        this->start_read_it(a_callback, common::time_tick_infinity);
-    }
-
+    void start_read_it(const Conversion_callback& a_callback);
     void stop_read_it();
 
     void set_resolution(Resolution a_resolution);
@@ -188,24 +188,10 @@ public:
 
 private:
 
-    struct IT_callback
-    {
-        Conversion_callback function = nullptr;
-
-        common::time_tick start_timestamp = 0;
-        common::time_tick timeout         = 0;
-    };
-
-private:
-
     bool enable(Resolution a_resolution,
                 common::time_tick a_start,
                 common::uint32 a_irq_priority,
                 common::time_tick a_timeout);
-
-private:
-
-    IT_callback callaback;
 
 private:
 

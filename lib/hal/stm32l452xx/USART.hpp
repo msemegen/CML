@@ -16,8 +16,6 @@
 #include <common/integer.hpp>
 #include <common/Non_copyable.hpp>
 #include <common/time_tick.hpp>
-#include <debug/assert.hpp>
-#include <hal/systick.hpp>
 
 namespace cml {
 namespace hal {
@@ -101,18 +99,18 @@ public:
 
     struct TX_callback
     {
-        using Function = bool(*)(common::byte* p_a_byte, void* a_p_user_data, bool a_timeout);
+        using Function = bool(*)(volatile common::uint32* p_a_data, void* a_p_user_data);
 
-        Function p_function = nullptr;
-        void* p_user_data   = nullptr;
+        Function function = nullptr;
+        void* p_user_data = nullptr;
     };
 
     struct RX_callback
     {
-        using Function = bool(*)(common::byte a_byte, void* a_p_user_data, bool a_timeout);
+        using Function = bool(*)(common::uint32 a_data, void* a_p_user_data);
 
-        Function p_function = nullptr;
-        void* p_user_data   = nullptr;
+        Function function = nullptr;
+        void* p_user_data = nullptr;
     };
 
 public:
@@ -165,17 +163,8 @@ public:
     void read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes);
     bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
 
-    void start_write_bytes_it(const TX_callback& a_callback)
-    {
-        this->start_write_bytes_it(a_callback, common::time_tick_infinity);
-    }
-    void start_write_bytes_it(const TX_callback& a_callback, common::time_tick a_timeout_ms);
-
-    void start_read_bytes_it(const RX_callback& a_callback)
-    {
-        this->start_read_bytes_it(a_callback, common::time_tick_infinity);
-    }
-    void start_read_bytes_it(const RX_callback& a_callback, common::time_tick a_timeout_ms);
+    void start_write_bytes_it(const TX_callback& a_callback);
+    void start_read_bytes_it(const RX_callback& a_callback);
 
     void stop_write_bytes_it();
     void stop_read_bytes_it();
@@ -229,15 +218,10 @@ private:
 
 private:
 
-    using TX_it_context = IT_context<TX_callback>;
-    using RX_it_context = IT_context<RX_callback>;
-
-private:
-
     Id id;
 
-    TX_it_context TX_context;
-    RX_it_context RX_context;
+    TX_callback tx_callback;
+    RX_callback rx_callback;
 
     USART_TypeDef* p_usart;
 
