@@ -12,7 +12,7 @@
 #include <hal/systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Console.hpp>
-#include <utils/sleep.hpp>
+#include <utils/delay.hpp>
 
 int main()
 {
@@ -96,7 +96,7 @@ int main()
                         console.write_line("Random number generation error");
                     }
 
-                    sleep::ms(1000);
+                    delay::ms(1000);
                 }
             }
             else

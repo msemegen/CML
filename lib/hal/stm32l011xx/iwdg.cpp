@@ -10,8 +10,9 @@
 
 //cml
 #include <debug/assert.hpp>
+#include <hal/core/systick.hpp>
 #include <hal/stm32l011xx/mcu.hpp>
-#include <utils/sleep.hpp>
+#include <utils/wait.hpp>
 
 namespace {
 
@@ -32,6 +33,7 @@ namespace hal {
 namespace stm32l011xx {
 
 using namespace cml::common;
+using namespace cml::hal::core;
 using namespace cml::utils;
 
 bool iwdg::enable(Prescaler a_prescaler,
@@ -50,12 +52,12 @@ bool iwdg::enable(Prescaler a_prescaler,
     IWDG->KR = control_flags::write_access_enable;
 
     IWDG->PR = static_cast<uint32>(a_prescaler);
-    bool ret = sleep::until(&(IWDG->SR), IWDG_SR_PVU, true, start, a_timeout);
+    bool ret = wait::until(&(IWDG->SR), IWDG_SR_PVU, true, start, a_timeout);
 
     if (true == ret)
     {
         IWDG->RLR = a_reload;
-        ret = sleep::until(&(IWDG->SR), IWDG_SR_RVU, true, start, a_timeout);
+        ret = wait::until(&(IWDG->SR), IWDG_SR_RVU, true, start, a_timeout);
     }
 
     if (true == ret)
@@ -63,7 +65,7 @@ bool iwdg::enable(Prescaler a_prescaler,
         if (true == a_window.enable)
         {
             IWDG->WINR = a_window.value;
-            ret = sleep::until(&(IWDG->SR), IWDG_SR_WVU, true, start, a_timeout);
+            ret = wait::until(&(IWDG->SR), IWDG_SR_WVU, true, start, a_timeout);
         }
         else
         {

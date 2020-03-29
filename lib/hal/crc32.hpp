@@ -24,7 +24,7 @@ using crc32 = stm32l452xx::crc32;
 
 #ifdef STM32L011xx
 using crc32 = stm32l011xx::crc32;
-#endif
+#endif // STM32L011xx
 
 } // namespace cml
 } // namespace hal

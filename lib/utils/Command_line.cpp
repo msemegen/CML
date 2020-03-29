@@ -20,10 +20,8 @@ namespace
 using namespace cml::collection;
 using namespace cml::common;
 
-bool rx_callback(byte a_byte, void* a_p_user_data, bool a_timeout)
+bool rx_callback(uint32 a_byte, void* a_p_user_data)
 {
-    unused(a_timeout);
-
     reinterpret_cast<Ring<char>*>(a_p_user_data)->push(static_cast<char>(a_byte));
     return true;
 }
@@ -115,7 +113,7 @@ void Command_line::update()
 
 void Command_line::enable()
 {
-    this->p_io_stream->start_read_bytes_it({ rx_callback, &(this->input_buffer_view) }, time_tick_infinity);
+    this->p_io_stream->start_read_bytes_it({ rx_callback, &(this->input_buffer_view) });
 }
 
 void Command_line::disable()

@@ -8,12 +8,14 @@
 //cml
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
-#include <utils/sleep.hpp>
+#include <hal/core/systick.hpp>
+#include <utils/delay.hpp>
 
 int main()
 {
     using namespace cml::common;
     using namespace cml::hal;
+    using namespace cml::hal::core;
     using namespace cml::utils;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
@@ -40,7 +42,7 @@ int main()
 
         while (true)
         {
-            sleep::ms(1000);
+            delay::ms(1000);
             led_pin.toggle_level();
         }
     }

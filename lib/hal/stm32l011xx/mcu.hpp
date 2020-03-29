@@ -127,8 +127,10 @@ struct mcu
 
     struct Sysclk_frequency_change_callback
     {
-        void(*p_function)(void* a_p_user_data) = nullptr;
-        void* a_p_user_data = nullptr;
+        using Function = void(*)(void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
     };
 
     struct Bus_prescalers

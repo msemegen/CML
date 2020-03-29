@@ -10,22 +10,22 @@
 //cml
 #ifdef STM32L452xx
 #include <hal/stm32l452xx/USART.hpp>
-#endif
+#endif // STM32L452xx
 
 #ifdef STM32L011xx
 #include <hal/stm32l011xx/USART.hpp>
-#endif
+#endif // STM32L011xx
 
 namespace cml {
 namespace hal {
 
 #ifdef STM32L452xx
 using USART = stm32l452xx::USART;
-#endif
+#endif // STM32L452xx
 
 #ifdef STM32L011xx
 using USART = stm32l011xx::USART;
-#endif
+#endif // STM32L011xx
 
 } // namespace hal
 } // namespace cml

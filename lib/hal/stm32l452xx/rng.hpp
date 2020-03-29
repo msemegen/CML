@@ -22,7 +22,13 @@ class rng
 {
 public:
 
-    using New_value_callback = void(*)(common::uint32 a_value, bool a_clock_error, bool a_seed_error);
+    struct New_value_callback
+    {
+        using Function = void(*)(common::uint32 a_value, bool a_clock_error, bool a_seed_error, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
 
     rng()           = delete;
     rng(rng&&)      = delete;
@@ -36,7 +42,7 @@ public:
 
     static bool get_value_polling(common::uint32* a_p_value, common::time_tick a_timeout_ms);
 
-    static void get_value_it(New_value_callback a_callback);
+    static void get_value_it(const New_value_callback& a_callback);
 };
 
 } // namespace stm32l452xx
