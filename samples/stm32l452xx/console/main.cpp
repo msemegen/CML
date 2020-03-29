@@ -8,7 +8,7 @@
 //cml
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
-#include <hal/systick.hpp>
+#include <hal/core/systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Console.hpp>
 
@@ -16,6 +16,7 @@ int main()
 {
     using namespace cml::common;
     using namespace cml::hal;
+    using namespace cml::hal::core;
     using namespace cml::utils;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
