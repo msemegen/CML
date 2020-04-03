@@ -211,13 +211,6 @@ private:
 
 private:
 
-    common::uint32 to_index(Id a_id) const
-    {
-        return static_cast<common::uint32>(a_id);
-    }
-
-private:
-
     Id id;
 
     TX_callback tx_callback;

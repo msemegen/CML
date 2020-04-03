@@ -76,6 +76,7 @@ void usart_handle_interrupt(USART* a_p_this)
 
 bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_priority, time_tick a_timeout_ms)
 {
+    assert(nullptr               == p_usart_2);
     assert(0                     != a_config.baud_rate);
     assert(Flow_control::unknown != a_config.flow_control);
     assert(Parity::unknown       != a_config.parity);
@@ -86,8 +87,6 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_pr
     assert(0                      != a_clock.frequency_hz);
 
     time_tick start = systick::get_counter();
-
-    this->disable();
 
     p_usart_2 = this;
 
@@ -157,6 +156,7 @@ void USART::disable()
 
 void USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes)
 {
+    assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
 
@@ -172,6 +172,7 @@ void USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
 
 bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
 {
+    assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
     assert(true == systick::is_enabled());
@@ -201,6 +202,7 @@ bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
 
 void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
 {
+    assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
 
@@ -213,6 +215,7 @@ void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
 
 bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
 {
+    assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
     assert(true == systick::is_enabled());
@@ -235,6 +238,7 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
 
 void USART::start_write_bytes_it(const TX_callback& a_callback)
 {
+    assert(nullptr != p_usart_2);
     assert(nullptr != a_callback.function);
 
     this->tx_callback = a_callback;
@@ -244,6 +248,7 @@ void USART::start_write_bytes_it(const TX_callback& a_callback)
 
 void USART::start_read_bytes_it(const RX_callback& a_callback)
 {
+    assert(nullptr != p_usart_2);
     assert(nullptr != a_callback.function);
 
     this->rx_callback = a_callback;
@@ -253,6 +258,8 @@ void USART::start_read_bytes_it(const RX_callback& a_callback)
 
 void USART::stop_write_bytes_it()
 {
+    assert(nullptr != p_usart_2);
+
     clear_flag(&(USART2->CR1), USART_CR1_TXEIE);
 
     this->tx_callback = { nullptr, nullptr };
@@ -260,6 +267,8 @@ void USART::stop_write_bytes_it()
 
 void USART::stop_read_bytes_it()
 {
+    assert(nullptr != p_usart_2);
+
     clear_flag(&(USART2->CR1), USART_CR1_RXNEIE);
 
     this->rx_callback  = { nullptr, nullptr };
@@ -267,6 +276,7 @@ void USART::stop_read_bytes_it()
 
 void USART::set_baud_rate(uint32 a_baud_rate)
 {
+    assert(nullptr != p_usart_2);
     assert(0 != a_baud_rate);
 
     const Oversampling oversampling = this->get_oversampling();
@@ -296,6 +306,7 @@ void USART::set_baud_rate(uint32 a_baud_rate)
 
 void USART::set_oversampling(Oversampling a_oversampling)
 {
+    assert(nullptr != p_usart_2);
     assert(Oversampling::unknown != a_oversampling);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -305,6 +316,7 @@ void USART::set_oversampling(Oversampling a_oversampling)
 
 void USART::set_word_length(Word_length a_word_length)
 {
+    assert(nullptr != p_usart_2);
     assert(Word_length::unknown != a_word_length);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -313,6 +325,7 @@ void USART::set_word_length(Word_length a_word_length)
 
 void USART::set_parity(Parity a_parity)
 {
+    assert(nullptr != p_usart_2);
     assert(Parity::unknown != a_parity);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -321,6 +334,7 @@ void USART::set_parity(Parity a_parity)
 
 void USART::set_stop_bits(Stop_bits a_stop_bits)
 {
+    assert(nullptr != p_usart_2);
     assert(Stop_bits::unknown != a_stop_bits);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -330,6 +344,7 @@ void USART::set_stop_bits(Stop_bits a_stop_bits)
 
 void USART::set_flow_control(Flow_control a_flow_control)
 {
+    assert(nullptr != p_usart_2);
     assert(Flow_control::unknown != a_flow_control);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -339,31 +354,43 @@ void USART::set_flow_control(Flow_control a_flow_control)
 
 USART::Oversampling USART::get_oversampling() const
 {
+    assert(nullptr != p_usart_2);
+
     return static_cast<Oversampling>(get_flag(USART2->CR1, static_cast<uint32>(USART_CR1_OVER8)));
 }
 
 USART::Word_length USART::get_word_length() const
 {
+    assert(nullptr != p_usart_2);
+
     return static_cast<Word_length>(get_flag(USART2->CR1, USART_CR1_M0 | USART_CR1_M1));
 }
 
 USART::Stop_bits USART::get_stop_bits() const
 {
+    assert(nullptr != p_usart_2);
+
     return static_cast<Stop_bits>(get_flag(USART2->CR2, USART_CR2_STOP));
 }
 
 USART::Flow_control USART::get_flow_control() const
 {
+    assert(nullptr != p_usart_2);
+
     return static_cast<Flow_control>(get_flag(USART2->CR3, USART_CR3_RTSE | USART_CR3_CTSE));
 }
 
 bool USART::is_rx_it_enabled() const
 {
+    assert(nullptr != p_usart_2);
+
     return is_flag(USART2->CR1, USART_CR1_RXNEIE);
 }
 
 bool USART::is_tx_it_enabled() const
 {
+    assert(nullptr != p_usart_2);
+
     return is_flag(USART2->CR1, USART_CR1_TXEIE);
 }
 

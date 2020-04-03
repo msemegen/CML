@@ -38,9 +38,9 @@ bool cstring::equals(const char* a_p_string_1, const char* a_p_string_2, uint32 
 }
 
 uint32 cstring::join(char* a_p_destination,
-                    uint32 a_destination_capacity,
-                    const char* a_p_source,
-                    uint32 a_source_length)
+                     uint32 a_destination_capacity,
+                     const char* a_p_source,
+                     uint32 a_source_length)
 {
     uint32 i = 0;
     for (;i < a_source_length && i + 1 < a_destination_capacity; i++)
