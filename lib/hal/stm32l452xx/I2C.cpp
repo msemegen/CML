@@ -273,6 +273,24 @@ bool I2C_master::write_bytes_polling(uint32 a_slave_address,
 
 void I2C_master::read_bytes_polling(uint32 a_slave_address, void* a_p_data, uint32 a_data_size_in_bytes)
 {
+    assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
+
+    uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
+    uint32 data_length_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
+
+    this->p_i2c->CR2 = address_mask | data_length_mask | I2C_CR2_AUTOEND | I2C_CR2_START | I2C_CR2_RD_WRN;
+
+    uint8* p_data = static_cast<uint8*>(a_p_data);
+    for (uint32 i = 0; i < a_data_size_in_bytes; i++)
+    {
+        wait::until(&(this->p_i2c->ISR), I2C_ISR_RXNE, false);
+        p_data[i] = static_cast<uint8_t>(this->p_i2c->RXDR);
+    }
+
+    SET_BIT(this->p_i2c->ICR, I2C_ICR_STOPCF);
+    this->p_i2c->CR2 = 0;
 }
 
 bool I2C_master::read_bytes_polling(uint32 a_slave_address,
@@ -280,6 +298,35 @@ bool I2C_master::read_bytes_polling(uint32 a_slave_address,
                                     uint32 a_data_size_in_bytes,
                                     time_tick a_timeout_ms)
 {
+    assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
+
+    assert(true == systick::is_enabled());
+
+    time_tick start = systick::get_counter();
+
+    uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
+    uint32 data_length_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
+
+    this->p_i2c->CR2 = address_mask | data_length_mask | I2C_CR2_AUTOEND | I2C_CR2_START | I2C_CR2_RD_WRN;
+
+    bool ret = true;
+    uint8* p_data = static_cast<uint8*>(a_p_data);
+    for (uint32 i = 0; i < a_data_size_in_bytes; i++)
+    {
+        ret = wait::until(&(this->p_i2c->ISR), I2C_ISR_RXNE, false, start, a_timeout_ms);
+
+        if (true == ret)
+        {
+            p_data[i] = static_cast<uint8_t>(this->p_i2c->RXDR);
+        }
+    }
+
+    SET_BIT(this->p_i2c->ICR, I2C_ICR_STOPCF);
+    this->p_i2c->CR2 = 0;
+
+    return ret;
 }
 
 } // namespace stm32l452xx
