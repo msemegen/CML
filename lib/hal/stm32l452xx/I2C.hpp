@@ -35,9 +35,25 @@ public:
 
     enum class Clock_source
     {
-        pclk1,
-        sysclk,
-        hsi
+        pclk1  = 0,
+        sysclk = 1,
+        hsi    = 2
+    };
+
+    struct TX_callback
+    {
+        using Function = bool(*)(volatile common::uint8* p_a_data, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    struct RX_callback
+    {
+        using Function = bool(*)(common::uint8 a_data, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
     };
 
 public:
@@ -51,7 +67,11 @@ public:
         this->diasble();
     }
 
-    void enable(Clock_source a_clock_source, bool a_analog_filter, common::uint32 a_timings, bool a_is_fast_plus);
+    void enable(Clock_source a_clock_source,
+                bool a_analog_filter,
+                common::uint32 a_timings,
+                bool a_is_fast_plus,
+                common::uint32 a_irq_priority);
     void diasble();
 
     template<typename Data_t>
@@ -63,7 +83,7 @@ public:
     template<typename Data_t>
     bool write_polling(const Data_t& a_data, common::time_tick a_timeout_ms)
     {
-        return this->write_bytes_polling(static_cast<void*>(a_data), sizeof(a_data), a_timeout_ms);
+        return this->write_bytes_polling(static_cast<void*>(&a_data), sizeof(a_data), a_timeout_ms);
     }
 
     template<typename Data_t>
@@ -78,11 +98,29 @@ public:
         return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms);
     }
 
-    void write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes);
-    bool write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
+    void write_bytes_polling(common::uint32 a_slave_address,
+                             const void* a_p_data,
+                             common::uint32 a_data_size_in_bytes);
 
-    void read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes);
-    bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
+    bool write_bytes_polling(common::uint32 a_slave_address,
+                             const void* a_p_data,
+                             common::uint32 a_data_size_in_bytes,
+                             common::time_tick a_timeout_ms);
+
+    void read_bytes_polling(common::uint32 a_slave_address,
+                            void* a_p_data,
+                            common::uint32 a_data_size_in_bytes);
+
+    bool read_bytes_polling(common::uint32 a_slave_address,
+                            void* a_p_data,
+                            common::uint32 a_data_size_in_bytes,
+                            common::time_tick a_timeout_ms);
+
+    void start_write_bytes_it(const TX_callback& a_callback);
+    void start_read_bytes_it(const RX_callback& a_callback);
+
+    void stop_write_bytes_it();
+    void stop_read_bytes_it();
 
     bool is_analog_filter() const
     {
@@ -117,6 +155,10 @@ private:
 
     Id id;
     I2C_TypeDef* p_i2c;
+
+private:
+
+    friend void i2c_handle_interrupt(I2C_master* a_p_this);
 };
 
 class I2C_slave : private common::Non_copyable
@@ -203,6 +245,11 @@ private:
 
     Id id;
     I2C_TypeDef* p_i2c;
+
+private:
+
+    friend void i2c_handle_interrupt(I2C_slave* a_p_this);
+
 };
 
 } // namespace stm32l452xx
