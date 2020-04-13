@@ -122,6 +122,8 @@ public:
     void stop_write_bytes_it();
     void stop_read_bytes_it();
 
+    bool is_slave(common::uint16 a_slave_address, common::time_tick a_timeout_ms) const;
+
     bool is_analog_filter() const
     {
         assert(nullptr != this->p_i2c);
@@ -155,6 +157,9 @@ private:
 
     Id id;
     I2C_TypeDef* p_i2c;
+
+    RX_callback rx_callback;
+    TX_callback tx_callback;
 
 private:
 

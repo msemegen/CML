@@ -165,12 +165,39 @@ using namespace cml::utils;
 
 void i2c_handle_interrupt(I2C_master* a_p_this)
 {
+    uint32 isr = a_p_this->p_i2c->ISR;
+    uint32 cr1 = a_p_this->p_i2c->CR1;
 
+    if (true == is_flag(isr, I2C_ISR_RXNE) && true == is_flag(cr1, I2C_CR1_RXIE))
+    {
+
+    }
+
+    if (true == is_flag(isr, I2C_ISR_TXE) && true == is_flag(cr1, I2C_CR1_RXIE))
+    {
+
+    }
 }
 
 void i2c_handle_interrupt(I2C_slave* a_p_this)
 {
+    uint32 isr = a_p_this->p_i2c->ISR;
+    uint32 cr1 = a_p_this->p_i2c->CR1;
 
+    if (true == is_flag(isr, I2C_ISR_ADDR) && true == is_flag(cr1, I2C_CR1_ADDRIE))
+    {
+
+    }
+
+    if (true == is_flag(isr, I2C_ISR_RXNE) && true == is_flag(cr1, I2C_CR1_RXIE))
+    {
+
+    }
+
+    if (true == is_flag(isr, I2C_ISR_TXE) && true == is_flag(cr1, I2C_CR1_RXIE))
+    {
+
+    }
 }
 
 void I2C_master::enable(Clock_source a_clock_source,
@@ -327,6 +354,30 @@ bool I2C_master::read_bytes_polling(uint32 a_slave_address,
     this->p_i2c->CR2 = 0;
 
     return ret;
+}
+
+void I2C_master::start_write_bytes_it(const TX_callback& a_callback)
+{
+}
+
+void I2C_master::start_read_bytes_it(const RX_callback& a_callback)
+{
+}
+
+void I2C_master::stop_write_bytes_it()
+{
+    this->tx_callback = { nullptr, nullptr };
+}
+
+void I2C_master::stop_read_bytes_it()
+{
+    this->rx_callback = { nullptr, nullptr };
+}
+
+bool I2C_master::is_slave(uint16 a_slave_address, time_tick a_timeout_ms) const
+{
+    //wait::until()
+    return false;
 }
 
 } // namespace stm32l452xx
