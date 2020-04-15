@@ -42,7 +42,7 @@ public:
 
     struct TX_callback
     {
-        using Function = bool(*)(volatile common::uint8* p_a_data, void* a_p_user_data);
+        using Function = bool(*)(volatile common::uint32* p_a_data, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -98,26 +98,31 @@ public:
         return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms);
     }
 
-    void write_bytes_polling(common::uint32 a_slave_address,
+    void write_bytes_polling(common::uint16 a_slave_address,
                              const void* a_p_data,
                              common::uint32 a_data_size_in_bytes);
 
-    bool write_bytes_polling(common::uint32 a_slave_address,
+    bool write_bytes_polling(common::uint16 a_slave_address,
                              const void* a_p_data,
                              common::uint32 a_data_size_in_bytes,
                              common::time_tick a_timeout_ms);
 
-    void read_bytes_polling(common::uint32 a_slave_address,
+    void read_bytes_polling(common::uint16 a_slave_address,
                             void* a_p_data,
                             common::uint32 a_data_size_in_bytes);
 
-    bool read_bytes_polling(common::uint32 a_slave_address,
+    bool read_bytes_polling(common::uint16 a_slave_address,
                             void* a_p_data,
                             common::uint32 a_data_size_in_bytes,
                             common::time_tick a_timeout_ms);
 
-    void start_write_bytes_it(const TX_callback& a_callback);
-    void start_read_bytes_it(const RX_callback& a_callback);
+    void start_write_bytes_it(common::uint16 a_slave_address,
+                              const TX_callback& a_callback,
+                              common::uint32 a_data_size_in_bytes);
+
+    void start_read_bytes_it(common::uint16 a_slave_address,
+                             const RX_callback& a_callback,
+                             common::uint32 a_data_size_in_bytes);
 
     void stop_write_bytes_it();
     void stop_read_bytes_it();
@@ -155,11 +160,22 @@ public:
 
 private:
 
+    struct IT_context
+    {
+        common::uint32 index = 0;
+        common::uint32 size  = 0;
+    };
+
+private:
+
     Id id;
     I2C_TypeDef* p_i2c;
 
     RX_callback rx_callback;
     TX_callback tx_callback;
+
+    IT_context rx_context;
+    IT_context tx_context;
 
 private:
 
@@ -254,7 +270,6 @@ private:
 private:
 
     friend void i2c_handle_interrupt(I2C_slave* a_p_this);
-
 };
 
 } // namespace stm32l452xx

@@ -77,20 +77,6 @@ void i2c_4_disable()
     NVIC_DisableIRQ(I2C4_EV_IRQn);
 }
 
-uint32 get_clock_source_register_value(uint32 a_clock_source, uint32 a_i2c_id)
-{
-    if (a_i2c_id < 4)
-    {
-        return a_clock_source << (12 + a_i2c_id * 2);
-    }
-    else
-    {
-        return a_clock_source;
-    }
-
-    return 0;
-}
-
 struct Controller
 {
     using Enable_function  = void(*)(uint32 a_clock_source, uint32 a_irq_priority);
@@ -170,12 +156,27 @@ void i2c_handle_interrupt(I2C_master* a_p_this)
 
     if (true == is_flag(isr, I2C_ISR_RXNE) && true == is_flag(cr1, I2C_CR1_RXIE))
     {
+        a_p_this->rx_context.index++;
 
+        bool ret = a_p_this->rx_callback.function(static_cast<uint8>(a_p_this->p_i2c->RXDR),
+                                                  a_p_this->rx_callback.p_user_data);
+
+        if (false == ret || a_p_this->rx_context.index == a_p_this->rx_context.size)
+        {
+            a_p_this->stop_read_bytes_it();
+        }
     }
 
     if (true == is_flag(isr, I2C_ISR_TXE) && true == is_flag(cr1, I2C_CR1_RXIE))
     {
+        a_p_this->rx_context.index++;
 
+        bool ret = a_p_this->tx_callback.function(&(a_p_this->p_i2c->TXDR), a_p_this->tx_callback.p_user_data);
+
+        if (false == ret || a_p_this->rx_context.index == a_p_this->rx_context.size)
+        {
+            a_p_this->stop_write_bytes_it();
+        }
     }
 }
 
@@ -208,6 +209,20 @@ void I2C_master::enable(Clock_source a_clock_source,
 {
     assert(nullptr == controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr == controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle);
+
+    auto get_clock_source_register_value = [](uint32 a_clock_source, uint32 a_i2c_id) -> uint32
+    {
+        if (a_i2c_id < 4)
+        {
+            return a_clock_source << (12 + a_i2c_id * 2);
+        }
+        else
+        {
+            return a_clock_source;
+        }
+
+        return 0;
+    };
 
     controllers[static_cast<uint32>(this->id)].enable(get_clock_source_register_value(static_cast<uint32>(a_clock_source),
                                                                                       static_cast<uint32>(this->id)),
@@ -243,7 +258,7 @@ void I2C_master::diasble()
     this->p_i2c = nullptr;
 }
 
-void I2C_master::write_bytes_polling(uint32 a_slave_address, const void* a_p_data, uint32 a_data_size_in_bytes)
+void I2C_master::write_bytes_polling(uint16 a_slave_address, const void* a_p_data, uint32 a_data_size_in_bytes)
 {
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_p_data);
@@ -264,7 +279,7 @@ void I2C_master::write_bytes_polling(uint32 a_slave_address, const void* a_p_dat
     this->p_i2c->CR2 = 0;
 }
 
-bool I2C_master::write_bytes_polling(uint32 a_slave_address,
+bool I2C_master::write_bytes_polling(uint16 a_slave_address,
                                      const void* a_p_data,
                                      uint32 a_data_size_in_bytes,
                                      time_tick a_timeout_ms)
@@ -298,7 +313,7 @@ bool I2C_master::write_bytes_polling(uint32 a_slave_address,
     return ret;
 }
 
-void I2C_master::read_bytes_polling(uint32 a_slave_address, void* a_p_data, uint32 a_data_size_in_bytes)
+void I2C_master::read_bytes_polling(uint16 a_slave_address, void* a_p_data, uint32 a_data_size_in_bytes)
 {
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_p_data);
@@ -320,7 +335,7 @@ void I2C_master::read_bytes_polling(uint32 a_slave_address, void* a_p_data, uint
     this->p_i2c->CR2 = 0;
 }
 
-bool I2C_master::read_bytes_polling(uint32 a_slave_address,
+bool I2C_master::read_bytes_polling(uint16 a_slave_address,
                                     void* a_p_data,
                                     uint32 a_data_size_in_bytes,
                                     time_tick a_timeout_ms)
@@ -356,21 +371,39 @@ bool I2C_master::read_bytes_polling(uint32 a_slave_address,
     return ret;
 }
 
-void I2C_master::start_write_bytes_it(const TX_callback& a_callback)
+void I2C_master::start_write_bytes_it(uint16 a_slave_address,
+                                      const TX_callback& a_callback,
+                                      uint32 a_data_size_in_bytes)
 {
+    assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
+    assert(nullptr != a_callback.function);
+
+    uint32 address_mask = (static_cast<uint32_t>(a_slave_address) << 1) & I2C_CR2_SADD;
+    uint32 data_length_mask = static_cast<uint32_t>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
+
+    this->tx_context.index = 0;
+    this->tx_context.size  = a_data_size_in_bytes;
 }
 
-void I2C_master::start_read_bytes_it(const RX_callback& a_callback)
+void I2C_master::start_read_bytes_it(uint16 a_slave_address,
+                                     const RX_callback& a_callback,
+                                     uint32 a_data_size_in_bytes)
 {
 }
 
 void I2C_master::stop_write_bytes_it()
 {
+    clear_flag(&(this->p_i2c->CR1), I2C_CR1_TXIE);
+
+    this->tx_context  = { 0,0 };
     this->tx_callback = { nullptr, nullptr };
 }
 
 void I2C_master::stop_read_bytes_it()
 {
+    clear_flag(&(this->p_i2c->CR1), I2C_CR1_RXIE);
+
+    this->rx_context  = { 0,0 };
     this->rx_callback = { nullptr, nullptr };
 }
 
