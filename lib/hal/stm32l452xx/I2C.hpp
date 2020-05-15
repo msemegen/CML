@@ -40,6 +40,23 @@ public:
         hsi    = 2
     };
 
+    enum class Bus_status
+    {
+        ok,
+        timeout,
+        overrun,
+        arbitration_lost,
+        misplaced,
+        nack
+    };
+
+    struct Config
+    {
+        bool analog_filter     = false;
+        common::uint32 timings = 0;
+        bool fast_plus         = false;
+    };
+
     struct TX_callback
     {
         using Function = bool(*)(volatile common::uint32* p_a_data, void* a_p_user_data);
@@ -60,6 +77,7 @@ public:
 
     I2C_master(Id a_id)
         : id(a_id)
+        , p_i2c(nullptr)
     {}
 
     ~I2C_master()
@@ -67,49 +85,61 @@ public:
         this->diasble();
     }
 
-    void enable(Clock_source a_clock_source,
-                bool a_analog_filter,
-                common::uint32 a_timings,
-                bool a_is_fast_plus,
+    void enable(const Config& a_config,
+                Clock_source a_clock_source,
                 common::uint32 a_irq_priority);
     void diasble();
 
     template<typename Data_t>
-    void write_polling(const Data_t& a_data)
+    common::uint32 transmit_polling(common::uint16 a_slave_address,
+                                    const Data_t& a_data,
+                                    Bus_status* a_p_status = nullptr)
     {
-        this->write_bytes_polling(static_cast<void*>(a_data), sizeof(a_data));
+        return this->transmit_bytes_polling(a_slave_address, static_cast<void*>(a_data), sizeof(a_data), a_p_status);
     }
 
     template<typename Data_t>
-    bool write_polling(const Data_t& a_data, common::time_tick a_timeout_ms)
+    common::uint32 transmit_polling(common::uint16 a_slave_address,
+                                 const Data_t& a_data,
+                                 common::time_tick a_timeout_ms,
+                                 Bus_status* a_p_status = nullptr)
     {
-        return this->write_bytes_polling(static_cast<void*>(&a_data), sizeof(a_data), a_timeout_ms);
+        return this->transmit_bytes_polling(a_slave_address,
+                                            static_cast<void*>(&a_data),
+                                            sizeof(a_data),
+                                            a_timeout_ms,
+                                            a_p_status);
     }
 
     template<typename Data_t>
-    void read_polling(Data_t* a_p_data)
+    common::uint32 receive_polling(common::uint16 a_slave_address,
+                                   Data_t* a_p_data,
+                                   Bus_status* a_p_status = nullptr)
     {
-        this->read_bytes_polling(static_cast<void*>(a_p_data), sizeof(Data_t));
+        return this->receive_bytes_polling(a_slave_address, static_cast<void*>(a_p_data), sizeof(Data_t), a_p_status);
     }
 
-    template<typename Data_t>
-    bool read_polling(Data_t* a_p_data, common::time_tick a_timeout_ms)
-    {
-        return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms);
-    }
+    //template<typename Data_t>
+    //bool read_polling(common::uint16 a_slave_address, Data_t* a_p_data, common::time_tick a_timeout_ms)
+    //{
+    //    return this->write_bytes_polling(a_slave_address, static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms);
+    //}
 
-    void write_bytes_polling(common::uint16 a_slave_address,
-                             const void* a_p_data,
-                             common::uint32 a_data_size_in_bytes);
+    common::uint32 transmit_bytes_polling(common::uint16 a_slave_address,
+                                          const void* a_p_data,
+                                          common::uint32 a_data_size_in_bytes,
+                                          Bus_status* a_p_status = nullptr);
 
-    bool write_bytes_polling(common::uint16 a_slave_address,
-                             const void* a_p_data,
-                             common::uint32 a_data_size_in_bytes,
-                             common::time_tick a_timeout_ms);
+    common::uint32 transmit_bytes_polling(common::uint16 a_slave_address,
+                                          const void* a_p_data,
+                                          common::uint32 a_data_size_in_bytes,
+                                          common::time_tick a_timeout_ms,
+                                          Bus_status* a_p_status = nullptr);
 
-    void read_bytes_polling(common::uint16 a_slave_address,
-                            void* a_p_data,
-                            common::uint32 a_data_size_in_bytes);
+    common::uint32 receive_bytes_polling(common::uint16 a_slave_address,
+                                         void* a_p_data,
+                                         common::uint32 a_data_size_in_bytes,
+                                         Bus_status* a_p_status = nullptr);
 
     bool read_bytes_polling(common::uint16 a_slave_address,
                             void* a_p_data,
@@ -165,6 +195,12 @@ private:
         common::uint32 index = 0;
         common::uint32 size  = 0;
     };
+
+private:
+
+    void clear_error_flags();
+    bool is_error() const;
+    Bus_status isr_to_bus_status(common::uint32 a_isr) const;
 
 private:
 

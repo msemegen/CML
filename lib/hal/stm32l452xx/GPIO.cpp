@@ -113,7 +113,7 @@ void GPIO::disable()
 {
     controllers[this->to_index(this->id)].p_disable();
 
-    common::clear_bit(&(this->flags), 31);
+    clear_bit(&(this->flags), 31);
 }
 
 void Output_pin::enable(const Config& a_config)
@@ -392,4 +392,4 @@ Analog_pin::Pull Analog_pin::get_pull() const
 } // namespace hal
 } // namespace cml
 
-#endif // STM32L0xx
+#endif // STM32L452xx
