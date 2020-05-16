@@ -227,6 +227,7 @@ void I2C_master::enable(const Config& a_config,
 
 void I2C_master::diasble()
 {
+    assert(nullptr != this->p_i2c);
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
 
     this->p_i2c->CR1 = 0;
@@ -246,6 +247,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
                                           uint32 a_data_size_in_bytes,
                                           Bus_status* a_p_status)
 {
+    assert(nullptr != this->p_i2c);
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
@@ -287,6 +289,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
                                           time_tick a_timeout_ms,
                                           Bus_status* a_p_status)
 {
+    assert(nullptr != this->p_i2c);
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
@@ -331,6 +334,7 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
                                          uint32 a_data_size_in_bytes,
                                          Bus_status* a_p_status)
 {
+    assert(nullptr != this->p_i2c);
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
@@ -371,6 +375,7 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
                                          time_tick a_timeout_ms,
                                          Bus_status* a_p_status)
 {
+    assert(nullptr != this->p_i2c);
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
@@ -415,6 +420,7 @@ void I2C_master::start_transmit_bytes_it(uint16 a_slave_address,
                                         const TX_callback& a_callback,
                                         uint32 a_data_size_in_bytes)
 {
+    assert(nullptr != this->p_i2c);
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_callback.function);
 
@@ -426,8 +432,7 @@ void I2C_master::start_transmit_bytes_it(uint16 a_slave_address,
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_AUTOEND | I2C_CR2_START;
-
+    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START;
     set_flag(&(this->p_i2c->CR1), I2C_CR1_TXIE);
 }
 
@@ -435,8 +440,14 @@ void I2C_master::start_receive_bytes_it(uint16 a_slave_address,
                                         const RX_callback& a_callback,
                                         uint32 a_data_size_in_bytes)
 {
+    assert(nullptr != this->p_i2c);
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_callback.function);
+
+    this->rx_context.index = 0;
+    this->rx_context.size = a_data_size_in_bytes;
+
+    this->rx_callback = a_callback;
 
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
@@ -447,8 +458,10 @@ void I2C_master::start_receive_bytes_it(uint16 a_slave_address,
 
 void I2C_master::stop_transmit_bytes_it()
 {
+    assert(nullptr != this->p_i2c);
+    assert(nullptr != this->tx_callback.function);
+
     set_flag(&(this->p_i2c->CR2), I2C_CR2_STOP);
-    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
     clear_flag(&(this->p_i2c->CR1), I2C_CR1_TXIE);
 
     this->p_i2c->CR1 = 0;
@@ -459,8 +472,10 @@ void I2C_master::stop_transmit_bytes_it()
 
 void I2C_master::stop_receive_bytes_it()
 {
+    assert(nullptr != this->p_i2c);
+    assert(nullptr != this->rx_callback.function);
+
     set_flag(&(this->p_i2c->CR2), I2C_CR2_STOP);
-    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
     clear_flag(&(this->p_i2c->CR1), I2C_CR1_RXIE);
 
     this->rx_context  = { 0,0 };
@@ -469,11 +484,16 @@ void I2C_master::stop_receive_bytes_it()
 
 bool I2C_master::is_slave_present(uint16 a_slave_address, time_tick a_timeout_ms) const
 {
+    assert(nullptr != this->p_i2c);
+    assert(true == systick::is_enabled());
+
+    time_tick start = systick::get_counter();
+
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
 
     this->p_i2c->CR2 = address_mask | I2C_CR2_AUTOEND | I2C_CR2_START;
 
-    bool ret = wait::until(&(this->p_i2c->ISR), I2C_ISR_STOPF, false, a_timeout_ms);
+    bool ret = wait::until(&(this->p_i2c->ISR), I2C_ISR_STOPF, false, start, a_timeout_ms);
 
     if (true == ret)
     {

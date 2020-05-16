@@ -213,7 +213,7 @@ private:
 private:
 
     Id id;
-    I2C_TypeDef* p_i2c;
+    mutable I2C_TypeDef* p_i2c;
 
     RX_callback rx_callback;
     TX_callback tx_callback;
