@@ -59,7 +59,7 @@ public:
 
     struct TX_callback
     {
-        using Function = bool(*)(volatile common::uint32* p_a_data, void* a_p_user_data);
+        using Function = bool(*)(volatile common::uint32* p_a_data, Bus_status a_status, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -67,7 +67,7 @@ public:
 
     struct RX_callback
     {
-        using Function = bool(*)(common::uint8 a_data, void* a_p_user_data);
+        using Function = bool(*)(common::uint8 a_data, Bus_status a_status, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -119,11 +119,18 @@ public:
         return this->receive_bytes_polling(a_slave_address, static_cast<void*>(a_p_data), sizeof(Data_t), a_p_status);
     }
 
-    //template<typename Data_t>
-    //bool read_polling(common::uint16 a_slave_address, Data_t* a_p_data, common::time_tick a_timeout_ms)
-    //{
-    //    return this->write_bytes_polling(a_slave_address, static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms);
-    //}
+    template<typename Data_t>
+    common::uint32 receive_polling(common::uint16 a_slave_address,
+                                   Data_t* a_p_data,
+                                   common::time_tick a_timeout_ms,
+                                   Bus_status* a_p_status = nullptr)
+    {
+        return this->receive_bytes_polling(a_slave_address,
+                                           static_cast<void*>(&a_p_data),
+                                           sizeof(Data_t),
+                                           a_timeout_ms,
+                                           a_p_status);
+    }
 
     common::uint32 transmit_bytes_polling(common::uint16 a_slave_address,
                                           const void* a_p_data,
@@ -141,23 +148,24 @@ public:
                                          common::uint32 a_data_size_in_bytes,
                                          Bus_status* a_p_status = nullptr);
 
-    bool read_bytes_polling(common::uint16 a_slave_address,
-                            void* a_p_data,
-                            common::uint32 a_data_size_in_bytes,
-                            common::time_tick a_timeout_ms);
+    common::uint32 receive_bytes_polling(common::uint16 a_slave_address,
+                                         void* a_p_data,
+                                         common::uint32 a_data_size_in_bytes,
+                                         common::time_tick a_timeout_ms,
+                                         Bus_status* a_p_status = nullptr);
 
-    void start_write_bytes_it(common::uint16 a_slave_address,
-                              const TX_callback& a_callback,
-                              common::uint32 a_data_size_in_bytes);
+    void start_transmit_bytes_it(common::uint16 a_slave_address,
+                                 const TX_callback& a_callback,
+                                 common::uint32 a_data_size_in_bytes);
 
-    void start_read_bytes_it(common::uint16 a_slave_address,
-                             const RX_callback& a_callback,
-                             common::uint32 a_data_size_in_bytes);
+    void start_receive_bytes_it(common::uint16 a_slave_address,
+                                const RX_callback& a_callback,
+                                common::uint32 a_data_size_in_bytes);
 
-    void stop_write_bytes_it();
-    void stop_read_bytes_it();
+    void stop_transmit_bytes_it();
+    void stop_receive_bytes_it();
 
-    bool is_slave(common::uint16 a_slave_address, common::time_tick a_timeout_ms) const;
+    bool is_slave_present(common::uint16 a_slave_address, common::time_tick a_timeout_ms) const;
 
     bool is_analog_filter() const
     {
