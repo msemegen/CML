@@ -79,7 +79,7 @@ int main()
         //i2c_sda.set_level(Output_pin::Level::high);
         //i2c_scl.set_level(Output_pin::Level::low);
 
-        i2c_master.enable({ false, 0x00200205, true }, I2C_master::Clock_source::sysclk, 0x1u);
+        i2c_master.enable({ false, true, 0x00200205 }, I2C_master::Clock_source::sysclk, 0x1u);
         i2c_master.transmit_bytes_polling(16, data, sizeof(data));
 
         I2C_master::Bus_status err;

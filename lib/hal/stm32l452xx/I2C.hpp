@@ -53,8 +53,8 @@ public:
     struct Config
     {
         bool analog_filter     = false;
-        common::uint32 timings = 0;
         bool fast_plus         = false;
+        common::uint32 timings = 0;
     };
 
     struct TX_callback
@@ -166,6 +166,7 @@ public:
     void stop_receive_bytes_it();
 
     bool is_slave_present(common::uint16 a_slave_address, common::time_tick a_timeout_ms) const;
+    Clock_source get_clock_source() const;
 
     bool is_analog_filter() const
     {
@@ -181,13 +182,11 @@ public:
         return this->p_i2c->TIMINGR;
     }
 
-    Clock_source get_clock_source() const
-    {
-        return Clock_source::hsi;
-    }
 
     bool is_fast_plus() const
     {
+        assert(nullptr != this->p_i2c);
+
         return common::get_bit(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<common::uint32>(this->id));
     }
 
@@ -238,6 +237,31 @@ public:
         _4
     };
 
+    enum class Clock_source
+    {
+        pclk1  = 0,
+        sysclk = 1,
+        hsi    = 2
+    };
+
+    enum class Bus_status
+    {
+        ok,
+        timeout,
+        overrun,
+        arbitration_lost,
+        misplaced,
+        nack
+    };
+
+    struct Config
+    {
+        bool analog_filter     = false;
+        bool fast_plus         = false;
+        common::uint32 timings = 0;
+        common::uint16 address = 0;
+    };
+
 public:
 
     I2C_slave(Id a_id)
@@ -249,38 +273,53 @@ public:
         this->diasble();
     }
 
-    void enable(bool a_analog_filter, common::uint32 a_timings, bool a_is_fast_plus);
+    void enable(const Config& a_config,
+                Clock_source a_clock_source,
+                common::uint32 a_irq_priority);
+
     void diasble();
 
     template<typename Data_t>
-    void write_polling(const Data_t& a_data)
+    common::uint32 transmit_polling(const Data_t& a_data, Bus_status* a_p_status = nullptr)
     {
-        this->write_bytes_polling(static_cast<void*>(a_data), sizeof(a_data));
+        return this->transmit_bytes_polling(static_cast<void*>(a_data), sizeof(a_data), a_p_status);
     }
 
     template<typename Data_t>
-    bool write_polling(const Data_t& a_data, common::time_tick a_timeout_ms)
+    common::uint32 write_polling(const Data_t& a_data, common::time_tick a_timeout_ms, Bus_status* a_p_status = nullptr)
     {
-        return this->write_bytes_polling(static_cast<void*>(a_data), sizeof(a_data), a_timeout_ms);
+        return this->transmit_bytes_polling(static_cast<void*>(a_data), sizeof(a_data), a_timeout_ms, a_p_status);
     }
 
     template<typename Data_t>
-    void read_polling(Data_t* a_p_data)
+    common::uint32 receive_polling(Data_t* a_p_data, Bus_status* a_p_status = nullptr)
     {
-        this->read_bytes_polling(static_cast<void*>(a_p_data), sizeof(Data_t));
+        return this->receive_bytes_polling(static_cast<void*>(a_p_data), sizeof(Data_t), a_p_status);
     }
 
     template<typename Data_t>
-    bool read_polling(Data_t* a_p_data, common::time_tick a_timeout_ms)
+    bool receive_polling(Data_t* a_p_data, common::time_tick a_timeout_ms, Bus_status* a_p_status)
     {
-        return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms);
+        return this->receive_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms, a_p_status);
     }
 
-    void write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes);
-    bool write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
+    common::uint32 transmit_bytes_polling(const void* a_p_data,
+                                          common::uint32 a_data_size_in_bytes,
+                                          Bus_status* a_p_status = nullptr);
 
-    void read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes);
-    bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
+    common::uint32 transmit_bytes_polling(const void* a_p_data,
+                                          common::uint32 a_data_size_in_bytes,
+                                          common::time_tick a_timeout_ms,
+                                          Bus_status* a_p_status = nullptr);
+
+    common::uint32 receive_bytes_polling(void* a_p_data,
+                                         common::uint32 a_data_size_in_bytes,
+                                         Bus_status* a_p_status = nullptr);
+
+    common::uint32 receive_bytes_polling(void* a_p_data,
+                                         common::uint32 a_data_size_in_bytes,
+                                         common::time_tick a_timeout_ms,
+                                         Bus_status* a_p_status = nullptr);
 
     bool is_analog_filter() const
     {
@@ -298,6 +337,8 @@ public:
 
     bool is_fast_plus() const
     {
+        assert(nullptr != this->p_i2c);
+
         return common::get_bit(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<common::uint32>(this->id));
     }
 

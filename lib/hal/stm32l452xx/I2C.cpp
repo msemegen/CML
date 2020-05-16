@@ -20,6 +20,8 @@ using namespace cml::hal::stm32l452xx;
 
 void i2c_1_enable(uint32 a_clock_source, uint32 a_irq_priority)
 {
+    assert(0 != a_clock_source);
+
     set_flag(&(RCC->CCIPR), RCC_CCIPR_I2C1SEL, a_clock_source);
     set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C1EN);
 
@@ -35,6 +37,8 @@ void i2c_1_disable()
 
 void i2c_2_enable(uint32 a_clock_source, uint32 a_irq_priority)
 {
+    assert(0 != a_clock_source);
+
     set_flag(&(RCC->CCIPR), RCC_CCIPR_I2C2SEL, a_clock_source);
     set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C2EN);
 
@@ -50,6 +54,8 @@ void i2c_2_disable()
 
 void i2c_3_enable(uint32 a_clock_source, uint32 a_irq_priority)
 {
+    assert(0 != a_clock_source);
+
     set_flag(&(RCC->CCIPR), RCC_CCIPR_I2C3SEL, a_clock_source);
     set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C3EN);
 
@@ -65,6 +71,8 @@ void i2c_3_disable()
 
 void i2c_4_enable(uint32 a_clock_source, uint32 a_irq_priority)
 {
+    assert(0 != a_clock_source);
+
     set_flag(&(RCC->CCIPR2), RCC_CCIPR2_I2C4SEL, a_clock_source);
     set_flag(&(RCC->APB1ENR2), RCC_APB1ENR2_I2C4EN);
 
@@ -116,7 +124,7 @@ void interupt_handler(uint32 a_controller_index)
 
     if (nullptr != controllers[a_controller_index].p_i2c_slave_handle)
     {
-        //i2c_handle_interrupt(controllers[a_controller_index].p_i2c_slave_handle);
+        i2c_handle_interrupt(controllers[a_controller_index].p_i2c_slave_handle);
     }
 }
 
@@ -184,6 +192,11 @@ void i2c_handle_interrupt(I2C_master* a_p_this)
     }
 }
 
+void i2c_handle_interrupt(I2C_slave* a_p_this)
+{
+
+}
+
 void I2C_master::enable(const Config& a_config,
                         Clock_source a_clock_source,
                         uint32 a_irq_priority)
@@ -191,23 +204,29 @@ void I2C_master::enable(const Config& a_config,
     assert(nullptr == controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr == controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle);
 
-    auto get_clock_source_register_value = [](uint32 a_clock_source, uint32 a_i2c_id) -> uint32
+    auto to_ccipr_value = [](Clock_source a_clock_source, Id a_i2c_id) -> uint32
     {
-        if (a_i2c_id < 4)
+        switch (a_i2c_id)
         {
-            return a_clock_source << (12 + a_i2c_id * 2);
-        }
-        else
-        {
-            return a_clock_source;
+            case I2C_master::Id::_1:
+            case I2C_master::Id::_2:
+            case I2C_master::Id::_3:
+            {
+                return static_cast<uint32>(a_clock_source) << (12 + static_cast<uint32>(a_i2c_id) * 2);
+            }
+            break;
+
+            case I2C_master::Id::_4:
+            {
+                return static_cast<uint32>(a_clock_source);
+            }
+            break;
         }
 
         return 0;
     };
 
-    controllers[static_cast<uint32>(this->id)].enable(get_clock_source_register_value(static_cast<uint32>(a_clock_source),
-                                                                                      static_cast<uint32>(this->id)),
-                                                      a_irq_priority);
+    controllers[static_cast<uint32>(this->id)].enable(to_ccipr_value(a_clock_source, this->id), a_irq_priority);
 
     controllers[static_cast<uint32>(this->id)].p_i2c_master_handle = this;
     this->p_i2c = controllers[static_cast<uint32>(this->id)].p_registers;
@@ -508,6 +527,26 @@ bool I2C_master::is_slave_present(uint16 a_slave_address, time_tick a_timeout_ms
     this->p_i2c->CR2 = 0;
 
     return ret;
+}
+
+I2C_master::Clock_source I2C_master::get_clock_source() const
+{
+    switch (this->id)
+    {
+        case Id::_1:
+        case Id::_2:
+        case Id::_3:
+        {
+            return static_cast<Clock_source>(get_flag(RCC->CCIPR, 0x3 << (12 + static_cast<uint32>(this->id) * 2)));
+        }
+        break;
+
+        default:
+        {
+            return static_cast<Clock_source>(get_flag(RCC->CCIPR2, RCC_CCIPR2_I2C4SEL));
+        }
+        break;
+    }
 }
 
 void I2C_master::clear_error_flags()
