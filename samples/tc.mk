@@ -1,9 +1,9 @@
-CC     := gcc
-CPP    := g++
-AS     := as
-LD     := ld
-CP     := objcopy
-OD     := objdump
-GDBTUI := gdbtui
-GDB    := gdb
+CC     := arm-none-eabi-gcc
+CPP    := arm-none-eabi-g++
+AS     := arm-none-eabi-as
+LD     := arm-none-eabi-ld
+CP     := arm-none-eabi-objcopy
+OD     := arm-none-eabi-objdump
+GDBTUI := arm-none-eabi-gdbtui
+GDB    := arm-none-eabi-gdb
 OOCD   := openocd
