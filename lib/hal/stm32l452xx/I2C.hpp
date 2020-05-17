@@ -182,7 +182,6 @@ public:
         return this->p_i2c->TIMINGR;
     }
 
-
     bool is_fast_plus() const
     {
         assert(nullptr != this->p_i2c);
@@ -202,12 +201,6 @@ private:
         common::uint32 index = 0;
         common::uint32 size  = 0;
     };
-
-private:
-
-    void clear_error_flags();
-    bool is_error() const;
-    Bus_status isr_to_bus_status(common::uint32 a_isr) const;
 
 private:
 
