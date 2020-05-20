@@ -337,7 +337,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START;
+    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND;
 
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes && false == is_error(this->p_i2c->ISR))
@@ -347,18 +347,18 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
             this->p_i2c->TXDR = static_cast<const byte*>(a_p_data)[ret++];
         }
     }
-    set_flag(&(this->p_i2c->CR2), I2C_CR2_STOP);
+
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = isr_to_bus_status<Bus_status>(this->p_i2c->ISR);
+    }
 
     if (true == is_error(this->p_i2c->ISR))
     {
-        if (nullptr != a_p_status)
-        {
-            (*a_p_status) = isr_to_bus_status<Bus_status>(this->p_i2c->ISR);
-        }
-
         clear_errors(&(this->p_i2c->ICR));
     }
 
+    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
     this->p_i2c->CR2 = 0;
 
     return ret;
@@ -381,7 +381,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START;
+    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND;
 
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
@@ -393,18 +393,18 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
             this->p_i2c->TXDR = static_cast<const byte*>(a_p_data)[ret++];
         }
     }
-    set_flag(&(this->p_i2c->CR2), I2C_CR2_STOP);
+
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = isr_to_bus_status<Bus_status>(this->p_i2c->ISR);
+    }
 
     if (true == is_error(this->p_i2c->ISR))
     {
-        if (nullptr != a_p_status)
-        {
-            (*a_p_status) = isr_to_bus_status<Bus_status>(this->p_i2c->ISR);
-        }
-
         clear_errors(&(this->p_i2c->ICR));
     }
 
+    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
     this->p_i2c->CR2 = 0;
 
     return ret;
@@ -423,7 +423,7 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_RD_WRN;
+    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
 
     uint8* p_data = static_cast<uint8*>(a_p_data);
     uint32 ret = 0;
@@ -434,19 +434,20 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
             p_data[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
         }
     }
-    set_flag(&(this->p_i2c->CR2), I2C_CR2_STOP);
+
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = isr_to_bus_status<Bus_status>(this->p_i2c->ISR);
+    }
 
     if (true == is_error(this->p_i2c->ISR))
     {
-        if (nullptr != a_p_status)
-        {
-            (*a_p_status) = isr_to_bus_status<Bus_status>(this->p_i2c->ISR);
-        }
-
         clear_errors(&(this->p_i2c->ICR));
     }
 
+    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
     this->p_i2c->CR2 = 0;
+
     return ret;
 }
 
@@ -467,7 +468,7 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_RD_WRN;
+    this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
 
     uint8* p_data = static_cast<uint8*>(a_p_data);
     uint32 ret = 0;
@@ -480,18 +481,17 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
             p_data[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
         }
     }
-    set_flag(&(this->p_i2c->CR2), I2C_CR2_STOP);
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = isr_to_bus_status<Bus_status>(this->p_i2c->ISR);
+    }
 
     if (true == is_error(this->p_i2c->ISR))
     {
-        if (nullptr != a_p_status)
-        {
-            (*a_p_status) = isr_to_bus_status<Bus_status>(this->p_i2c->ISR);
-        }
-
         clear_errors(&(this->p_i2c->ICR));
     }
 
+    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
     this->p_i2c->CR2 = 0;
 
     return ret;
