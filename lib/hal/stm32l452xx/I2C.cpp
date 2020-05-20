@@ -348,7 +348,6 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
         }
     }
     set_flag(&(this->p_i2c->CR2), I2C_CR2_STOP);
-    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
 
     if (true == is_error(this->p_i2c->ISR))
     {
