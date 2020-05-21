@@ -481,6 +481,7 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
             p_data[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
         }
     }
+
     if (nullptr != a_p_status)
     {
         (*a_p_status) = isr_to_bus_status<Bus_status>(this->p_i2c->ISR);
@@ -599,7 +600,8 @@ I2C_master::Clock_source I2C_master::get_clock_source() const
         case Id::_2:
         case Id::_3:
         {
-            return static_cast<Clock_source>(get_flag(RCC->CCIPR, 0x3 << (12 + static_cast<uint32>(this->id) * 2)));
+            return static_cast<Clock_source>(get_flag(RCC->CCIPR,
+                                                      0x3 << (12 + static_cast<uint32>(this->id) * 2)) >> 12);
         }
         break;
 
