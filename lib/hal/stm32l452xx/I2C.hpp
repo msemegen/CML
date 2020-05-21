@@ -59,7 +59,7 @@ public:
 
     struct TX_callback
     {
-        using Function = bool(*)(volatile common::uint32* p_a_data, Bus_status a_status, void* a_p_user_data);
+        using Function = bool(*)(volatile common::uint32* a_p_data, Bus_status a_status, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -313,6 +313,8 @@ public:
                                          common::uint32 a_data_size_in_bytes,
                                          common::time_tick a_timeout_ms,
                                          Bus_status* a_p_status = nullptr);
+
+    Clock_source get_clock_source() const;
 
     bool is_analog_filter() const
     {
