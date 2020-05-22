@@ -86,6 +86,13 @@ void i2c_4_disable()
     NVIC_DisableIRQ(I2C4_EV_IRQn);
 }
 
+enum class Transfer_type
+{
+    transmit,
+    receive
+};
+
+
 struct Controller
 {
     using Enable_function  = void(*)(uint32 a_clock_source, uint32 a_irq_priority);
@@ -127,73 +134,78 @@ void clear_I2C_ISR_errors(I2C_TypeDef* a_p_i2c)
                               I2C_ICR_NACKCF);
 }
 
-template<typename Bus_status_t>
-Bus_status_t get_bus_status_from_I2C_ISR(const I2C_TypeDef* a_p_i2c)
+
+I2C_base::Bus_status get_bus_status_from_I2C_ISR(const I2C_TypeDef* a_p_i2c, Transfer_type a_transfer_type)
 {
     if (true == is_flag(a_p_i2c->ISR, I2C_ISR_TIMEOUT))
     {
-        return Bus_status_t::timeout;
+        return I2C_base::Bus_status::timeout;
     }
 
     if (true == is_flag(a_p_i2c->ISR, I2C_ISR_OVR))
     {
-        return Bus_status_t::overrun;
+        switch (a_transfer_type)
+        {
+            case Transfer_type::receive:
+                return I2C_base::Bus_status::overrun;
+
+            case Transfer_type::transmit:
+                return I2C_base::Bus_status::underrun;
+        }
     }
 
     if (true == is_flag(a_p_i2c->ISR, I2C_ISR_ARLO))
     {
-        return Bus_status_t::arbitration_lost;
+        return I2C_base::Bus_status::arbitration_lost;
     }
 
     if (true == is_flag(a_p_i2c->ISR, I2C_ISR_BERR))
     {
-        return Bus_status_t::misplaced;
+        return I2C_base::Bus_status::misplaced;
     }
 
     if (true == is_flag(a_p_i2c->ISR, I2C_ISR_NACKF))
     {
-        return Bus_status_t::nack;
+        return I2C_base::Bus_status::nack;
     }
 
-    return Bus_status_t::ok;
+    return I2C_base::Bus_status::ok;
 }
 
-template<typename Clock_source_t, typename Id_t>
-Clock_source_t get_clock_source_from_RCC_CCIPR(Id_t a_id)
+I2C_base::Clock_source get_clock_source_from_RCC_CCIPR(I2C_base::Id a_id)
 {
     switch (a_id)
     {
-        case Id_t::_1:
-        case Id_t::_2:
-        case Id_t::_3:
+        case I2C_base::Id::_1:
+        case I2C_base::Id::_2:
+        case I2C_base::Id::_3:
         {
-            return static_cast<Clock_source_t>(get_flag(RCC->CCIPR,
-                                                        0x3 << (12 + static_cast<uint32>(a_id) * 2)) >> 12);
+            return static_cast<I2C_base::Clock_source>(get_flag(RCC->CCIPR,
+                                                                0x3 << (12 + static_cast<uint32>(a_id) * 2)) >> 12);
         }
         break;
 
         default:
         {
-            return static_cast<Clock_source_t>(get_flag(RCC->CCIPR2, RCC_CCIPR2_I2C4SEL));
+            return static_cast<I2C_base::Clock_source>(get_flag(RCC->CCIPR2, RCC_CCIPR2_I2C4SEL));
         }
         break;
     }
 }
 
-template<typename Clock_source_t, typename Id_t>
-uint32 get_RCC_CCIPR_from_clock_source(Clock_source_t a_clock_source, Id_t a_i2c_id)
+uint32 get_RCC_CCIPR_from_clock_source(I2C_base::Clock_source a_clock_source, I2C_base::Id a_i2c_id)
 {
     switch (a_i2c_id)
     {
-        case Id_t::_1:
-        case Id_t::_2:
-        case Id_t::_3:
+        case I2C_base::Id::_1:
+        case I2C_base::Id::_2:
+        case I2C_base::Id::_3:
         {
             return static_cast<uint32>(a_clock_source) << (12 + static_cast<uint32>(a_i2c_id) * 2);
         }
         break;
 
-        case Id_t::_4:
+        case I2C_base::Id::_4:
         {
             return static_cast<uint32>(a_clock_source);
         }
@@ -254,7 +266,7 @@ using namespace cml::common;
 using namespace cml::hal::core;
 using namespace cml::utils;
 
-void i2c_handle_interrupt(I2C_master* a_p_this)
+void i2c_handle_interrupt(I2C_base* a_p_this)
 {
     volatile uint32 isr = a_p_this->p_i2c->ISR;
     volatile uint32 cr1 = a_p_this->p_i2c->CR1;
@@ -264,7 +276,7 @@ void i2c_handle_interrupt(I2C_master* a_p_this)
         a_p_this->rx_context.index++;
 
         bool ret = a_p_this->rx_callback.function(static_cast<uint8>(a_p_this->p_i2c->RXDR),
-                                                  get_bus_status_from_I2C_ISR<I2C_master::Bus_status>(a_p_this->p_i2c),
+                                                  get_bus_status_from_I2C_ISR(a_p_this->p_i2c, Transfer_type::receive),
                                                   a_p_this->rx_callback.p_user_data);
 
         if (true == is_I2C_ISR_error(a_p_this->p_i2c))
@@ -274,7 +286,12 @@ void i2c_handle_interrupt(I2C_master* a_p_this)
 
         if (false == ret || a_p_this->rx_context.index == a_p_this->rx_context.size)
         {
-            a_p_this->stop_receive_bytes_it();
+            a_p_this->rx_callback      = { nullptr, nullptr };
+            a_p_this->rx_context.index = 0;
+            a_p_this->rx_context.size  = 0;
+
+            set_flag(&(a_p_this->p_i2c->ICR), I2C_ICR_STOPCF);
+            clear_flag(&(a_p_this->p_i2c->CR1), I2C_CR1_RXIE);
         }
     }
 
@@ -283,7 +300,7 @@ void i2c_handle_interrupt(I2C_master* a_p_this)
         a_p_this->tx_context.index++;
 
         bool ret = a_p_this->tx_callback.function(reinterpret_cast<volatile uint32*>(&(a_p_this->p_i2c->TXDR)),
-                                                  get_bus_status_from_I2C_ISR<I2C_master::Bus_status>(a_p_this->p_i2c),
+                                                  get_bus_status_from_I2C_ISR(a_p_this->p_i2c, Transfer_type::transmit),
                                                   a_p_this->tx_callback.p_user_data);
 
         if (true == is_I2C_ISR_error(a_p_this->p_i2c))
@@ -293,14 +310,19 @@ void i2c_handle_interrupt(I2C_master* a_p_this)
 
         if (false == ret || a_p_this->tx_context.index == a_p_this->tx_context.size)
         {
-            a_p_this->stop_transmit_bytes_it();
+            a_p_this->tx_callback      = { nullptr, nullptr };
+            a_p_this->tx_context.index = 0;
+            a_p_this->tx_context.size  = 0;
+
+            set_flag(&(a_p_this->p_i2c->ICR), I2C_ICR_STOPCF);
+            clear_flag(&(a_p_this->p_i2c->CR1), I2C_CR1_TXIE);
         }
     }
 }
 
-void i2c_handle_interrupt(I2C_slave* a_p_this)
+I2C_base::Clock_source I2C_base::get_clock_source() const
 {
-
+    return get_clock_source_from_RCC_CCIPR(this->id);
 }
 
 void I2C_master::enable(const Config& a_config,
@@ -319,7 +341,9 @@ void I2C_master::enable(const Config& a_config,
     this->p_i2c->CR1     = 0;
     this->p_i2c->TIMINGR = a_config.timings;
 
-    this->p_i2c->CR1 = (false == a_config.analog_filter ? I2C_CR1_ANFOFF : 0) | I2C_CR1_PE;
+    this->p_i2c->CR1 = (false == a_config.analog_filter ? I2C_CR1_ANFOFF : 0) |
+                       (true == a_config.crc_enable ? I2C_CR1_PECEN : 0)      |
+                       I2C_CR1_PE;
 
     if (true == a_config.fast_plus)
     {
@@ -343,6 +367,7 @@ void I2C_master::diasble()
 
     controllers[static_cast<uint32>(this->id)].disable();
     controllers[static_cast<uint32>(this->id)].p_i2c_master_handle = nullptr;
+
     this->p_i2c = nullptr;
 }
 
@@ -356,7 +381,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
-    uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
+    uint32 address_mask   = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
     this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND;
@@ -372,7 +397,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
 
     if (nullptr != a_p_status)
     {
-        (*a_p_status) = get_bus_status_from_I2C_ISR<Bus_status>(this->p_i2c);
+        (*a_p_status) = get_bus_status_from_I2C_ISR(this->p_i2c, Transfer_type::transmit);
     }
 
     if (true == is_I2C_ISR_error(this->p_i2c))
@@ -396,7 +421,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
-    assert(true == systick::is_enabled());
+    assert(true == systick::is_enabled() && a_timeout_ms > 0);
 
     time_tick start = systick::get_counter();
 
@@ -408,7 +433,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error(this->p_i2c) &&
-           a_timeout_ms <= common::time_tick_diff(hal::systick::get_counter(), start))
+           a_timeout_ms <= time_tick_diff(hal::systick::get_counter(), start))
     {
         if (true == is_flag(this->p_i2c->ISR, I2C_ISR_TXE))
         {
@@ -418,7 +443,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
 
     if (nullptr != a_p_status)
     {
-        (*a_p_status) = get_bus_status_from_I2C_ISR<Bus_status>(this->p_i2c);
+        (*a_p_status) = get_bus_status_from_I2C_ISR(this->p_i2c, Transfer_type::transmit);
     }
 
     if (true == is_I2C_ISR_error(this->p_i2c))
@@ -447,19 +472,18 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
 
     this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
 
-    uint8* p_data = static_cast<uint8*>(a_p_data);
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes && false == is_I2C_ISR_error(this->p_i2c))
     {
         if (true == is_flag(this->p_i2c->ISR, I2C_ISR_RXNE))
         {
-            p_data[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
+            static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
         }
     }
 
     if (nullptr != a_p_status)
     {
-        (*a_p_status) = get_bus_status_from_I2C_ISR<Bus_status>(this->p_i2c);
+        (*a_p_status) = get_bus_status_from_I2C_ISR(this->p_i2c, Transfer_type::receive);
     }
 
     if (true == is_I2C_ISR_error(this->p_i2c))
@@ -483,7 +507,7 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
-    assert(true == systick::is_enabled());
+    assert(true == systick::is_enabled() && a_timeout_ms > 0);
 
     time_tick start = systick::get_counter();
 
@@ -492,21 +516,20 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
 
     this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
 
-    uint8* p_data = static_cast<uint8*>(a_p_data);
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error(this->p_i2c) &&
-           a_timeout_ms <= common::time_tick_diff(hal::systick::get_counter(), start))
+           a_timeout_ms <= time_tick_diff(hal::systick::get_counter(), start))
     {
         if (true == is_flag(this->p_i2c->ISR, I2C_ISR_RXNE))
         {
-            p_data[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
+            static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
         }
     }
 
     if (nullptr != a_p_status)
     {
-        (*a_p_status) = get_bus_status_from_I2C_ISR<Bus_status>(this->p_i2c);
+        (*a_p_status) = get_bus_status_from_I2C_ISR(this->p_i2c, Transfer_type::receive);
     }
 
     if (true == is_I2C_ISR_error(this->p_i2c))
@@ -572,7 +595,7 @@ void I2C_master::stop_transmit_bytes_it()
     set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
     clear_flag(&(this->p_i2c->CR1), I2C_CR1_TXIE);
 
-    this->tx_context  = { 0,0 };
+    this->tx_context  = { 0, 0 };
     this->tx_callback = { nullptr, nullptr };
 }
 
@@ -584,7 +607,7 @@ void I2C_master::stop_receive_bytes_it()
     set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
     clear_flag(&(this->p_i2c->CR1), I2C_CR1_RXIE);
 
-    this->rx_context  = { 0,0 };
+    this->rx_context  = { 0, 0 };
     this->rx_callback = { nullptr, nullptr };
 }
 
@@ -616,9 +639,213 @@ bool I2C_master::is_slave_present(uint16 a_slave_address, time_tick a_timeout_ms
     return ret;
 }
 
-I2C_master::Clock_source I2C_master::get_clock_source() const
+void I2C_slave::enable(const Config& a_config,
+                       Clock_source a_clock_source,
+                       uint32 a_irq_priority)
 {
-    return get_clock_source_from_RCC_CCIPR<I2C_master::Clock_source, I2C_master::Id>(this->id);
+    assert(nullptr == controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
+    assert(nullptr == controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle);
+
+    controllers[static_cast<uint32>(this->id)].enable(get_RCC_CCIPR_from_clock_source(a_clock_source, this->id),
+                                                      a_irq_priority);
+
+    controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle = this;
+    this->p_i2c = controllers[static_cast<uint32>(this->id)].p_registers;
+
+    this->p_i2c->CR1     = 0;
+    this->p_i2c->TIMINGR = a_config.timings;
+
+    this->p_i2c->OAR1 = I2C_OAR1_OA1EN | (a_config.address << 1);
+    this->p_i2c->CR1  = (false == a_config.analog_filter ? I2C_CR1_ANFOFF : 0) |
+                        (true == a_config.crc_enable ? I2C_CR1_PECEN : 0)|
+                        I2C_CR1_PE;
+
+    if (true == a_config.fast_plus)
+    {
+        assert(true == mcu::is_syscfg_enabled());
+
+        set_bit(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<uint32>(this->id));
+    }
+}
+
+void I2C_slave::diasble()
+{
+    assert(nullptr != this->p_i2c);
+    assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle);
+
+    this->p_i2c->CR1 = 0;
+
+    if (true == this->is_fast_plus())
+    {
+        clear_bit(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<uint32>(this->id));
+    }
+
+    controllers[static_cast<uint32>(this->id)].disable();
+    controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle = nullptr;
+
+    this->p_i2c = nullptr;
+}
+
+uint32 I2C_slave::transmit_bytes_polling(const void* a_p_data,
+                                         uint32 a_data_size_in_bytes,
+                                         Bus_status* a_p_status)
+{
+    assert(nullptr != this->p_i2c);
+    assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle);
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
+
+    uint32 ret = 0;
+    while (ret < a_data_size_in_bytes &&
+           false == is_I2C_ISR_error(this->p_i2c))
+    {
+        if (true == is_flag(this->p_i2c->ISR, I2C_ISR_TXE))
+        {
+            this->p_i2c->TXDR = static_cast<const uint8*>(a_p_data)[ret++];
+        }
+    }
+
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = get_bus_status_from_I2C_ISR(this->p_i2c, Transfer_type::transmit);
+    }
+
+    if (true == is_I2C_ISR_error(this->p_i2c))
+    {
+        clear_I2C_ISR_errors(this->p_i2c);
+    }
+
+    return ret;
+}
+
+uint32 I2C_slave::transmit_bytes_polling(const void* a_p_data,
+                                         uint32 a_data_size_in_bytes,
+                                         time_tick a_timeout_ms,
+                                         Bus_status* a_p_status)
+{
+    assert(nullptr != this->p_i2c);
+    assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle);
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
+    assert(true == systick::is_enabled() && a_timeout_ms > 0);
+
+    time_tick start = systick::get_counter();
+
+    uint32 ret = 0;
+    while (ret < a_data_size_in_bytes &&
+           false == is_I2C_ISR_error(this->p_i2c) &&
+           a_timeout_ms <= time_tick_diff(hal::systick::get_counter(), start))
+    {
+        if (true == is_flag(this->p_i2c->ISR, I2C_ISR_TXE))
+        {
+            this->p_i2c->TXDR = static_cast<const uint8*>(a_p_data)[ret++];
+        }
+    }
+
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = get_bus_status_from_I2C_ISR(this->p_i2c, Transfer_type::receive);
+    }
+
+    if (true == is_I2C_ISR_error(this->p_i2c))
+    {
+        clear_I2C_ISR_errors(this->p_i2c);
+    }
+
+    return ret;
+}
+
+common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
+                                                uint32 a_data_size_in_bytes,
+                                                Bus_status* a_p_status)
+{
+    assert(nullptr != this->p_i2c);
+    assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle);
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
+
+    uint32 ret = 0;
+    while (ret < a_data_size_in_bytes &&
+           false == is_I2C_ISR_error(this->p_i2c))
+    {
+        if (true == is_flag(this->p_i2c->ISR, I2C_ISR_RXNE))
+        {
+            static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
+        }
+    }
+
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = get_bus_status_from_I2C_ISR(this->p_i2c, Transfer_type::receive);
+    }
+
+    if (true == is_I2C_ISR_error(this->p_i2c))
+    {
+        clear_I2C_ISR_errors(this->p_i2c);
+    }
+
+    return ret;
+}
+
+common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
+                                                uint32 a_data_size_in_bytes,
+                                                time_tick a_timeout_ms,
+                                                Bus_status* a_p_status)
+{
+    assert(nullptr != this->p_i2c);
+    assert(nullptr != controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle);
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
+    assert(true == systick::is_enabled() && a_timeout_ms > 0);
+
+    time_tick start = systick::get_counter();
+
+    uint32 ret = 0;
+    while (ret < a_data_size_in_bytes &&
+           false == is_I2C_ISR_error(this->p_i2c) &&
+           a_timeout_ms <= time_tick_diff(hal::systick::get_counter(), start))
+    {
+        if (true == is_flag(this->p_i2c->ISR, I2C_ISR_RXNE))
+        {
+            static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
+        }
+    }
+
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = get_bus_status_from_I2C_ISR(this->p_i2c, Transfer_type::receive);
+    }
+
+    if (true == is_I2C_ISR_error(this->p_i2c))
+    {
+        clear_I2C_ISR_errors(this->p_i2c);
+    }
+
+    return ret;
+}
+
+void I2C_slave::stop_transmit_bytes_it()
+{
+    assert(nullptr != this->p_i2c);
+    assert(nullptr != this->tx_callback.function);
+
+    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
+    clear_flag(&(this->p_i2c->CR1), I2C_CR1_TXIE);
+
+    this->tx_context = { 0, 0 };
+    this->tx_callback = { nullptr, nullptr };
+}
+
+void I2C_slave::stop_receive_bytes_it()
+{
+    assert(nullptr != this->p_i2c);
+    assert(nullptr != this->rx_callback.function);
+
+    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
+    clear_flag(&(this->p_i2c->CR1), I2C_CR1_RXIE);
+
+    this->rx_context = { 0, 0 };
+    this->rx_callback = { nullptr, nullptr };
 }
 
 } // namespace stm32l452xx
