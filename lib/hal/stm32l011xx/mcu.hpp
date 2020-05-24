@@ -197,6 +197,21 @@ public:
     static Bus_prescalers get_bus_prescalers();
     static Pll_config get_pll_config();
 
+    static void enable_syscfg()
+    {
+        common::set_flag(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
+    }
+
+    static void disable_syscfg()
+    {
+        common::clear_flag(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
+    }
+
+    static bool is_syscfg_enabled()
+    {
+        return common::is_flag(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
+    }
+
     static Device_id get_device_id()
     {
         common::uint8* p_id_location = reinterpret_cast<common::uint8*>(UID_BASE);

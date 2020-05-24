@@ -181,7 +181,7 @@ I2C_base::Clock_source get_clock_source_from_RCC_CCIPR(I2C_base::Id a_id)
         case I2C_base::Id::_3:
         {
             return static_cast<I2C_base::Clock_source>(get_flag(RCC->CCIPR,
-                                                                0x3 << (12 + static_cast<uint32>(a_id) * 2)) >> 12);
+                                                                0x3 << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32>(a_id) * 2)) >> RCC_CCIPR_I2C1SEL_Pos);
         }
         break;
 
@@ -201,7 +201,7 @@ uint32 get_RCC_CCIPR_from_clock_source(I2C_base::Clock_source a_clock_source, I2
         case I2C_base::Id::_2:
         case I2C_base::Id::_3:
         {
-            return static_cast<uint32>(a_clock_source) << (12 + static_cast<uint32>(a_i2c_id) * 2);
+            return static_cast<uint32>(a_clock_source) << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32>(a_i2c_id) * 2);
         }
         break;
 
@@ -229,10 +229,13 @@ void interupt_handler(uint32 a_controller_index)
     {
         i2c_handle_interrupt(controllers[a_controller_index].p_i2c_master_handle);
     }
-
-    if (nullptr != controllers[a_controller_index].p_i2c_slave_handle)
+    else if (nullptr != controllers[a_controller_index].p_i2c_slave_handle)
     {
         i2c_handle_interrupt(controllers[a_controller_index].p_i2c_slave_handle);
+    }
+    else
+    {
+        assert(false);
     }
 }
 
