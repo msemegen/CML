@@ -318,6 +318,11 @@ void i2c_handle_interrupt(I2C_base* a_p_this)
             clear_flag(&(a_p_this->p_i2c->CR1), I2C_CR1_TXIE);
         }
     }
+
+    if (true == is_flag(isr, I2C_ISR_ADDR) && true == is_flag(cr1, I2C_CR1_ADDRIE))
+    {
+        set_flag(&(a_p_this->p_i2c->ICR), I2C_ICR_ADDRCF);
+    }
 }
 
 I2C_base::Clock_source I2C_base::get_clock_source() const
@@ -645,6 +650,7 @@ void I2C_slave::enable(const Config& a_config,
 {
     assert(nullptr == controllers[static_cast<uint32>(this->id)].p_i2c_master_handle);
     assert(nullptr == controllers[static_cast<uint32>(this->id)].p_i2c_slave_handle);
+    assert(a_config.address <= 0x7F);
 
     controllers[static_cast<uint32>(this->id)].enable(get_RCC_CCIPR_from_clock_source(a_clock_source, this->id),
                                                       a_irq_priority);
@@ -658,7 +664,7 @@ void I2C_slave::enable(const Config& a_config,
     this->p_i2c->OAR1 = I2C_OAR1_OA1EN | (a_config.address << 1);
     this->p_i2c->CR1  = (false == a_config.analog_filter ? I2C_CR1_ANFOFF : 0) |
                         (true == a_config.crc_enable ? I2C_CR1_PECEN : 0)|
-                        I2C_CR1_PE;
+                        I2C_CR1_ADDRIE | I2C_CR1_PE;
 
     if (true == a_config.fast_plus)
     {
@@ -784,6 +790,8 @@ common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
         clear_I2C_ISR_errors(this->p_i2c);
     }
 
+    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
+
     return ret;
 }
 
@@ -799,6 +807,7 @@ common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
     assert(true == systick::is_enabled() && a_timeout_ms > 0);
 
     time_tick start = systick::get_counter();
+
 
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
@@ -820,6 +829,8 @@ common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
     {
         clear_I2C_ISR_errors(this->p_i2c);
     }
+
+    set_flag(&(this->p_i2c->ICR), I2C_ICR_STOPCF);
 
     return ret;
 }
