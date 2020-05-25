@@ -8,7 +8,7 @@
 */
 
 //cml
-#include <common/time_tick.hpp>
+#include <common/time.hpp>
 
 namespace cml {
 namespace hal {
@@ -25,7 +25,7 @@ public:
     misc& operator = (misc&&)      = delete;
     misc& operator = (const misc&) = delete;
 
-    static void delay_us(common::time_tick a_time);
+    static void delay_us(common::time::tick a_time);
 };
 
 } // namespace stm32l011xx

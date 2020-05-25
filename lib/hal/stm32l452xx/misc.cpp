@@ -18,7 +18,7 @@ namespace stm32l452xx {
 
 using namespace cml::common;
 
-void misc::delay_us(time_tick a_time)
+void misc::delay_us(time::tick a_time)
 {
     assert(true == mcu::is_dwt_enabled());
     assert(mcu::get_sysclk_frequency_hz() >= MHz(1));

@@ -60,12 +60,12 @@ using namespace cml::common;
 using namespace cml::hal::core;
 using namespace cml::utils;
 
-bool rng::enable(uint32 a_irq_priority, time_tick a_timeout_ms)
+bool rng::enable(uint32 a_irq_priority, time::tick a_timeout_ms)
 {
     assert(mcu::get_clk48_mux_freqency_hz() <= MHz(48));
     assert(true == systick::is_enabled());
 
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
     set_flag(&(RNG->CR), RNG_CR_RNGEN);
@@ -95,9 +95,9 @@ void rng::disable()
     NVIC_DisableIRQ(RNG_IRQn);
 }
 
-bool rng::get_value_polling(uint32* a_p_value, time_tick a_timeout_ms)
+bool rng::get_value_polling(uint32* a_p_value, time::tick a_timeout_ms)
 {
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     bool ret = wait::until(&(RNG->SR), RNG_SR_DRDY, false, start, a_timeout_ms);
 

@@ -8,7 +8,7 @@
 */
 
 //cml
-#include <common/time_tick.hpp>
+#include <common/time.hpp>
 #include <debug/assert.hpp>
 #include <hal/systick.hpp>
 
@@ -35,15 +35,15 @@ public:
     delay& operator = (delay&&)      = delete;
     delay& operator = (const delay&) = delete;
 
-    static void ms(common::time_tick a_time)
+    static void ms(common::time::tick a_time)
     {
         assert(true == hal::systick::is_enabled());
 
-        common::time_tick start = hal::systick::get_counter();
-        while (common::time_tick_diff(hal::systick::get_counter(), start) <= a_time);
+        common::time::tick start = hal::systick::get_counter();
+        while (common::time::diff(hal::systick::get_counter(), start) <= a_time);
     }
 
-    inline static void us(common::time_tick a_time)
+    inline static void us(common::time::tick a_time)
     {
 #ifdef STM32L452xx
         hal::stm32l452xx::misc::delay_us(a_time);

@@ -39,14 +39,14 @@ using namespace cml::utils;
 bool iwdg::enable(Prescaler a_prescaler,
                   uint16 a_reload,
                   const Window& a_window,
-                  time_tick a_timeout)
+                  time::tick a_timeout)
 {
     assert((true == a_window.enable && a_window.value <= 0xFFFu) || (false == a_window.enable));
     assert(true == mcu::is_clock_enabled(mcu::Clock::lsi));
     assert(true == systick::is_enabled());
     assert(a_reload <= 0xFFFu);
 
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     IWDG->KR = control_flags::enable;
     IWDG->KR = control_flags::write_access_enable;

@@ -74,7 +74,7 @@ void usart_handle_interrupt(USART* a_p_this)
     }
 }
 
-bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_priority, time_tick a_timeout_ms)
+bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_priority, time::tick a_timeout_ms)
 {
     assert(nullptr               == p_usart_2);
     assert(0                     != a_config.baud_rate);
@@ -86,7 +86,7 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_pr
     assert(Clock::Source::unknown != a_clock.source);
     assert(0                      != a_clock.frequency_hz);
 
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     p_usart_2 = this;
 
@@ -170,7 +170,7 @@ void USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
     USART2->ICR = USART_ICR_TCCF;
 }
 
-bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
+bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time::tick a_timeout_ms)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
@@ -178,7 +178,7 @@ bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
     assert(true == systick::is_enabled());
 
     bool ret        = true;
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     set_flag(&(USART2->CR1), USART_CR1_TE);
 
@@ -213,7 +213,7 @@ void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
     }
 }
 
-bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
+bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time::tick a_timeout_ms)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
@@ -221,7 +221,7 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
     assert(true == systick::is_enabled());
 
     bool ret        = false;
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
     {

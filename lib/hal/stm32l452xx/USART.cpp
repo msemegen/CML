@@ -155,7 +155,7 @@ void usart_handle_interrupt(USART* a_p_this)
     }
 }
 
-bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irqn_priority, time_tick a_timeout_ms)
+bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irqn_priority, time::tick a_timeout_ms)
 {
     assert(nullptr               == this->p_usart);
     assert(a_config.baud_rate    != 0);
@@ -167,7 +167,7 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irqn_p
     assert(Clock::Source::unknown != a_clock.source);
     assert(0                      != a_clock.frequency_hz);
 
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     controllers[static_cast<uint32>(this->id)].p_usart_handle = this;
     this->p_usart = controllers[static_cast<uint32>(this->id)].p_registers;
@@ -254,7 +254,7 @@ void USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
     this->p_usart->ICR = USART_ICR_TCCF;
 }
 
-bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
+bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time::tick a_timeout_ms)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_p_data);
@@ -262,7 +262,7 @@ bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_byte
     assert(true == systick::is_enabled());
 
     bool ret        = true;
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
     {
@@ -295,7 +295,7 @@ void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
     }
 }
 
-bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time_tick a_timeout_ms)
+bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time::tick a_timeout_ms)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_p_data);
@@ -303,7 +303,7 @@ bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time
     assert(true == systick::is_enabled());
 
     bool ret        = true;
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
     {

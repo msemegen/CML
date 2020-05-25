@@ -81,12 +81,12 @@ void adc_handle_interrupt(ADC* a_p_this)
     }
 }
 
-bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32 a_irq_priority, time_tick a_timeout)
+bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32 a_irq_priority, time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
     assert(true == systick::is_enabled());
 
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     set_flag(&(RCC->APB2ENR), RCC_APB2ENR_ADC1EN);
     set_flag(&(ADC1->CFGR2), ADC_CFGR2_CKMODE, static_cast<uint32>(a_clock.divider));
@@ -94,13 +94,13 @@ bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint
     return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
 
-bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, uint32 a_irq_priority, time_tick a_timeout)
+bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, uint32 a_irq_priority, time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
     assert(true == systick::is_enabled());
     assert(true == mcu::is_clock_enabled(mcu::Clock::hsi));
 
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     set_flag(&(RCC->APB2ENR), RCC_APB2ENR_ADC1EN);
     set_flag(&(ADC1->CFGR2), ADC_CFGR2_CKMODE, static_cast<uint32>(a_clock.divider));
@@ -183,7 +183,7 @@ void ADC::read_polling(uint16* a_p_data, uint32 a_count)
     clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
 }
 
-bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
+bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time::tick a_timeout)
 {
     assert(nullptr != p_adc_1);
     assert(nullptr != a_p_data);
@@ -195,7 +195,7 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
     set_flag(&(ADC1->CR), ADC_CR_ADSTART);
 
     bool ret = true;
-    time_tick start = systick::get_counter();
+    time::tick start = systick::get_counter();
 
     for (uint32 i = 0; i < a_count && true == ret; i++)
     {
@@ -277,7 +277,7 @@ uint32 ADC::get_active_channels_count() const
     return ret;
 }
 
-bool ADC::enable(Resolution a_resolution, time_tick a_start, uint32 a_irq_priority, time_tick a_timeout)
+bool ADC::enable(Resolution a_resolution, time::tick a_start, uint32 a_irq_priority, time::tick a_timeout)
 {
     p_adc_1 = this;
 
