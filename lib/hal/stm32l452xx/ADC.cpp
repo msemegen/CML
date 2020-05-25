@@ -85,13 +85,12 @@ void adc_handle_interrupt(ADC* a_p_this)
 
 bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, uint32 a_irq_priority, time_tick a_timeout)
 {
+    assert(nullptr == p_adc_1);
     assert(true == systick::is_enabled());
     assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
            true == mcu::get_pll_config().pllsai1.r.output_enabled);
 
     time_tick start = systick::get_counter();
-
-    this->disable();
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
     clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
@@ -102,6 +101,7 @@ bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, uin
 
 bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32 a_irq_priority, time_tick a_timeout)
 {
+    assert(nullptr == p_adc_1);
     assert(true == systick::is_enabled());
     assert(Synchronous_clock::Divider::unknown != a_clock.divider);
     assert(Synchronous_clock::Divider::_1 == a_clock.divider ?
@@ -109,8 +109,6 @@ bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint
            true);
 
     time_tick start = systick::get_counter();
-
-    this->disable();
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
     set_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<common::uint32>(a_clock.divider));
@@ -133,6 +131,7 @@ void ADC::disable()
 
 void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_count)
 {
+    assert(nullptr != p_adc_1);
     assert(nullptr != a_p_channels);
     assert(a_channels_count > 0);
 
@@ -198,6 +197,8 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_cou
 
 void ADC::clear_active_channels()
 {
+    assert(nullptr != p_adc_1);
+
     ADC1->SQR1 = 0;
 
     ADC1->SQR2 = 0;
@@ -212,6 +213,7 @@ void ADC::clear_active_channels()
 
 void ADC::read_polling(uint16* a_p_data, uint32 a_count)
 {
+    assert(nullptr != p_adc_1);
     assert(nullptr != a_p_data);
     assert(a_count > 0);
 
@@ -234,6 +236,7 @@ void ADC::read_polling(uint16* a_p_data, uint32 a_count)
 
 bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
 {
+    assert(nullptr != p_adc_1);
     assert(nullptr != a_p_data);
     assert(a_count > 0);
 
@@ -273,6 +276,7 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time_tick a_timeout)
 
 void ADC::start_read_it(const Conversion_callback& a_callback)
 {
+    assert(nullptr != p_adc_1);
     assert(nullptr != a_callback.function);
 
     this->callaback = a_callback;
@@ -283,6 +287,8 @@ void ADC::start_read_it(const Conversion_callback& a_callback)
 
 void ADC::stop_read_it()
 {
+    assert(nullptr != p_adc_1);
+
     clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
     clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
 
@@ -291,6 +297,8 @@ void ADC::stop_read_it()
 
 void ADC::set_resolution(Resolution a_resolution)
 {
+    assert(nullptr != p_adc_1);
+
     bool is_started = is_flag(ADC1->CR, ADC_CR_ADSTART);
 
     if (true == is_started)

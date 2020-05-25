@@ -23,14 +23,18 @@ bool get_bit(Register_t a_register, uint8 a_index)
 template<typename Register_t, typename Flag_t>
 bool is_flag(Register_t a_register, Flag_t a_flag)
 {
-    static_assert(sizeof(Register_t) == sizeof(Flag_t));
     return a_flag == (a_register & a_flag);
+}
+
+template<typename Register_t, typename Mask_t>
+bool is_any_bit(Register_t a_register, Mask_t a_mask)
+{
+    return 0 != (a_register & a_mask);
 }
 
 template<typename Register_t, typename Mask_t>
 Mask_t get_flag(Register_t a_register, Mask_t a_mask)
 {
-    static_assert(sizeof(Register_t) == sizeof(Mask_t));
     return (a_register & a_mask);
 }
 
@@ -43,16 +47,12 @@ void set_bit(Register_t *a_p_register, uint8 a_index)
 template<typename Register_t, typename Flag_t>
 void set_flag(Register_t *a_p_register, Flag_t a_flag)
 {
-    static_assert(sizeof(Register_t) == sizeof(Flag_t));
     (*a_p_register) |= a_flag;
 }
 
 template<typename Register_t, typename Clear_mask_t, typename Flag_t>
 void set_flag(Register_t *a_p_register, Clear_mask_t a_clear_mask, Flag_t a_set_flag)
 {
-    static_assert(sizeof(Register_t) == sizeof(Flag_t));
-    static_assert(sizeof(Register_t) == sizeof(Clear_mask_t));
-
     (*a_p_register) = (((*a_p_register) & (~a_clear_mask)) | a_set_flag);
 }
 

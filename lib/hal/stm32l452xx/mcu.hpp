@@ -355,6 +355,16 @@ public:
         common::clear_flag(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
     }
 
+    static void enable_syscfg()
+    {
+        common::set_flag(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
+    }
+
+    static void disable_syscfg()
+    {
+        common::clear_flag(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
+    }
+
     static void reset();
     static void halt();
 
@@ -370,6 +380,11 @@ public:
     {
         return true == common::is_flag(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
                        common::is_flag(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
+    }
+
+    static bool is_syscfg_enabled()
+    {
+        return common::is_flag(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
     }
 
     static Bus_prescalers get_bus_prescalers();
