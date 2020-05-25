@@ -233,7 +233,7 @@ public:
     void stop_transmit_bytes_it();
     void stop_receive_bytes_it();
 
-    bool is_slave_present(common::uint16 a_slave_address, common::time_tick a_timeout_ms) const;
+    bool is_slave_connected(common::uint16 a_slave_address, common::time_tick a_timeout_ms) const;
 
 };
 

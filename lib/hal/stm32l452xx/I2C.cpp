@@ -619,7 +619,7 @@ void I2C_master::stop_receive_bytes_it()
     this->rx_callback = { nullptr, nullptr };
 }
 
-bool I2C_master::is_slave_present(uint16 a_slave_address, time_tick a_timeout_ms) const
+bool I2C_master::is_slave_connected(uint16 a_slave_address, time_tick a_timeout_ms) const
 {
     assert(nullptr != this->p_i2c);
     assert(true == systick::is_enabled());

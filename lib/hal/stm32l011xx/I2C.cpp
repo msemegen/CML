@@ -336,7 +336,7 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
-    uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
+    uint32 address_mask   = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
     I2C1->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
@@ -455,7 +455,7 @@ void I2C_master::start_receive_bytes_it(uint16 a_slave_address,
 
 void I2C_master::stop_transmit_bytes_it()
 {
-    assert(nullptr != I2C1);
+    assert(nullptr != controller.p_i2c_master_handle);
     assert(nullptr != this->tx_callback.function);
 
     set_flag(&(I2C1->ICR), I2C_ICR_STOPCF);
@@ -467,7 +467,7 @@ void I2C_master::stop_transmit_bytes_it()
 
 void I2C_master::stop_receive_bytes_it()
 {
-    assert(nullptr != I2C1);
+    assert(nullptr != controller.p_i2c_master_handle);
     assert(nullptr != this->rx_callback.function);
 
     set_flag(&(I2C1->ICR), I2C_ICR_STOPCF);
@@ -477,9 +477,9 @@ void I2C_master::stop_receive_bytes_it()
     this->rx_callback = { nullptr, nullptr };
 }
 
-bool I2C_master::is_slave_present(uint16 a_slave_address, time_tick a_timeout_ms) const
+bool I2C_master::is_slave_connected(uint16 a_slave_address, time_tick a_timeout_ms) const
 {
-    assert(nullptr != I2C1);
+    assert(nullptr != controller.p_i2c_master_handle);
     assert(true == systick::is_enabled());
 
     time_tick start = systick::get_counter();
@@ -660,7 +660,6 @@ common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
 
     time_tick start = systick::get_counter();
 
-
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error() &&
@@ -689,6 +688,7 @@ common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
 
 void I2C_slave::stop_transmit_bytes_it()
 {
+    assert(nullptr != controller.p_i2c_slave_handle);
     assert(nullptr != this->tx_callback.function);
 
     set_flag(&(I2C1->ICR), I2C_ICR_STOPCF);
@@ -700,6 +700,7 @@ void I2C_slave::stop_transmit_bytes_it()
 
 void I2C_slave::stop_receive_bytes_it()
 {
+    assert(nullptr != controller.p_i2c_slave_handle);
     assert(nullptr != this->rx_callback.function);
 
     set_flag(&(I2C1->ICR), I2C_ICR_STOPCF);
