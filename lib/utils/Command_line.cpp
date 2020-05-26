@@ -76,7 +76,7 @@ void Command_line::update()
                 if (this->line_length > 0)
                 {
                     this->line_buffer[this->line_length--] = 0;
-                    this->p_io_stream->transmit_polling("\b \b");
+                    this->p_io_stream->transmit_bytes_polling("\b \b", 3);
                 }
             }
             break;
@@ -104,7 +104,7 @@ void Command_line::update()
                 else if (this->line_length + 1 < config::command_line::line_buffer_capacity)
                 {
                     this->line_buffer[this->line_length++] = c;
-                    this->p_io_stream->transmit_polling(c);
+                    this->p_io_stream->transmit_bytes_polling(&c, 1);
                 }
             }
         }

@@ -561,20 +561,6 @@ USART::Flow_control USART::get_flow_control() const
     return static_cast<Flow_control>(get_flag(this->p_usart->CR3, USART_CR3_RTSE | USART_CR3_CTSE));
 }
 
-bool USART::is_rx_it_enabled() const
-{
-    assert(nullptr != this->p_usart);
-
-    return is_flag(this->p_usart->CR1, USART_CR1_RXNEIE);
-}
-
-bool USART::is_tx_it_enabled() const
-{
-    assert(nullptr != this->p_usart);
-
-    return is_flag(this->p_usart->CR1, USART_CR1_TXEIE);
-}
-
 } // naespace stm32l452xx
 } // namespace hal
 } // namespace cml`
