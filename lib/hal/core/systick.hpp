@@ -9,7 +9,7 @@
 
 //cml
 #include <common/integer.hpp>
-#include <common/time_tick.hpp>
+#include <common/time.hpp>
 #include <debug/assert.hpp>
 
 namespace cml {
@@ -25,7 +25,7 @@ public:
     static void reset_counter();
 
     static bool is_enabled();
-    static common::time_tick get_counter();
+    static common::time::tick get_counter();
 
 private:
 

@@ -14,7 +14,7 @@
 #include <common/integer.hpp>
 #include <common/macros.hpp>
 #include <common/Non_copyable.hpp>
-#include <common/time_tick.hpp>
+#include <common/time.hpp>
 
 namespace cml {
 namespace hal {
@@ -159,12 +159,12 @@ public:
     bool enable(Resolution a_resolution,
                 const Asynchronous_clock& a_clock,
                 common::uint32 a_irq_priority,
-                common::time_tick a_timeout);
+                common::time::tick a_timeout);
 
     bool enable(Resolution a_resolution,
                 const Synchronous_clock& a_clock,
                 common::uint32 a_irq_priority,
-                common::time_tick a_timeout);
+                common::time::tick a_timeout);
 
     void disable();
 
@@ -172,7 +172,7 @@ public:
     void clear_active_channels();
 
     void read_polling(common::uint16* a_p_data, common::uint32 a_count);
-    bool read_polling(common::uint16* a_p_data, common::uint32 a_count, common::time_tick a_timeout);
+    bool read_polling(common::uint16* a_p_data, common::uint32 a_count, common::time::tick a_timeout);
 
     void start_read_it(const Conversion_callback& a_callback);
     void stop_read_it();
@@ -200,9 +200,9 @@ public:
 private:
 
     bool enable(Resolution a_resolution,
-                common::time_tick a_start,
+                common::time::tick a_start,
                 common::uint32 a_irq_priority,
-                common::time_tick a_timeout);
+                common::time::tick a_timeout);
 
 private:
 

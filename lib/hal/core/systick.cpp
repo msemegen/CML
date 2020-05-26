@@ -79,7 +79,7 @@ bool systick::is_enabled()
     return is_flag(SysTick->CTRL, SysTick_CTRL_ENABLE_Msk);
 }
 
-common::time_tick systick::get_counter()
+time::tick systick::get_counter()
 {
     return cnt;
 }

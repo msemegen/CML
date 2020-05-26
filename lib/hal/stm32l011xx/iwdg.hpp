@@ -12,7 +12,7 @@
 
 //cml
 #include <common/integer.hpp>
-#include <common/time_tick.hpp>
+#include <common/time.hpp>
 
 namespace cml {
 namespace hal {
@@ -51,7 +51,7 @@ public:
     static bool enable(Prescaler a_prescaler,
                        common::uint16 a_reload,
                        const Window& a_window,
-                       common::time_tick a_timeout);
+                       common::time::tick a_timeout);
 
     static void disable();
     static void feed();

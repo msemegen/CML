@@ -18,7 +18,7 @@ namespace stm32l011xx {
 
 using namespace cml::common;
 
-void misc::delay_us(time_tick a_time)
+void misc::delay_us(time::tick a_time)
 {
     assert(mcu::get_sysclk_frequency_hz() >= MHz(1));
     assert(a_time > 0);

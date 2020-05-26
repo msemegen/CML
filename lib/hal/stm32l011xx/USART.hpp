@@ -16,7 +16,7 @@
 #include <common/integer.hpp>
 #include <common/macros.hpp>
 #include <common/Non_copyable.hpp>
-#include <common/time_tick.hpp>
+#include <common/time.hpp>
 
 namespace cml {
 namespace hal {
@@ -135,7 +135,7 @@ public:
     bool enable(const Config& a_config,
                 const Clock& a_clock,
                 common::uint32 a_irq_priority,
-                common::time_tick a_timeout_ms);
+                common::time::tick a_timeout_ms);
 
     void disable();
 
@@ -146,7 +146,7 @@ public:
     }
 
     template<typename Data_t>
-    bool write_polling(const Data_t& a_data, common::time_tick a_timeout_ms)
+    bool write_polling(const Data_t& a_data, common::time::tick a_timeout_ms)
     {
         return this->write_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout_ms);
     }
@@ -158,16 +158,16 @@ public:
     }
 
     template<typename Data_t>
-    bool read_polling(Data_t* a_p_data, common::time_tick a_timeout_ms)
+    bool read_polling(Data_t* a_p_data, common::time::tick a_timeout_ms)
     {
         return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms);
     }
 
     void write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes);
-    bool write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
+    bool write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes, common::time::tick a_timeout_ms);
 
     void read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes);
-    bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time_tick a_timeout_ms);
+    bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time::tick a_timeout_ms);
 
     void start_write_bytes_it(const TX_callback& a_callback);
     void start_read_bytes_it(const RX_callback& a_callback);

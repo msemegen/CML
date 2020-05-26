@@ -1,9 +1,9 @@
 #pragma once
 
 /*
-    Name: cc_attributes.hpp
+    Name: compiler.hpp
 
-    Copyright(c) 2019 Mateusz Semegen
+    Copyright(c) 2019 - 2020 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
