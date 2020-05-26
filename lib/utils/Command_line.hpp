@@ -80,7 +80,7 @@ public:
 
     void write_prompt()
     {
-        this->p_io_stream->write_bytes_polling(this->p_prompt, this->prompt_length);
+        this->p_io_stream->transmit_bytes_polling(this->p_prompt, this->prompt_length);
     }
 
 private:
@@ -141,7 +141,7 @@ private:
 
     void write_new_line()
     {
-        this->p_io_stream->write_bytes_polling("\n", 1);
+        this->p_io_stream->transmit_bytes_polling("\n", 1);
     }
 
 private:

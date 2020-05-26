@@ -23,6 +23,21 @@ using namespace cml::hal::stm32l011xx;
 
 USART* p_usart_2 = nullptr;
 
+bool is_USART_ISR_error()
+{
+    return false;
+}
+
+USART::Bus_status get_bus_status_from_USART_ISR()
+{
+    return USART::Bus_status::ok;
+}
+
+void clear_USART_ISR_errors()
+{
+
+}
+
 } // namespace ::
 
 extern "C"
@@ -58,7 +73,7 @@ void usart_handle_interrupt(USART* a_p_this)
 
         if (false == procceed)
         {
-            a_p_this->stop_write_bytes_it();
+            a_p_this->stop_transmit_bytes_it();
         }
     }
 
@@ -69,7 +84,7 @@ void usart_handle_interrupt(USART* a_p_this)
 
         if (false == procceed)
         {
-            a_p_this->stop_read_bytes_it();
+            a_p_this->stop_receive_bytes_it();
         }
     }
 }
@@ -154,89 +169,157 @@ void USART::disable()
     p_usart_2 = nullptr;
 }
 
-void USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes)
+uint32 USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, Bus_status* a_p_status)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
 
-    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
+    set_flag(&(USART2->ICR), USART_ICR_TCCF);
+
+    uint32 ret                  = 0;
+    bool last_transfer_complete = true;
+
+    while ((ret < a_data_size_in_bytes || false == last_transfer_complete) &&
+           false == is_USART_ISR_error())
     {
-        wait::until(&(USART2->ISR), USART_ISR_TXE, false);
-        USART2->TDR = static_cast<const uint8*>(a_p_data)[i];
+        if (true == is_flag(USART2->ISR, USART_ISR_TXE) && true == last_transfer_complete)
+        {
+            USART2->TDR = static_cast<const uint8*>(a_p_data)[ret++];
+            last_transfer_complete = false;
+        }
+
+        if (false == last_transfer_complete && is_flag(USART2->ISR, USART_ISR_TC))
+        {
+            set_flag(&(USART2->ICR), USART_ICR_TCCF);
+            last_transfer_complete = true;
+        }
     }
 
-    wait::until(&(USART2->ISR), USART_ISR_TC, false);
-    USART2->ICR = USART_ICR_TCCF;
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = get_bus_status_from_USART_ISR();
+    }
+
+    if (true == is_USART_ISR_error())
+    {
+        clear_USART_ISR_errors();
+    }
+
+    return ret;
 }
 
-bool USART::write_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time::tick a_timeout_ms)
+uint32 USART::transmit_bytes_polling(const void* a_p_data,
+                                     uint32 a_data_size_in_bytes,
+                                     time::tick a_timeout_ms,
+                                     Bus_status* a_p_status)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
     assert(true == systick::is_enabled());
 
-    bool ret        = true;
     time::tick start = systick::get_counter();
 
-    set_flag(&(USART2->CR1), USART_CR1_TE);
+    set_flag(&(USART2->ICR), USART_ICR_TCCF);
 
-    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
+    uint32 ret = 0;
+    bool last_transfer_complete = true;
+
+    while ((ret < a_data_size_in_bytes || false == last_transfer_complete) &&
+           false == is_USART_ISR_error() &&
+           a_timeout_ms < time::diff(systick::get_counter(), start))
     {
-        ret = wait::until(&(USART2->ISR), USART_ISR_TXE, false, start, a_timeout_ms);
-
-        if (false == ret)
+        if (true == is_flag(USART2->ISR, USART_ISR_TXE) && true == last_transfer_complete)
         {
-            USART2->TDR = static_cast<const uint8*>(a_p_data)[i];
+            USART2->TDR = static_cast<const uint8*>(a_p_data)[ret++];
+            last_transfer_complete = false;
+        }
+
+        if (false == last_transfer_complete && is_flag(USART2->ISR, USART_ISR_TC))
+        {
+            set_flag(&(USART2->ICR), USART_ICR_TCCF);
+            last_transfer_complete = true;
         }
     }
 
-    if (true == ret)
+    if (nullptr != a_p_status)
     {
-        ret = wait::until(&(USART2->ISR), USART_ISR_TC, false, start, a_timeout_ms);
+        (*a_p_status) = get_bus_status_from_USART_ISR();
+    }
+
+    if (true == is_USART_ISR_error())
+    {
+        clear_USART_ISR_errors();
     }
 
     return ret;
 }
 
-void USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
+uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, Bus_status* a_p_status)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
 
-    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes; i++)
+    set_flag(&(USART2->ICR), USART_ICR_IDLECF);
+
+    uint32 ret = 0;
+
+    while (ret < a_data_size_in_bytes &&
+           false == is_flag(USART2->ISR, USART_ISR_IDLE) &&
+           false == is_USART_ISR_error())
     {
-        wait::until(&(USART2->ISR), USART_ISR_RXNE, false);
-        static_cast<uint8*>(a_p_data)[i] = USART2->RDR;
+        if (true == is_flag(USART2->ISR, USART_ISR_RXNE))
+        {
+            static_cast<uint8*>(a_p_data)[ret++] = USART2->RDR;
+        }
     }
+
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = get_bus_status_from_USART_ISR();
+    }
+
+    if (true == is_USART_ISR_error())
+    {
+        clear_USART_ISR_errors();
+    }
+
+    return ret;
 }
 
-bool USART::read_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time::tick a_timeout_ms)
+uint32 USART::receive_bytes_polling(void* a_p_data,
+                                    uint32 a_data_size_in_bytes,
+                                    time::tick a_timeout_ms,
+                                    Bus_status* a_p_status)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
     assert(true == systick::is_enabled());
 
-    bool ret        = false;
     time::tick start = systick::get_counter();
 
-    for (decltype(a_data_size_in_bytes) i = 0; i < a_data_size_in_bytes && true == ret; i++)
-    {
-        ret = wait::until(&(USART2->ISR), USART_ISR_RXNE, false, start, a_timeout_ms);
+    set_flag(&(USART2->ICR), USART_ICR_IDLECF);
 
-        if (false == ret)
+    uint32 ret = 0;
+
+    while (ret < a_data_size_in_bytes &&
+           false == is_flag(USART2->ISR, USART_ISR_IDLE) &&
+           false == is_USART_ISR_error() && 
+           a_timeout_ms < time::diff(systick::get_counter(), start))
+    {
+        if (true == is_flag(USART2->ISR, USART_ISR_RXNE))
         {
-            static_cast<uint8*>(a_p_data)[i] = USART2->RDR;
+            static_cast<uint8*>(a_p_data)[ret++] = USART2->RDR;
         }
     }
 
     return ret;
 }
 
-void USART::start_write_bytes_it(const TX_callback& a_callback)
+void USART::start_transmit_bytes_it(const TX_callback& a_callback)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_callback.function);
@@ -246,7 +329,7 @@ void USART::start_write_bytes_it(const TX_callback& a_callback)
     set_flag(&(USART2->CR1), USART_CR1_TXEIE);
 }
 
-void USART::start_read_bytes_it(const RX_callback& a_callback)
+void USART::start_receive_bytes_it(const RX_callback& a_callback)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_callback.function);
@@ -256,7 +339,7 @@ void USART::start_read_bytes_it(const RX_callback& a_callback)
     set_flag(&(USART2->CR1), USART_CR1_RXNEIE);
 }
 
-void USART::stop_write_bytes_it()
+void USART::stop_transmit_bytes_it()
 {
     assert(nullptr != p_usart_2);
 
@@ -265,7 +348,7 @@ void USART::stop_write_bytes_it()
     this->tx_callback = { nullptr, nullptr };
 }
 
-void USART::stop_read_bytes_it()
+void USART::stop_receive_bytes_it()
 {
     assert(nullptr != p_usart_2);
 

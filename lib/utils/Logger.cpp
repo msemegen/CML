@@ -62,9 +62,9 @@ void Logger::write(const char* a_p_message, Stream_type a_type)
     {
         const uint32 message_length = cstring::length(a_p_message, config::console::line_buffer_capacity);
 
-        this->p_err_stream->write_bytes_polling(tags[static_cast<uint32>(a_type)], tag_length);
-        this->p_err_stream->write_bytes_polling(a_p_message, message_length);
-        this->p_err_stream->write_bytes_polling(&(config::new_line_character), 1);
+        this->p_err_stream->transmit_bytes_polling(tags[static_cast<uint32>(a_type)], tag_length);
+        this->p_err_stream->transmit_bytes_polling(a_p_message, message_length);
+        this->p_err_stream->transmit_bytes_polling(&(config::new_line_character), 1);
     }
 }
 
