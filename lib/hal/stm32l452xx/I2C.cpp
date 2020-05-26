@@ -18,6 +18,25 @@ namespace {
 using namespace cml::common;
 using namespace cml::hal::stm32l452xx;
 
+enum class Transfer_type
+{
+    transmit,
+    receive
+};
+
+struct Controller
+{
+    using Enable_function  = void(*)(uint32 a_clock_source, uint32 a_irq_priority);
+    using Disable_function = void(*)();
+
+    I2C_TypeDef* p_registers        = nullptr;
+    I2C_master* p_i2c_master_handle = nullptr;
+    I2C_slave* p_i2c_slave_handle   = nullptr;
+
+    Enable_function enable   = nullptr;
+    Disable_function disable = nullptr;
+};
+
 void i2c_1_enable(uint32 a_clock_source, uint32 a_irq_priority)
 {
     assert(0 != a_clock_source);
@@ -85,34 +104,6 @@ void i2c_4_disable()
     clear_flag(&(RCC->APB1ENR2), RCC_APB1ENR2_I2C4EN);
     NVIC_DisableIRQ(I2C4_EV_IRQn);
 }
-
-enum class Transfer_type
-{
-    transmit,
-    receive
-};
-
-
-struct Controller
-{
-    using Enable_function  = void(*)(uint32 a_clock_source, uint32 a_irq_priority);
-    using Disable_function = void(*)();
-
-    I2C_TypeDef* p_registers        = nullptr;
-    I2C_master* p_i2c_master_handle = nullptr;
-    I2C_slave* p_i2c_slave_handle   = nullptr;
-
-    Enable_function enable   = nullptr;
-    Disable_function disable = nullptr;
-};
-
-Controller controllers[]
-{
-    { I2C1, nullptr, nullptr, i2c_1_enable, i2c_1_disable },
-    { I2C2, nullptr, nullptr, i2c_2_enable, i2c_2_disable },
-    { I2C3, nullptr, nullptr, i2c_3_enable, i2c_3_disable },
-    { I2C4, nullptr, nullptr, i2c_4_enable, i2c_4_disable }
-};
 
 bool is_I2C_ISR_error(const I2C_TypeDef* a_p_i2c)
 {
@@ -214,6 +205,14 @@ uint32 get_RCC_CCIPR_from_clock_source(I2C_base::Clock_source a_clock_source, I2
 
     return 0;
 }
+
+Controller controllers[]
+{
+    { I2C1, nullptr, nullptr, i2c_1_enable, i2c_1_disable },
+    { I2C2, nullptr, nullptr, i2c_2_enable, i2c_2_disable },
+    { I2C3, nullptr, nullptr, i2c_3_enable, i2c_3_disable },
+    { I2C4, nullptr, nullptr, i2c_4_enable, i2c_4_disable }
+};
 
 } // namespace ::
 
@@ -441,7 +440,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error(this->p_i2c) &&
-           a_timeout_ms <= time::diff(hal::systick::get_counter(), start))
+           a_timeout_ms <= time::diff(systick::get_counter(), start))
     {
         if (true == is_flag(this->p_i2c->ISR, I2C_ISR_TXE))
         {
@@ -527,7 +526,7 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error(this->p_i2c) &&
-           a_timeout_ms <= time::diff(hal::systick::get_counter(), start))
+           a_timeout_ms <= time::diff(systick::get_counter(), start))
     {
         if (true == is_flag(this->p_i2c->ISR, I2C_ISR_RXNE))
         {
@@ -743,7 +742,7 @@ uint32 I2C_slave::transmit_bytes_polling(const void* a_p_data,
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error(this->p_i2c) &&
-           a_timeout_ms <= time::diff(hal::systick::get_counter(), start))
+           a_timeout_ms <= time::diff(systick::get_counter(), start))
     {
         if (true == is_flag(this->p_i2c->ISR, I2C_ISR_TXE))
         {
@@ -815,7 +814,7 @@ common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error(this->p_i2c) &&
-           a_timeout_ms <= time::diff(hal::systick::get_counter(), start))
+           a_timeout_ms <= time::diff(systick::get_counter(), start))
     {
         if (true == is_flag(this->p_i2c->ISR, I2C_ISR_RXNE))
         {

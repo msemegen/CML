@@ -59,8 +59,8 @@ void Command_line::update()
                     if (false == command_executed)
                     {
                         this->write_new_line();
-                        this->p_io_stream->write_bytes_polling(this->p_command_not_found_message,
-                                                               this->command_not_found_message_length);
+                        this->p_io_stream->transmit_bytes_polling(this->p_command_not_found_message,
+                                                                  this->command_not_found_message_length);
                     }
 
                     this->line_length = 0;
@@ -76,7 +76,7 @@ void Command_line::update()
                 if (this->line_length > 0)
                 {
                     this->line_buffer[this->line_length--] = 0;
-                    this->p_io_stream->write_polling("\b \b");
+                    this->p_io_stream->transmit_polling("\b \b");
                 }
             }
             break;
@@ -104,7 +104,7 @@ void Command_line::update()
                 else if (this->line_length + 1 < config::command_line::line_buffer_capacity)
                 {
                     this->line_buffer[this->line_length++] = c;
-                    this->p_io_stream->write_polling(c);
+                    this->p_io_stream->transmit_polling(c);
                 }
             }
         }
@@ -113,12 +113,12 @@ void Command_line::update()
 
 void Command_line::enable()
 {
-    this->p_io_stream->start_read_bytes_it({ rx_callback, &(this->input_buffer_view) });
+    this->p_io_stream->start_receive_bytes_it({ rx_callback, &(this->input_buffer_view) });
 }
 
 void Command_line::disable()
 {
-    this->p_io_stream->stop_read_bytes_it();
+    this->p_io_stream->stop_receive_bytes_it();
 }
 
 Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(char* a_p_line,
@@ -201,7 +201,7 @@ void Command_line::execute_escape_sequence(char a_first, char a_second)
         {
             case 'A':
             {
-                this->p_io_stream->write_bytes_polling("\033[2K\r", 5);
+                this->p_io_stream->transmit_bytes_polling("\033[2K\r", 5);
                 this->write_prompt();
 
                 const Commands_carousel::Command& command = this->commands_carousel.read_next();
@@ -209,13 +209,13 @@ void Command_line::execute_escape_sequence(char a_first, char a_second)
                 memory::copy(this->line_buffer, command.buffer, command.length);
                 this->line_length = command.length;
 
-                this->p_io_stream->write_bytes_polling(command.buffer, command.length);
+                this->p_io_stream->transmit_bytes_polling(command.buffer, command.length);
             }
             break;
 
             case 'B':
             {
-                this->p_io_stream->write_bytes_polling("\033[2K\r", 5);
+                this->p_io_stream->transmit_bytes_polling("\033[2K\r", 5);
                 this->write_prompt();
 
                 const Commands_carousel::Command& command = this->commands_carousel.read_prev();
@@ -223,7 +223,7 @@ void Command_line::execute_escape_sequence(char a_first, char a_second)
                 memory::copy(this->line_buffer, command.buffer, command.length);
                 this->line_length = command.length;
 
-                this->p_io_stream->write_bytes_polling(command.buffer, command.length);
+                this->p_io_stream->transmit_bytes_polling(command.buffer, command.length);
             }
             break;
         }

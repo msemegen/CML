@@ -67,7 +67,6 @@ void clear_I2C_ISR_errors()
                            I2C_ICR_NACKCF);
 }
 
-
 I2C_base::Bus_status get_bus_status_from_I2C_ISR(Transfer_type a_transfer_type)
 {
     if (true == is_flag(I2C1->ISR, I2C_ISR_TIMEOUT))

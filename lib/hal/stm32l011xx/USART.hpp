@@ -72,6 +72,14 @@ public:
         unknown
     };
 
+    enum class Bus_status
+    {
+        ok,
+        framing_error,
+        parity_error,
+        overrun
+    };
+
     struct Config
     {
         common::uint32 baud_rate  = 0;
@@ -140,40 +148,54 @@ public:
     void disable();
 
     template<typename Data_t>
-    void write_polling(const Data_t& a_data)
+    common::uint32 write_polling(const Data_t& a_data, Bus_status* a_p_status = nullptr)
     {
-        this->write_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data));
+        return this->transmit_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_p_status);
     }
 
     template<typename Data_t>
-    bool write_polling(const Data_t& a_data, common::time::tick a_timeout_ms)
+    common::uint32 write_polling(const Data_t& a_data,
+                                 common::time::tick a_timeout_ms,
+                                 Bus_status* a_p_status = nullptr)
     {
-        return this->write_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout_ms);
+        return this->transmit_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout_ms, a_p_status);
     }
 
     template<typename Data_t>
-    void read_polling(Data_t* a_p_data)
+    common::uint32 read_polling(Data_t* a_p_data, Bus_status* a_p_status = nullptr)
     {
-        this->read_bytes_polling(static_cast<void*>(a_p_data), sizeof(Data_t));
+        return this->receive_bytes_polling(static_cast<void*>(a_p_data), sizeof(Data_t), a_p_status);
     }
 
     template<typename Data_t>
-    bool read_polling(Data_t* a_p_data, common::time::tick a_timeout_ms)
+    common::uint32 read_polling(Data_t* a_p_data, common::time::tick a_timeout_ms, Bus_status* a_p_status = nullptr)
     {
-        return this->write_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms);
+        return this->transmit_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms, a_p_status);
     }
 
-    void write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes);
-    bool write_bytes_polling(const void* a_p_data, common::uint32 a_data_size_in_bytes, common::time::tick a_timeout_ms);
+    common::uint32 transmit_bytes_polling(const void* a_p_data,
+                                          common::uint32 a_data_size_in_bytes,
+                                          Bus_status* a_p_status = nullptr);
 
-    void read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes);
-    bool read_bytes_polling(void* a_p_data, common::uint32 a_data_size_in_bytes, common::time::tick a_timeout_ms);
+    common::uint32 transmit_bytes_polling(const void* a_p_data,
+                                          common::uint32 a_data_size_in_bytes,
+                                          common::time::tick a_timeout_ms,
+                                          Bus_status* a_p_status = nullptr);
 
-    void start_write_bytes_it(const TX_callback& a_callback);
-    void start_read_bytes_it(const RX_callback& a_callback);
+    common::uint32 receive_bytes_polling(void* a_p_data,
+                                         common::uint32 a_data_size_in_bytes,
+                                         Bus_status* a_p_status = nullptr);
 
-    void stop_write_bytes_it();
-    void stop_read_bytes_it();
+    common::uint32 receive_bytes_polling(void* a_p_data,
+                                         common::uint32 a_data_size_in_bytes,
+                                         common::time::tick a_timeout_ms,
+                                         Bus_status* a_p_status = nullptr);
+
+    void start_transmit_bytes_it(const TX_callback& a_callback);
+    void start_receive_bytes_it(const RX_callback& a_callback);
+
+    void stop_transmit_bytes_it();
+    void stop_receive_bytes_it();
 
     void set_baud_rate(common::uint32 a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);
