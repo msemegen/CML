@@ -38,6 +38,11 @@ public:
         assert(false);
         return Type_t();
     }
+
+public:
+
+    static constexpr bool is_signed   = false;
+    static constexpr bool is_unsigned = false;
 };
 
 template<>
@@ -64,6 +69,11 @@ public:
         static_assert(1 == sizeof(uint8));
         return static_cast<uint8>(0xFFU);
     }
+
+public:
+
+    static constexpr bool is_signed   = false;
+    static constexpr bool is_unsigned = true;
 };
 
 template<>
@@ -90,6 +100,11 @@ public:
         static_assert(1 == sizeof(int8));
         return static_cast<int8>(0x7F);
     }
+
+public:
+
+    static constexpr bool is_signed   = true;
+    static constexpr bool is_unsigned = false;
 };
 
 template<>
@@ -116,6 +131,11 @@ public:
         static_assert(2 == sizeof(uint16));
         return static_cast<uint16>(0xFFFFU);
     }
+
+public:
+
+    static constexpr bool is_signed   = false;
+    static constexpr bool is_unsigned = true;
 };
 
 template<>
@@ -142,6 +162,11 @@ public:
         static_assert(2 == sizeof(int16));
         return static_cast<int16>(0x7FFF);
     }
+
+public:
+
+    static constexpr bool is_signed   = true;
+    static constexpr bool is_unsigned = false;
 };
 
 template<>
@@ -168,6 +193,11 @@ public:
         static_assert(4 == sizeof(uint32));
         return static_cast<uint32>(0xFFFFFFFFU);
     }
+
+public:
+
+    static constexpr bool is_signed   = false;
+    static constexpr bool is_unsigned = true;
 };
 
 template<>
@@ -194,6 +224,11 @@ public:
         static_assert(4 == sizeof(int32));
         return static_cast<int32>(0x7FFFFFFF);
     }
+
+public:
+
+    static constexpr bool is_signed   = true;
+    static constexpr bool is_unsigned = false;
 };
 
 template<>
@@ -220,6 +255,11 @@ public:
         static_assert(8 == sizeof(uint64));
         return static_cast<uint64>(0xFFFFFFFFFFFFFFFFULL);
     }
+
+public:
+
+    static constexpr bool is_signed   = false;
+    static constexpr bool is_unsigned = true;
 };
 
 template<>
@@ -246,6 +286,11 @@ public:
         static_assert(8 == sizeof(int64));
         return static_cast<int64>(0x7FFFFFFFFFFFFFFFLL);
     }
+
+public:
+
+    static constexpr bool is_signed   = true;
+    static constexpr bool is_unsigned = false;
 };
 
 } // namespace common

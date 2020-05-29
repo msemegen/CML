@@ -10,87 +10,72 @@
 
 //cml
 #include <common/cstring.hpp>
-#include <common/macros.hpp>
 #include <debug/assert.hpp>
-
-namespace
-{
-
-using namespace cml::collection;
-using namespace cml::common;
-
-bool rx_callback(uint32 a_byte, void* a_p_user_data)
-{
-    reinterpret_cast<Ring<char>*>(a_p_user_data)->push(static_cast<char>(a_byte));
-    return true;
-}
-
-} // namespace
 
 namespace cml {
 namespace utils {
 
 using namespace common;
 
-void Console::enable()
-{
-    this->p_io_stream->start_receive_bytes_it({ rx_callback, &(this->input_buffer_ring_view) });
-}
-
-void Console::disable()
-{
-    this->p_io_stream->stop_receive_bytes_it();
-}
-
-void Console::write(char a_character)
+uint32 Console::write(char a_character)
 {
     assert(nullptr != this->p_io_stream);
 
-    this->p_io_stream->transmit_bytes_polling(&a_character, 1);
+    return this->p_io_stream->transmit_bytes_polling(&a_character, 1);
 }
 
-void Console::write(const char* a_p_string)
+uint32 Console::write(const char* a_p_string)
 {
     assert(nullptr != this->p_io_stream);
 
-    uint32 message_length = cstring::length(a_p_string, config::console::line_buffer_capacity);
-    this->p_io_stream->transmit_bytes_polling(a_p_string, message_length);
+    uint32 message_length = cstring::length(a_p_string);
+    return this->p_io_stream->transmit_bytes_polling(a_p_string, message_length);
 }
 
-void Console::write_line(char a_character)
+uint32 Console::write_line(char a_character)
 {
     assert(nullptr != this->p_io_stream);
 
     char b[2] = { a_character, config::new_line_character };
-    this->p_io_stream->transmit_bytes_polling(b, 2);
+    return this->p_io_stream->transmit_bytes_polling(b, 2);
 }
 
-void Console::write_line(const char* a_p_string)
+uint32 Console::write_line(const char* a_p_string)
 {
     assert(nullptr != this->p_io_stream);
 
-    uint32 message_length = cstring::length(a_p_string, config::console::line_buffer_capacity);
-    this->p_io_stream->transmit_bytes_polling(a_p_string, message_length);
-    this->p_io_stream->transmit_bytes_polling(&config::new_line_character, 1);
+    uint32 ret            = 0;
+    uint32 message_length = cstring::length(a_p_string);
+
+    ret += this->p_io_stream->transmit_bytes_polling(a_p_string, message_length);
+    ret += this->p_io_stream->transmit_bytes_polling(&config::new_line_character, 1);
+
+    return ret;
 }
 
 char Console::read_key()
 {
     assert(nullptr != this->p_io_stream);
 
-    while (true == this->input_buffer_ring_view.is_empty());
-    return this->input_buffer_ring_view.read();
+    char c = 0;
+    this->p_io_stream->receive_bytes_polling(&c, 1);
+
+    return c;
 }
 
-void Console::read_line(char* a_p_buffer, uint32 a_max_characters_count)
+uint32 Console::read_line(char* a_p_buffer, uint32 a_max_characters_count)
 {
     assert(nullptr != this->p_io_stream);
 
-    for (uint32 i = 0; i < a_max_characters_count && config::new_line_character != a_p_buffer[i]; i++)
+    char c = 0;
+    uint32 ret = 0;
+    while(ret < a_max_characters_count && config::new_line_character != a_p_buffer[ret])
     {
-        while (true == this->input_buffer_ring_view.is_empty());
-        a_p_buffer[i] = this->input_buffer_ring_view.read();
+        this->p_io_stream->receive_bytes_polling(&c, 1);
+        a_p_buffer[ret++] = c;
     }
+
+    return ret;
 }
 
 } // namespace utils

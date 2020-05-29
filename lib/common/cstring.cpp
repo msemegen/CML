@@ -72,10 +72,10 @@ uint32 cstring::format_raw(Buffer* a_p_destinaition_buffer,
                 case 'd':
                 case 'i':
                 {
-                    uint32 number_length = cstring::from_integer(a_p_argv[argument_index++].get_int32(),
-                                                                 a_p_number_buffer->p_data,
-                                                                 a_p_number_buffer->capacity,
-                                                                 cstring::Radix::dec);
+                    uint32 number_length = cstring::from_signed_integer(a_p_argv[argument_index++].get_int32(),
+                                                                        a_p_number_buffer->p_data,
+                                                                        a_p_number_buffer->capacity,
+                                                                        cstring::Radix::dec);
 
                     length += cstring::join(a_p_destinaition_buffer->p_data + length,
                                             a_p_destinaition_buffer->capacity - length,
@@ -88,10 +88,10 @@ uint32 cstring::format_raw(Buffer* a_p_destinaition_buffer,
 
                 case 'u':
                 {
-                    uint32 number_length = cstring::from_integer(a_p_argv[argument_index++].get_uint32(),
-                                                                 a_p_number_buffer->p_data,
-                                                                 a_p_number_buffer->capacity,
-                                                                 cstring::Radix::dec);
+                    uint32 number_length = cstring::from_unsigned_integer(a_p_argv[argument_index++].get_uint32(),
+                                                                          a_p_number_buffer->p_data,
+                                                                          a_p_number_buffer->capacity,
+                                                                          cstring::Radix::dec);
 
                     length += cstring::join(a_p_destinaition_buffer->p_data + length,
                                             a_p_destinaition_buffer->capacity - length,

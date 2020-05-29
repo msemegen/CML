@@ -9,6 +9,7 @@
 #include <hal/stm32l452xx/I2C.hpp>
 
 //cml
+#include <common/macros.hpp>
 #include <hal/core/systick.hpp>
 #include <hal/stm32l452xx/mcu.hpp>
 #include <utils/wait.hpp>
@@ -480,11 +481,20 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
 
     uint32 ret = 0;
-    while (ret < a_data_size_in_bytes && false == is_I2C_ISR_error(this->p_i2c))
+    while (false == is_flag(this->p_i2c->ISR, I2C_ISR_STOPF) && false == is_I2C_ISR_error(this->p_i2c))
     {
         if (true == is_flag(this->p_i2c->ISR, I2C_ISR_RXNE))
         {
-            static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
+            if (ret < a_data_size_in_bytes)
+            {
+                static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
+            }
+            else
+            {
+                volatile uint32 temp = this->p_i2c->RXDR;
+                unused(temp);
+                ret++;
+            }
         }
     }
 
@@ -524,13 +534,22 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     this->p_i2c->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
 
     uint32 ret = 0;
-    while (ret < a_data_size_in_bytes &&
+    while (false == is_flag(this->p_i2c->ISR, I2C_ISR_STOPF) &&
            false == is_I2C_ISR_error(this->p_i2c) &&
            a_timeout_ms <= time::diff(systick::get_counter(), start))
     {
         if (true == is_flag(this->p_i2c->ISR, I2C_ISR_RXNE))
         {
-            static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
+            if (ret < a_data_size_in_bytes)
+            {
+                static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(this->p_i2c->RXDR);
+            }
+            else
+            {
+                volatile uint32 temp = this->p_i2c->RXDR;
+                unused(temp);
+                ret++;
+            }
         }
     }
 

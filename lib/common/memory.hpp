@@ -21,6 +21,15 @@ struct memory
     static void clear(void* a_p_destination, uint32 a_size_in_bytes);
     static bool equals(const void* a_p_first, const void* a_p_second, uint32 a_size_in_bytes);
 
+    template<typename Type_t>
+    static void swap(Type_t* a_p_first, Type_t* a_p_second)
+    {
+        Type_t tmp = *(a_p_first);
+
+        (*a_p_first)  = *(a_p_second);
+        *(a_p_second) = tmp;
+    }
+
     memory()              = delete;
     memory(memory&&)      = delete;
     memory(const memory&) = delete;

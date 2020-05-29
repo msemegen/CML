@@ -67,7 +67,6 @@ int main()
         if (true == usart_ready)
         {
             Console console(&console_usart);
-            console.enable();
 
             console.write_line("CML Console sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 

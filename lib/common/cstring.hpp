@@ -10,6 +10,7 @@
 //cml
 #include <common/integer.hpp>
 #include <common/memory.hpp>
+#include <common/numeric_traits.hpp>
 #include <debug/assert.hpp>
 
 namespace cml {
@@ -25,8 +26,18 @@ struct cstring
         hex = 16
     };
 
-    static uint32 length(const char* a_p_string, uint32 a_max_length);
+    static uint32 length(const char* a_p_string, uint32 a_max_length = numeric_traits<uint32>::get_max());
     static bool equals(const char* a_p_string_1, const char* a_p_string_2, uint32 a_max_length);
+
+    static void reverse(char* a_p_string, uint32 a_length)
+    {
+        assert(a_length > 0);
+
+        for (uint32 i = 0; i < a_length - 1; i++)
+        {
+            memory::swap(&(a_p_string[i]), &(a_p_string[a_length - i - 1]));
+        }
+    }
 
     static uint32 join(char* a_p_destination,
                        uint32 a_destination_capacity,
@@ -34,7 +45,7 @@ struct cstring
                        uint32 a_source_length);
 
     template<typename Type_t>
-    static Type_t to_integer(const char* a_p_string, uint32 a_length)
+    static Type_t to_signed_integer(const char* a_p_string, uint32 a_length)
     {
         assert(nullptr != a_p_string && 0 != a_p_string[0]);
         assert(a_length > 0);
@@ -53,37 +64,83 @@ struct cstring
     }
 
     template<typename Type_t>
-    static uint32 from_integer(Type_t a_value, char* a_p_buffer, uint32 a_buffer_capacity, Radix a_base)
+    static Type_t to_unsigned_integer(const char* a_p_string, uint32 a_length)
     {
-        assert(a_buffer_capacity > 1);
+        assert(nullptr != a_p_string && 0 != a_p_string[0]);
+        assert(a_length > 0);
 
-        uint32 length      = a_value > 0 ? 0 : 1;
-        const uint32 start = a_value > 0 ? 0 : 1;
+        Type_t retval = 0;
 
-        a_p_buffer[start] = 0;
-
-        if (a_value < 0)
+        for (uint32 i = a_length - 1, m = 1; i + a_length + 1 != a_length; i--, m *= 10)
         {
-            a_value *= -1;
+            retval += (a_p_string[i] - '0') * m;
         }
 
-        while (0 != a_value && length < a_buffer_capacity)
+        return retval;
+    }
+
+    template<typename Type_t>
+    static uint32 from_unsigned_integer(Type_t a_value, char* a_p_buffer, uint32 a_buffer_capacity, Radix a_base)
+    {
+        static_assert(true == numeric_traits<Type_t>::is_unsigned);
+        assert(a_buffer_capacity > 1);
+
+        uint32 ret = 0;
+
+        if (0 == a_value)
         {
-            char v = static_cast<char>(a_value % static_cast<byte>(a_base));
-            char to_insert = (v > 9) ? (v - 10) + 'a' : v + '0';
+            a_p_buffer[0] = '0';
+            a_p_buffer[1] = 0;
 
-            memory::move(a_p_buffer + 1, a_p_buffer, ++length);
-            a_p_buffer[start] = to_insert;
+            return 1;
+        }
 
+        while (0 != a_value)
+        {
+            Type_t remainder = a_value % static_cast<Type_t>(a_base);
+            a_p_buffer[ret++] = (remainder > 9) ? (remainder - 10) + 'a' : remainder + '0';
             a_value /= static_cast<Type_t>(a_base);
         }
 
-        if (1 == start)
+        a_p_buffer[ret] = 0;
+        reverse(a_p_buffer, ret);
+
+        return ret;
+    }
+
+    template<typename Type_t>
+    static uint32 from_signed_integer(Type_t a_value, char* a_p_buffer, uint32 a_buffer_capacity, Radix a_base)
+    {
+        static_assert(true == numeric_traits<Type_t>::is_signed);
+        assert(a_buffer_capacity > 1);
+
+        uint32 ret    = 0;
+        bool negative = a_value < 0;
+
+        if (0 == a_value)
         {
-            a_p_buffer[0] = '-';
+            a_p_buffer[0] = '0';
+            a_p_buffer[1] = 0;
+
+            return 1;
         }
 
-        return length;
+        while (0 != a_value)
+        {
+            Type_t remainder = a_value % static_cast<Type_t>(a_base);
+            a_p_buffer[ret++] = (remainder > 9) ? (remainder - 10) + 'a' : remainder + '0';
+            a_value /= static_cast<Type_t>(a_base);
+        }
+
+        if (true == negative)
+        {
+            a_p_buffer[ret++] = '-';
+        }
+
+        a_p_buffer[ret] = 0;
+        reverse(a_p_buffer, ret);
+        
+        return ret;
     }
 
     template<typename ... Types_t>

@@ -53,16 +53,16 @@ int main()
         };
 
         mcu::disable_msi_clock();
-        systick::enable(0x0);
+        systick::enable(0x9u);
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        Alternate_function_pin console_usart_TX_pin(&gpio_port_a, 2);
-        Alternate_function_pin console_usart_RX_pin(&gpio_port_a, 3);
+        Alternate_function_pin console_usart_tx_pin(&gpio_port_a, 2);
+        Alternate_function_pin console_usart_rx_pin(&gpio_port_a, 3);
 
-        console_usart_TX_pin.enable(usart_pin_config);
-        console_usart_RX_pin.enable(usart_pin_config);
+        console_usart_tx_pin.enable(usart_pin_config);
+        console_usart_rx_pin.enable(usart_pin_config);
 
         USART console_usart(USART::Id::_2);
         bool usart_ready = console_usart.enable(usart_config, usart_clock, 0x1u, 10);
@@ -70,8 +70,6 @@ int main()
         if (true == usart_ready)
         {
             Console console(&console_usart);
-            console.enable();
-
             console.write_line("CML Console sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             while (true)

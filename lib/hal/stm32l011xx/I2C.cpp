@@ -341,11 +341,20 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     I2C1->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
 
     uint32 ret = 0;
-    while (ret < a_data_size_in_bytes && false == is_I2C_ISR_error())
+    while (false == is_flag(I2C1->ISR, I2C_ISR_STOPF) && false == is_I2C_ISR_error())
     {
         if (true == is_flag(I2C1->ISR, I2C_ISR_RXNE))
         {
-            static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(I2C1->RXDR);
+            if (ret < a_data_size_in_bytes)
+            {
+                static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(I2C1->RXDR);
+            }
+            else
+            {
+                volatile uint32 temp = I2C1->RXDR;
+                unused(temp);
+                ret++;
+            }
         }
     }
 
@@ -384,13 +393,22 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     I2C1->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
 
     uint32 ret = 0;
-    while (ret < a_data_size_in_bytes &&
+    while (false == is_flag(I2C1->ISR, I2C_ISR_STOPF) &&
            false == is_I2C_ISR_error() &&
            a_timeout_ms <= time::diff(hal::systick::get_counter(), start))
     {
         if (true == is_flag(I2C1->ISR, I2C_ISR_RXNE))
         {
-            static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(I2C1->RXDR);
+            if (ret < a_data_size_in_bytes)
+            {
+                static_cast<uint8*>(a_p_data)[ret++] = static_cast<uint8>(I2C1->RXDR);
+            }
+            else
+            {
+                volatile uint32 temp = I2C1->RXDR;
+                unused(temp);
+                ret++;
+            }
         }
     }
 

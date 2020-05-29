@@ -266,13 +266,20 @@ uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes,
 
     uint32 ret = 0;
 
-    while (ret < a_data_size_in_bytes &&
-           false == is_flag(USART2->ISR, USART_ISR_IDLE) &&
+    while (false == is_flag(USART2->ISR, USART_ISR_IDLE) &&
            false == is_USART_ISR_error())
     {
         if (true == is_flag(USART2->ISR, USART_ISR_RXNE))
         {
-            static_cast<uint8*>(a_p_data)[ret++] = USART2->RDR;
+            if (ret < a_data_size_in_bytes)
+            {
+                static_cast<uint8*>(a_p_data)[ret++] = USART2->RDR;
+            }
+            else
+            {
+                set_flag(&(USART2->RQR), USART_RQR_RXFRQ);
+                ret++;
+            }
         }
     }
 
@@ -305,15 +312,32 @@ uint32 USART::receive_bytes_polling(void* a_p_data,
 
     uint32 ret = 0;
 
-    while (ret < a_data_size_in_bytes &&
-           false == is_flag(USART2->ISR, USART_ISR_IDLE) &&
+    while (false == is_flag(USART2->ISR, USART_ISR_IDLE) &&
            false == is_USART_ISR_error() && 
            a_timeout_ms < time::diff(systick::get_counter(), start))
     {
         if (true == is_flag(USART2->ISR, USART_ISR_RXNE))
         {
-            static_cast<uint8*>(a_p_data)[ret++] = USART2->RDR;
+            if (ret < a_data_size_in_bytes)
+            {
+                static_cast<uint8*>(a_p_data)[ret++] = USART2->RDR;
+            }
+            else
+            {
+                set_flag(&(USART2->RQR), USART_RQR_RXFRQ);
+                ret++;
+            }
         }
+    }
+
+    if (nullptr != a_p_status)
+    {
+        (*a_p_status) = get_bus_status_from_USART_ISR();
+    }
+
+    if (true == is_USART_ISR_error())
+    {
+        clear_USART_ISR_errors();
     }
 
     return ret;
