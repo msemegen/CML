@@ -18,6 +18,8 @@ namespace common {
 
 struct cstring
 {
+    static constexpr uint32 format_number_buffer_capacity = 12;
+
     enum class Radix
     {
         bin = 2,
@@ -147,10 +149,10 @@ struct cstring
     static uint32 format(char* a_p_buffer, uint32 a_buffer_capacity, const char* a_p_format, Types_t ... a_params)
     {
         const Argument args[] = { Argument{a_params}... };
-        char number_buffer_data[22];
+        char number_buffer_data[format_number_buffer_capacity];
 
         Buffer destination_buffer{ a_p_buffer, a_buffer_capacity };
-        Buffer number_buffer{ number_buffer_data, 22 };
+        Buffer number_buffer{ number_buffer_data, sizeof(number_buffer_data) };
 
         return format_raw(&destination_buffer, &number_buffer, a_p_format, args, sizeof...(a_params));
     }
