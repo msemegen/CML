@@ -20,12 +20,21 @@ class systick
 {
 public:
 
-    static void enable(common::uint32 a_priority);
+    struct Tick_callback
+    {
+        using Function = void(*)(void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    static void enable(common::uint32 a_start_value, common::uint32 a_priority);
     static void disable();
-    static void reset_counter();
+
+    static void register_tick_callback(const Tick_callback& a_callback);
+    static void unregister_tick_callback();
 
     static bool is_enabled();
-    static common::time::tick get_counter();
 
 private:
 

@@ -14,7 +14,7 @@
 #include <common/bit.hpp>
 #include <debug/assert.hpp>
 #include <hal/mcu.hpp>
-#include <hal/core/systick.hpp>
+#include <hal/core/system_counter.hpp>
 #include <utils/delay.hpp>
 #include <utils/wait.hpp>
 
@@ -84,9 +84,9 @@ void adc_handle_interrupt(ADC* a_p_this)
 bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32 a_irq_priority, time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
-    assert(true == systick::is_enabled());
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     set_flag(&(RCC->APB2ENR), RCC_APB2ENR_ADC1EN);
     set_flag(&(ADC1->CFGR2), ADC_CFGR2_CKMODE, static_cast<uint32>(a_clock.divider));
@@ -97,10 +97,9 @@ bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint
 bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, uint32 a_irq_priority, time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
-    assert(true == systick::is_enabled());
     assert(true == mcu::is_clock_enabled(mcu::Clock::hsi));
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     set_flag(&(RCC->APB2ENR), RCC_APB2ENR_ADC1EN);
     set_flag(&(ADC1->CFGR2), ADC_CFGR2_CKMODE, static_cast<uint32>(a_clock.divider));
@@ -188,14 +187,13 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time::tick a_timeout)
     assert(nullptr != p_adc_1);
     assert(nullptr != a_p_data);
     assert(a_count > 0);
-
+    assert(a_timeout > 0);
     assert(this->get_active_channels_count() == a_count);
-    assert(true == systick::is_enabled());
 
     set_flag(&(ADC1->CR), ADC_CR_ADSTART);
 
     bool ret = true;
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     for (uint32 i = 0; i < a_count && true == ret; i++)
     {

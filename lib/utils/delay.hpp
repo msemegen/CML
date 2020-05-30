@@ -10,7 +10,7 @@
 //cml
 #include <common/time.hpp>
 #include <debug/assert.hpp>
-#include <hal/systick.hpp>
+#include <hal/system_counter.hpp>
 
 #ifdef STM32L452xx
 #include <hal/stm32l452xx/misc.hpp>
@@ -37,10 +37,8 @@ public:
 
     static void ms(common::time::tick a_time)
     {
-        assert(true == hal::systick::is_enabled());
-
-        common::time::tick start = hal::systick::get_counter();
-        while (common::time::diff(hal::systick::get_counter(), start) <= a_time);
+        common::time::tick start = hal::system_counter::get();
+        while (common::time::diff(hal::system_counter::get(), start) <= a_time);
     }
 
     inline static void us(common::time::tick a_time)

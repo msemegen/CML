@@ -9,7 +9,7 @@
 #include <hal/stm32l011xx/I2C.hpp>
 
 //cml
-#include <hal/core/systick.hpp>
+#include <hal/core/system_counter.hpp>
 #include <hal/stm32l011xx/mcu.hpp>
 #include <utils/wait.hpp>
 
@@ -284,15 +284,15 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
 uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
                                           const void* a_p_data,
                                           uint32 a_data_size_in_bytes,
-                                          time::tick a_timeout_ms,
+                                          time::tick a_timeout,
                                           Bus_status* a_p_status)
 {
     assert(nullptr != controller.p_i2c_master_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
-    assert(true == systick::is_enabled() && a_timeout_ms > 0);
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
@@ -302,7 +302,7 @@ uint32 I2C_master::transmit_bytes_polling(uint16 a_slave_address,
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error() &&
-           a_timeout_ms <= time::diff(hal::systick::get_counter(), start))
+           a_timeout <= time::diff(system_counter::get(), start))
     {
         if (true == is_flag(I2C1->ISR, I2C_ISR_TXE))
         {
@@ -377,15 +377,15 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
 uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
                                          void* a_p_data,
                                          uint32 a_data_size_in_bytes,
-                                         time::tick a_timeout_ms,
+                                         time::tick a_timeout,
                                          Bus_status* a_p_status)
 {
     assert(nullptr != controller.p_i2c_master_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
-    assert(true == systick::is_enabled() && a_timeout_ms > 0);
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
     uint32 data_size_mask = static_cast<uint32>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
@@ -395,7 +395,7 @@ uint32 I2C_master::receive_bytes_polling(uint16 a_slave_address,
     uint32 ret = 0;
     while (false == is_flag(I2C1->ISR, I2C_ISR_STOPF) &&
            false == is_I2C_ISR_error() &&
-           a_timeout_ms <= time::diff(hal::systick::get_counter(), start))
+           a_timeout <= time::diff(system_counter::get(), start))
     {
         if (true == is_flag(I2C1->ISR, I2C_ISR_RXNE))
         {
@@ -494,18 +494,18 @@ void I2C_master::stop_receive_bytes_it()
     this->rx_callback = { nullptr, nullptr };
 }
 
-bool I2C_master::is_slave_connected(uint16 a_slave_address, time::tick a_timeout_ms) const
+bool I2C_master::is_slave_connected(uint16 a_slave_address, time::tick a_timeout) const
 {
     assert(nullptr != controller.p_i2c_master_handle);
-    assert(true == systick::is_enabled());
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     uint32 address_mask = (static_cast<uint32>(a_slave_address) << 1) & I2C_CR2_SADD;
 
     I2C1->CR2 = address_mask | I2C_CR2_AUTOEND | I2C_CR2_START;
 
-    bool ret = wait::until(&(I2C1->ISR), I2C_ISR_STOPF, false, start, a_timeout_ms);
+    bool ret = wait::until(&(I2C1->ISR), I2C_ISR_STOPF, false, start, a_timeout);
 
     if (true == ret)
     {
@@ -598,20 +598,20 @@ uint32 I2C_slave::transmit_bytes_polling(const void* a_p_data,
 
 uint32 I2C_slave::transmit_bytes_polling(const void* a_p_data,
                                          uint32 a_data_size_in_bytes,
-                                         time::tick a_timeout_ms,
+                                         time::tick a_timeout,
                                          Bus_status* a_p_status)
 {
     assert(nullptr != controller.p_i2c_slave_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
-    assert(true == systick::is_enabled() && a_timeout_ms > 0);
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error() &&
-           a_timeout_ms <= time::diff(hal::systick::get_counter(), start))
+           a_timeout <= time::diff(system_counter::get(), start))
     {
         if (true == is_flag(I2C1->ISR, I2C_ISR_TXE))
         {
@@ -667,20 +667,20 @@ common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
 
 common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
                                                 uint32 a_data_size_in_bytes,
-                                                time::tick a_timeout_ms,
+                                                time::tick a_timeout,
                                                 Bus_status* a_p_status)
 {
     assert(nullptr != controller.p_i2c_slave_handle);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
-    assert(true == systick::is_enabled() && a_timeout_ms > 0);
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     uint32 ret = 0;
     while (ret < a_data_size_in_bytes &&
            false == is_I2C_ISR_error() &&
-           a_timeout_ms <= time::diff(hal::systick::get_counter(), start))
+           a_timeout <= time::diff(system_counter::get(), start))
     {
         if (true == is_flag(I2C1->ISR, I2C_ISR_RXNE))
         {

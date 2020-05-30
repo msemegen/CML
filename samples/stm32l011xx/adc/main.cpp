@@ -9,6 +9,8 @@
 #include <hal/ADC.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
+#include <hal/system_counter.hpp>
+#include <hal/systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Console.hpp>
 #include <utils/delay.hpp>
@@ -41,7 +43,8 @@ int main()
 
     if (mcu::Sysclk_source::msi == mcu::get_sysclk_source())
     {
-        systick::enable(0x0u);
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
+        systick::register_tick_callback({ system_counter::update, nullptr });
         mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
 
         ADC adc(ADC::Id::_1);
@@ -95,8 +98,6 @@ int main()
                 adc.set_active_channels(ADC::Sampling_time::_160_5_clock_cycles, enabled_channels, 1);
 
                 Console console(&console_usart);
-                console.enable();
-
                 console.write_line("CML ADC sample. CPU speed: %d MHz\n", mcu::get_sysclk_frequency_hz() / MHz(1));
 
                 while (true)

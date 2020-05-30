@@ -12,7 +12,7 @@
 
 //cml
 #include <debug/assert.hpp>
-#include <hal/core/systick.hpp>
+#include <hal/core/system_counter.hpp>
 #include <utils/wait.hpp>
 
 namespace {
@@ -185,7 +185,7 @@ void usart_handle_interrupt(USART* a_p_this)
     }
 }
 
-bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irqn_priority, time::tick a_timeout_ms)
+bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irqn_priority, time::tick a_timeout)
 {
     assert(nullptr               == this->p_usart);
     assert(a_config.baud_rate    != 0);
@@ -196,8 +196,9 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irqn_p
 
     assert(Clock::Source::unknown != a_clock.source);
     assert(0                      != a_clock.frequency_hz);
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     controllers[static_cast<uint32>(this->id)].p_usart_handle = this;
     this->p_usart = controllers[static_cast<uint32>(this->id)].p_registers;
@@ -243,7 +244,7 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irqn_p
     this->baud_rate = a_config.baud_rate;
     this->clock     = a_clock;
 
-    bool ret = wait::until(&(this->p_usart->ISR), USART_ISR_TEACK | USART_ISR_REACK, false, start, a_timeout_ms);
+    bool ret = wait::until(&(this->p_usart->ISR), USART_ISR_TEACK | USART_ISR_REACK, false, start, a_timeout);
 
     if (false == ret)
     {
@@ -309,15 +310,15 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in
 
 uint32 USART::transmit_bytes_polling(const void* a_p_data,
                                      uint32 a_data_size_in_bytes,
-                                     time::tick a_timeout_ms,
+                                     time::tick a_timeout,
                                      Bus_status* a_p_status)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
-    assert(true == systick::is_enabled());
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
 
@@ -326,7 +327,7 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data,
 
     while ((ret < a_data_size_in_bytes || false == last_transfer_complete) &&
            false == is_USART_ISR_error(this->p_usart) &&
-           a_timeout_ms < time::diff(systick::get_counter(), start))
+           a_timeout < time::diff(system_counter::get(), start))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_TXE) && true == last_transfer_complete)
         {
@@ -396,15 +397,15 @@ uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes,
 
 uint32 USART::receive_bytes_polling(void* a_p_data,
                                     uint32 a_data_size_in_bytes,
-                                    time::tick a_timeout_ms,
+                                    time::tick a_timeout,
                                     Bus_status* a_p_status)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
-    assert(true == systick::is_enabled());
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     set_flag(&(this->p_usart->ICR), USART_ICR_IDLECF);
 
@@ -412,7 +413,7 @@ uint32 USART::receive_bytes_polling(void* a_p_data,
 
     while (false == is_flag(this->p_usart->ISR, USART_ISR_IDLE) &&
            false == is_USART_ISR_error(this->p_usart) && 
-           a_timeout_ms < time::diff(systick::get_counter(), start))
+           a_timeout < time::diff(system_counter::get(), start))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_RXNE))
         {

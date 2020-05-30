@@ -11,7 +11,7 @@
 #include <hal/stm32l452xx/ADC.hpp>
 
 //cml
-#include <hal/core/systick.hpp>
+#include <hal/core/system_counter.hpp>
 #include <utils/delay.hpp>
 #include <utils/wait.hpp>
 
@@ -89,11 +89,10 @@ bool ADC::enable(Resolution a_resolution,
                  time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
-    assert(true == systick::is_enabled());
     assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
            true == mcu::get_pll_config().pllsai1.r.output_enabled);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
     clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
@@ -108,13 +107,12 @@ bool ADC::enable(Resolution a_resolution,
                  time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
-    assert(true == systick::is_enabled());
     assert(Synchronous_clock::Divider::unknown != a_clock.divider);
     assert(Synchronous_clock::Divider::_1 == a_clock.divider ?
            mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
            true);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
     set_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<common::uint32>(a_clock.divider));
@@ -245,14 +243,14 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time::tick a_timeout)
     assert(nullptr != p_adc_1);
     assert(nullptr != a_p_data);
     assert(a_count > 0);
+    assert(a_timeout > 0);
 
     assert(this->get_active_channels_count() == a_count);
-    assert(true == systick::is_enabled());
 
     set_flag(&(ADC1->CR), ADC_CR_ADSTART);
 
-    bool ret        = true;
-    time::tick start = systick::get_counter();
+    bool ret         = true;
+    time::tick start = system_counter::get();
 
     for (uint32 i = 0; i < a_count && true == ret; i++)
     {

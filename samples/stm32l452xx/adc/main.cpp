@@ -9,6 +9,7 @@
 #include <hal/ADC.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
+#include <hal/system_counter.hpp>
 #include <hal/systick.hpp>
 #include <common/bit.hpp>
 #include <common/frequency.hpp>
@@ -71,7 +72,8 @@ int main()
             0x7u
         };
 
-        systick::enable(0x0);
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
+        systick::register_tick_callback({ system_counter::update, nullptr });
 
         mcu::disable_msi_clock();
         mcu::enable_dwt();
@@ -108,8 +110,6 @@ int main()
                 adc.set_active_channels(enabled_channels, 1);
 
                 Console console(&console_usart);
-                console.enable();
-
                 console.write_line("CML ADC sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
                 while (true)

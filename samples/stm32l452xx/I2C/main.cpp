@@ -10,6 +10,7 @@
 #include <common/frequency.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
+#include <hal/system_counter.hpp>
 #include <hal/systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/delay.hpp>
@@ -103,7 +104,8 @@ int main()
         mcu::disable_msi_clock();
         mcu::enable_syscfg();
 
-        systick::enable(9u);
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
+        systick::register_tick_callback({ system_counter::update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);
         GPIO gpio_port_b(GPIO::Id::b);

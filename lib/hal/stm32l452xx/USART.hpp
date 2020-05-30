@@ -137,7 +137,7 @@ public:
     bool enable(const Config& a_config,
                 const Clock& a_clock,
                 common::uint32 a_irq_priority,
-                common::time::tick a_timeout_ms);
+                common::time::tick a_timeout);
 
     void disable();
 
@@ -149,10 +149,10 @@ public:
 
     template<typename Data_t>
     common::uint32 transmit_polling(const Data_t& a_data,
-                                    common::time::tick a_timeout_ms,
+                                    common::time::tick a_timeout,
                                     Bus_status* a_p_status = nullptr)
     {
-        return this->transmit_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout_ms, a_p_status);
+        return this->transmit_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout, a_p_status);
     }
 
     template<typename Data_t>
@@ -162,9 +162,9 @@ public:
     }
 
     template<typename Data_t>
-    common::uint32 receive_polling(Data_t* a_p_data, common::time::tick a_timeout_ms, Bus_status* a_p_status = nullptr)
+    common::uint32 receive_polling(Data_t* a_p_data, common::time::tick a_timeout, Bus_status* a_p_status = nullptr)
     {
-        return this->receive_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout_ms, a_p_status);
+        return this->receive_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout, a_p_status);
     }
 
     common::uint32 transmit_bytes_polling(const void* a_p_data,
@@ -173,7 +173,7 @@ public:
 
     common::uint32 transmit_bytes_polling(const void* a_p_data,
                                           common::uint32 a_data_size_in_bytes,
-                                          common::time::tick a_timeout_ms,
+                                          common::time::tick a_timeout,
                                           Bus_status* a_p_status = nullptr);
 
     common::uint32 receive_bytes_polling(void* a_p_data,
@@ -182,7 +182,7 @@ public:
 
     common::uint32 receive_bytes_polling(void* a_p_data,
                                          common::uint32 a_data_size_in_bytes,
-                                         common::time::tick a_timeout_ms,
+                                         common::time::tick a_timeout,
                                          Bus_status* a_p_status = nullptr);
 
     void start_transmit_bytes_it(const TX_callback& a_callback);

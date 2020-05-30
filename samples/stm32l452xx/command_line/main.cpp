@@ -10,6 +10,7 @@
 #include <common/cstring.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
+#include <hal/system_counter.hpp>
 #include <hal/systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Command_line.hpp>
@@ -89,7 +90,9 @@ int main()
         };
 
         mcu::disable_msi_clock();
-        systick::enable(0x0);
+
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
+        systick::register_tick_callback({ system_counter::update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
@@ -109,8 +112,6 @@ int main()
             led_pin.enable({ Output_pin::Mode::push_pull, Output_pin::Pull::down, Output_pin::Speed::low });
 
             Console console(&console_usart);
-
-            console.enable();
             console.write_line("\nCML CLI sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             Command_line command_line(&console_usart, "cmd > ", "Command not found");

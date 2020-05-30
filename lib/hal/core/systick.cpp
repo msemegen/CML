@@ -24,14 +24,9 @@
 namespace
 {
 
-using namespace cml::common;
+using namespace cml::hal::core;
 
-uint32 cnt = 0;
-
-void systick_handle_interrupt()
-{
-    cnt++;
-}
+systick::Tick_callback callback;
 
 } // namespace ::
 
@@ -41,7 +36,10 @@ using namespace cml::hal;
 
 void SysTick_Handler()
 {
-    systick_handle_interrupt();
+    if (nullptr != callback.function)
+    {
+        callback.function(callback.p_user_data);
+    }
 }
 
 } // extern "C"
@@ -52,14 +50,14 @@ namespace core {
 
 using namespace cml::common;
 
-void systick::enable(uint32 a_priority)
+void systick::enable(uint32 a_start_value, uint32 a_priority)
 {
-    assert(SystemCoreClock / 1000 > 1);
+    assert(a_start_value > 0);
 
     NVIC_SetPriority(SysTick_IRQn, a_priority);
 
     SysTick->CTRL = 0;
-    SysTick->LOAD = (SystemCoreClock / 1000) - 1;
+    SysTick->LOAD = a_start_value;
     SysTick->VAL  = 0;
     SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 }
@@ -69,19 +67,20 @@ void systick::disable()
     SysTick->CTRL = 0;
 }
 
-void systick::reset_counter()
+void systick::register_tick_callback(const Tick_callback& a_callback)
 {
-    cnt = 0;
+    callback = a_callback;
+}
+
+void systick::unregister_tick_callback()
+{
+    callback.function    = nullptr;
+    callback.p_user_data = nullptr;
 }
 
 bool systick::is_enabled()
 {
     return is_flag(SysTick->CTRL, SysTick_CTRL_ENABLE_Msk);
-}
-
-time::tick systick::get_counter()
-{
-    return cnt;
 }
 
 } // namespace core
