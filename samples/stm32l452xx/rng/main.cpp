@@ -54,7 +54,9 @@ int main()
         };
 
         mcu::disable_msi_clock();
-        systick::enable(0x0);
+
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
+        systick::register_tick_callback({ system_counter::update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
@@ -71,8 +73,6 @@ int main()
         if (true == usart_ready)
         {
             Console console(&console_usart);
-            console.enable();
-
             console.write_line("CML rng sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             mcu::enable_hsi48_clock(mcu::Hsi48_frequency::_48_MHz);

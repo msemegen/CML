@@ -11,7 +11,7 @@
 #include <common/bit.hpp>
 #include <common/integer.hpp>
 #include <common/time.hpp>
-#include <hal/systick.hpp>
+#include <hal/system_counter.hpp>
 
 namespace cml {
 namespace utils {
@@ -39,14 +39,14 @@ public:
                       common::uint32 a_flag,
                       bool a_status,
                       common::time::tick a_start,
-                      common::time::tick a_timeout_ms)
+                      common::time::tick a_timeout)
     {
         bool status  = true;
         bool timeout = false;
 
         while (true == status && false == timeout)
         {
-            timeout = a_timeout_ms <= common::time::diff(hal::systick::get_counter(), a_start);
+            timeout = a_timeout <= common::time::diff(hal::system_counter::get(), a_start);
             status  = common::is_flag(*a_p_register, a_flag) == a_status;
         }
 

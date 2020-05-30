@@ -10,7 +10,7 @@
 
 //cml
 #include <hal/stm32l452xx/mcu.hpp>
-#include <hal/core/systick.hpp>
+#include <hal/core/system_counter.hpp>
 #include <utils/wait.hpp>
 
 namespace {
@@ -60,12 +60,12 @@ using namespace cml::common;
 using namespace cml::hal::core;
 using namespace cml::utils;
 
-bool rng::enable(uint32 a_irq_priority, time::tick a_timeout_ms)
+bool rng::enable(uint32 a_irq_priority, time::tick a_timeout)
 {
     assert(mcu::get_clk48_mux_freqency_hz() <= MHz(48));
-    assert(true == systick::is_enabled());
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
     set_flag(&(RNG->CR), RNG_CR_RNGEN);
@@ -74,8 +74,8 @@ bool rng::enable(uint32 a_irq_priority, time::tick a_timeout_ms)
 
     if (true == ret)
     {
-        ret = wait::until(&(RNG->SR), RNG_SR_SECS, true, start, a_timeout_ms) &&
-              wait::until(&(RNG->SR), RNG_SR_CECS, true, start, a_timeout_ms);
+        ret = wait::until(&(RNG->SR), RNG_SR_SECS, true, start, a_timeout) &&
+              wait::until(&(RNG->SR), RNG_SR_CECS, true, start, a_timeout);
     }
 
     if (true == ret)
@@ -95,11 +95,13 @@ void rng::disable()
     NVIC_DisableIRQ(RNG_IRQn);
 }
 
-bool rng::get_value_polling(uint32* a_p_value, time::tick a_timeout_ms)
+bool rng::get_value_polling(uint32* a_p_value, time::tick a_timeout)
 {
-    time::tick start = systick::get_counter();
+    assert(a_timeout > 0);
 
-    bool ret = wait::until(&(RNG->SR), RNG_SR_DRDY, false, start, a_timeout_ms);
+    time::tick start = system_counter::get();
+
+    bool ret = wait::until(&(RNG->SR), RNG_SR_DRDY, false, start, a_timeout);
 
     if (true == ret)
     {

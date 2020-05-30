@@ -10,6 +10,7 @@
 #include <hal/iwdg.hpp>
 #include <hal/mcu.hpp>
 #include <hal/rng.hpp>
+#include <hal/system_counter.hpp>
 #include <hal/systick.hpp>
 #include <hal/USART.hpp>
 #include <utils/Console.hpp>
@@ -56,7 +57,9 @@ int main()
 
         mcu::disable_msi_clock();
         mcu::enable_lsi_clock(mcu::Lsi_frequency::_32_kHz);
-        systick::enable(0x0u);
+
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
+        systick::register_tick_callback({ system_counter::update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
@@ -73,8 +76,6 @@ int main()
         if (true == usart_ready)
         {
             Console console(&console_usart);
-            console.enable();
-
             console.write("RESET SOURCE: ");
 
             switch (mcu::get_reset_source())

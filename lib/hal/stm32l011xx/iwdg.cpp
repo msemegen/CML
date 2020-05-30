@@ -10,7 +10,7 @@
 
 //cml
 #include <debug/assert.hpp>
-#include <hal/core/systick.hpp>
+#include <hal/core/system_counter.hpp>
 #include <hal/stm32l011xx/mcu.hpp>
 #include <utils/wait.hpp>
 
@@ -43,10 +43,10 @@ bool iwdg::enable(Prescaler a_prescaler,
 {
     assert((true == a_window.enable && a_window.value <= 0xFFFu) || (false == a_window.enable));
     assert(true == mcu::is_clock_enabled(mcu::Clock::lsi));
-    assert(true == systick::is_enabled());
     assert(a_reload <= 0xFFFu);
+    assert(a_timeout > 0);
 
-    time::tick start = systick::get_counter();
+    time::tick start = system_counter::get();
 
     IWDG->KR = control_flags::enable;
     IWDG->KR = control_flags::write_access_enable;
