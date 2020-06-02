@@ -93,23 +93,18 @@ int main()
         console_usart_rx_pin.enable(usart_pin_config);
 
         USART console_usart(USART::Id::_2);
-        bool usart_ready = console_usart.enable(usart_config, usart_clock, 0x1u, 10);
+        console_usart.enable(usart_config, usart_clock, 0x1u, 10);
 
-        if (true == usart_ready)
-        {
-            Logger logger(&console_usart, true, true, true, true);
-            logger.inf("CML assert sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
+        Logger logger(&console_usart, true, true, true, true);
+        logger.inf("CML assert sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
-            assert::register_callback({ print_assert, &logger });
-            assert::register_callback({ halt, nullptr });
+        assert::register_callback({ print_assert, &logger });
+        assert::register_callback({ halt, nullptr });
 
-            logger.set_verbose();
+        uint8 array_buffer[3];
+        Array<uint8> array(array_buffer, sizeof(array_buffer));
 
-            uint8 array_buffer[3];
-            Array<uint8> array(array_buffer, sizeof(array_buffer));
-
-            array[3] = 3;
-        }
+        array[3] = 3;
     }
 
     while (true);
