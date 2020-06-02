@@ -32,7 +32,7 @@ void assert::register_callback(const Print_callback& a_callback)
     print = a_callback;
 }
 
-void assert::trap(const char* a_p_file, int32 a_line, const char* a_p_expression)
+void assert::trap(const char* a_p_file, uint32 a_line, const char* a_p_expression)
 {
     if (nullptr != print.p_function)
     {
@@ -43,8 +43,6 @@ void assert::trap(const char* a_p_file, int32 a_line, const char* a_p_expression
     {
         halt.p_function(halt.p_user_data);
     }
-
-    while (true);
 }
 
 } // namespace debug

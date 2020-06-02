@@ -6,7 +6,7 @@
 */
 
 //this
-#include <utils/logger.hpp>
+#include <utils/Logger.hpp>
 
 //cml
 #include <common/cstring.hpp>
@@ -56,17 +56,17 @@ void Logger::omg(const char* a_p_message)
 
 void Logger::write(const char* a_p_message, Stream_type a_type)
 {
-    assert(nullptr != this->p_err_stream);
+    assert(nullptr != this->p_io_stream);
 
     if (true == this->is_stream_enabled(a_type))
     {
         const uint32 message_length = cstring::length(a_p_message, config::console::line_buffer_capacity);
 
-        this->p_err_stream->transmit_bytes_polling(tags[static_cast<uint32>(a_type)], tag_length);
-        this->p_err_stream->transmit_bytes_polling(a_p_message, message_length);
-        this->p_err_stream->transmit_bytes_polling(&(config::new_line_character), 1);
+        this->p_io_stream->transmit_bytes_polling(tags[static_cast<uint32>(a_type)], tag_length);
+        this->p_io_stream->transmit_bytes_polling(a_p_message, message_length);
+        this->p_io_stream->transmit_bytes_polling(&(config::new_line_character), 1);
     }
 }
 
 } // namespace utils
-} // namespace cml
+} // namespace cmls

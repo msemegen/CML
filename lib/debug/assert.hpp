@@ -17,26 +17,26 @@ struct assert
 {
     struct Halt_callback
     {
-        using function = void(*)(void* a_p_user_data);
+        using Function = void(*)(void* a_p_user_data);
 
-        function p_function = nullptr;
+        Function p_function = nullptr;
         void* p_user_data   = nullptr;
     };
 
     struct Print_callback
     {
-        using function = void(*)(void* a_p_user_data,
+        using Function = void(*)(void* a_p_user_data,
                                  const char* a_p_file,
-                                 common::int32 a_line,
+                                 common::uint32 a_line,
                                  const char* a_p_expression);
 
-        function p_function = nullptr;
+        Function p_function = nullptr;
         void* p_user_data   = nullptr;
     };
 
     static void register_callback(const Halt_callback& a_callback);
     static void register_callback(const Print_callback& a_callback);
-    static void trap(const char* a_p_file, common::int32 a_line, const char* a_p_expression);
+    static void trap(const char* a_p_file, common::uint32 a_line, const char* a_p_expression);
 
     assert()              = delete;
     assert(const assert&) = delete;
@@ -51,8 +51,8 @@ struct assert
 } // namespace cml
 
 #ifdef CML_DEBUG
-#define assert(expression) (false == (expression) ? cml::debug::assert::trap(__FILE__,    \
-                                                                             __LINE__,    \
+#define assert(expression) (false == (expression) ? cml::debug::assert::trap(__FILE__, \
+                                                                             static_cast<cml::common::uint32>(__LINE__),\
                                                                              #expression) \
                                                   : static_cast<void>(0))
 #endif

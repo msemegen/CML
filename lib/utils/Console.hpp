@@ -20,11 +20,14 @@ class Console
 {
 public:
 
+    Console()
+        : p_io_stream(nullptr)
+    {}
+
     Console(hal::USART* a_p_io_stream)
         : p_io_stream(a_p_io_stream)
     {}
 
-    Console()               = delete;
     Console(Console&&)      = default;
     Console(const Console&) = default;
     ~Console()              = default;

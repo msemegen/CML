@@ -641,7 +641,7 @@ common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
     uint32 ret = 0;
-    while (ret < a_data_size_in_bytes &&
+    while ((ret < a_data_size_in_bytes || true == is_flag(I2C1->ICR, I2C_ICR_STOPCF)) &&
            false == is_I2C_ISR_error())
     {
         if (true == is_flag(I2C1->ISR, I2C_ISR_RXNE))
@@ -678,7 +678,7 @@ common::uint32 I2C_slave::receive_bytes_polling(void* a_p_data,
     time::tick start = system_counter::get();
 
     uint32 ret = 0;
-    while (ret < a_data_size_in_bytes &&
+    while ((ret < a_data_size_in_bytes || true == is_flag(I2C1->ICR, I2C_ICR_STOPCF)) &&
            false == is_I2C_ISR_error() &&
            a_timeout <= time::diff(system_counter::get(), start))
     {

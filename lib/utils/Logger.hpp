@@ -31,16 +31,20 @@ public:
 
 public:
 
-    void enable(hal::USART* a_p_err_stream, bool a_inf, bool a_wrn, bool a_err, bool a_omg)
-    {
-        this->p_err_stream = a_p_err_stream;
-        this->set_verbosity(a_inf, a_wrn, a_err, a_omg);
-    }
+    Logger()
+        : p_io_stream(nullptr)
+    {}
 
-    void disable()
-    {
-        this->p_err_stream = nullptr;
-    }
+    Logger(hal::USART* a_p_stream)
+        : p_io_stream(a_p_stream)
+    {}
+
+    Logger(Logger&&)      = default;
+    Logger(const Logger&) = default;
+    ~Logger()             = default;
+
+    Logger& operator = (Logger&&)      = default;
+    Logger& operator = (const Logger&) = default;
 
     bool is_stream_enabled(Stream_type a_type)
     {
@@ -60,12 +64,12 @@ public:
         if (true == a_omg) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::omg)); }
     }
 
-    void calm_down()
+    void set_calm_down()
     {
         this->verbosity = 0;
     }
 
-    void verbose()
+    void set_verbose()
     {
         common::set_flag(&(this->verbosity), static_cast<common::uint8>(0xFu));
     }
@@ -105,18 +109,11 @@ public:
 
 private:
 
-    Logger()              = default;
-    Logger(Logger&&)      = delete;
-    Logger(const Logger&) = delete;
-
-    Logger& operator = (const Logger&) = delete;
-    Logger& operator = (Logger&&)      = delete;
-
     void write(const char* a_p_message, Stream_type a_type);
 
 private:
 
-    hal::USART* p_err_stream;
+    hal::USART* p_io_stream;
     common::uint8 verbosity;
 
     char line_buffer[config::logger::line_buffer_capacity];
