@@ -11,7 +11,6 @@
 #include <common/integer.hpp>
 #include <debug/assert.hpp>
 
-
 namespace cml {
 namespace collection {
 
@@ -32,7 +31,7 @@ public:
 
     Array()                      = delete;
     Array(Array<Type_t>&&)       = default;
-    Array(const Array<Type_t>&&) = default;
+    Array(const Array<Type_t>&)  = default;
 
     Array<Type_t>& operator = (Array<Type_t>&&)      = default;
     Array<Type_t>& operator = (const Array<Type_t>&) = default;

@@ -35,9 +35,14 @@ public:
         : p_io_stream(nullptr)
     {}
 
-    Logger(hal::USART* a_p_stream)
+    Logger(hal::USART* a_p_stream, bool a_inf, bool a_wrn, bool a_err, bool a_omg)
         : p_io_stream(a_p_stream)
-    {}
+    {
+        if (true == a_inf) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::inf)); }
+        if (true == a_wrn) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::wrn)); }
+        if (true == a_err) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::err)); }
+        if (true == a_omg) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::omg)); }
+    }
 
     Logger(Logger&&)      = default;
     Logger(const Logger&) = default;
