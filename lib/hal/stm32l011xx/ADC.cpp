@@ -46,7 +46,7 @@ extern "C"
 void ADC1_COMP_IRQHandler()
 {
     assert(nullptr != p_adc_1);
-    adc_handle_interrupt(p_adc_1);
+    adc_interrupt_handler(p_adc_1);
 }
 
 } // extern "C"
@@ -59,7 +59,7 @@ using namespace cml::common;
 using namespace cml::hal::core;
 using namespace cml::utils;
 
-void adc_handle_interrupt(ADC* a_p_this)
+void adc_interrupt_handler(ADC* a_p_this)
 {
     uint32 isr = ADC1->ISR;
 

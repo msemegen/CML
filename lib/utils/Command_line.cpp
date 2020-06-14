@@ -20,9 +20,13 @@ namespace
 using namespace cml::collection;
 using namespace cml::common;
 
-bool rx_callback(uint32 a_byte, void* a_p_user_data)
+bool rx_callback(uint32 a_byte, bool a_idle, void* a_p_user_data)
 {
-    reinterpret_cast<Ring<char>*>(a_p_user_data)->push(static_cast<char>(a_byte));
+    if (false == a_idle)
+    {
+        reinterpret_cast<Ring<char>*>(a_p_user_data)->push(static_cast<char>(a_byte));
+    }
+
     return true;
 }
 
@@ -31,7 +35,7 @@ bool rx_callback(uint32 a_byte, void* a_p_user_data)
 namespace cml {
 namespace utils {
 
-using namespace cml::common;
+using namespace cml::common;    
 using namespace cml::hal;
 
 void Command_line::update()
@@ -113,12 +117,12 @@ void Command_line::update()
 
 void Command_line::enable()
 {
-    this->p_io_stream->start_receive_bytes_it({ rx_callback, &(this->input_buffer_view) });
+    this->p_io_stream->register_receive_callback({ rx_callback, &(this->input_buffer_view) });
 }
 
 void Command_line::disable()
 {
-    this->p_io_stream->stop_receive_bytes_it();
+    this->p_io_stream->unregister_receive_callback();
 }
 
 Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(char* a_p_line,

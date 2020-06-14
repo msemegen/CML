@@ -1,7 +1,7 @@
 /*
     Name: main.cpp
 
-    Copyright(c) 2019 Mateusz Semegen
+    Copyright(c) 2020 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
@@ -9,6 +9,7 @@
 #include <common/bit.hpp>
 #include <common/frequency.hpp>
 #include <hal/GPIO.hpp>
+#include <hal/I2C.hpp>
 #include <hal/mcu.hpp>
 #include <hal/system_counter.hpp>
 #include <hal/systick.hpp>
@@ -16,65 +17,51 @@
 #include <utils/delay.hpp>
 #include <utils/Console.hpp>
 
-#include <hal/I2C.hpp>
-
 //#define MASTER
-//#define SLAVE
+#define SLAVE
 
 namespace
 {
-    using namespace cml::hal::stm32l452xx;
+    using namespace cml::hal;
     using namespace cml::utils;
 
-void print_status(Console* a_p_console, const char* a_p_tag, I2C_base::Bus_status a_bus_status, uint32_t a_bytes)
+void print_status(Console* a_p_console, const char* a_p_tag, I2C_base::Bus_status_flag a_bus_status, uint32_t a_bytes)
 {
     a_p_console->write("[%s] status: ", a_p_tag);
 
     switch (a_bus_status)
     {
-        case I2C_base::Bus_status::ok:
+        case I2C_base::Bus_status_flag::ok:
         {
             a_p_console->write("ok ");
         }
         break;
 
-        case I2C_base::Bus_status::timeout:
+        case I2C_base::Bus_status_flag::buffer_error:
         {
-            a_p_console->write("timeout ");
+            a_p_console->write("overrun / underrun ");
         }
         break;
 
-        case I2C_base::Bus_status::overrun:
-        {
-            a_p_console->write("overrun ");
-        }
-        break;
-
-        case I2C_base::Bus_status::underrun:
-        {
-            a_p_console->write("underrun ");
-        }
-        break;
-
-        case I2C_base::Bus_status::arbitration_lost:
+        case I2C_base::Bus_status_flag::arbitration_lost:
         {
             a_p_console->write("arbitration lost ");
         }
         break;
 
-        case I2C_base::Bus_status::misplaced:
+        case I2C_base::Bus_status_flag::misplaced:
         {
             a_p_console->write("misplaced ");
         }
         break;
 
-        case I2C_base::Bus_status::crc_error:
+        case I2C_base::Bus_status_flag::crc_error:
         {
             a_p_console->write("crc error ");
         }
         break;
 
-        case I2C_base::Bus_status::nack:
+        case I2C_base::Bus_status_flag::nack:
         {
             a_p_console->write("nack ");
         }
@@ -158,7 +145,7 @@ int main()
 
         if (true == usart_ready)
         {
-#ifdef MASTER
+#if defined MASTER && !defined SLAVE
 
             Console console(&console_usart);
             console.write_line("CML I2C master sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
@@ -171,23 +158,27 @@ int main()
             const uint8 data_to_send[] = { 0x1u, 0x2u };
             uint8 data_to_receive[]    = { 0xFF, 0xFF };
 
-            I2C_master::Bus_status bus_status;
+            I2C_master::Bus_status_flag bus_status;
 
             if (true == i2c_master_bus.is_slave_connected(0x11, 10))
             {
+                console.write_line("Slave detected!");
+
                 while (true)
                 {
                     uint32 bytes = i2c_master_bus.transmit_bytes_polling(0x11,
                                                                          data_to_send,
-                                                                         sizeof(data_to_send),
+                                                                         sizeof(data_to_send), 10,
                                                                          &bus_status);
 
-                    if (I2C_master::Bus_status::ok == bus_status)
+                    if (I2C_master::Bus_status_flag::ok == bus_status)
                     {
                         bytes += i2c_master_bus.receive_bytes_polling(0x11,
-                                                                      &data_to_receive,
-                                                                      sizeof(data_to_receive),
+                                                                      data_to_receive,
+                                                                      sizeof(data_to_receive), 10,
                                                                       &bus_status);
+
+                        console.write_line("resp: %u %u", data_to_receive[0], data_to_receive[1]);
                     }
 
 
@@ -198,9 +189,9 @@ int main()
             console.write_line("No slave detected...");
             while (true);
 
-#endif // MASTER
+#endif // defined MASTER && !defined SLAVE
 
-#ifdef SLAVE
+#if defined SLAVE && !defined MASTER
 
             Console console(&console_usart);
             console.write_line("CML I2C slave sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
@@ -208,26 +199,45 @@ int main()
             I2C_slave i2c_slave_bus(I2C_slave::Id::_1);
             i2c_slave_bus.enable({ false, true, false, 0x00200205, 0x11 }, I2C_slave::Clock_source::sysclk, 0x1u);
 
-            const uint8 data_to_send[] = { 0x1u, 0x2u };
-            uint8 data_to_receive[]    = { 0xFF, 0xFF };
+            uint8 data_to_send[]    = { 0x00u, 0x00u };
+            uint8 data_to_receive[] = { 0xFFu, 0xFFu };
 
-            I2C_slave::Bus_status bus_status;
+            I2C_slave::Bus_status_flag bus_status;
 
             while (true)
             {
                 uint32_t bytes_received = i2c_slave_bus.receive_bytes_polling(&data_to_receive,
                                                                               sizeof(data_to_receive),
                                                                               &bus_status);
-                print_status(&console, "receive_bytes_polling", bus_status, bytes_received);
 
-                uint32 bytes_transmited = i2c_slave_bus.transmit_bytes_polling(&data_to_send,
-                                                                               sizeof(data_to_send),
-                                                                               &bus_status);
-                print_status(&console, "transmit_bytes_polling", bus_status, bytes_transmited);
+                if (bytes_received > 0 && I2C_slave::Bus_status_flag::ok == bus_status)
+                {
+
+                    print_status(&console, "receive_bytes_polling", bus_status, bytes_received);
+
+                    uint32 bytes_transmited = i2c_slave_bus.transmit_bytes_polling(&data_to_send,
+                                                                                   sizeof(data_to_send),
+                                                                                   &bus_status);
+
+                    data_to_send[0]++;
+                    data_to_send[1]++;
+
+                    print_status(&console, "transmit_bytes_polling", bus_status, bytes_transmited);
+                }
+                else
+                {
+                    if (0 == bytes_received && I2C_slave::Bus_status_flag::ok == bus_status)
+                    {
+                        console.write_line("Discovered!");
+                    }
+                    else
+                    {
+                        print_status(&console, "receive_bytes_polling", bus_status, bytes_received);
+                    }
+                }
             }
 
-
-#endif // SLAVE
+#endif // defined SLAVE && !defined MASTER
         }
     }
 

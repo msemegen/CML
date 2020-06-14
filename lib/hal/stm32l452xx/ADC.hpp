@@ -210,7 +210,7 @@ private:
 
 private:
 
-    friend void adc_handle_interrupt(ADC* a_p_this);
+    friend void adc_interrupt_handler(ADC* a_p_this);
 };
 
 } // namespace stm32l452xx

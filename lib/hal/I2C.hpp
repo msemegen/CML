@@ -20,11 +20,13 @@ namespace cml {
 namespace hal {
 
 #ifdef STM32L452xx
+using I2C_base   = stm32l452xx::I2C_base;
 using I2C_master = stm32l452xx::I2C_master;
 using I2C_slave  = stm32l452xx::I2C_slave;
 #endif // STM32L452xx
 
 #ifdef STM32L011xx
+using I2C_base   = stm32l011xx::I2C_base;
 using I2C_master = stm32l011xx::I2C_master;
 using I2C_slave  = stm32l011xx::I2C_slave;
 #endif // STM32L011xx

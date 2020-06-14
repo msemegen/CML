@@ -33,15 +33,14 @@ public:
 
     Logger()
         : p_io_stream(nullptr)
+        , verbosity(0)
     {}
 
     Logger(hal::USART* a_p_stream, bool a_inf, bool a_wrn, bool a_err, bool a_omg)
         : p_io_stream(a_p_stream)
+        , verbosity(0)
     {
-        if (true == a_inf) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::inf)); }
-        if (true == a_wrn) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::wrn)); }
-        if (true == a_err) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::err)); }
-        if (true == a_omg) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::omg)); }
+        this->set_verbosity(a_inf, a_wrn, a_err, a_omg);
     }
 
     Logger(Logger&&)      = default;
@@ -58,15 +57,7 @@ public:
 
     void set_verbosity(bool a_inf, bool a_wrn, bool a_err, bool a_omg)
     {
-        common::clear_bit(&(this->verbosity), static_cast<common::int8>(Stream_type::inf));
-        common::clear_bit(&(this->verbosity), static_cast<common::int8>(Stream_type::wrn));
-        common::clear_bit(&(this->verbosity), static_cast<common::int8>(Stream_type::err));
-        common::clear_bit(&(this->verbosity), static_cast<common::int8>(Stream_type::omg));
-
-        if (true == a_inf) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::inf)); }
-        if (true == a_wrn) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::wrn)); }
-        if (true == a_err) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::err)); }
-        if (true == a_omg) { common::set_bit(&(this->verbosity), static_cast<common::uint8>(Stream_type::omg)); }
+        common::set_flag(&(this->verbosity), 0xFu, this->create_verbosity_mask(a_inf, a_wrn, a_err, a_omg));
     }
 
     void set_calm_down()
@@ -115,6 +106,14 @@ public:
 private:
 
     void write(const char* a_p_message, Stream_type a_type);
+
+    common::uint8 create_verbosity_mask(bool a_inf, bool a_wrn, bool a_err, bool a_omg)
+    {
+        return (true == a_inf ? 0x1u : 0x0u) | 
+               (true == a_wrn ? 0x2u : 0x0u) |
+               (true == a_err ? 0x4u : 0x0u) |
+               (true == a_omg ? 0x8u : 0x0u);
+    }
 
 private:
 

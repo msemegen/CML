@@ -72,6 +72,7 @@ int main()
         {
             Console console(&console_usart);
             console.write_line("CML Console sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
+            console.enable_buffered_input();
 
             while (true)
             {

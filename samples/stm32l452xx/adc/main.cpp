@@ -110,6 +110,8 @@ int main()
                 adc.set_active_channels(enabled_channels, 1);
 
                 Console console(&console_usart);
+                console.enable_buffered_input();
+
                 console.write_line("CML ADC sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
                 while (true)

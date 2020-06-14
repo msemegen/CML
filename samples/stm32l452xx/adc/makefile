@@ -4,8 +4,11 @@ endif
 
 PROJECT_NAME := cml_adc_sample
 ROOT         := $(CURDIR)
+CML_ROOT     := $(ROOT)/../../..
 LIBRARIES    := $(ROOT)/libraries
 OUTPUT_NAME  := $(PROJECT_NAME)
+
+C_SOURCE_PATHS := $(ROOT)/../
 
 OUTPUT_FOLDER_NAME := output
 OUTDIR         	   := $(ROOT)/$(OUTPUT_FOLDER_NAME)

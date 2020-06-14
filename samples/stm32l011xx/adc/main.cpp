@@ -98,6 +98,8 @@ int main()
                 adc.set_active_channels(ADC::Sampling_time::_160_5_clock_cycles, enabled_channels, 1);
 
                 Console console(&console_usart);
+                console.enable_buffered_input(); //we handle input, but with no reaction on it
+
                 console.write_line("CML ADC sample. CPU speed: %d MHz\n", mcu::get_sysclk_frequency_hz() / MHz(1));
 
                 while (true)

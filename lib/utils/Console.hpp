@@ -10,6 +10,7 @@
 //cml
 #include <common/cstring.hpp>
 #include <common/integer.hpp>
+#include <collection/Ring.hpp>
 #include <hal/USART.hpp>
 #include <utils/config.hpp>
 
@@ -22,10 +23,14 @@ public:
 
     Console()
         : p_io_stream(nullptr)
+        , input_buffer_view(this->input_buffer, config::console::input_buffer_capacity)
+        , buffered_input_enabled(false)
     {}
 
     Console(hal::USART* a_p_io_stream)
         : p_io_stream(a_p_io_stream)
+        , input_buffer_view(this->input_buffer, config::console::input_buffer_capacity)
+        , buffered_input_enabled(false)
     {}
 
     Console(Console&&)      = default;
@@ -34,6 +39,14 @@ public:
 
     Console& operator = (Console&&)      = default;
     Console& operator = (const Console&) = default;
+
+    void enable_buffered_input();
+    void disable_buffered_input();
+
+    bool is_buffered_input() const
+    {
+        return this->buffered_input_enabled;
+    }
 
     common::uint32 write(char a_character);
     common::uint32 write(const char* a_p_string);
@@ -63,6 +76,10 @@ private:
     hal::USART* p_io_stream;
 
     char line_buffer[config::console::line_buffer_capacity];
+    char input_buffer[config::console::input_buffer_capacity];
+
+    collection::Ring<char> input_buffer_view;
+    bool buffered_input_enabled;
 };
 
 } // namespace utils

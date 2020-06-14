@@ -6,7 +6,10 @@
 */
 
 //cml
+#define CML_ASSERT
+
 #include <collection/Array.hpp>
+#include <debug/assert.hpp>
 #include <hal/GPIO.hpp>
 #include <hal/mcu.hpp>
 #include <hal/system_counter.hpp>
@@ -103,7 +106,6 @@ int main()
         Array<uint8> array(array_buffer, sizeof(array_buffer));
 
         array[3] = 3;
-
     }
 
     while (true);

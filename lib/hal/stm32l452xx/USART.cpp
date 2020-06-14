@@ -73,34 +73,41 @@ void usart_3_disable()
     NVIC_DisableIRQ(USART3_IRQn);
 }
 
-bool is_USART_ISR_error(const USART_TypeDef* a_p_usart)
+bool is_USART_ISR_error(uint32 a_isr)
 {
-    return is_any_bit(a_p_usart->ISR, USART_ISR_PE | USART_ISR_FE | USART_ISR_ORE);
+    return is_any_bit(a_isr, USART_ISR_PE | USART_ISR_FE | USART_ISR_ORE | USART_ISR_NE);
 }
 
-USART::Bus_status get_bus_status_from_USART_ISR(const USART_TypeDef* a_p_usart)
+USART::Bus_status_flag get_bus_status_flag_from_USART_ISR(uint32 a_isr)
 {
-    if (true == is_flag(a_p_usart->ISR, USART_ISR_PE))
+    USART::Bus_status_flag ret = USART::Bus_status_flag::ok;
+
+    if (true == is_flag(a_isr, USART_ISR_PE))
     {
-        return USART::Bus_status::parity_error;
+        ret |= USART::Bus_status_flag::parity_error;
     }
 
-    if (true == is_flag(a_p_usart->ISR, USART_ISR_FE))
+    if (true == is_flag(a_isr, USART_ISR_FE))
     {
-        return USART::Bus_status::framing_error;
+        ret |= USART::Bus_status_flag::framing_error;
     }
 
-    if (true == is_flag(a_p_usart->ISR, USART_ISR_ORE))
+    if (true == is_flag(a_isr, USART_ISR_ORE))
     {
-        return USART::Bus_status::overrun;
+        ret |= USART::Bus_status_flag::overrun;
     }
 
-    return USART::Bus_status::ok;
+    if (true == is_flag(a_isr, USART_ISR_NE))
+    {
+        ret |= USART::Bus_status_flag::noise_detected;
+    }
+
+    return ret;
 }
 
-void clear_USART_ISR_errors(USART_TypeDef* a_p_usart)
+void clear_USART_ISR_errors(volatile uint32* a_p_icr)
 {
-    set_flag(&(a_p_usart->ICR), USART_ICR_PECF | USART_ICR_FECF | USART_ICR_ORECF);
+    set_flag(a_p_icr, USART_ICR_PECF | USART_ICR_FECF | USART_ICR_ORECF | USART_ICR_NECF);
 }
 
 struct Controller
@@ -130,19 +137,19 @@ extern "C"
 void USART1_IRQHandler()
 {
     assert(nullptr != controllers[0].p_usart_handle);
-    usart_handle_interrupt(controllers[0].p_usart_handle);
+    usart_interrupt_handler(controllers[0].p_usart_handle);
 }
 
 void USART2_IRQHandler()
 {
     assert(nullptr != controllers[1].p_usart_handle);
-    usart_handle_interrupt(controllers[1].p_usart_handle);
+    usart_interrupt_handler(controllers[1].p_usart_handle);
 }
 
 void USART3_IRQHandler()
 {
     assert(nullptr != controllers[2].p_usart_handle);
-    usart_handle_interrupt(controllers[2].p_usart_handle);
+    usart_interrupt_handler(controllers[2].p_usart_handle);
 }
 
 } // extern "C"
@@ -155,32 +162,58 @@ using namespace cml::common;
 using namespace cml::hal::core;
 using namespace cml::utils;
 
-void usart_handle_interrupt(USART* a_p_this)
+void usart_interrupt_handler(USART* a_p_this)
 {
     assert(nullptr != a_p_this);
 
     uint32 isr = a_p_this->p_usart->ISR;
     uint32 cr1 = a_p_this->p_usart->CR1;
+    uint32 cr3 = a_p_this->p_usart->CR3;
 
-    if (true == is_flag(isr, USART_ISR_TXE) && true == is_flag(cr1, USART_CR1_TXEIE))
+    if (true == is_flag(isr, USART_ISR_TXE) &&
+        true == is_flag(cr1, USART_CR1_TXEIE) &&
+        nullptr != a_p_this->tx_callback.function)
     {
-        const bool procceed = a_p_this->tx_callback.function(reinterpret_cast<volatile uint32*>(&(a_p_this->p_usart->TDR)),
-                                                             a_p_this->tx_callback.p_user_data);
+        const bool status = a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR),
+                                                           a_p_this->tx_callback.p_user_data);
 
-        if (false == procceed)
+        if (false == status)
         {
-            a_p_this->stop_transmit_bytes_it();
+            a_p_this->unregister_transmit_callback();
         }
     }
 
-    if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
+    if (nullptr != a_p_this->rx_callback.function)
     {
-        const bool procceed = a_p_this->rx_callback.function(a_p_this->p_usart->RDR,
-                                                             a_p_this->rx_callback.p_user_data);
+        bool status = true;
 
-        if (false == procceed)
+        if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
         {
-            a_p_this->stop_receive_bytes_it();
+            status = a_p_this->rx_callback.function(a_p_this->p_usart->RDR,
+                                                    false,
+                                                    a_p_this->rx_callback.p_user_data);
+        }
+        
+        else if (true == is_flag(isr, USART_ISR_IDLE) && true == is_flag(cr1, USART_CR1_IDLEIE))
+        {
+            set_flag(&(a_p_this->p_usart->ICR), USART_ICR_IDLECF);
+            status = a_p_this->rx_callback.function(0x0u, true, a_p_this->rx_callback.p_user_data);
+        }
+
+        if (false == status)
+        {
+            a_p_this->unregister_receive_callback();
+        }
+    }
+
+    if (nullptr != a_p_this->bus_status_callback.function && true == is_flag(cr3, USART_CR3_EIE | USART_CR1_PEIE))
+    {
+        USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR(isr);
+
+        if (status != USART::Bus_status_flag::ok &&
+            true == a_p_this->bus_status_callback.function(status, a_p_this->bus_status_callback.p_user_data))
+        {
+            clear_USART_ISR_errors(&(a_p_this->p_usart->ICR));
         }
     }
 }
@@ -268,7 +301,7 @@ void USART::disable()
     this->p_usart = nullptr;
 }
 
-uint32 USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, Bus_status* a_p_status)
+uint32 USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, Bus_status_flag* a_p_status)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_p_data);
@@ -280,7 +313,7 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in
     bool last_transfer_complete = true;
 
     while ((ret < a_data_size_in_bytes || false == last_transfer_complete) &&
-           false == is_USART_ISR_error(this->p_usart))
+           false == is_USART_ISR_error(this->p_usart->ISR))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_TXE) && true == last_transfer_complete)
         {
@@ -297,12 +330,12 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in
 
     if (nullptr != a_p_status)
     {
-        (*a_p_status) = get_bus_status_from_USART_ISR(this->p_usart);
+        (*a_p_status) = get_bus_status_flag_from_USART_ISR(this->p_usart->ISR);
     }
 
-    if (true == is_USART_ISR_error(this->p_usart))
+    if (true == is_USART_ISR_error(this->p_usart->ISR))
     {
-        clear_USART_ISR_errors(this->p_usart);
+        clear_USART_ISR_errors(&(this->p_usart->ICR));
     }
 
     return ret;
@@ -311,7 +344,7 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in
 uint32 USART::transmit_bytes_polling(const void* a_p_data,
                                      uint32 a_data_size_in_bytes,
                                      time::tick a_timeout,
-                                     Bus_status* a_p_status)
+                                     Bus_status_flag* a_p_status)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_p_data);
@@ -326,7 +359,7 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data,
     bool last_transfer_complete = true;
 
     while ((ret < a_data_size_in_bytes || false == last_transfer_complete) &&
-           false == is_USART_ISR_error(this->p_usart) &&
+           false == is_USART_ISR_error(this->p_usart->ISR) &&
            a_timeout < time::diff(system_counter::get(), start))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_TXE) && true == last_transfer_complete)
@@ -344,18 +377,18 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data,
 
     if (nullptr != a_p_status)
     {
-        (*a_p_status) = get_bus_status_from_USART_ISR(this->p_usart);
+        (*a_p_status) = get_bus_status_flag_from_USART_ISR(this->p_usart->ISR);
     }
 
-    if (true == is_USART_ISR_error(this->p_usart))
+    if (true == is_USART_ISR_error(this->p_usart->ISR))
     {
-        clear_USART_ISR_errors(this->p_usart);
+        clear_USART_ISR_errors(&(this->p_usart->ICR));
     }
 
     return ret;
 }
 
-uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, Bus_status* a_p_status)
+uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, Bus_status_flag* a_p_status)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_p_data);
@@ -366,7 +399,7 @@ uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes,
     uint32 ret = 0;
 
     while ((ret < a_data_size_in_bytes || false == is_flag(this->p_usart->ISR, USART_ISR_IDLE)) &&
-           false == is_USART_ISR_error(this->p_usart))
+           false == is_USART_ISR_error(this->p_usart->ISR))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_RXNE))
         {
@@ -384,12 +417,12 @@ uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes,
 
     if (nullptr != a_p_status)
     {
-        (*a_p_status) = get_bus_status_from_USART_ISR(this->p_usart);
+        (*a_p_status) = get_bus_status_flag_from_USART_ISR(this->p_usart->ISR);
     }
 
-    if (true == is_USART_ISR_error(this->p_usart))
+    if (true == is_USART_ISR_error(this->p_usart->ISR))
     {
-        clear_USART_ISR_errors(this->p_usart);
+        clear_USART_ISR_errors(&(this->p_usart->ICR));
     }
 
     return ret;
@@ -398,7 +431,7 @@ uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes,
 uint32 USART::receive_bytes_polling(void* a_p_data,
                                     uint32 a_data_size_in_bytes,
                                     time::tick a_timeout,
-                                    Bus_status* a_p_status)
+                                    Bus_status_flag* a_p_status)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_p_data);
@@ -412,7 +445,7 @@ uint32 USART::receive_bytes_polling(void* a_p_data,
     uint32 ret = 0;
 
     while ((ret < a_data_size_in_bytes || false == is_flag(this->p_usart->ISR, USART_ISR_IDLE)) &&
-           false == is_USART_ISR_error(this->p_usart) && 
+           false == is_USART_ISR_error(this->p_usart->ISR) &&
            a_timeout < time::diff(system_counter::get(), start))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_RXNE))
@@ -431,18 +464,18 @@ uint32 USART::receive_bytes_polling(void* a_p_data,
 
     if (nullptr != a_p_status)
     {
-        (*a_p_status) = get_bus_status_from_USART_ISR(this->p_usart);
+        (*a_p_status) = get_bus_status_flag_from_USART_ISR(this->p_usart->ISR);
     }
 
-    if (true == is_USART_ISR_error(this->p_usart))
+    if (true == is_USART_ISR_error(this->p_usart->ISR))
     {
-        clear_USART_ISR_errors(this->p_usart);
+        clear_USART_ISR_errors(&(this->p_usart->ICR));
     }
 
     return ret;
 }
 
-void USART::start_transmit_bytes_it(const TX_callback& a_callback)
+void USART::register_transmit_callback(const TX_callback& a_callback)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_callback.function);
@@ -452,17 +485,27 @@ void USART::start_transmit_bytes_it(const TX_callback& a_callback)
     set_flag(&(this->p_usart->CR1), USART_CR1_TXEIE);
 }
 
-void USART::start_receive_bytes_it(const RX_callback& a_callback)
+void USART::register_receive_callback(const RX_callback& a_callback)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr != a_callback.function);
 
     this->rx_callback = a_callback;
 
-    set_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE);
+    set_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE | USART_CR1_IDLEIE);
 }
 
-void USART::stop_transmit_bytes_it()
+void USART::register_bus_status_callback(const Bus_status_callback& a_callback)
+{
+    assert(nullptr != this->p_usart);
+    assert(nullptr != a_callback.function);
+
+    this->bus_status_callback = a_callback;
+
+    set_flag(&(this->p_usart->CR3), USART_CR3_EIE | USART_CR1_PEIE);
+}
+
+void USART::unregister_transmit_callback()
 {
     assert(nullptr != this->p_usart);
 
@@ -471,13 +514,20 @@ void USART::stop_transmit_bytes_it()
     this->tx_callback = { nullptr, nullptr };
 }
 
-void USART::stop_receive_bytes_it()
+void USART::unregister_receive_callback()
 {
     assert(nullptr != this->p_usart);
 
-    clear_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE);
+    clear_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE | USART_CR1_IDLEIE);
 
     this->rx_callback = { nullptr, nullptr };
+}
+
+void USART::unregister_bus_status_callback()
+{
+    clear_flag(&(this->p_usart->CR3), USART_CR3_EIE | USART_CR1_PEIE);
+
+    this->bus_status_callback = { nullptr, nullptr };
 }
 
 void USART::set_baud_rate(uint32 a_baud_rate)

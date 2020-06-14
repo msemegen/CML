@@ -195,38 +195,13 @@ private:
             memory::copy(this->data, a_other.data, sizeof(a_other.data));
         }
 
-        explicit Argument(unsigned long int a_value)
-            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
-                    static_cast<uint8>((a_value >> 16u) & 0xFF),
-                    static_cast<uint8>((a_value >> 8u) & 0xFF),
-                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
-            , type(Type::unsigned_int)
-        {
-            static_assert(sizeof(a_value)    == 4);
-            static_assert(sizeof(this->data) == 4);
-        }
-
-        explicit Argument(long int a_value)
-            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
-                    static_cast<uint8>((a_value >> 16u) & 0xFF),
-                    static_cast<uint8>((a_value >> 8u) & 0xFF),
-                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
-            , type(Type::signed_int)
-        {
-            static_assert(sizeof(a_value)    == 4);
-            static_assert(sizeof(this->data) == 4);
-        }
-
         explicit Argument(uint32 a_value)
             : data { static_cast<uint8>((a_value >> 24u) & 0xFF),
                      static_cast<uint8>((a_value >> 16u) & 0xFF),
                      static_cast<uint8>((a_value >> 8u)  & 0xFF),
                      static_cast<uint8>((a_value >> 0u)  & 0xFF) }
             , type(Type::unsigned_int)
-        {
-            static_assert(sizeof(a_value)    == 4);
-            static_assert(sizeof(this->data) == 4);
-        }
+        {}
 
         explicit Argument(int32 a_value)
             : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
@@ -234,10 +209,7 @@ private:
                     static_cast<uint8>((a_value >> 8u)  & 0xFF),
                     static_cast<uint8>((a_value >> 0u)  & 0xFF) }
             , type(Type::signed_int)
-        {
-            static_assert(sizeof(a_value)    == 4);
-            static_assert(sizeof(this->data) == 4);
-        }
+        {}
 
         explicit Argument(uint16 a_value)
             : data{ 0u,
@@ -245,10 +217,7 @@ private:
                     static_cast<uint8>((a_value >> 8u) & 0xFF),
                     static_cast<uint8>((a_value >> 0u) & 0xFF) }
             , type(Type::unsigned_int)
-        {
-            static_assert(sizeof(a_value)    == 2);
-            static_assert(sizeof(this->data) == 4);
-        }
+        {}
 
         explicit Argument(int16 a_value)
             : data{ 0u,
@@ -256,26 +225,17 @@ private:
                     static_cast<uint8>((a_value >> 8u) & 0xFF),
                     static_cast<uint8>((a_value >> 0u) & 0xFF) }
             , type(Type::signed_int)
-        {
-            static_assert(sizeof(a_value)    == 2);
-            static_assert(sizeof(this->data) == 4);
-        }
+        {}
 
         explicit Argument(uint8 a_value)
-            : data{ static_cast<uint8>(a_value), 0u, 0u, 0u }
+            : data{ 0u, 0u, 0u, static_cast<uint8>(a_value) }
             , type(Argument::Type::unsigned_int)
-        {
-            static_assert(sizeof(a_value)    == 1);
-            static_assert(sizeof(this->data) == 4);
-        }
+        {}
 
         explicit Argument(int8 a_value)
-            : data{ static_cast<uint8>(a_value), 0u, 0u, 0u }
+            : data{ 0u, 0u, 0u, static_cast<uint8>(a_value) }
             , type(Argument::Type::character)
-        {
-            static_assert(sizeof(a_value)    == 1);
-            static_assert(sizeof(this->data) == 4);
-        }
+        {}
 
         explicit Argument(const char* a_p_value)
             : data{ static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 24u) & 0xFF),
@@ -283,9 +243,23 @@ private:
                     static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 8u)  & 0xFF),
                     static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 0u)  & 0xFF) }
             , type(Type::cstring)
-        {
-            static_assert(sizeof(this->data) == 4);
-        }
+        {}
+
+        explicit Argument(int a_value)
+            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
+                    static_cast<uint8>((a_value >> 16u) & 0xFF),
+                    static_cast<uint8>((a_value >> 8u) & 0xFF),
+                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
+            , type(Type::signed_int)
+        {}
+
+        explicit Argument(unsigned int a_value)
+            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
+                    static_cast<uint8>((a_value >> 16u) & 0xFF),
+                    static_cast<uint8>((a_value >> 8u) & 0xFF),
+                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
+            , type(Type::unsigned_int)
+        {}
 
         uint32 get_uint32() const
         {

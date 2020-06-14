@@ -15,10 +15,10 @@
 #include <utils/delay.hpp>
 #include <utils/wait.hpp>
 
-#ifdef CML_DEBUG
+#ifdef CML_ASSERT
 #include <debug/assert.hpp>
 #include <hal/stm32l452xx/mcu.hpp>
-#endif // CML_DEBUG
+#endif // CML_ASSERT
 
 namespace
 {
@@ -48,7 +48,7 @@ extern "C"
 void ADC1_IRQHandler()
 {
     assert(nullptr != p_adc_1);
-    adc_handle_interrupt(p_adc_1);
+    adc_interrupt_handler(p_adc_1);
 }
 
 } // extern "C"
@@ -61,7 +61,7 @@ using namespace cml::common;
 using namespace cml::hal::core;
 using namespace cml::utils;
 
-void adc_handle_interrupt(ADC* a_p_this)
+void adc_interrupt_handler(ADC* a_p_this)
 {
     uint32 isr = ADC1->ISR;
 

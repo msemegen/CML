@@ -12,10 +12,39 @@
 #include <common/cstring.hpp>
 #include <debug/assert.hpp>
 
+namespace {
+
+using namespace cml::collection;
+using namespace cml::common;
+
+bool rx_callback(uint32 a_byte, bool a_idle, void* a_p_user_data)
+{
+    if (false == a_idle)
+    {
+        reinterpret_cast<Ring<char>*>(a_p_user_data)->push(static_cast<char>(a_byte));
+    }
+
+    return true;
+}
+
+} // namespace ::
+
 namespace cml {
 namespace utils {
 
 using namespace common;
+
+void Console::enable_buffered_input()
+{
+    this->p_io_stream->register_receive_callback({ rx_callback, &(this->input_buffer_view) });
+    this->buffered_input_enabled = true;
+}
+
+void Console::disable_buffered_input()
+{
+    this->p_io_stream->unregister_receive_callback();
+    this->buffered_input_enabled = false;
+}
 
 uint32 Console::write(char a_character)
 {
@@ -58,7 +87,16 @@ char Console::read_key()
     assert(nullptr != this->p_io_stream);
 
     char c = 0;
-    this->p_io_stream->receive_bytes_polling(&c, 1);
+
+    if (false == this->buffered_input_enabled)
+    {
+        this->p_io_stream->receive_bytes_polling(&c, 1);
+    }
+    else
+    {
+        while(true == this->input_buffer_view.is_empty());
+        c = this->input_buffer_view.read();
+    }
 
     return c;
 }
@@ -67,12 +105,11 @@ uint32 Console::read_line(char* a_p_buffer, uint32 a_max_characters_count)
 {
     assert(nullptr != this->p_io_stream);
 
-    char c = 0;
     uint32 ret = 0;
-    while(ret < a_max_characters_count && config::new_line_character != a_p_buffer[ret])
+
+    while (ret < a_max_characters_count && config::new_line_character != a_p_buffer[ret])
     {
-        this->p_io_stream->receive_bytes_polling(&c, 1);
-        a_p_buffer[ret++] = c;
+        a_p_buffer[ret++] = this->read_key();
     }
 
     return ret;

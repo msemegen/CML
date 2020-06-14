@@ -73,12 +73,13 @@ public:
         unknown
     };
 
-    enum class Bus_status
+    enum class Bus_status_flag : common::uint32
     {
-        ok,
-        framing_error,
-        parity_error,
-        overrun
+        ok             = 0x0,
+        framing_error  = 0x1,
+        parity_error   = 0x2,
+        overrun        = 0x4,
+        noise_detected = 0x8
     };
 
     struct Config
@@ -107,7 +108,7 @@ public:
 
     struct TX_callback
     {
-        using Function = bool(*)(volatile common::uint32* p_a_data, void* a_p_user_data);
+        using Function = bool(*)(volatile common::uint16* p_a_data, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -115,7 +116,15 @@ public:
 
     struct RX_callback
     {
-        using Function = bool(*)(common::uint32 a_data, void* a_p_user_data);
+        using Function = bool(*)(common::uint32 a_data, bool a_idle, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    struct Bus_status_callback
+    {
+        using Function = bool(*)(Bus_status_flag a_bus_status, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -142,7 +151,7 @@ public:
     void disable();
 
     template<typename Data_t>
-    common::uint32 transmit_polling(const Data_t& a_data, Bus_status* a_p_status = nullptr)
+    common::uint32 transmit_polling(const Data_t& a_data, Bus_status_flag* a_p_status = nullptr)
     {
         return this->transmit_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_p_status);
     }
@@ -150,46 +159,50 @@ public:
     template<typename Data_t>
     common::uint32 transmit_polling(const Data_t& a_data,
                                     common::time::tick a_timeout,
-                                    Bus_status* a_p_status = nullptr)
+                                    Bus_status_flag* a_p_status = nullptr)
     {
         return this->transmit_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout, a_p_status);
     }
 
     template<typename Data_t>
-    common::uint32 receive_polling(Data_t* a_p_data, Bus_status* a_p_status = nullptr)
+    common::uint32 receive_polling(Data_t* a_p_data, Bus_status_flag* a_p_status = nullptr)
     {
         return this->receive_bytes_polling(static_cast<void*>(a_p_data), sizeof(Data_t), a_p_status);
     }
 
     template<typename Data_t>
-    common::uint32 receive_polling(Data_t* a_p_data, common::time::tick a_timeout, Bus_status* a_p_status = nullptr)
+    common::uint32 receive_polling(Data_t* a_p_data,
+                                   common::time::tick a_timeout,
+                                   Bus_status_flag* a_p_status = nullptr)
     {
         return this->receive_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout, a_p_status);
     }
 
     common::uint32 transmit_bytes_polling(const void* a_p_data,
                                           common::uint32 a_data_size_in_bytes,
-                                          Bus_status* a_p_status = nullptr);
+                                          Bus_status_flag* a_p_status = nullptr);
 
     common::uint32 transmit_bytes_polling(const void* a_p_data,
                                           common::uint32 a_data_size_in_bytes,
                                           common::time::tick a_timeout,
-                                          Bus_status* a_p_status = nullptr);
+                                          Bus_status_flag* a_p_status = nullptr);
 
     common::uint32 receive_bytes_polling(void* a_p_data,
                                          common::uint32 a_data_size_in_bytes,
-                                         Bus_status* a_p_status = nullptr);
+                                         Bus_status_flag* a_p_status = nullptr);
 
     common::uint32 receive_bytes_polling(void* a_p_data,
                                          common::uint32 a_data_size_in_bytes,
                                          common::time::tick a_timeout,
-                                         Bus_status* a_p_status = nullptr);
+                                         Bus_status_flag* a_p_status = nullptr);
 
-    void start_transmit_bytes_it(const TX_callback& a_callback);
-    void start_receive_bytes_it(const RX_callback& a_callback);
+    void register_transmit_callback(const TX_callback& a_callback);
+    void register_receive_callback(const RX_callback& a_callback);
+    void register_bus_status_callback(const Bus_status_callback& a_callback);
 
-    void stop_transmit_bytes_it();
-    void stop_receive_bytes_it();
+    void unregister_transmit_callback();
+    void unregister_receive_callback();
+    void unregister_bus_status_callback();
 
     void set_baud_rate(common::uint32 a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);
@@ -221,19 +234,35 @@ public:
 private:
 
     Id id;
+    USART_TypeDef* p_usart;
 
     TX_callback tx_callback;
     RX_callback rx_callback;
-
-    USART_TypeDef* p_usart;
+    Bus_status_callback bus_status_callback;
 
     common::uint32 baud_rate;
     Clock clock;
 
 private:
 
-    friend void usart_handle_interrupt(USART* a_p_this);
+    friend void usart_interrupt_handler(USART* a_p_this);
 };
+
+constexpr USART::Bus_status_flag operator | (USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
+{
+    return static_cast<USART::Bus_status_flag>(static_cast<common::uint32>(a_f1) | static_cast<common::uint32>(a_f2));
+}
+
+constexpr USART::Bus_status_flag operator & (USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
+{
+    return static_cast<USART::Bus_status_flag>(static_cast<common::uint32>(a_f1) & static_cast<common::uint32>(a_f2));
+}
+
+constexpr USART::Bus_status_flag operator |= (USART::Bus_status_flag& a_f1, USART::Bus_status_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
 
 } // namespace stm32l452xx
 } // namespace hal
