@@ -386,8 +386,7 @@ uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes,
 
     uint32 ret = 0;
 
-    while ((ret < a_data_size_in_bytes || false == is_flag(this->p_usart->ISR, USART_ISR_IDLE)) &&
-           false == is_USART_ISR_error(this->p_usart->ISR))
+    while (false == is_flag(this->p_usart->ISR, USART_ISR_IDLE) && false == is_USART_ISR_error(this->p_usart->ISR))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_RXNE))
         {
@@ -432,9 +431,9 @@ uint32 USART::receive_bytes_polling(void* a_p_data,
 
     uint32 ret = 0;
 
-    while ((ret < a_data_size_in_bytes || false == is_flag(this->p_usart->ISR, USART_ISR_IDLE)) &&
+    while (false == is_flag(this->p_usart->ISR, USART_ISR_IDLE) &&
            false == is_USART_ISR_error(this->p_usart->ISR) &&
-           a_timeout < time::diff(system_counter::get(), start))
+           a_timeout >= time::diff(system_counter::get(), start))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_RXNE))
         {
