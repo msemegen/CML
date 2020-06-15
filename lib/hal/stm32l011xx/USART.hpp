@@ -106,7 +106,7 @@ public:
 
     struct TX_callback
     {
-        using Function = bool(*)(volatile common::uint32* p_a_byte, void* a_p_user_data);
+        using Function = bool(*)(volatile common::uint32* a_p_data, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -114,7 +114,7 @@ public:
 
     struct RX_callback
     {
-        using Function = bool(*)(common::uint32 a_byte, bool a_idle, void* a_p_user_data);
+        using Function = bool(*)(common::uint32 a_data, bool a_idle, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;

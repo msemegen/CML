@@ -170,14 +170,11 @@ void usart_interrupt_handler(USART* a_p_this)
     uint32 cr1 = a_p_this->p_usart->CR1;
     uint32 cr3 = a_p_this->p_usart->CR3;
 
-    if (true == is_flag(isr, USART_ISR_TXE) &&
-        true == is_flag(cr1, USART_CR1_TXEIE) &&
+    if (true == is_flag(isr, USART_ISR_TC) &&
+        true == is_flag(cr1, USART_CR1_TCIE) &&
         nullptr != a_p_this->tx_callback.function)
     {
-        const bool status = a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR),
-                                                           a_p_this->tx_callback.p_user_data);
-
-        if (false == status)
+        if (false == a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR), a_p_this->tx_callback.p_user_data))
         {
             a_p_this->unregister_transmit_callback();
         }
@@ -307,24 +304,12 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
 
-    set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
-
-    uint32 ret                  = 0;
-    bool last_transfer_complete = true;
-
-    while ((ret < a_data_size_in_bytes || false == last_transfer_complete) &&
-           false == is_USART_ISR_error(this->p_usart->ISR))
+    uint32 ret  = 0;
+    while (ret < a_data_size_in_bytes && false == is_USART_ISR_error(this->p_usart->ISR))
     {
-        if (true == is_flag(this->p_usart->ISR, USART_ISR_TXE) && true == last_transfer_complete)
+        if (true == is_flag(this->p_usart->ISR, USART_ISR_TC))
         {
             this->p_usart->TDR = static_cast<const uint8*>(a_p_data)[ret++];
-            last_transfer_complete = false;
-        }
-
-        if (false == last_transfer_complete && is_flag(this->p_usart->ISR, USART_ISR_TC))
-        {
-            set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
-            last_transfer_complete = true;
         }
     }
 
@@ -351,27 +336,16 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data,
     assert(a_data_size_in_bytes > 0);
     assert(a_timeout > 0);
 
-    time::tick start = system_counter::get();
-
-    set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
+    time::tick start = system_counter::get();   
 
     uint32 ret = 0;
-    bool last_transfer_complete = true;
-
-    while ((ret < a_data_size_in_bytes || false == last_transfer_complete) &&
+    while (ret < a_data_size_in_bytes &&
            false == is_USART_ISR_error(this->p_usart->ISR) &&
            a_timeout < time::diff(system_counter::get(), start))
     {
-        if (true == is_flag(this->p_usart->ISR, USART_ISR_TXE) && true == last_transfer_complete)
-        {
+        if (true == is_flag(this->p_usart->ISR, USART_ISR_TC))
+        {   
             this->p_usart->TDR = static_cast<const uint8*>(a_p_data)[ret++];
-            last_transfer_complete = false;
-        }
-
-        if (false == last_transfer_complete && is_flag(this->p_usart->ISR, USART_ISR_TC))
-        {
-            set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
-            last_transfer_complete = true;
         }
     }
 
@@ -482,7 +456,7 @@ void USART::register_transmit_callback(const TX_callback& a_callback)
 
     this->tx_callback = a_callback;
 
-    set_flag(&(this->p_usart->CR1), USART_CR1_TXEIE);
+    set_flag(&(this->p_usart->CR1), USART_CR1_TCIE);
 }
 
 void USART::register_receive_callback(const RX_callback& a_callback)
@@ -509,7 +483,7 @@ void USART::unregister_transmit_callback()
 {
     assert(nullptr != this->p_usart);
 
-    clear_flag(&(this->p_usart->CR1), USART_CR1_TXEIE);
+    clear_flag(&(this->p_usart->CR1), USART_CR1_TCIE);
 
     this->tx_callback = { nullptr, nullptr };
 }
