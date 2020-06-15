@@ -296,6 +296,8 @@ int main()
 #if defined MASTER && !defined SLAVE
 
             Console console(&console_usart);
+
+            console.enable_buffered_input();
             console.write_line("CML I2C master sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             I2C_master i2c_master_bus(I2C_master::Id::_1);
@@ -348,6 +350,8 @@ int main()
 #if defined SLAVE && !defined MASTER
 
             Console console(&console_usart);
+
+            console.enable_buffered_input();
             console.write_line("CML I2C slave sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             I2C_slave i2c_slave_bus(I2C_slave::Id::_1);
