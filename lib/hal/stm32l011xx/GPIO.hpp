@@ -171,8 +171,9 @@ public:
     void set_pull(Pull a_pull);
     void set_speed(Speed a_speed);
 
-    Mode  get_mode() const;
-    Pull  get_pull() const;
+    Level get_level() const;
+    Mode  get_mode()  const;
+    Pull  get_pull()  const;
     Speed get_speed() const;
 
     GPIO* get_port() const

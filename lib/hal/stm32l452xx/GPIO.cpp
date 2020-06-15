@@ -193,6 +193,11 @@ void Output_pin::set_speed(Speed a_speed)
     set_flag(&(p_port->OSPEEDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_speed) << (this->pin * 2));
 }
 
+Output_pin::Level Output_pin::get_level() const
+{
+    return static_cast<Level>(get_bit(static_cast<GPIO_TypeDef*>((*this->p_port))->IDR, this->pin));
+}
+
 Output_pin::Mode Output_pin::get_mode() const
 {
     const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
