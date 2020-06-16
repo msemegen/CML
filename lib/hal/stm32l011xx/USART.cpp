@@ -393,10 +393,9 @@ void USART::register_receive_callback(const RX_callback& a_callback)
     assert(nullptr != p_usart_2);
     assert(nullptr != a_callback.function);
 
-    set_flag(&(USART2->ICR), USART_ICR_IDLECF);
-
     this->rx_callback = a_callback;
 
+    set_flag(&(USART2->ICR), USART_ICR_IDLECF);
     set_flag(&(USART2->CR1), USART_CR1_RXNEIE | USART_CR1_IDLEIE);
 }
 
