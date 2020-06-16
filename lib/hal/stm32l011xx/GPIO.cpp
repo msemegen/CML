@@ -116,7 +116,7 @@ void Output_pin::disable()
 
 void Output_pin::set_level(Level a_level)
 {
-    uint8_t mul[] = { 16, 0 };
+    constexpr uint8_t mul[] = { 16, 0 };
     static_cast<GPIO_TypeDef*>((*this->p_port))->BSRR = 0x1u << (this->pin + mul[static_cast<uint32>(a_level)]);
 }
 

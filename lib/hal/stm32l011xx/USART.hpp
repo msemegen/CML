@@ -72,6 +72,13 @@ public:
         unknown
     };
 
+    enum Sampling_method
+    {
+        three_sample_bit = 0,
+        one_sample_bit   = USART_CR3_ONEBIT,
+        unknown
+    };
+
     enum class Bus_status_flag : common::uint32
     {
         ok            = 0x0,
@@ -82,12 +89,13 @@ public:
 
     struct Config
     {
-        common::uint32 baud_rate  = 0;
-        Oversampling oversampling = Oversampling::unknown;
-        Word_length word_length   = Word_length::unknown;
-        Stop_bits stop_bits       = Stop_bits::unknown;
-        Flow_control flow_control = Flow_control::unknown;
-        Parity parity             = Parity::unknown;
+        common::uint32 baud_rate        = 0;
+        Oversampling oversampling       = Oversampling::unknown;
+        Word_length word_length         = Word_length::unknown;
+        Stop_bits stop_bits             = Stop_bits::unknown;
+        Flow_control flow_control       = Flow_control::unknown;
+        Parity parity                   = Parity::unknown;
+        Sampling_method sampling_method = Sampling_method::unknown;
     };
 
     struct Clock
@@ -201,9 +209,11 @@ public:
 
     void register_transmit_callback(const TX_callback& a_callback);
     void register_receive_callback(const RX_callback& a_callback);
+    void register_bus_status_callback(const Bus_status_callback& a_callback);
 
     void unregister_transmit_callback();
     void unregister_receive_callback();
+    void unregister_bus_status_callback();
 
     void set_baud_rate(common::uint32 a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);

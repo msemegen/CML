@@ -73,6 +73,13 @@ public:
         unknown
     };
 
+    enum Sampling_method : common::uint32
+    {
+        three_sample_bit = 0,
+        one_sample_bit   = USART_CR3_ONEBIT,
+        unknown
+    };
+
     enum class Bus_status_flag : common::uint32
     {
         ok             = 0x0,
@@ -84,12 +91,13 @@ public:
 
     struct Config
     {
-        common::uint32 baud_rate  = 0;
-        Oversampling oversampling = Oversampling::unknown;
-        Word_length word_length   = Word_length::unknown;
-        Stop_bits stop_bits       = Stop_bits::unknown;
-        Flow_control flow_control = Flow_control::unknown;
-        Parity parity             = Parity::unknown;
+        common::uint32 baud_rate        = 0;
+        Oversampling oversampling       = Oversampling::unknown;
+        Word_length word_length         = Word_length::unknown;
+        Stop_bits stop_bits             = Stop_bits::unknown;
+        Flow_control flow_control       = Flow_control::unknown;
+        Parity parity                   = Parity::unknown;
+        Sampling_method sampling_method = Sampling_method::unknown;
     };
 
     struct Clock

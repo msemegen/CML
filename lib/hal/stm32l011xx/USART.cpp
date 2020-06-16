@@ -112,7 +112,7 @@ void usart_interrupt_handler(USART* a_p_this)
         {
             status = a_p_this->rx_callback.function(USART2->RDR, false, a_p_this->rx_callback.p_user_data);
         }
-        
+
         else if (true == is_flag(isr, USART_ISR_IDLE) && true == is_flag(cr1, USART_CR1_IDLEIE))
         {
             set_flag(&(USART2->ICR), USART_ICR_IDLECF);
@@ -139,12 +139,13 @@ void usart_interrupt_handler(USART* a_p_this)
 
 bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_priority, time::tick a_timeout)
 {
-    assert(nullptr               == p_usart_2);
-    assert(0                     != a_config.baud_rate);
-    assert(Flow_control::unknown != a_config.flow_control);
-    assert(Parity::unknown       != a_config.parity);
-    assert(Stop_bits::unknown    != a_config.stop_bits);
-    assert(Word_length::unknown  != a_config.word_length);
+    assert(nullptr                  == p_usart_2);
+    assert(0                        != a_config.baud_rate);
+    assert(Flow_control::unknown    != a_config.flow_control);
+    assert(Parity::unknown          != a_config.parity);
+    assert(Stop_bits::unknown       != a_config.stop_bits);
+    assert(Word_length::unknown     != a_config.word_length);
+    assert(Sampling_method::unknown != a_config.sampling_method);
 
     assert(Clock::Source::unknown != a_clock.source);
     assert(0                      != a_clock.frequency_hz);
@@ -162,7 +163,8 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_pr
     NVIC_EnableIRQ(USART2_IRQn);
 
     USART2->CR2 = static_cast<uint32>(a_config.stop_bits);
-    USART2->CR3 = static_cast<uint32>(a_config.flow_control);
+    USART2->CR3 = static_cast<uint32>(a_config.flow_control) |
+                  static_cast<uint32>(a_config.sampling_method);
 
     switch (a_config.oversampling)
     {
@@ -186,12 +188,15 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_pr
         break;
     }
 
-    set_flag(&(USART2->CR1), static_cast<uint32>(a_config.word_length)  |
-                             static_cast<uint32>(a_config.oversampling) |
-                             static_cast<uint32>(a_config.parity));
+    USART2->CR2 = static_cast<uint32>(a_config.stop_bits);
+    USART2->CR3 = static_cast<uint32>(a_config.flow_control) |
+                  static_cast<uint32>(a_config.sampling_method);
 
-    set_flag(&(USART2->CR1), USART_CR1_UE);
-    set_flag(&(USART2->CR1), USART_CR1_RE | USART_CR1_TE);
+
+    USART2->CR1 = static_cast<uint32>(a_config.word_length)  |
+                  static_cast<uint32>(a_config.oversampling) |
+                  static_cast<uint32>(a_config.parity)       |
+                  USART_CR1_UE | USART_CR1_RE | USART_CR1_TE;
 
     this->baud_rate = a_config.baud_rate;
     this->clock     = a_clock;
@@ -257,7 +262,7 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data,
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0);
     assert(a_timeout > 0);
- 
+
     time::tick start = system_counter::get();
 
     set_flag(&(USART2->ICR), USART_ICR_TCCF);
@@ -272,7 +277,7 @@ uint32 USART::transmit_bytes_polling(const void* a_p_data,
             USART2->TDR = static_cast<const uint8*>(a_p_data)[ret++];
         }
     }
- 
+
     if (nullptr != a_p_status)
     {
         (*a_p_status) = get_bus_status_flag_from_USART_ISR();
@@ -296,8 +301,7 @@ uint32 USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes,
 
     uint32 ret = 0;
 
-    while (false == is_flag(USART2->ISR, USART_ISR_IDLE) &&
-           false == is_USART_ISR_error())
+    while (false == is_flag(USART2->ISR, USART_ISR_IDLE) && false == is_USART_ISR_error())
     {
         if (true == is_flag(USART2->ISR, USART_ISR_RXNE))
         {
@@ -343,7 +347,7 @@ uint32 USART::receive_bytes_polling(void* a_p_data,
     uint32 ret = 0;
 
     while (false == is_flag(USART2->ISR, USART_ISR_IDLE) &&
-           false == is_USART_ISR_error() && 
+           false == is_USART_ISR_error() &&
            a_timeout >= time::diff(system_counter::get(), start))
     {
         if (true == is_flag(USART2->ISR, USART_ISR_RXNE))
@@ -389,9 +393,22 @@ void USART::register_receive_callback(const RX_callback& a_callback)
     assert(nullptr != p_usart_2);
     assert(nullptr != a_callback.function);
 
+    set_flag(&(USART2->ICR), USART_ICR_IDLECF);
+
     this->rx_callback = a_callback;
 
-    set_flag(&(USART2->CR1), USART_CR1_RXNEIE);
+    set_flag(&(USART2->CR1), USART_CR1_RXNEIE | USART_CR1_IDLEIE);
+}
+
+void USART::register_bus_status_callback(const Bus_status_callback& a_callback)
+{
+    assert(nullptr != p_usart_2);
+    assert(nullptr != a_callback.function);
+
+    this->bus_status_callback = a_callback;
+
+    set_flag(&(USART2->CR1), USART_CR1_PEIE);
+    set_flag(&(USART2->CR3), USART_CR3_EIE);
 }
 
 void USART::unregister_transmit_callback()
