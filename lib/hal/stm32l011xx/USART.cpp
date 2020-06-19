@@ -125,7 +125,9 @@ void usart_interrupt_handler(USART* a_p_this)
         }
     }
 
-    if (nullptr != a_p_this->bus_status_callback.function && true == is_flag(cr3, USART_CR3_EIE | USART_CR1_PEIE))
+    if (nullptr != a_p_this->bus_status_callback.function &&
+        true == is_flag(cr3, USART_CR3_EIE) &&
+        true == is_flag(cr1, USART_CR1_PEIE))
     {
         USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR();
 

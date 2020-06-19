@@ -213,7 +213,9 @@ void usart_interrupt_handler(USART* a_p_this)
         }
     }
 
-    if (nullptr != a_p_this->bus_status_callback.function && true == is_flag(cr3, USART_CR3_EIE | USART_CR1_PEIE))
+    if (nullptr != a_p_this->bus_status_callback.function &&
+        true == is_flag(cr3, USART_CR3_EIE) &&
+        true == is_flag(cr1, USART_CR1_PEIE))
     {
         USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR(isr);
 
@@ -269,8 +271,7 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irqn_p
     }
 
     this->p_usart->CR2 = static_cast<uint32>(a_config.stop_bits);
-    this->p_usart->CR3 = static_cast<uint32>(a_config.flow_control) |
-                         static_cast<uint32>(a_config.sampling_method);
+    this->p_usart->CR3 = static_cast<uint32>(a_config.flow_control) | static_cast<uint32>(a_config.sampling_method);
 
     this->p_usart->CR1 = static_cast<uint32>(a_config.word_length)  |
                          static_cast<uint32>(a_config.oversampling) |
