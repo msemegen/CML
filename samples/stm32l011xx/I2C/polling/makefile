@@ -4,7 +4,7 @@ endif
 
 PROJECT_NAME := cml_i2c_polling_sample
 ROOT         := $(CURDIR)
-CML_ROOT     := $(ROOT)/../../../../
+CML_ROOT     := $(ROOT)/../../../..
 LIBRARIES    := $(ROOT)/libraries
 OUTPUT_NAME  := $(PROJECT_NAME)
 

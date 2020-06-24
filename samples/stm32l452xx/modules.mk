@@ -1,12 +1,16 @@
 #lib
 C_SOURCE_PATHS   := $(C_SOURCE_PATHS)   $(CML_ROOT)/lib/
-CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(CML_ROOT)/lib/ \
-                    $(CML_ROOT)/lib/hal/                 \
-                    $(CML_ROOT)/lib/utils/               \
-                    $(CML_ROOT)/lib/common/              \
-                    $(CML_ROOT)/lib/debug/               \
-                    $(CML_ROOT)/lib/hal/stm32l452xx/     \
-                    $(CML_ROOT)/lib/hal/core/
+CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(CML_ROOT)/lib/         \
+                    $(CML_ROOT)/lib/cml/hal/                     \
+                    $(CML_ROOT)/lib/cml/utils/                   \
+                    $(CML_ROOT)/lib/cml/common/                  \
+                    $(CML_ROOT)/lib/cml/debug/                   \
+                    $(CML_ROOT)/lib/cml/hal/stm32l452xx/         \
+                    $(CML_ROOT)/lib/cml/hal/core/                \
+                    $(CML_ROOT)/lib/soc/                         \
+                    $(CML_ROOT)/lib/soc/stm32l452xx/             \
+                    $(CML_ROOT)/lib/soc/stm32l452xx/system/      \
+                    $(CML_ROOT)/lib/soc/stm32l452xx/peripherals/
 
 INCLUDE_PATH     := $(INCLUDE_PATH) $(CML_ROOT)/lib/
 

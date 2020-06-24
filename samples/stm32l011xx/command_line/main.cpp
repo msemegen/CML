@@ -6,22 +6,23 @@
 */
 
 //cml
-#include <collection/Vector.hpp>
-#include <common/cstring.hpp>
-#include <hal/GPIO.hpp>
-#include <hal/mcu.hpp>
-#include <hal/system_counter.hpp>
-#include <hal/systick.hpp>
-#include <hal/USART.hpp>
-#include <utils/Command_line.hpp>
-#include <utils/Console.hpp>
+#include <cml/collection/Vector.hpp>
+#include <cml/common/cstring.hpp>
+#include <cml/hal/counter.hpp>
+#include <cml/hal/systick.hpp>
+#include <cml/hal/peripherals/GPIO.hpp>
+#include <cml/hal/peripherals/USART.hpp>
+#include <cml/hal/mcu.hpp>
+#include <cml/utils/Command_line.hpp>
+#include <cml/utils/Console.hpp>
 
 namespace
 {
 
+using namespace cml;
 using namespace cml::collection;
 using namespace cml::common;
-using namespace cml::hal;
+using namespace cml::hal::peripherals;
 using namespace cml::utils;
 
 void led_cli_callback(const Vector<Command_line::Callback::Parameter>& a_params, void* a_p_user_data)
@@ -90,7 +91,7 @@ int main()
         mcu::disable_msi_clock();
 
         systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
-        systick::register_tick_callback({ system_counter::update, nullptr });
+        systick::register_tick_callback({ counter::update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();

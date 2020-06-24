@@ -6,16 +6,17 @@
 */
 
 //cml
-#include <hal/GPIO.hpp>
-#include <hal/mcu.hpp>
-#include <hal/system_counter.hpp>
-#include <hal/systick.hpp>
-#include <utils/delay.hpp>
+#include <cml/hal/counter.hpp>
+#include <cml/hal/mcu.hpp>
+#include <cml/hal/systick.hpp>
+#include <cml/hal/peripherals/GPIO.hpp>
+#include <cml/utils/delay.hpp>
 
 int main()
 {
-    using namespace cml::common;
+    using namespace cml;
     using namespace cml::hal;
+    using namespace cml::hal::peripherals;
     using namespace cml::utils;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
@@ -30,11 +31,15 @@ int main()
     if (mcu::Sysclk_source::pll == mcu::get_sysclk_source())
     {
         mcu::disable_msi_clock();
+        mcu::enable_syscfg();
 
         systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
-        systick::register_tick_callback({ system_counter::update, nullptr });
+        systick::register_tick_callback({ counter::update, nullptr });
 
+        GPIO gpio_port_a(GPIO::Id::a);
         GPIO gpio_port_b(GPIO::Id::b);
+
+        gpio_port_a.enable();
         gpio_port_b.enable();
 
         Output_pin led_pin(&gpio_port_b, 3);

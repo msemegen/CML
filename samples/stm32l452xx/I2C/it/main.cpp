@@ -6,24 +6,24 @@
 */
 
 //cml
-#include <common/bit.hpp>
-#include <common/frequency.hpp>
-#include <hal/GPIO.hpp>
-#include <hal/I2C.hpp>
-#include <hal/mcu.hpp>
-#include <hal/system_counter.hpp>
-#include <hal/systick.hpp>
-#include <hal/USART.hpp>
-#include <utils/delay.hpp>
-#include <utils/Console.hpp>
+#include <cml/bit.hpp>
+#include <cml/frequency.hpp>
+#include <cml/hal/counter.hpp>
+#include <cml/hal/mcu.hpp>
+#include <cml/hal/systick.hpp>
+#include <cml/hal/peripherals/GPIO.hpp>
+#include <cml/hal/peripherals/I2C.hpp>
+#include <cml/hal/peripherals/USART.hpp>
+#include <cml/utils/delay.hpp>
+#include <cml/utils/Console.hpp>
 
-//#define MASTER
-#define SLAVE
+#define MASTER
+//#define SLAVE
 
 namespace
 {
-    using namespace cml::common;
-    using namespace cml::hal;
+    using namespace cml;
+    using namespace cml::hal::peripherals;
     using namespace cml::utils;
 
 void print_status(Console* a_p_console, const char* a_p_tag, I2C_base::Bus_status_flag a_bus_status, uint32_t a_bytes)
@@ -240,7 +240,7 @@ int main()
         mcu::enable_syscfg();
 
         systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
-        systick::register_tick_callback({ system_counter::update, nullptr });
+        systick::register_tick_callback({ counter::update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);
         GPIO gpio_port_b(GPIO::Id::b);

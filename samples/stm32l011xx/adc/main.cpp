@@ -6,19 +6,19 @@
 */
 
 //cml
-#include <hal/ADC.hpp>
-#include <hal/GPIO.hpp>
-#include <hal/mcu.hpp>
-#include <hal/system_counter.hpp>
-#include <hal/systick.hpp>
-#include <hal/USART.hpp>
-#include <utils/Console.hpp>
-#include <utils/delay.hpp>
+#include <cml/hal/counter.hpp>
+#include <cml/hal/mcu.hpp>
+#include <cml/hal/systick.hpp>
+#include <cml/hal/peripherals/ADC.hpp>
+#include <cml/hal/peripherals/GPIO.hpp>
+#include <cml/hal/peripherals/USART.hpp>
+#include <cml/utils/Console.hpp>
+#include <cml/utils/delay.hpp>
 
 namespace {
 
-using namespace cml::common;
-using namespace cml::hal;
+using namespace cml;
+using namespace cml::hal::peripherals;
 
 int32 compute_temperature(const ADC::Calibration_data& a_calibration_data, uint32 measure)
 {
@@ -32,19 +32,20 @@ int32 compute_temperature(const ADC::Calibration_data& a_calibration_data, uint3
 
 int main()
 {
-    using namespace cml::common;
+    using namespace cml;
     using namespace cml::hal;
+    using namespace cml::hal::peripherals;
     using namespace cml::utils;
 
     mcu::enable_msi_clock(mcu::Msi_frequency::_4194_kHz);
     mcu::set_sysclk(mcu::Sysclk_source::msi, { mcu::Bus_prescalers::AHB::_1,
                                                mcu::Bus_prescalers::APB1::_1,
-                                               mcu::Bus_prescalers::APB2::_1 });
+                                              mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::msi == mcu::get_sysclk_source())
     {
         systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
-        systick::register_tick_callback({ system_counter::update, nullptr });
+        systick::register_tick_callback({ counter::update, nullptr });
         mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
 
         ADC adc(ADC::Id::_1);
