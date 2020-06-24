@@ -31,18 +31,14 @@ int main()
     if (mcu::Sysclk_source::pll == mcu::get_sysclk_source())
     {
         mcu::disable_msi_clock();
-        mcu::enable_syscfg();
 
         systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
         systick::register_tick_callback({ counter::update, nullptr });
 
-        GPIO gpio_port_a(GPIO::Id::a);
         GPIO gpio_port_b(GPIO::Id::b);
-
-        gpio_port_a.enable();
         gpio_port_b.enable();
 
-        Output_pin led_pin(&gpio_port_b, 3);
+        Output_pin led_pin(&gpio_port_b, 3u);
         led_pin.enable({ Output_pin::Mode::push_pull, Output_pin::Pull::down, Output_pin::Speed::low });
 
         led_pin.set_level(Output_pin::Level::low);
