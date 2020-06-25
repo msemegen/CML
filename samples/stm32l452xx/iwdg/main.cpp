@@ -41,6 +41,7 @@ int main()
             USART::Stop_bits::_1,
             USART::Flow_control::none,
             USART::Parity::none,
+            USART::Sampling_method::three_sample_bit
         };
 
         USART::Clock usart_clock

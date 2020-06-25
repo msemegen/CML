@@ -163,29 +163,29 @@ public:
     void disable();
 
     template<typename Data_t>
-    cml::uint32 write_polling(const Data_t& a_data, Bus_status_flag* a_p_status = nullptr)
+    cml::uint32 transmit_polling(const Data_t& a_data, Bus_status_flag* a_p_status = nullptr)
     {
-        return this->transmit_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_p_status);
+        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_p_status);
     }
 
     template<typename Data_t>
-    cml::uint32 write_polling(const Data_t& a_data,
-                              cml::time::tick a_timeout,
-                              Bus_status_flag* a_p_status = nullptr)
+    cml::uint32 transmit_polling(const Data_t& a_data,
+                                 cml::time::tick a_timeout,
+                                 Bus_status_flag* a_p_status = nullptr)
     {
-        return this->transmit_bytes_polling(static_cast<const void*>(&a_data), sizeof(a_data), a_timeout, a_p_status);
+        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout, a_p_status);
     }
 
     template<typename Data_t>
-    cml::uint32 read_polling(Data_t* a_p_data, Bus_status_flag* a_p_status = nullptr)
+    cml::uint32 receive_polling(Data_t* a_p_data, Bus_status_flag* a_p_status = nullptr)
     {
-        return this->receive_bytes_polling(static_cast<void*>(a_p_data), sizeof(Data_t), a_p_status);
+        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_p_status);
     }
 
     template<typename Data_t>
-    cml::uint32 read_polling(Data_t* a_p_data, cml::time::tick a_timeout, Bus_status_flag* a_p_status = nullptr)
+    cml::uint32 receive_polling(Data_t* a_p_data, cml::time::tick a_timeout, Bus_status_flag* a_p_status = nullptr)
     {
-        return this->transmit_bytes_polling(static_cast<void*>(&a_p_data), sizeof(Data_t), a_timeout, a_p_status);
+        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout, a_p_status);
     }
 
     cml::uint32 transmit_bytes_polling(const void* a_p_data,

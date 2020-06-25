@@ -135,7 +135,8 @@ int main()
                                                   USART::Word_length::_8_bits,
                                                   USART::Stop_bits::_1,
                                                   USART::Flow_control::none,
-                                                  USART::Parity::none
+                                                  USART::Parity::none,
+                                                  USART::Sampling_method::three_sample_bit
                                                 },
                                                 { USART::Clock::Source::sysclk,
                                                   mcu::get_sysclk_frequency_hz(),
