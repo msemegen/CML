@@ -17,7 +17,6 @@
 #include <cml/hal/systick.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
-#include <cml/utils/Console.hpp>
 #include <cml/utils/Logger.hpp>
 
 namespace {
@@ -62,9 +61,8 @@ int main()
         {
             115200u,
             USART::Oversampling::_16,
-            USART::Word_length::_8_bits,
             USART::Stop_bits::_1,
-            USART::Flow_control::none,
+            USART::Flow_control_flag::none,
             USART::Parity::none,
             USART::Sampling_method::three_sample_bit
         };

@@ -14,7 +14,7 @@
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/utils/Command_line.hpp>
-#include <cml/utils/Console.hpp>
+#include <cml/utils/Unbuffered_console.hpp>
 
 namespace
 {
@@ -68,9 +68,8 @@ int main()
         {
             115200u,
             USART::Oversampling::_16,
-            USART::Word_length::_8_bits,
             USART::Stop_bits::_1,
-            USART::Flow_control::none,
+            USART::Flow_control_flag::none,
             USART::Parity::none,
             USART::Sampling_method::three_sample_bit
         };
@@ -114,7 +113,7 @@ int main()
             Output_pin led_pin(&gpio_port_b, 3);
             led_pin.enable({ Output_pin::Mode::push_pull, Output_pin::Pull::down, Output_pin::Speed::low });
 
-            Console console(&console_usart);
+            Unbuffered_console console(&console_usart);
             console.write_line("\nCML CLI sample. CPU speed: %d MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             Command_line command_line(&console_usart, "cmd > ", "Command not found");

@@ -11,7 +11,7 @@
 #include <cml/hal/systick.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
-#include <cml/utils/Console.hpp>
+#include <cml/utils/Buffered_console.hpp>
 #include <cml/utils/delay.hpp>
 
 int main()
@@ -34,9 +34,8 @@ int main()
         {
             115200u,
             USART::Oversampling::_16,
-            USART::Word_length::_8_bits,
             USART::Stop_bits::_1,
-            USART::Flow_control::none,
+            USART::Flow_control_flag::none,
             USART::Parity::none,
             USART::Sampling_method::three_sample_bit
         };
@@ -73,13 +72,15 @@ int main()
 
         if (true == usart_ready)
         {
-            Console console(&console_usart);
+            Buffered_console console(&console_usart);
+
+            console.enable();
             console.write_line("CML Console sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
-            console.enable_buffered_input();
 
             while (true)
             {
-                char c = console.read_key();
+                char c;
+                console.read_key(&c);
                 console.write(c);
             }
         }

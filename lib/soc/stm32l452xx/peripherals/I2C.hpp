@@ -15,6 +15,7 @@
 #include <cml/integer.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/time.hpp>
+#include <cml/type_traits.hpp>
 #include <cml/debug/assert.hpp>
 
 namespace soc {
@@ -48,6 +49,13 @@ public:
         arbitration_lost = 0x4,
         misplaced        = 0x8,
         nack             = 0x10,
+        unknown          = 0x20
+    };
+
+    struct Result
+    {
+        Bus_status_flag bus_status = Bus_status_flag::unknown;
+        cml::uint32 data_length    = 0;
     };
 
     struct TX_callback
@@ -77,6 +85,7 @@ public:
 public:
 
     Clock_source get_clock_source() const;
+    bool is_enabled() const;
 
     bool is_analog_filter() const
     {
@@ -97,13 +106,6 @@ public:
         assert(nullptr != this->p_i2c);
 
         return cml::is_bit(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<cml::uint32>(this->id));
-    }
-
-    bool is_enabled() const
-    {
-        assert(nullptr != this->p_i2c);
-
-        return cml::is_flag(this->p_i2c->CR1, I2C_CR1_PE);
     }
 
     Id get_id() const
@@ -156,6 +158,7 @@ public:
     using Id              = I2C_base::Id;
     using Clock_source    = I2C_base::Clock_source;
     using Bus_status_flag = I2C_base::Bus_status_flag;
+    using Result          = I2C_base::Result;
 
     using TX_callback         = I2C_base::TX_callback;
     using RX_callback         = I2C_base::RX_callback;
@@ -186,60 +189,46 @@ public:
     void diasble();
 
     template<typename Data_t>
-    cml::uint32 transmit_polling(cml::uint16 a_slave_address,
-                                 const Data_t& a_data,
-                                 Bus_status_flag* a_p_status = nullptr)
+    Result transmit_polling(cml::uint16 a_slave_address, const Data_t& a_data)
     {
-        return this->transmit_bytes_polling(a_slave_address, &a_data, sizeof(a_data), a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->transmit_bytes_polling(a_slave_address, &a_data, sizeof(a_data));
     }
 
     template<typename Data_t>
-    cml::uint32 transmit_polling(cml::uint16 a_slave_address,
-                                 const Data_t& a_data,
-                                 cml::time::tick a_timeout,
-                                 Bus_status_flag* a_p_status = nullptr)
+    Result transmit_polling(cml::uint16 a_slave_address, const Data_t& a_data, cml::time::tick a_timeout)
     {
-        return this->transmit_bytes_polling(a_slave_address, &a_data, sizeof(a_data), a_timeout, a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->transmit_bytes_polling(a_slave_address, &a_data, sizeof(a_data), a_timeout);
     }
 
     template<typename Data_t>
-    cml::uint32 receive_polling(cml::uint16 a_slave_address,
-                                Data_t* a_p_data,
-                                Bus_status_flag* a_p_status = nullptr)
+    Result receive_polling(cml::uint16 a_slave_address, Data_t* a_p_data)
     {
-        return this->receive_bytes_polling(a_slave_address, a_p_data, sizeof(Data_t), a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->receive_bytes_polling(a_slave_address, a_p_data, sizeof(Data_t));
     }
 
     template<typename Data_t>
-    cml::uint32 receive_polling(cml::uint16 a_slave_address,
-                                Data_t* a_p_data,
-                                cml::time::tick a_timeout,
-                                Bus_status_flag* a_p_status = nullptr)
+    Result receive_polling(cml::uint16 a_slave_address, Data_t* a_p_data, cml::time::tick a_timeout)
     {
-        return this->receive_bytes_polling(a_slave_address, a_p_data, sizeof(Data_t), a_timeout, a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->receive_bytes_polling(a_slave_address, a_p_data, sizeof(Data_t), a_timeout);
     }
 
-    cml::uint32 transmit_bytes_polling(cml::uint16 a_slave_address,
-                                       const void* a_p_data,
-                                       cml::uint32 a_data_size_in_bytes,
-                                       Bus_status_flag* a_p_status = nullptr);
+    Result transmit_bytes_polling(cml::uint16 a_slave_address, const void* a_p_data, cml::uint32 a_data_size_in_bytes);
 
-    cml::uint32 transmit_bytes_polling(cml::uint16 a_slave_address,
-                                       const void* a_p_data,
-                                       cml::uint32 a_data_size_in_bytes,
-                                       cml::time::tick a_timeout,
-                                       Bus_status_flag* a_p_status = nullptr);
+    Result transmit_bytes_polling(cml::uint16 a_slave_address,
+                                 const void* a_p_data,
+                                 cml::uint32 a_data_size_in_bytes,
+                                 cml::time::tick a_timeout);
 
-    cml::uint32 receive_bytes_polling(cml::uint16 a_slave_address,
-                                      void* a_p_data,
-                                      cml::uint32 a_data_size_in_bytes,
-                                      Bus_status_flag* a_p_status = nullptr);
+    Result receive_bytes_polling(cml::uint16 a_slave_address, void* a_p_data, cml::uint32 a_data_size_in_bytes);
 
-    cml::uint32 receive_bytes_polling(cml::uint16 a_slave_address,
-                                      void* a_p_data,
-                                      cml::uint32 a_data_size_in_bytes,
-                                      cml::time::tick a_timeout,
-                                      Bus_status_flag* a_p_status = nullptr);
+    Result receive_bytes_polling(cml::uint16 a_slave_address,
+                                 void* a_p_data,
+                                 cml::uint32 a_data_size_in_bytes,
+                                 cml::time::tick a_timeout);
 
     void register_transmit_callback(cml::uint16 a_slave_address,
                                     const TX_callback& a_callback,
@@ -266,6 +255,7 @@ public:
     using Id              = I2C_base::Id;
     using Clock_source    = I2C_base::Clock_source;
     using Bus_status_flag = I2C_base::Bus_status_flag;
+    using Result          = I2C_base::Result;
 
     using TX_callback         = I2C_base::TX_callback;
     using RX_callback         = I2C_base::RX_callback;
@@ -298,48 +288,38 @@ public:
     void diasble();
 
     template<typename Data_t>
-    cml::uint32 transmit_polling(const Data_t& a_data, Bus_status_flag* a_p_status = nullptr)
+    Result transmit_polling(const Data_t& a_data)
     {
-        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->transmit_bytes_polling(&a_data, sizeof(a_data));
     }
 
     template<typename Data_t>
-    cml::uint32 transmit_polling(const Data_t& a_data,
-                                 cml::time::tick a_timeout,
-                                 Bus_status_flag* a_p_status = nullptr)
+    Result transmit_polling(const Data_t& a_data, cml::time::tick a_timeout)
     {
-        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout, a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout);
     }
 
     template<typename Data_t>
-    cml::uint32 receive_polling(Data_t* a_p_data, Bus_status_flag* a_p_status = nullptr)
+    Result receive_polling(Data_t* a_p_data)
     {
-        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
     template<typename Data_t>
-    bool receive_polling(Data_t* a_p_data, cml::time::tick a_timeout, Bus_status_flag* a_p_status)
+    Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
     {
-        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout, a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
-    cml::uint32 transmit_bytes_polling(const void* a_p_data,
-                                       cml::uint32 a_data_size_in_bytes,
-                                       Bus_status_flag* a_p_status = nullptr);
+    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_bytes);
+    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_bytes, cml::time::tick a_timeout);
 
-    cml::uint32 transmit_bytes_polling(const void* a_p_data,
-                                       cml::uint32 a_data_size_in_bytes,
-                                       cml::time::tick a_timeout,
-                                       Bus_status_flag* a_p_status = nullptr);
-
-    cml::uint32 receive_bytes_polling(void* a_p_data,
-                                      cml::uint32 a_data_size_in_bytes,
-                                      Bus_status_flag* a_p_status = nullptr);
-
-    cml::uint32 receive_bytes_polling(void* a_p_data,
-                                      cml::uint32 a_data_size_in_bytes,
-                                      cml::time::tick a_timeout,
-                                      Bus_status_flag* a_p_status = nullptr);
+    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_bytes);
+    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_bytes, cml::time::tick a_timeout);
 
     void register_transmit_callback(const TX_callback& a_callback,
                                     cml::uint32 a_data_size_in_bytes);

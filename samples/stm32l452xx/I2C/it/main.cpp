@@ -15,10 +15,10 @@
 #include <cml/hal/peripherals/I2C.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/utils/delay.hpp>
-#include <cml/utils/Console.hpp>
+#include <cml/utils/Buffered_console.hpp>
 
-#define MASTER
-//#define SLAVE
+//#define MASTER
+#define SLAVE
 
 namespace
 {
@@ -26,7 +26,10 @@ namespace
     using namespace cml::hal::peripherals;
     using namespace cml::utils;
 
-void print_status(Console* a_p_console, const char* a_p_tag, I2C_base::Bus_status_flag a_bus_status, uint32_t a_bytes)
+void print_status(Buffered_console* a_p_console,
+                  const char* a_p_tag,
+                  I2C_base::Bus_status_flag a_bus_status,
+                  uint32_t a_bytes)
 {
     a_p_console->write("[%s] status: ", a_p_tag);
 
@@ -65,6 +68,12 @@ void print_status(Console* a_p_console, const char* a_p_tag, I2C_base::Bus_statu
         case I2C_base::Bus_status_flag::nack:
         {
             a_p_console->write("nack ");
+        }
+        break;
+
+        case I2C_base::Bus_status_flag::unknown:
+        {
+            a_p_console->write("unknown ");
         }
         break;
     }
@@ -281,9 +290,8 @@ int main()
         USART console_usart(USART::Id::_2);
         bool usart_ready = console_usart.enable({ 115200u,
                                                   USART::Oversampling::_16,
-                                                  USART::Word_length::_8_bits,
                                                   USART::Stop_bits::_1,
-                                                  USART::Flow_control::none,
+                                                  USART::Flow_control_flag::none,
                                                   USART::Parity::none,
                                                   USART::Sampling_method::three_sample_bit
                                                 },
@@ -296,9 +304,9 @@ int main()
         {
 #if defined MASTER && !defined SLAVE
 
-            Console console(&console_usart);
+            Buffered_console console(&console_usart);
 
-            console.enable_buffered_input();
+            console.enable();
             console.write_line("CML I2C master sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             I2C_master i2c_master_bus(I2C_master::Id::_1);
@@ -350,9 +358,9 @@ int main()
 
 #if defined SLAVE && !defined MASTER
 
-            Console console(&console_usart);
+            Buffered_console console(&console_usart);
 
-            console.enable_buffered_input();
+            console.enable();
             console.write_line("CML I2C slave sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             I2C_slave i2c_slave_bus(I2C_slave::Id::_1);

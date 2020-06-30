@@ -37,7 +37,7 @@ int main()
             USART::Oversampling::_16,
             USART::Word_length::_8_bits,
             USART::Stop_bits::_1,
-            USART::Flow_control::none,
+            USART::Flow_control_flag::none,
             USART::Parity::none,
             USART::Sampling_method::three_sample_bit
         };

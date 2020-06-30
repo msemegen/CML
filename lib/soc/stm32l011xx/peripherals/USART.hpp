@@ -16,6 +16,7 @@
 #include <cml/integer.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/time.hpp>
+#include <cml/type_traits.hpp>
 
 namespace soc {
 namespace stm32l011xx {
@@ -37,14 +38,6 @@ public:
         unknown
     };
 
-    enum class Word_length : cml::uint32
-    {
-        _7_bits = USART_CR1_M1,
-        _8_bits = 0x0u,
-        _9_bits = USART_CR1_M0,
-        unknown
-    };
-
     enum class Stop_bits : cml::uint32
     {
         _0_5 = USART_CR2_STOP_0,
@@ -54,12 +47,11 @@ public:
         unknown
     };
 
-    enum class Flow_control : cml::uint32
+    enum class Flow_control_flag: cml::uint32
     {
         none                          = 0x0u,
         request_to_send               = USART_CR3_RTSE,
         clear_to_send                 = USART_CR3_CTSE,
-        request_to_send_clear_to_send = USART_CR3_RTSE | USART_CR3_CTSE,
         unknown
     };
 
@@ -84,7 +76,8 @@ public:
         framing_error  = 0x1,
         parity_error   = 0x2,
         overrun        = 0x4,
-        noise_detected = 0x8
+        noise_detected = 0x8,
+        unknown        = 0x10
 
     };
 
@@ -92,9 +85,8 @@ public:
     {
         cml::uint32 baud_rate            = 0;
         Oversampling oversampling       = Oversampling::unknown;
-        Word_length word_length         = Word_length::unknown;
         Stop_bits stop_bits             = Stop_bits::unknown;
-        Flow_control flow_control       = Flow_control::unknown;
+        Flow_control_flag flow_control  = Flow_control_flag::unknown;
         Parity parity                   = Parity::unknown;
         Sampling_method sampling_method = Sampling_method::unknown;
     };
@@ -113,9 +105,15 @@ public:
         cml::frequency frequency_hz = cml::Hz(0);
     };
 
+    struct Result
+    {
+        Bus_status_flag bus_status = Bus_status_flag::unknown;
+        cml::uint32 data_length    = 0;
+    };
+
     struct TX_callback
     {
-        using Function = bool(*)(volatile cml::uint32* a_p_data, bool a_transfer_complete, void* a_p_user_data);
+        using Function = bool(*)(volatile cml::uint16* a_p_data, bool a_transfer_complete, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -163,48 +161,38 @@ public:
     void disable();
 
     template<typename Data_t>
-    cml::uint32 transmit_polling(const Data_t& a_data, Bus_status_flag* a_p_status = nullptr)
+    Result transmit_polling(const Data_t& a_data)
     {
-        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->transmit_bytes_polling(&a_data, sizeof(a_data));
     }
 
     template<typename Data_t>
-    cml::uint32 transmit_polling(const Data_t& a_data,
-                                 cml::time::tick a_timeout,
-                                 Bus_status_flag* a_p_status = nullptr)
+    Result transmit_polling(const Data_t& a_data, cml::time::tick a_timeout)
     {
-        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout, a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout);
     }
 
     template<typename Data_t>
-    cml::uint32 receive_polling(Data_t* a_p_data, Bus_status_flag* a_p_status = nullptr)
+    Result receive_polling(Data_t* a_p_data)
     {
-        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
     template<typename Data_t>
-    cml::uint32 receive_polling(Data_t* a_p_data, cml::time::tick a_timeout, Bus_status_flag* a_p_status = nullptr)
+    Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
     {
-        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout, a_p_status);
+        static_assert(true == cml::is_pod<Data_t>());
+        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
-    cml::uint32 transmit_bytes_polling(const void* a_p_data,
-                                       cml::uint32 a_data_size_in_bytes,
-                                       Bus_status_flag* a_p_status = nullptr);
+    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_bytes);
+    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_bytes, cml::time::tick a_timeout);
+    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_bytes);
 
-    cml::uint32 transmit_bytes_polling(const void* a_p_data,
-                                       cml::uint32 a_data_size_in_bytes,
-                                       cml::time::tick a_timeout,
-                                       Bus_status_flag* a_p_status = nullptr);
-
-    cml::uint32 receive_bytes_polling(void* a_p_data,
-                                      cml::uint32 a_data_size_in_bytes,
-                                      Bus_status_flag* a_p_status = nullptr);
-
-    cml::uint32 receive_bytes_polling(void* a_p_data,
-                                      cml::uint32 a_data_size_in_bytes,
-                                      cml::time::tick a_timeout,
-                                      Bus_status_flag* a_p_status = nullptr);
+    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_bytes, cml::time::tick a_timeout);
 
     void register_transmit_callback(const TX_callback& a_callback);
     void register_receive_callback(const RX_callback& a_callback);
@@ -216,15 +204,32 @@ public:
 
     void set_baud_rate(cml::uint32 a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);
-    void set_word_length(Word_length a_word_length);
     void set_parity(Parity a_parity);
     void set_stop_bits(Stop_bits a_stop_bits);
-    void set_flow_control(Flow_control a_flow_control);
+    void set_flow_control(Flow_control_flag a_flow_control);
+    void set_sampling_method(Sampling_method a_sampling_method);
 
-    Oversampling get_oversampling() const;
-    Word_length  get_word_length()  const;
-    Stop_bits    get_stop_bits()    const;
-    Flow_control get_flow_control() const;
+    bool is_transmit_callback_registered() const
+    {
+        return nullptr != this->tx_callback.function;
+    }
+
+    bool is_receive_callback_registered() const
+    {
+        return nullptr != this->rx_callback.function;
+    }
+
+    bool is_bus_status_callback_registered() const
+    {
+        return nullptr != this->tx_callback.function;
+    }
+
+    Oversampling      get_oversampling()    const;
+    Stop_bits         get_stop_bits()       const;
+    Flow_control_flag get_flow_control()    const;
+    Sampling_method   get_sampling_method() const;
+
+    bool is_enabled() const;
 
     cml::uint32 get_baud_rate() const
     {
@@ -266,6 +271,22 @@ constexpr USART::Bus_status_flag operator & (USART::Bus_status_flag a_f1, USART:
 }
 
 constexpr USART::Bus_status_flag operator |= (USART::Bus_status_flag& a_f1, USART::Bus_status_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
+
+constexpr USART::Flow_control_flag operator | (USART::Flow_control_flag a_f1, USART::Flow_control_flag a_f2)
+{
+    return static_cast<USART::Flow_control_flag>(static_cast<cml::uint32>(a_f1) | static_cast<cml::uint32>(a_f2));
+}
+
+constexpr USART::Flow_control_flag operator & (USART::Flow_control_flag a_f1, USART::Flow_control_flag a_f2)
+{
+    return static_cast<USART::Flow_control_flag>(static_cast<cml::uint32>(a_f1) & static_cast<cml::uint32>(a_f2));
+}
+
+constexpr USART::Flow_control_flag operator |= (USART::Flow_control_flag& a_f1, USART::Flow_control_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;

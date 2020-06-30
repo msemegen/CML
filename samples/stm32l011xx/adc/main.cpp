@@ -12,7 +12,7 @@
 #include <cml/hal/peripherals/ADC.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
-#include <cml/utils/Console.hpp>
+#include <cml/utils/Buffered_console.hpp>
 #include <cml/utils/delay.hpp>
 
 namespace {
@@ -61,9 +61,8 @@ int main()
             {
                 115200u,
                 USART::Oversampling::_16,
-                USART::Word_length::_8_bits,
                 USART::Stop_bits::_1,
-                USART::Flow_control::none,
+                USART::Flow_control_flag::none,
                 USART::Parity::none,
                 USART::Sampling_method::three_sample_bit
             };
@@ -99,9 +98,9 @@ int main()
                 const ADC::Channel enabled_channels[] = { ADC::Channel::temperature_sensor };
                 adc.set_active_channels(ADC::Sampling_time::_160_5_clock_cycles, enabled_channels, 1);
 
-                Console console(&console_usart);
-                console.enable_buffered_input(); //we handle input, but with no reaction on it
+                Buffered_console console(&console_usart);
 
+                console.enable();
                 console.write_line("CML ADC sample. CPU speed: %d MHz\n", mcu::get_sysclk_frequency_hz() / MHz(1));
 
                 while (true)

@@ -27,6 +27,9 @@ struct config
 
         console& operator = (console&)       = delete;
         console& operator = (const console&) = delete;
+
+        static_assert(line_buffer_capacity > 1);
+        static_assert(input_buffer_capacity > 1);
     };
 
     struct command_line
@@ -44,6 +47,12 @@ struct config
 
         command_line& operator = (command_line&)       = delete;
         command_line& operator = (const command_line&) = delete;
+
+        static_assert(callbacks_buffer_capacity > 0);
+        static_assert(callback_parameters_buffer_capacity > 0);
+        static_assert(input_buffer_capacity > 0);
+        static_assert(line_buffer_capacity > 0);
+        static_assert(commands_carousel_capacity > 0);
     };
 
     struct logger
@@ -57,6 +66,8 @@ struct config
 
         logger& operator = (logger&)       = delete;
         logger& operator = (const logger&) = delete;
+
+        static_assert(line_buffer_capacity > 1);
     };
 
 
