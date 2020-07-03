@@ -51,9 +51,9 @@ struct assert
 } // namespace cml
 
 #ifdef CML_ASSERT
-#define assert(expression) (false == (expression) ? cml::debug::assert::trap(__FILE__, \
-                                                                             static_cast<cml::uint32>(__LINE__),\
-                                                                             #expression) \
+#define assert(expression) (false == (expression) ? cml::debug::assert::trap(__FILE__,                           \
+                                                                             static_cast<cml::uint32>(__LINE__), \
+                                                                             #expression)                        \
                                                   : static_cast<void>(0))
 #endif
 

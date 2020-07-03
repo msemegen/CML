@@ -34,7 +34,7 @@ bool rx_callback(uint32 a_byte, bool a_idle, void* a_p_user_data)
 namespace cml {
 namespace utils {
 
-using namespace cml::common;    
+using namespace cml::common;
 using namespace cml::hal;
 
 void Command_line::update()

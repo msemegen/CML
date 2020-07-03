@@ -33,7 +33,13 @@ int main()
             USART::Oversampling::_16,
             USART::Stop_bits::_1,
             USART::Flow_control_flag::none,
-            USART::Parity::none,
+            USART::Sampling_method::three_sample_bit
+        };
+
+        USART::Frame_format usart_frame_format
+        {
+            USART::Word_length::_8_bit,
+            USART::Parity::none
         };
 
         USART::Clock usart_clock
@@ -65,7 +71,7 @@ int main()
         console_usart_rx_pin.enable(usart_pin_config);
 
         USART console_usart(USART::Id::_2);
-        bool usart_ready = console_usart.enable(usart_config, usart_clock, 0x1u, 10);
+        bool usart_ready = console_usart.enable(usart_config, usart_frame_format, usart_clock, 0x1u, 10);
 
         if (true == usart_ready)
         {

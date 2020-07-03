@@ -94,7 +94,9 @@ void usart_interrupt_handler(USART* a_p_this)
         true == is_flag(cr1, USART_CR1_TXEIE) &&
         nullptr != a_p_this->tx_callback.function)
     {
-        if (false == a_p_this->tx_callback.function(reinterpret_cast<volatile uint16*>(&(USART2->TDR)), false, a_p_this->tx_callback.p_user_data))
+        if (false == a_p_this->tx_callback.function(reinterpret_cast<volatile uint16*>(&(USART2->TDR)),
+                                                    false,
+                                                    a_p_this->tx_callback.p_user_data))
         {
             a_p_this->unregister_transmit_callback();
         }
@@ -131,7 +133,7 @@ void usart_interrupt_handler(USART* a_p_this)
         }
     }
 
-    if (nullptr != a_p_this->bus_status_callback.function &&
+    if (/*nullptr != a_p_this->bus_status_callback.function &&*/
         true == is_flag(cr3, USART_CR3_EIE) &&
         true == is_flag(cr1, USART_CR1_PEIE))
     {
@@ -145,16 +147,22 @@ void usart_interrupt_handler(USART* a_p_this)
     }
 }
 
-bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_priority, time::tick a_timeout)
+bool USART::enable(const Config& a_config,
+                   const Frame_format& a_frame_format,
+                   const Clock &a_clock,
+                   uint32 a_irq_priority,
+                   time::tick a_timeout)
 {
     assert(false == this->is_enabled());
 
     assert(nullptr                    == p_usart_2);
     assert(0                          != a_config.baud_rate);
     assert(Flow_control_flag::unknown != a_config.flow_control);
-    assert(Parity::unknown            != a_config.parity);
     assert(Stop_bits::unknown         != a_config.stop_bits);
     assert(Sampling_method::unknown   != a_config.sampling_method);
+
+    assert(Parity::unknown      != a_frame_format.parity);
+    assert(Word_length::unknown != a_frame_format.word_length);
 
     assert(Clock::Source::unknown != a_clock.source);
     assert(0                      != a_clock.frequency_hz);
@@ -170,10 +178,6 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_pr
 
     NVIC_SetPriority(USART2_IRQn, a_irq_priority);
     NVIC_EnableIRQ(USART2_IRQn);
-
-    USART2->CR2 = static_cast<uint32>(a_config.stop_bits);
-    USART2->CR3 = static_cast<uint32>(a_config.flow_control) |
-                  static_cast<uint32>(a_config.sampling_method);
 
     switch (a_config.oversampling)
     {
@@ -201,12 +205,14 @@ bool USART::enable(const Config& a_config, const Clock &a_clock, uint32 a_irq_pr
     USART2->CR3 = static_cast<uint32>(a_config.flow_control) |
                   static_cast<uint32>(a_config.sampling_method);
 
-    USART2->CR1 = static_cast<uint32>(a_config.oversampling) |
-                  static_cast<uint32>(a_config.parity)       |
+    USART2->CR1 = static_cast<uint32>(a_config.oversampling)      |
+                  static_cast<uint32>(a_frame_format.parity)      |
+                  static_cast<uint32>(a_frame_format.word_length) |
                   USART_CR1_UE | USART_CR1_RE | USART_CR1_TE;
 
-    this->baud_rate = a_config.baud_rate;
-    this->clock     = a_clock;
+    this->baud_rate    = a_config.baud_rate;
+    this->frame_format = a_frame_format;
+    this->clock        = a_clock;
 
     bool ret = wait::until(&(USART2->ISR), USART_ISR_REACK | USART_ISR_TEACK, false, start, a_timeout);
 
@@ -230,11 +236,11 @@ void USART::disable()
     p_usart_2 = nullptr;
 }
 
-USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes)
+USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in_words)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
-    assert(a_data_size_in_bytes > 0);
+    assert(a_data_size_in_words > 0);
 
     set_flag(&(USART2->ICR), USART_ICR_TCCF);
 
@@ -244,9 +250,16 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_
 
     while (false == is_flag(USART2->ISR, USART_ISR_TC) && false == error)
     {
-        if (true == is_flag(USART2->ISR, USART_ISR_TXE) && ret < a_data_size_in_bytes)
+        if (true == is_flag(USART2->ISR, USART_ISR_TXE) && ret < a_data_size_in_words)
         {
-            USART2->TDR = static_cast<const uint8*>(a_p_data)[ret++];
+            if (Parity::none == this->frame_format.parity && Word_length::_9_bit == this->frame_format.word_length)
+            {
+                USART2->TDR = (static_cast<const uint16*>(a_p_data)[ret++]) & 0x1FFu;
+            }
+            else
+            {
+                USART2->TDR = (static_cast<const uint8*>(a_p_data)[ret++]) & 0xFFu;
+            }
         }
 
         error = is_USART_ISR_error();
@@ -261,11 +274,11 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_
     return { status, ret };
 }
 
-USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in_bytes, time::tick a_timeout)
+USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_size_in_words, time::tick a_timeout)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
-    assert(a_data_size_in_bytes > 0);
+    assert(a_data_size_in_words > 0);
     assert(a_timeout > 0);
 
     time::tick start = counter::get();
@@ -280,9 +293,16 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_
            false == error &&
            a_timeout < time::diff(counter::get(), start))
     {
-        if (true == is_flag(USART2->ISR, USART_ISR_TXE))
+        if (true == is_flag(USART2->ISR, USART_ISR_TXE) && ret < a_data_size_in_words)
         {
-            USART2->TDR = static_cast<const uint8*>(a_p_data)[ret++];
+            if (Parity::none == this->frame_format.parity && Word_length::_9_bit == this->frame_format.word_length)
+            {
+                USART2->TDR = (static_cast<const uint16*>(a_p_data)[ret++]) & 0x1FFu;
+            }
+            else
+            {
+                USART2->TDR = (static_cast<const uint8*>(a_p_data)[ret++]) & 0xFFu;
+            }
         }
 
         error = is_USART_ISR_error();
@@ -297,11 +317,11 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32 a_data_
     return { status, ret };
 }
 
-USART::Result USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes)
+USART::Result USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_words)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
-    assert(a_data_size_in_bytes > 0);
+    assert(a_data_size_in_words > 0);
 
     set_flag(&(USART2->ICR), USART_ICR_IDLECF);
 
@@ -313,9 +333,16 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in
     {
         if (true == is_flag(USART2->ISR, USART_ISR_RXNE))
         {
-            if (ret < a_data_size_in_bytes)
+            if (ret < a_data_size_in_words)
             {
-                static_cast<uint8*>(a_p_data)[ret++] = USART2->RDR;
+                if (Parity::none == this->frame_format.parity && Word_length::_9_bit == this->frame_format.word_length)
+                {
+                    static_cast<uint16*>(a_p_data)[ret++] = (USART2->RDR & 0x1FFu);
+                }
+                else
+                {
+                    static_cast<uint8*>(a_p_data)[ret++] = (USART2->RDR & 0xFFu);
+                }
             }
             else
             {
@@ -336,11 +363,11 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in
     return { status, ret };
 }
 
-USART::Result USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_bytes, time::tick a_timeout)
+USART::Result USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in_words, time::tick a_timeout)
 {
     assert(nullptr != p_usart_2);
     assert(nullptr != a_p_data);
-    assert(a_data_size_in_bytes > 0);
+    assert(a_data_size_in_words > 0);
     assert(a_timeout > 0);
 
     time::tick start = counter::get();
@@ -355,9 +382,16 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in
     {
         if (true == is_flag(USART2->ISR, USART_ISR_RXNE))
         {
-            if (ret < a_data_size_in_bytes)
+            if (ret < a_data_size_in_words)
             {
-                static_cast<uint8*>(a_p_data)[ret++] = USART2->RDR;
+                if (Parity::none == this->frame_format.parity && Word_length::_9_bit == this->frame_format.word_length)
+                {
+                    static_cast<uint16*>(a_p_data)[ret++] = (USART2->RDR & 0x1FFu);
+                }
+                else
+                {
+                    static_cast<uint8*>(a_p_data)[ret++] = (USART2->RDR & 0xFFu);
+                }
             }
             else
             {
@@ -469,15 +503,6 @@ void USART::set_oversampling(Oversampling a_oversampling)
     set_flag(&(USART2->CR1), USART_CR1_UE);
 }
 
-void USART::set_parity(Parity a_parity)
-{
-    assert(nullptr != p_usart_2);
-    assert(Parity::unknown != a_parity);
-
-    clear_flag(&(USART2->CR1), USART_CR1_UE);
-    set_flag(&(USART2->CR1), static_cast<uint32>(a_parity) | USART_CR1_UE);
-}
-
 void USART::set_stop_bits(Stop_bits a_stop_bits)
 {
     assert(nullptr != p_usart_2);
@@ -496,6 +521,32 @@ void USART::set_flow_control(Flow_control_flag a_flow_control)
     clear_flag(&(USART2->CR1), USART_CR1_UE);
     set_flag(&(USART2->CR3), static_cast<uint32>(a_flow_control));
     set_flag(&(USART2->CR1), USART_CR1_UE);
+}
+
+void USART::set_sampling_method(Sampling_method a_sampling_method)
+{
+    assert(nullptr != p_usart_2);
+    assert(Sampling_method::unknown != a_sampling_method);
+
+    clear_flag(&(USART2->CR1), USART_CR1_UE);
+    set_flag(&(USART2->CR3), USART_CR3_ONEBIT, static_cast<uint32>(a_sampling_method));
+    set_flag(&(USART2->CR1), USART_CR1_UE);
+}
+
+void USART::set_frame_format(const Frame_format& a_frame_format)
+{
+    assert(nullptr != p_usart_2);
+    assert(USART::Word_length::unknown != a_frame_format.word_length);
+    assert(USART::Parity::unknown != a_frame_format.parity);
+
+    clear_flag(&(USART2->CR1), USART_CR1_UE);
+    set_flag(&(USART2->CR1),
+             USART_CR1_PCE | USART_CR1_M,
+             static_cast<uint32>(a_frame_format.parity)      |
+             static_cast<uint32>(a_frame_format.word_length) | 
+             USART_CR1_UE);
+
+    this->frame_format = a_frame_format;
 }
 
 USART::Oversampling USART::get_oversampling() const
@@ -517,6 +568,11 @@ USART::Flow_control_flag USART::get_flow_control() const
     assert(nullptr != p_usart_2);
 
     return static_cast<Flow_control_flag>(get_flag(USART2->CR3, USART_CR3_RTSE | USART_CR3_CTSE));
+}
+
+USART::Sampling_method USART::get_sampling_method() const
+{
+    return static_cast<Sampling_method>(get_flag(USART2->CR3, USART_CR3_ONEBIT));
 }
 
 bool USART::is_enabled() const

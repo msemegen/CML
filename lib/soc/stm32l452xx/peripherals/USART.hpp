@@ -57,6 +57,21 @@ public:
         unknown
     };
 
+    enum Sampling_method : cml::uint32
+    {
+        three_sample_bit = 0,
+        one_sample_bit   = USART_CR3_ONEBIT,
+        unknown
+    };
+
+    enum class Word_length : cml::uint32
+    {
+        _7_bit = USART_CR1_M1,
+        _8_bit = 0x0u,
+        _9_bit = USART_CR1_M0,
+        unknown
+    };
+
     enum class Parity : cml::uint32
     {
         none = 0x0u,
@@ -65,11 +80,11 @@ public:
         unknown
     };
 
-    enum Sampling_method : cml::uint32
+    enum class Frame_length : cml::uint32
     {
-        three_sample_bit = 0,
-        one_sample_bit   = USART_CR3_ONEBIT,
-        unknown
+        _7_bit,
+        _8_bit,
+        _9_bit
     };
 
     enum class Bus_status_flag : cml::uint32
@@ -82,13 +97,18 @@ public:
         unknown        = 0x10
     };
 
+    struct Frame_format
+    {
+        Word_length word_length = Word_length::unknown;
+        Parity parity           = Parity::unknown;
+    };
+
     struct Config
     {
         cml::uint32 baud_rate           = 0;
         Oversampling oversampling       = Oversampling::unknown;
         Stop_bits stop_bits             = Stop_bits::unknown;
         Flow_control_flag flow_control  = Flow_control_flag::unknown;
-        Parity parity                   = Parity::unknown;
         Sampling_method sampling_method = Sampling_method::unknown;
     };
 
@@ -108,8 +128,8 @@ public:
 
     struct Result
     {
-        Bus_status_flag bus_status = Bus_status_flag::unknown;
-        cml::uint32 data_length    = 0;
+        Bus_status_flag bus_status       = Bus_status_flag::unknown;
+        cml::uint32 data_length_in_words = 0;
     };
 
     struct TX_callback
@@ -150,6 +170,7 @@ public:
     }
 
     bool enable(const Config& a_config,
+                const Frame_format& frame_format,
                 const Clock& a_clock,
                 cml::uint32 a_irq_priority,
                 cml::time::tick a_timeout);
@@ -184,10 +205,10 @@ public:
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
-    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_bytes);
-    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_bytes, cml::time::tick a_timeout);
-    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_bytes);
-    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_bytes, cml::time::tick a_timeout);
+    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_words);
+    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout);
+    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words);
+    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout);
 
     void register_transmit_callback(const TX_callback& a_callback);
     void register_receive_callback(const RX_callback& a_callback);
@@ -199,10 +220,10 @@ public:
 
     void set_baud_rate(cml::uint32 a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);
-    void set_parity(Parity a_parity);
     void set_stop_bits(Stop_bits a_stop_bits);
     void set_flow_control(Flow_control_flag a_flow_control);
     void set_sampling_method(Sampling_method a_sampling_method);
+    void set_frame_format(const Frame_format& a_frame_format);
 
     bool is_transmit_callback_registered() const
     {
@@ -231,9 +252,14 @@ public:
         return this->baud_rate;
     }
 
-    Clock get_clock() const
+    const Clock& get_clock() const
     {
         return this->clock;
+    }
+
+    const Frame_format& get_frame_format() const
+    {
+        return this->frame_format;
     }
 
     Id get_id() const
@@ -251,7 +277,9 @@ private:
     Bus_status_callback bus_status_callback;
 
     cml::uint32 baud_rate;
+
     Clock clock;
+    Frame_format frame_format;
 
 private:
 

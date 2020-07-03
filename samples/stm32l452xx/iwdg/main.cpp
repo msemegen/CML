@@ -13,7 +13,7 @@
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/hal/system/iwdg.hpp>
 #include <cml/hal/system/rng.hpp>
-#include <cml/utils/Console.hpp>
+#include <cml/utils/Buffered_console.hpp>
 #include <cml/utils/delay.hpp>
 
 int main()
@@ -37,11 +37,15 @@ int main()
         {
             115200u,
             USART::Oversampling::_16,
-            USART::Word_length::_8_bits,
             USART::Stop_bits::_1,
             USART::Flow_control_flag::none,
-            USART::Parity::none,
             USART::Sampling_method::three_sample_bit
+        };
+
+        USART::Frame_format usart_frame_format
+        {
+            USART::Word_length::_8_bit,
+            USART::Parity::none
         };
 
         USART::Clock usart_clock
@@ -74,11 +78,12 @@ int main()
         console_usart_RX_pin.enable(usart_pin_config);
 
         USART console_usart(USART::Id::_2);
-        bool usart_ready = console_usart.enable(usart_config, usart_clock, 0x1u, 10);
+        bool usart_ready = console_usart.enable(usart_config, usart_frame_format, usart_clock, 0x1u, 10);
 
         if (true == usart_ready)
         {
-            Console console(&console_usart);
+            Buffered_console console(&console_usart);
+            console.enable();
             console.write("RESET SOURCE: ");
 
             switch (mcu::get_reset_source())

@@ -17,8 +17,8 @@
 #include <cml/utils/delay.hpp>
 #include <cml/utils/Buffered_console.hpp>
 
-#define MASTER
-//#define SLAVE
+//#define MASTER
+#define SLAVE
 
 namespace
 {
@@ -144,9 +144,13 @@ int main()
                                                   USART::Oversampling::_16,
                                                   USART::Stop_bits::_1,
                                                   USART::Flow_control_flag::none,
-                                                  USART::Parity::none,
                                                   USART::Sampling_method::three_sample_bit
                                                 },
+
+                                                { USART::Word_length::_8_bit,
+                                                  USART::Parity::none
+                                                },
+
                                                 { USART::Clock::Source::sysclk,
                                                   mcu::get_sysclk_frequency_hz(),
                                                 },

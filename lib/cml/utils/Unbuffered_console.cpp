@@ -50,12 +50,12 @@ USART::Result Unbuffered_console::write_line(const char* a_p_string)
 
     uint32 message_length = cstring::length(a_p_string);
 
-    auto ret = this->p_io_stream->transmit_bytes_polling(a_p_string, message_length);
+    USART::Result ret = this->p_io_stream->transmit_bytes_polling(a_p_string, message_length);
 
     if (USART::Bus_status_flag::ok == ret.bus_status)
     {
         auto [status, data_length] = this->p_io_stream->transmit_bytes_polling(&config::new_line_character, 1);
-        ret.data_length += data_length;
+        ret.data_length_in_words += data_length;
         ret.bus_status = status;
     }
 
@@ -81,14 +81,14 @@ USART::Result Unbuffered_console::read_line(char* a_p_buffer, uint32 a_buffer_si
 
     do
     {
-        tmp = this->p_io_stream->receive_bytes_polling(&(a_p_buffer[ret.data_length]), 1);
+        tmp = this->p_io_stream->receive_bytes_polling(&(a_p_buffer[ret.data_length_in_words]), 1);
 
-        ret.data_length += tmp.data_length;
+        ret.data_length_in_words += tmp.data_length_in_words;
         ret.bus_status = tmp.bus_status;
     }
-    while (ret.data_length < a_buffer_size &&
+    while (ret.data_length_in_words < a_buffer_size &&
            ret.bus_status == USART::Bus_status_flag::ok &&
-           config::new_line_character != a_p_buffer[ret.data_length - 1]);
+           config::new_line_character != a_p_buffer[ret.data_length_in_words - 1]);
 
     return ret;
 }

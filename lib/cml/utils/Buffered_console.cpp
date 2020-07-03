@@ -207,7 +207,7 @@ USART::Result Buffered_console::read_key(char* a_p_character)
 
     if (false == this->input_buffer_view.is_empty() && USART::Bus_status_flag::ok == this->bus_status)
     {
-        ret.data_length = 1;
+        ret.data_length_in_words = 1;
         (*a_p_character) = this->input_buffer_view.read();
     }
 
@@ -228,14 +228,14 @@ USART::Result Buffered_console::read_line(char* a_p_buffer, uint32 a_buffer_size
 
     do
     {
-        tmp = this->read_key(&(a_p_buffer[ret.data_length]));
+        tmp = this->read_key(&(a_p_buffer[ret.data_length_in_words]));
 
-        ret.data_length += tmp.data_length;
+        ret.data_length_in_words += tmp.data_length_in_words;
         ret.bus_status = tmp.bus_status;
     }
-    while (ret.data_length < a_buffer_size &&
+    while (ret.data_length_in_words < a_buffer_size &&
            ret.bus_status == USART::Bus_status_flag::ok &&
-           config::new_line_character != a_p_buffer[ret.data_length - 1]);
+           config::new_line_character != a_p_buffer[ret.data_length_in_words - 1]);
 
     return ret;
 }

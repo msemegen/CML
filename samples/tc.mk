@@ -6,4 +6,4 @@ CP     := arm-none-eabi-objcopy
 OD     := arm-none-eabi-objdump
 GDBTUI := arm-none-eabi-gdbtui
 GDB    := arm-none-eabi-gdb
-OOCD   := /C/HKM/toolchain/openocd/0.10.0-7-20180123-1217/bin/openocd.exe
+OOCD   := openocd

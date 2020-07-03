@@ -14,7 +14,6 @@
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/utils/Command_line.hpp>
-#include <cml/utils/Unbuffered_console.hpp>
 
 namespace
 {
@@ -70,8 +69,13 @@ int main()
             USART::Oversampling::_16,
             USART::Stop_bits::_1,
             USART::Flow_control_flag::none,
-            USART::Parity::none,
             USART::Sampling_method::three_sample_bit
+        };
+
+        USART::Frame_format usart_frame_format
+        {
+            USART::Word_length::_8_bit,
+            USART::Parity::none
         };
 
         USART::Clock usart_clock
@@ -103,7 +107,7 @@ int main()
         console_usart_RX_pin.enable(usart_pin_config);
 
         USART console_usart(USART::Id::_2);
-        bool usart_ready = console_usart.enable(usart_config, usart_clock, 0x1u, 10);
+        bool usart_ready = console_usart.enable(usart_config, usart_frame_format, usart_clock, 0x1u, 10);
 
         if (true == usart_ready)
         {
@@ -113,8 +117,13 @@ int main()
             Output_pin led_pin(&gpio_port_b, 3);
             led_pin.enable({ Output_pin::Mode::push_pull, Output_pin::Pull::down, Output_pin::Speed::low });
 
-            Unbuffered_console console(&console_usart);
-            console.write_line("\nCML CLI sample. CPU speed: %d MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
+            char preamble[36];
+            cstring::format(preamble,
+                            sizeof(preamble),
+                            "\nCML CLI sample. CPU speed: %d MHz\n",
+                            mcu::get_sysclk_frequency_hz() / MHz(1));
+
+            console_usart.transmit_bytes_polling(preamble, sizeof(preamble));
 
             Command_line command_line(&console_usart, "cmd > ", "Command not found");
 
