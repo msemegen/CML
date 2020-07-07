@@ -82,9 +82,9 @@ public:
 
     enum class Frame_length : cml::uint32
     {
-        _7_bit,
-        _8_bit,
-        _9_bit
+        _7_bit = USART_CR1_M1,
+        _8_bit = 0,
+        _9_bit = USART_CR1_M0
     };
 
     enum class Bus_status_flag : cml::uint32
@@ -206,9 +206,9 @@ public:
     }
 
     Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_words);
-    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout);
+    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout_ms);
     Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words);
-    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout);
+    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout_ms);
 
     void register_transmit_callback(const TX_callback& a_callback);
     void register_receive_callback(const RX_callback& a_callback);

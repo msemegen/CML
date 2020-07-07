@@ -15,7 +15,7 @@ namespace debug {
 
 struct assert
 {
-    struct Halt_callback
+    struct Halt
     {
         using Function = void(*)(void* a_p_user_data);
 
@@ -23,7 +23,7 @@ struct assert
         void* p_user_data   = nullptr;
     };
 
-    struct Print_callback
+    struct Print
     {
         using Function = void(*)(void* a_p_user_data,
                                  const char* a_p_file,
@@ -34,8 +34,8 @@ struct assert
         void* p_user_data   = nullptr;
     };
 
-    static void register_callback(const Halt_callback& a_callback);
-    static void register_callback(const Print_callback& a_callback);
+    static void register_halt(const Halt& a_callback);
+    static void register_print(const Print& a_callback);
     static void trap(const char* a_p_file, uint32 a_line, const char* a_p_expression);
 
     assert()              = delete;
