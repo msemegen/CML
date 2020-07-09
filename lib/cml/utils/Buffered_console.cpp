@@ -44,7 +44,7 @@ bool tx_callback(volatile uint16* a_p_data, bool a_transfer_complete, void* a_p_
     }
     else
     {
-        p_this->p_io_stream->unregister_transmit_callback();
+        p_this->tx_context.complete = true;
         return false;
     }
 
@@ -90,13 +90,12 @@ USART::Result Buffered_console::write(char a_character)
 
     USART::Result ret;
 
-    this->tx_context.index  = 0;
-    this->tx_context.length = 1;
-
+    this->tx_context = { 1, 0, false };
     this->line_buffer[0] = a_character;
 
     this->p_io_stream->register_transmit_callback({ tx_callback, this });
-    while (true == this->p_io_stream->is_transmit_callback_registered());
+    while (false == this->tx_context.complete);
+    this->p_io_stream->unregister_transmit_callback();
 
     ret = { this->bus_status, this->tx_context.index };
 
@@ -117,13 +116,12 @@ USART::Result Buffered_console::write(const char* a_p_string)
 
     USART::Result ret;
 
-    this->tx_context.index  = 0;
-    this->tx_context.length = cstring::length(a_p_string);
-
+    this->tx_context = { cstring::length(a_p_string, config::console::line_buffer_capacity), 0, false };
     memory::copy(this->line_buffer, a_p_string, this->tx_context.length);
 
     this->p_io_stream->register_transmit_callback({ tx_callback, this });
-    while (true == this->p_io_stream->is_transmit_callback_registered());
+    while (false == this->tx_context.complete);
+    this->p_io_stream->unregister_transmit_callback();
 
     ret = { this->bus_status, this->tx_context.index };
 
@@ -143,15 +141,13 @@ USART::Result Buffered_console::write_line(char a_character)
 
     USART::Result ret;
 
-    this->tx_context.index  = 0;
-    this->tx_context.length = 2;
-
+    this->tx_context = { 2, 0, false };
     this->line_buffer[0] = a_character;
     this->line_buffer[1] = config::new_line_character;
 
     this->p_io_stream->register_transmit_callback({ tx_callback, this });
-
-    while (true == this->p_io_stream->is_transmit_callback_registered());
+    while (false == this->tx_context.complete);
+    this->p_io_stream->unregister_transmit_callback();
 
     ret = { this->bus_status, this->tx_context.index };
 
@@ -172,14 +168,13 @@ USART::Result Buffered_console::write_line(const char* a_p_string)
 
     USART::Result ret;
 
-    this->tx_context.index  = 0;
-    this->tx_context.length = cstring::length(a_p_string, config::console::line_buffer_capacity - 1);
-
+    this->tx_context = { cstring::length(a_p_string, config::console::line_buffer_capacity - 1), 0, false };
     memory::copy(this->line_buffer, a_p_string, this->tx_context.length);
     this->line_buffer[this->tx_context.length++] = config::new_line_character;
 
     this->p_io_stream->register_transmit_callback({ tx_callback, this });
-    while (true == this->p_io_stream->is_transmit_callback_registered());
+    while (false == this->tx_context.complete);
+    this->p_io_stream->unregister_transmit_callback();
 
     ret = { this->bus_status, this->tx_context.index };
 

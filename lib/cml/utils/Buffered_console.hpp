@@ -70,10 +70,11 @@ public:
 
 private:
 
-    struct IT_context
+    struct TX_context
     {
-        cml::uint32 length = 0;
-        cml::uint32 index  = 0;
+        cml::uint32 length     = 0;
+        cml::uint32 index      = 0;
+        volatile bool complete = false;
     };
 
 private:
@@ -84,7 +85,7 @@ private:
     char input_buffer[config::console::input_buffer_capacity];
 
     collection::Ring<char> input_buffer_view;
-    IT_context tx_context;
+    TX_context tx_context;
 
     hal::peripherals::USART::Bus_status_flag bus_status;
 

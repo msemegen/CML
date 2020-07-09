@@ -735,12 +735,14 @@ bool RS485::enable(const Config& a_config,
                            start,
                            a_timeout);
 
-    if (false == ret)
+    if (true == ret)
+    {
+        this->p_flow_control_pin->set_level(Output_pin::Level::low);
+    }
+    else
     {
         this->disable();
     }
-
-    this->p_flow_control_pin->set_level(Output_pin::Level::low);
 
     return ret;
 }
@@ -769,13 +771,13 @@ RS485::Result RS485::transmit_bytes_polling(uint8 a_address, const void* a_p_dat
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
 
-    this->p_flow_control_pin->set_level(Output_pin::Level::high);
-
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
 
     uint32 ret = 0;
     bool error = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
+
+    this->p_flow_control_pin->set_level(Output_pin::Level::high);
 
     while (false == is_flag(this->p_usart->ISR, USART_ISR_TC) && false == error)
     {
@@ -796,13 +798,13 @@ RS485::Result RS485::transmit_bytes_polling(uint8 a_address, const void* a_p_dat
         error = is_USART_ISR_error(this->p_usart->ISR);
     }
 
+    this->p_flow_control_pin->set_level(Output_pin::Level::low);
+
     if (true == error)
     {
         bus_status = get_bus_status_flag_from_USART_ISR(this->p_usart->ISR);
         clear_USART_ISR_errors(&(this->p_usart->ICR));
     }
-
-    this->p_flow_control_pin->set_level(Output_pin::Level::low);
 
     return { bus_status, ret };
 }
@@ -821,13 +823,13 @@ RS485::Result RS485::transmit_bytes_polling(uint8 a_address,
 
     time::tick start = counter::get();
 
-    this->p_flow_control_pin->set_level(Output_pin::Level::high);
-
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
 
     uint32 ret = 0;
     bool error = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
+
+    this->p_flow_control_pin->set_level(Output_pin::Level::high);
 
     while (false == is_flag(this->p_usart->ISR, USART_ISR_TC) &&
            false ==  error &&
@@ -850,6 +852,8 @@ RS485::Result RS485::transmit_bytes_polling(uint8 a_address,
         error = is_USART_ISR_error(this->p_usart->ISR);
     }
 
+    this->p_flow_control_pin->set_level(Output_pin::Level::low);
+
     if (true == error)
     {
         bus_status = get_bus_status_flag_from_USART_ISR(this->p_usart->ISR);
@@ -867,6 +871,7 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in
 
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
+
 
     set_flag(&(this->p_usart->ICR), USART_ICR_IDLECF);
 
