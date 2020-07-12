@@ -99,6 +99,14 @@ public:
     Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words);
     Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout_ms);
 
+    void register_transmit_callback(const TX_callback& a_callback);
+    void register_receive_callback(const RX_callback& a_callback);
+    void register_bus_status_callback(const Bus_status_callback& a_callback);
+
+    void unregister_transmit_callback();
+    void unregister_receive_callback();
+    void unregister_bus_status_callback();
+
     void set_baud_rate(cml::uint32 a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);
     void set_stop_bits(Stop_bits a_stop_bits);
@@ -124,8 +132,16 @@ private:
     USART_TypeDef* p_usart;
     Output_pin* p_flow_control_pin;
 
+    TX_callback tx_callback;
+    RX_callback rx_callback;
+    Bus_status_callback bus_status_callback;
+
     cml::uint32 baud_rate;
     USART::Clock clock;
+
+private:
+
+    friend void rs485_interrupt_handler(RS485* a_p_this);
 };
 
 } // namespace peripherals

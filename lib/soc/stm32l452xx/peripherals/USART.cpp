@@ -139,22 +139,34 @@ Controller controllers[] =
 extern "C"
 {
 
+void interrupt_handler(uint32 a_index)
+{
+    assert((nullptr != controllers[a_index].p_usart_handle && nullptr == controllers[a_index].p_rs485_handle) ||
+           (nullptr == controllers[a_index].p_usart_handle && nullptr != controllers[a_index].p_rs485_handle));
+
+    if (nullptr != controllers[a_index].p_usart_handle)
+    {
+        usart_interrupt_handler(controllers[a_index].p_usart_handle);
+    }
+    else if (nullptr != controllers[0].p_rs485_handle)
+    {
+        rs485_interrupt_handler(controllers[a_index].p_rs485_handle);
+    }
+}
+
 void USART1_IRQHandler()
 {
-    assert(nullptr != controllers[0].p_usart_handle);
-    usart_interrupt_handler(controllers[0].p_usart_handle);
+    interrupt_handler(0);
 }
 
 void USART2_IRQHandler()
 {
-    assert(nullptr != controllers[1].p_usart_handle);
-    usart_interrupt_handler(controllers[1].p_usart_handle);
+    interrupt_handler(1);
 }
 
 void USART3_IRQHandler()
 {
-    assert(nullptr != controllers[2].p_usart_handle);
-    usart_interrupt_handler(controllers[2].p_usart_handle);
+    interrupt_handler(2);
 }
 
 } // extern "C"
@@ -174,23 +186,26 @@ void usart_interrupt_handler(USART* a_p_this)
     uint32 cr1 = a_p_this->p_usart->CR1;
     uint32 cr3 = a_p_this->p_usart->CR3;
 
-    if (true == is_flag(isr, USART_ISR_TXE) &&
-        true == is_flag(cr1, USART_CR1_TXEIE) &&
-        nullptr != a_p_this->tx_callback.function)
+    if (nullptr != a_p_this->tx_callback.function)
     {
-        if (false == a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR), false, a_p_this->tx_callback.p_user_data))
+        if (true == is_flag(isr, USART_ISR_TXE) &&
+            true == is_flag(cr1, USART_CR1_TXEIE))
         {
-            a_p_this->unregister_transmit_callback();
+            if (false == a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR),
+                                                        false,
+                                                        a_p_this->tx_callback.p_user_data))
+            {
+                a_p_this->unregister_transmit_callback();
+            }
         }
-    }
 
-    if (true == is_flag(isr, USART_ISR_TC) &&
-        true == is_flag(cr1, USART_CR1_TCIE) &&
-        nullptr != a_p_this->tx_callback.function)
-    {
-        if (false == a_p_this->tx_callback.function(nullptr, true, a_p_this->tx_callback.p_user_data))
+        if (true == is_flag(isr, USART_ISR_TC) &&
+            true == is_flag(cr1, USART_CR1_TCIE))
         {
-            a_p_this->unregister_transmit_callback();
+            if (false == a_p_this->tx_callback.function(nullptr, true, a_p_this->tx_callback.p_user_data))
+            {
+                a_p_this->unregister_transmit_callback();
+            }
         }
     }
 
@@ -231,7 +246,88 @@ void usart_interrupt_handler(USART* a_p_this)
     }
 }
 
-bool USART::enable(const Config& a_config, const Frame_format& a_frame_format, const Clock &a_clock, uint32 a_irq_priority, time::tick a_timeout)
+void rs485_interrupt_handler(RS485* a_p_this)
+{
+    assert(nullptr != a_p_this);
+
+    uint32 isr = a_p_this->p_usart->ISR;
+    uint32 cr1 = a_p_this->p_usart->CR1;
+    uint32 cr3 = a_p_this->p_usart->CR3;
+
+    if (nullptr != a_p_this->tx_callback.function)
+    {
+        if (true == is_flag(isr, USART_ISR_TXE) &&
+            true == is_flag(cr1, USART_CR1_TXEIE))
+        {
+            if (false == a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR),
+                                                        false, 
+                                                        a_p_this->tx_callback.p_user_data))
+            {
+                a_p_this->unregister_transmit_callback();
+            }
+        }
+
+        if (true == is_flag(isr, USART_ISR_TC) &&
+            true == is_flag(cr1, USART_CR1_TCIE))
+        {
+            if (false == a_p_this->tx_callback.function(nullptr, true, a_p_this->tx_callback.p_user_data))
+            {
+                a_p_this->unregister_transmit_callback();
+            }
+        }
+    }
+
+    if (nullptr != a_p_this->rx_callback.function)
+    {
+        bool status = true;
+
+        if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
+        {
+            uint16 rdr = a_p_this->p_usart->RDR;
+
+            if (false == is_flag(rdr, 0x100))
+            {
+                status = a_p_this->rx_callback.function(rdr,
+                                                        false,
+                                                        a_p_this->rx_callback.p_user_data);
+
+            }
+            else
+            {
+                set_flag(&(a_p_this->p_usart->RQR), USART_RQR_RXFRQ);
+            }
+        }
+        else if (true == is_flag(isr, USART_ISR_IDLE) && true == is_flag(cr1, USART_CR1_IDLEIE))
+        {
+            set_flag(&(a_p_this->p_usart->ICR), USART_ICR_IDLECF);
+            status = a_p_this->rx_callback.function(0x0u, true, a_p_this->rx_callback.p_user_data);
+        }
+
+        if (false == status)
+        {
+            a_p_this->unregister_receive_callback();
+        }
+    }
+
+    if (nullptr != a_p_this->bus_status_callback.function &&
+        true == is_flag(cr3, USART_CR3_EIE) &&
+        true == is_flag(cr1, USART_CR1_PEIE))
+    {
+        USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR(isr);
+
+        if (status != USART::Bus_status_flag::ok &&
+            true == a_p_this->bus_status_callback.function(status, a_p_this->bus_status_callback.p_user_data))
+        {
+            clear_USART_ISR_errors(&(a_p_this->p_usart->ICR));
+        }
+    }
+}
+
+bool USART::enable(const Config& a_config,
+                   const Frame_format& a_frame_format, 
+                   const Clock &a_clock,
+                   uint32 a_irq_priority,
+                   time::tick a_timeout)
 {
     assert(false == this->is_enabled());
 
