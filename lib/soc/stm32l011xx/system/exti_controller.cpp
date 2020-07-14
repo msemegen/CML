@@ -38,7 +38,7 @@ extern "C"
 
 using namespace cml;
 
-bool interrupt_handler(uint32 a_pr1, uint32 a_index)
+static bool interrupt_handler(uint32 a_pr1, uint32 a_index)
 {
     assert(nullptr != handlers[a_index].callback.function);
 

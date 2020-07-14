@@ -12,20 +12,20 @@ namespace {
 
 using namespace cml::debug;
 
-assert::Halt_callback  halt{ nullptr, nullptr };
-assert::Print_callback print{ nullptr, nullptr };
+assert::Halt  halt{ nullptr, nullptr };
+assert::Print print{ nullptr, nullptr };
 
 } // namespace ::
 
 namespace cml {
 namespace debug {
 
-void assert::register_callback(const Halt_callback& a_callback)
+void assert::register_halt(const Halt& a_callback)
 {
     halt = a_callback;
 }
 
-void assert::register_callback(const Print_callback& a_callback)
+void assert::register_print(const Print& a_callback)
 {
     print = a_callback;
 }

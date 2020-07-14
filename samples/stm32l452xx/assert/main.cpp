@@ -104,8 +104,8 @@ int main()
         Logger logger(&console_usart, true, true, true, true);
         logger.inf("CML assert sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
-        assert::register_callback({ print_assert, &logger });
-        assert::register_callback({ halt, nullptr });
+        assert::register_print({ print_assert, &logger });
+        assert::register_halt({ halt, nullptr });
 
         uint8 array_buffer[3];
         Array<uint8> array(array_buffer, sizeof(array_buffer));
