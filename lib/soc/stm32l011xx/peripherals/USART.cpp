@@ -72,8 +72,16 @@ extern "C"
 
 void USART2_IRQHandler()
 {
-    assert(nullptr != p_usart_2);
-    usart_interrupt_handler(p_usart_2);
+    assert((nullptr != p_usart_2 && nullptr == p_rs485) || (nullptr == p_usart_2 && nullptr != p_rs485));
+
+    if (nullptr != p_usart_2)
+    {
+        usart_interrupt_handler(p_usart_2);
+    }
+    else if (nullptr != p_rs485)
+    {
+        rs485_interrupt_handler(p_rs485);
+    }
 }
 
 } // extern "C"
@@ -197,10 +205,6 @@ void rs485_interrupt_handler(RS485* a_p_this)
                                                         a_p_this->rx_callback.p_user_data);
 
             }
-            else
-            {
-                set_flag(&(USART2->RQR), USART_RQR_RXFRQ);
-            }
         }
         else if (true == is_flag(isr, USART_ISR_IDLE) && true == is_flag(cr1, USART_CR1_IDLEIE))
         {
@@ -228,15 +232,12 @@ void rs485_interrupt_handler(RS485* a_p_this)
     }
 }
 
-
 bool USART::enable(const Config& a_config,
                    const Frame_format& a_frame_format,
                    const Clock &a_clock,
                    uint32 a_irq_priority,
                    time::tick a_timeout)
 {
-    assert(false == this->is_enabled());
-
     assert(nullptr                    == p_usart_2);
     assert(0                          != a_config.baud_rate);
     assert(Flow_control_flag::unknown != a_config.flow_control);
@@ -293,8 +294,8 @@ bool USART::enable(const Config& a_config,
                   USART_CR1_UE | USART_CR1_RE | USART_CR1_TE;
 
     this->baud_rate    = a_config.baud_rate;
-    this->frame_format = a_frame_format;
     this->clock        = a_clock;
+    this->frame_format = a_frame_format;
 
     bool ret = wait::until(&(USART2->ISR), USART_ISR_REACK | USART_ISR_TEACK, false, start, a_timeout);
 
@@ -308,6 +309,8 @@ bool USART::enable(const Config& a_config,
 
 void USART::disable()
 {
+    assert(nullptr != p_usart_2 && nullptr == p_rs485);
+
     USART2->CR1 = 0;
     USART2->CR2 = 0;
     USART2->CR3 = 0;
@@ -453,6 +456,8 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in
     assert(a_timeout > 0);
 
     time::tick start = counter::get();
+
+    set_flag(&(USART2->ICR), USART_ICR_IDLECF);
 
     uint32 ret = 0;
     bool error = false;
@@ -680,9 +685,8 @@ bool RS485::enable(const Config& a_config,
                    uint32 a_irq_priority,
                    time::tick a_timeout)
 {
-    assert(false == this->is_enabled());
+    assert(nullptr == p_rs485 && nullptr == p_usart_2);
 
-    assert(nullptr            == p_rs485);
     assert(nullptr            != a_p_flow_control_pin);
     assert(0                  != a_config.baud_rate);
     assert(Stop_bits::unknown != a_config.stop_bits);
@@ -931,8 +935,6 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in
 
     time::tick start = counter::get();
 
-    this->p_flow_control_pin->set_level(Output_pin::Level::low);
-
     set_flag(&(USART2->ICR), USART_ICR_IDLECF);
 
     uint32 ret = 0;
@@ -978,13 +980,16 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32 a_data_size_in
 
 void RS485::register_transmit_callback(const TX_callback& a_callback)
 {
-    assert(nullptr != p_usart_2 && nullptr == p_usart_2);
+    assert(nullptr != this->p_flow_control_pin);
+    assert(nullptr != p_rs485 && nullptr == p_usart_2);
     assert(nullptr != a_callback.function);
 
     this->tx_callback = a_callback;
 
     set_flag(&(USART2->ICR), USART_ICR_TCCF);
     set_flag(&(USART2->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
+
+    this->p_flow_control_pin->set_level(Output_pin::Level::high);
 }
 
 void RS485::register_receive_callback(const RX_callback& a_callback)
@@ -1013,6 +1018,8 @@ void RS485::unregister_transmit_callback()
 {
     assert(nullptr != p_rs485 && nullptr == p_usart_2);
 
+    this->p_flow_control_pin->set_level(Output_pin::Level::low);
+
     clear_flag(&(USART2->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
 
     this->tx_callback = { nullptr, nullptr };
@@ -1036,6 +1043,57 @@ void RS485::unregister_bus_status_callback()
     clear_flag(&(USART2->CR3), USART_CR3_EIE);
 
     this->bus_status_callback = { nullptr, nullptr };
+}
+
+void RS485::set_baud_rate(cml::uint32 a_baud_rate)
+{
+    assert(nullptr != p_rs485 && nullptr == p_usart_2);
+
+    assert(0 != a_baud_rate);
+
+    const Oversampling oversampling = this->get_oversampling();
+
+    switch (oversampling)
+    {
+        case Oversampling::_8:
+        {
+            uint32 usartdiv = 2 * this->clock.frequency_hz / a_baud_rate;
+            USART2->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
+        }
+        break;
+
+        case Oversampling::_16:
+        {
+            USART2->BRR = this->clock.frequency_hz / a_baud_rate;
+        }
+        break;
+
+        case Oversampling::unknown:
+        {
+            assert(Oversampling::unknown != oversampling);
+        }
+        break;
+    }
+}
+
+void RS485::set_oversampling(Oversampling a_oversampling)
+{
+    assert(nullptr != p_rs485 && nullptr == p_usart_2);
+    assert(Oversampling::unknown != a_oversampling);
+
+    clear_flag(&(USART2->CR1), USART_CR1_UE);
+    set_flag(&(USART2->CR1), static_cast<uint32>(a_oversampling));
+    set_flag(&(USART2->CR1), USART_CR1_UE);
+}
+
+void RS485::set_stop_bits(Stop_bits a_stop_bits)
+{
+    assert(nullptr != p_rs485 && nullptr == p_usart_2);
+    assert(Stop_bits::unknown != a_stop_bits);
+
+    clear_flag(&(USART2->CR1), USART_CR1_UE);
+    set_flag(&(USART2->CR2), static_cast<uint32>(a_stop_bits));
+    set_flag(&(USART2->CR1), USART_CR1_UE);
 }
 
 bool RS485::is_enabled() const

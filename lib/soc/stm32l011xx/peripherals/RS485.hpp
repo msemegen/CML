@@ -106,6 +106,10 @@ public:
     void unregister_receive_callback();
     void unregister_bus_status_callback();
 
+    void set_baud_rate(cml::uint32 a_baud_rate);
+    void set_oversampling(Oversampling a_oversampling);
+    void set_stop_bits(Stop_bits a_stop_bits);
+
     bool is_enabled() const;
 
     Oversampling get_oversampling() const;
