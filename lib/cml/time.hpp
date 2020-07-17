@@ -9,7 +9,7 @@
 
 //cml
 #include <cml/integer.hpp>
-#include <cml/Numeric_traits.hpp>
+#include <cml/numeric_traits.hpp>
 
 namespace cml {
 
