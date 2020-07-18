@@ -28,7 +28,7 @@ public:
         void* p_user_data = nullptr;
     };
 
-    static void enable(cml::uint32_t a_start_value, cml::uint32_t a_priority);
+    static void enable(uint32_t a_start_value, uint32_t a_priority);
     static void disable();
 
     static void register_tick_callback(const Tick_callback& a_callback);
