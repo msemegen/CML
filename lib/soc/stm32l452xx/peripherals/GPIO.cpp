@@ -76,9 +76,9 @@ void gpio_h_disable()
     clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
 }
 
-uint32 get_index_from_Id(GPIO::Id a_id)
+uint32_t get_index_from_Id(GPIO::Id a_id)
 {
-    return static_cast<uint32>(a_id);
+    return static_cast<uint32_t>(a_id);
 }
 
 struct Controller
@@ -146,7 +146,7 @@ void Output_pin::disable()
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
 
-    uint32 flag = (0x3u << (this->pin * 2));
+    const uint32_t flag = (0x3u << (this->pin * 2));
 
     set_flag(&(p_port->MODER),     flag);
     clear_flag(&(p_port->OSPEEDR), flag);
@@ -158,7 +158,7 @@ void Output_pin::disable()
 void Output_pin::set_level(Level a_level)
 {
     constexpr uint8_t mul[] = { 16, 0 };
-    static_cast<GPIO_TypeDef*>((*this->p_port))->BSRR = 0x1u << (this->pin + mul[static_cast<uint32>(a_level)]);
+    static_cast<GPIO_TypeDef*>((*this->p_port))->BSRR = 0x1u << (this->pin + mul[static_cast<uint32_t>(a_level)]);
 }
 
 void Output_pin::toggle_level()
@@ -192,13 +192,13 @@ void Output_pin::set_mode(Mode a_mode)
 void Output_pin::set_pull(Pull a_pull)
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_pull) << (this->pin * 2));
+    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32_t>(a_pull) << (this->pin * 2));
 }
 
 void Output_pin::set_speed(Speed a_speed)
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    set_flag(&(p_port->OSPEEDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_speed) << (this->pin * 2));
+    set_flag(&(p_port->OSPEEDR), 0x3u << (this->pin * 2), static_cast<uint32_t>(a_speed) << (this->pin * 2));
 }
 
 Output_pin::Level Output_pin::get_level() const
@@ -209,19 +209,19 @@ Output_pin::Level Output_pin::get_level() const
 Output_pin::Mode Output_pin::get_mode() const
 {
     const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    return static_cast<Mode>(get_flag(p_port->OTYPER, static_cast<uint32>(0x1u << this->pin) << this->pin));
+    return static_cast<Mode>(get_flag(p_port->OTYPER, static_cast<uint32_t>(0x1u << this->pin) << this->pin));
 }
 
 Output_pin::Pull Output_pin::get_pull() const
 {
     const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    return static_cast<Pull>(get_flag(p_port->PUPDR, static_cast<uint32>(0x1u << this->pin) << this->pin));
+    return static_cast<Pull>(get_flag(p_port->PUPDR, static_cast<uint32_t>(0x1u << this->pin) << this->pin));
 }
 
 Output_pin::Speed Output_pin::get_speed() const
 {
     const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    return static_cast<Speed>((get_flag(p_port->OSPEEDR, static_cast<uint32>(0x1u << this->pin) << this->pin)));
+    return static_cast<Speed>((get_flag(p_port->OSPEEDR, static_cast<uint32_t>(0x1u << this->pin) << this->pin)));
 }
 
 void Input_pin::enable(Pull a_pull)
@@ -239,7 +239,7 @@ void Input_pin::enable(Pull a_pull)
 
 void Input_pin::disable()
 {
-    const uint32 flag = (0x3u << (this->pin * 2));
+    const uint32_t flag = (0x3u << (this->pin * 2));
 
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
 
@@ -252,7 +252,7 @@ void Input_pin::disable()
 void Input_pin::set_pull(Pull a_pull)
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_pull) << (this->pin * 2));
+    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32_t>(a_pull) << (this->pin * 2));
 }
 
 Input_pin::Level Input_pin::get_level() const
@@ -263,7 +263,7 @@ Input_pin::Level Input_pin::get_level() const
 Input_pin::Pull Input_pin::get_pull() const
 {
     const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    return static_cast<Pull>((get_flag(p_port->PUPDR, static_cast<uint32>(0x3u << this->pin)) << this->pin));
+    return static_cast<Pull>((get_flag(p_port->PUPDR, static_cast<uint32_t>(0x3u << this->pin)) << this->pin));
 }
 
 void Alternate_function_pin::enable(const Config& a_config)
@@ -290,7 +290,7 @@ void Alternate_function_pin::disable()
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
 
-    const uint32 flag = (0x3u << (this->pin * 2));
+    const uint32_t flag = (0x3u << (this->pin * 2));
 
     set_flag(&(p_port->MODER),     flag);
     clear_flag(&(p_port->OSPEEDR), flag);
@@ -325,21 +325,21 @@ void Alternate_function_pin::set_mode(Mode a_mode)
 void Alternate_function_pin::set_pull(Pull a_pull)
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_pull) << (this->pin * 2));
+    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32_t>(a_pull) << (this->pin * 2));
 }
 
 void Alternate_function_pin::set_speed(Speed a_speed)
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    set_flag(&(p_port->OSPEEDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_speed) << (this->pin * 2));
+    set_flag(&(p_port->OSPEEDR), 0x3u << (this->pin * 2), static_cast<uint32_t>(a_speed) << (this->pin * 2));
 }
 
-void Alternate_function_pin::set_function(uint32 a_function)
+void Alternate_function_pin::set_function(uint32_t a_function)
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
 
-    uint32 af_register_index = this->pin >> 3u;
-    uint32 af_register       = p_port->AFR[af_register_index];
+    uint32_t af_register_index = this->pin >> 3u;
+    uint32_t af_register       = p_port->AFR[af_register_index];
 
     af_register &= ~(0xFu << ((this->pin - (af_register_index * 8u)) * 4u));
     af_register |= a_function << ((this->pin - (af_register_index * 8u)) * 4u);
@@ -351,19 +351,19 @@ void Alternate_function_pin::set_function(uint32 a_function)
 Alternate_function_pin::Mode Alternate_function_pin::get_mode() const
 {
     const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    return static_cast<Mode>(get_flag(p_port->OTYPER, static_cast<uint32>(0x1u << this->pin) << this->pin));
+    return static_cast<Mode>(get_flag(p_port->OTYPER, static_cast<uint32_t>(0x1u << this->pin) << this->pin));
 }
 
 Alternate_function_pin::Pull Alternate_function_pin::get_pull() const
 {
     const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    return static_cast<Pull>(get_flag(p_port->PUPDR, static_cast<uint32>(0x1u << this->pin) << this->pin));
+    return static_cast<Pull>(get_flag(p_port->PUPDR, static_cast<uint32_t>(0x1u << this->pin) << this->pin));
 }
 
 Alternate_function_pin::Speed Alternate_function_pin::get_speed() const
 {
     const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    return static_cast<Speed>(get_flag(p_port->OSPEEDR, static_cast<uint32>(0x1u << this->pin) << this->pin));
+    return static_cast<Speed>(get_flag(p_port->OSPEEDR, static_cast<uint32_t>(0x1u << this->pin) << this->pin));
 }
 
 void Analog_pin::enable(Pull a_pull)
@@ -392,13 +392,13 @@ void Analog_pin::disable()
 void Analog_pin::set_pull(Pull a_pull)
 {
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32>(a_pull) << (this->pin * 2));
+    set_flag(&(p_port->PUPDR), 0x3u << (this->pin * 2), static_cast<uint32_t>(a_pull) << (this->pin * 2));
 }
 
 Analog_pin::Pull Analog_pin::get_pull() const
 {
     const GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*this->p_port));
-    return static_cast<Pull>(get_flag(p_port->PUPDR, static_cast<uint32>(0x1u << this->pin) << this->pin));
+    return static_cast<Pull>(get_flag(p_port->PUPDR, static_cast<uint32_t>(0x1u << this->pin) << this->pin));
 }
 
 } // namespace peripherals

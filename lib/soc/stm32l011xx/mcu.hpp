@@ -7,20 +7,22 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //externals
 #include <stm32l0xx.h>
 
 //cml
 #include <cml/bit.hpp>
 #include <cml/frequency.hpp>
-#include <cml/integer.hpp>
 
 namespace soc {
 namespace stm32l011xx {
 
 struct mcu
 {
-    enum class Clock : cml::uint32
+    enum class Clock : uint32_t
     {
         msi = RCC_CR_MSION,
         hsi = RCC_CR_HSION,
@@ -28,14 +30,14 @@ struct mcu
         lsi
     };
 
-    enum class Sysclk_source : cml::uint32
+    enum class Sysclk_source : uint32_t
     {
         msi = RCC_CFGR_SW_MSI,
         hsi = RCC_CFGR_SW_HSI,
         pll = RCC_CFGR_SW_PLL
     };
 
-    enum class Msi_frequency : cml::uint32
+    enum class Msi_frequency : uint32_t
     {
         _65536_Hz  = 0,
         _131072_Hz = 1,
@@ -46,24 +48,24 @@ struct mcu
         _4194_kHz  = 6
     };
 
-    enum class Hsi_frequency : cml::uint32
+    enum class Hsi_frequency : uint32_t
     {
         _16_MHz
     };
 
-    enum class Lsi_frequency : cml::uint32
+    enum class Lsi_frequency : uint32_t
     {
         _37_kHz
     };
 
-    enum class Flash_latency : cml::uint32
+    enum class Flash_latency : uint32_t
     {
         _0 = 0,
         _1 = FLASH_ACR_LATENCY,
         unknown
     };
 
-    enum class Voltage_scaling : cml::uint32
+    enum class Voltage_scaling : uint32_t
     {
         _1 = PWR_CR_VOS_0,
         _2 = PWR_CR_VOS_1,
@@ -71,7 +73,7 @@ struct mcu
         unknown
     };
 
-    enum class Reset_source : cml::uint32
+    enum class Reset_source : uint32_t
     {
         illegal_low_power           = RCC_CSR_LPWRRSTF,
         window_watchdog             = RCC_CSR_WWDGRSTF,
@@ -84,7 +86,7 @@ struct mcu
 
     struct Pll_config
     {
-        enum class Source : cml::uint32
+        enum class Source : uint32_t
         {
             hsi = RCC_CFGR_PLLSRC_HSI
         };
@@ -120,8 +122,8 @@ struct mcu
 
     struct Device_id
     {
-        const cml::uint8  serial_number[12] = { 0 };
-        const cml::uint32 type              = 0;
+        const uint8_t  serial_number[12] = { 0 };
+        const uint32_t type              = 0;
     };
 
     struct Sysclk_frequency_change_callback
@@ -213,7 +215,7 @@ public:
 
     static Device_id get_device_id()
     {
-        cml::uint8* p_id_location = reinterpret_cast<cml::uint8*>(UID_BASE);
+        const uint8_t* p_id_location = reinterpret_cast<uint8_t*>(UID_BASE);
 
         return { { p_id_location[0], p_id_location[1], p_id_location[2],  p_id_location[3],
                    p_id_location[4], p_id_location[5], p_id_location[6],  p_id_location[7],
@@ -228,7 +230,7 @@ public:
         return static_cast<Sysclk_source>(cml::get_flag(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
-    static cml::uint32 get_sysclk_frequency_hz()
+    static uint32_t get_sysclk_frequency_hz()
     {
         return SystemCoreClock;
     }
@@ -251,7 +253,7 @@ public:
             case Clock::hsi:
             case Clock::pll:
             {
-                return cml::is_flag(RCC->CR, static_cast<cml::uint32>(a_clock));
+                return cml::is_flag(RCC->CR, static_cast<uint32_t>(a_clock));
             }
             break;
 
@@ -299,8 +301,8 @@ private:
     mcu& operator = (const mcu&) = delete;
     mcu& operator = (mcu&&)      = delete;
 
-    static Flash_latency select_flash_latency(cml::uint32 a_syclk_freq, Voltage_scaling a_voltage_scaling);
-    static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, cml::uint32 a_sysclk_freq);
+    static Flash_latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
+    static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);
 
     static void set_flash_latency(Flash_latency a_latency);
     static void set_voltage_scaling(Voltage_scaling a_scaling);
@@ -315,7 +317,7 @@ private:
                                           cml::frequency a_frequency_hz,
                                           const Bus_prescalers& a_prescalers);
 
-    static cml::uint32 calculate_frequency_from_pll_configuration();
+    static uint32_t calculate_frequency_from_pll_configuration();
 };
 
 } // namespace stm32l011xx

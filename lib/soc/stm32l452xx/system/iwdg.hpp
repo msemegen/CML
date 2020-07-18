@@ -7,11 +7,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //externals
 #include <stm32l452xx.h>
 
 //cml
-#include <cml/integer.hpp>
 #include <cml/time.hpp>
 
 namespace soc {
@@ -22,7 +24,7 @@ class iwdg
 {
 public:
 
-    enum class Prescaler : cml::uint32
+    enum class Prescaler : uint32_t
     {
         _4   = 0x0u,
         _8   = IWDG_PR_PR_0,
@@ -35,8 +37,8 @@ public:
 
     struct Window
     {
-        bool enable          = false;
-        cml::uint16 value = 0xFFFu;
+        bool enable    = false;
+        uint16_t value = 0xFFFu;
     };
 
 public:
@@ -49,7 +51,7 @@ public:
     iwdg& operator = (const iwdg&) = delete;
 
     static bool enable(Prescaler a_prescaler,
-                       cml::uint16 a_reload,
+                       uint16_t a_reload,
                        const Window& a_window,
                        cml::time::tick a_timeout);
 

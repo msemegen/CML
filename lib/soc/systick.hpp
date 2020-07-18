@@ -7,8 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
-#include <cml/integer.hpp>
 #include <cml/time.hpp>
 #include <cml/debug/assert.hpp>
 
@@ -26,7 +28,7 @@ public:
         void* p_user_data = nullptr;
     };
 
-    static void enable(cml::uint32 a_start_value, cml::uint32 a_priority);
+    static void enable(cml::uint32_t a_start_value, cml::uint32_t a_priority);
     static void disable();
 
     static void register_tick_callback(const Tick_callback& a_callback);

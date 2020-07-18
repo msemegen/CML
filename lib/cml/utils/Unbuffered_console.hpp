@@ -7,8 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
-#include <cml/integer.hpp>
 #include <cml/collection/Pair.hpp>
 #include <cml/collection/Ring.hpp>
 #include <cml/common/cstring.hpp>
@@ -58,7 +60,7 @@ public:
     }
 
     hal::peripherals::USART::Result read_key(char* a_p_character);
-    hal::peripherals::USART::Result read_line(char* a_p_buffer, uint32 a_buffer_size);
+    hal::peripherals::USART::Result read_line(char* a_p_buffer, uint32_t a_buffer_size);
 
 private:
 

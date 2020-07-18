@@ -38,7 +38,7 @@ extern "C"
 
 using namespace cml;
 
-static bool interrupt_handler(uint32 a_pr1, uint32 a_index)
+static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
 {
     assert(nullptr != handlers[a_index].callback.function);
 
@@ -54,7 +54,7 @@ static bool interrupt_handler(uint32 a_pr1, uint32 a_index)
 
 void EXTI0_1_IRQHandler()
 {
-    for (uint32 i = 0u; i <= 1u; i++)
+    for (uint32_t i = 0u; i <= 1u; i++)
     {
         if (true == interrupt_handler(EXTI->PR, i))
         {
@@ -65,7 +65,7 @@ void EXTI0_1_IRQHandler()
 
 void EXTI2_3_IRQHandler()
 {
-    for (uint32 i = 2u; i <= 3u; i++)
+    for (uint32_t i = 2u; i <= 3u; i++)
     {
         if (true == interrupt_handler(EXTI->PR, i))
         {
@@ -76,7 +76,7 @@ void EXTI2_3_IRQHandler()
 
 void EXTI4_15_IRQHandler()
 {
-    for (uint32 i = 4u; i <= 15u; i++)
+    for (uint32_t i = 4u; i <= 15u; i++)
     {
         if (true == interrupt_handler(EXTI->PR, i))
         {
@@ -93,7 +93,7 @@ namespace system {
 
 using namespace cml;
 
-void exti_controller::enable(uint32 a_priority)
+void exti_controller::enable(uint32_t a_priority)
 {
     NVIC_SetPriority(EXTI0_1_IRQn,  a_priority);
     NVIC_SetPriority(EXTI2_3_IRQn,  a_priority);
@@ -120,7 +120,7 @@ void exti_controller::register_callback(Input_pin* a_p_pin,
     assert(nullptr == handlers[static_cast<uint32_t>(a_p_pin->get_pin())].callback.function);
 
     set_flag(&(SYSCFG->EXTICR[a_p_pin->get_pin() / 4u]),
-            (static_cast<uint32>(a_p_pin->get_port()->get_id()) << ((static_cast<uint32_t>(a_p_pin->get_pin()) % 4u) * 4u)));
+            (static_cast<uint32_t>(a_p_pin->get_port()->get_id()) << ((static_cast<uint32_t>(a_p_pin->get_pin()) % 4u) * 4u)));
 
     clear_bit(&(EXTI->RTSR), a_p_pin->get_pin());
     clear_bit(&(EXTI->FTSR), a_p_pin->get_pin());
@@ -159,7 +159,7 @@ void exti_controller::unregister_callback(const Input_pin& a_pin)
     clear_bit(&(EXTI->FTSR), a_pin.get_pin());
 
     clear_flag(&(SYSCFG->EXTICR[a_pin.get_pin() / 4u]),
-               (static_cast<uint32>(a_pin.get_port()->get_id()) << ((static_cast<uint32_t>(a_pin.get_pin()) % 4u) * 4u)));
+               (static_cast<uint32_t>(a_pin.get_port()->get_id()) << ((static_cast<uint32_t>(a_pin.get_pin()) % 4u) * 4u)));
 
     handlers[a_pin.get_pin()] = { { nullptr, nullptr }, nullptr };
 }

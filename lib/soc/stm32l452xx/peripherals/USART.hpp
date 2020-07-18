@@ -7,13 +7,15 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //externals
 #include <stm32l4xx.h>
 
 //cml
 #include <cml/bit.hpp>
 #include <cml/frequency.hpp>
-#include <cml/integer.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/time.hpp>
 #include <cml/type_traits.hpp>
@@ -26,21 +28,21 @@ class USART : private cml::Non_copyable
 {
 public:
 
-    enum class Id : cml::uint32
+    enum class Id : uint32_t
     {
         _1 = 0,
         _2 = 1,
         _3 = 2
     };
 
-    enum class Oversampling : cml::uint32
+    enum class Oversampling : uint32_t
     {
         _8  = USART_CR1_OVER8,
         _16 = 0,
         unknown
     };
 
-    enum class Stop_bits : cml::uint32
+    enum class Stop_bits : uint32_t
     {
         _0_5 = USART_CR2_STOP_0,
         _1   = 0x0u,
@@ -49,7 +51,7 @@ public:
         unknown
     };
 
-    enum class Flow_control_flag : cml::uint32
+    enum class Flow_control_flag : uint32_t
     {
         none            = 0x0u,
         request_to_send = USART_CR3_RTSE,
@@ -57,14 +59,14 @@ public:
         unknown
     };
 
-    enum Sampling_method : cml::uint32
+    enum Sampling_method : uint32_t
     {
         three_sample_bit = 0,
         one_sample_bit   = USART_CR3_ONEBIT,
         unknown
     };
 
-    enum class Word_length : cml::uint32
+    enum class Word_length : uint32_t
     {
         _7_bit = USART_CR1_M1,
         _8_bit = 0x0u,
@@ -72,7 +74,7 @@ public:
         unknown
     };
 
-    enum class Parity : cml::uint32
+    enum class Parity : uint32_t
     {
         none = 0x0u,
         even = USART_CR1_PCE,
@@ -80,14 +82,14 @@ public:
         unknown
     };
 
-    enum class Frame_length : cml::uint32
+    enum class Frame_length : uint32_t
     {
         _7_bit = USART_CR1_M1,
         _8_bit = 0,
         _9_bit = USART_CR1_M0
     };
 
-    enum class Bus_status_flag : cml::uint32
+    enum class Bus_status_flag : uint32_t
     {
         ok             = 0x0,
         framing_error  = 0x1,
@@ -105,7 +107,7 @@ public:
 
     struct Config
     {
-        cml::uint32 baud_rate           = 0;
+        uint32_t baud_rate              = 0;
         Oversampling oversampling       = Oversampling::unknown;
         Stop_bits stop_bits             = Stop_bits::unknown;
         Flow_control_flag flow_control  = Flow_control_flag::unknown;
@@ -114,7 +116,7 @@ public:
 
     struct Clock
     {
-        enum class Source : cml::uint32
+        enum class Source : uint32_t
         {
             pclk,
             sysclk,
@@ -128,13 +130,13 @@ public:
 
     struct Result
     {
-        Bus_status_flag bus_status       = Bus_status_flag::unknown;
-        cml::uint32 data_length_in_words = 0;
+        Bus_status_flag bus_status    = Bus_status_flag::unknown;
+        uint32_t data_length_in_words = 0;
     };
 
     struct TX_callback
     {
-        using Function = bool(*)(volatile cml::uint16* a_p_data, bool a_transfer_complete, void* a_p_user_data);
+        using Function = bool(*)(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -142,7 +144,7 @@ public:
 
     struct RX_callback
     {
-        using Function = bool(*)(cml::uint32 a_data, bool a_idle, void* a_p_user_data);
+        using Function = bool(*)(uint32_t a_data, bool a_idle, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -172,7 +174,7 @@ public:
     bool enable(const Config& a_config,
                 const Frame_format& frame_format,
                 const Clock& a_clock,
-                cml::uint32 a_irq_priority,
+                uint32_t a_irq_priority,
                 cml::time::tick a_timeout);
 
     void disable();
@@ -205,10 +207,10 @@ public:
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
-    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_words);
-    Result transmit_bytes_polling(const void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout_ms);
-    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words);
-    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout_ms);
+    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words);
+    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
+    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words);
+    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
 
     void register_transmit_callback(const TX_callback& a_callback);
     void register_receive_callback(const RX_callback& a_callback);
@@ -218,7 +220,7 @@ public:
     void unregister_receive_callback();
     void unregister_bus_status_callback();
 
-    void set_baud_rate(cml::uint32 a_baud_rate);
+    void set_baud_rate(uint32_t a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);
     void set_stop_bits(Stop_bits a_stop_bits);
     void set_flow_control(Flow_control_flag a_flow_control);
@@ -247,7 +249,7 @@ public:
 
     bool is_enabled() const;
 
-    cml::uint32 get_baud_rate() const
+    uint32_t get_baud_rate() const
     {
         return this->baud_rate;
     }
@@ -276,7 +278,7 @@ private:
     RX_callback rx_callback;
     Bus_status_callback bus_status_callback;
 
-    cml::uint32 baud_rate;
+    uint32_t baud_rate;
 
     Clock clock;
     Frame_format frame_format;
@@ -288,12 +290,12 @@ private:
 
 constexpr USART::Bus_status_flag operator | (USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
 {
-    return static_cast<USART::Bus_status_flag>(static_cast<cml::uint32>(a_f1) | static_cast<cml::uint32>(a_f2));
+    return static_cast<USART::Bus_status_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
 constexpr USART::Bus_status_flag operator & (USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
 {
-    return static_cast<USART::Bus_status_flag>(static_cast<cml::uint32>(a_f1) & static_cast<cml::uint32>(a_f2));
+    return static_cast<USART::Bus_status_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
 constexpr USART::Bus_status_flag operator |= (USART::Bus_status_flag& a_f1, USART::Bus_status_flag a_f2)
@@ -304,12 +306,12 @@ constexpr USART::Bus_status_flag operator |= (USART::Bus_status_flag& a_f1, USAR
 
 constexpr USART::Flow_control_flag operator | (USART::Flow_control_flag a_f1, USART::Flow_control_flag a_f2)
 {
-    return static_cast<USART::Flow_control_flag>(static_cast<cml::uint32>(a_f1) | static_cast<cml::uint32>(a_f2));
+    return static_cast<USART::Flow_control_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
 constexpr USART::Flow_control_flag operator & (USART::Flow_control_flag a_f1, USART::Flow_control_flag a_f2)
 {
-    return static_cast<USART::Flow_control_flag>(static_cast<cml::uint32>(a_f1) & static_cast<cml::uint32>(a_f2));
+    return static_cast<USART::Flow_control_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
 constexpr USART::Flow_control_flag operator |= (USART::Flow_control_flag& a_f1, USART::Flow_control_flag a_f2)

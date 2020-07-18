@@ -28,7 +28,7 @@ void misc::delay_us(time::tick a_time)
     assert(mcu::get_sysclk_frequency_hz() >= MHz(1));
     assert(a_time > 0);
 
-    uint32 count = ((((mcu::get_sysclk_frequency_hz() / MHz(1))) / 4) * (a_time - 1));
+    uint32_t count = ((((mcu::get_sysclk_frequency_hz() / MHz(1))) / 4) * (a_time - 1));
 
     __asm__ __volatile__("1: sub %0, #1 \n"
                          "   cmp %0, #0 \n"

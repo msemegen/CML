@@ -96,7 +96,7 @@ public:
         this->stop = true;
     }
 
-    uint8 get_back() const
+    uint8_t get_back() const
     {
         assert(this->i < sizeof(this->data));
 
@@ -114,12 +114,12 @@ public:
         return this->i == sizeof(this->data);
     }
 
-    uint32 get_i() const
+    uint32_t get_i() const
     {
         return this->i;
     }
 
-    constexpr uint32 get_length() const
+    constexpr uint32_t get_length() const
     {
         return sizeof(this->data);
     }
@@ -131,16 +131,16 @@ public:
 
 private:
 
-    mutable uint32 i = 0;
+    mutable uint32_t i = 0;
     bool stop = false;
-    uint8 data[2] = { 0x0u, 0x0u };
+    uint8_t data[2] = { 0x0u, 0x0u };
 };
 
 class Rx_context
 {
 public:
 
-    void set(uint8 a_value)
+    void set(uint8_t a_value)
     {
         assert(this->i < sizeof(this->data));
 
@@ -152,7 +152,7 @@ public:
         this->stop = true;
     }
 
-    uint8 get(uint32 a_idx) const
+    uint8_t get(uint32_t a_idx) const
     {
         assert(a_idx < sizeof(this->data));
 
@@ -170,12 +170,12 @@ public:
         return this->i == sizeof(this->data);
     }
 
-    uint32 get_i() const
+    uint32_t get_i() const
     {
         return this->i;
     }
 
-    constexpr uint32 get_length() const
+    constexpr uint32_t get_length() const
     {
         return sizeof(this->data);
     }
@@ -187,14 +187,14 @@ public:
 
 private:
 
-    uint32 i = 0;
+    uint32_t i = 0;
     bool stop = false;
-    uint8 data[2] = { 0x0u, 0x0u };
+    uint8_t data[2] = { 0x0u, 0x0u };
 };
 
 volatile I2C_master::Bus_status_flag bus_status = I2C_master::Bus_status_flag::ok;
 
-void rx_callback(uint8 a_value, bool a_stop, void* a_p_user_data)
+void rx_callback(uint8_t a_value, bool a_stop, void* a_p_user_data)
 {
     Rx_context* p_rx_context = reinterpret_cast<Rx_context*>(a_p_user_data);
 
@@ -208,7 +208,7 @@ void rx_callback(uint8 a_value, bool a_stop, void* a_p_user_data)
     }
 }
 
-void tx_callback(volatile uint32* a_p_data, bool a_stop, void* a_p_user_data)
+void tx_callback(volatile uint32_t* a_p_data, bool a_stop, void* a_p_user_data)
 {
     Tx_context* p_tx_context = reinterpret_cast<Tx_context*>(a_p_user_data);
 
@@ -334,7 +334,7 @@ int main()
                                                               tx_context.get_length());
 
                     while (false == tx_context.is_stop() && I2C_master::Bus_status_flag::ok == bus_status);
-                    uint32 r = tx_context.get_i();
+                    uint32_t r = tx_context.get_i();
                     tx_context.reset();
 
                     if (I2C_master::Bus_status_flag::ok == bus_status)

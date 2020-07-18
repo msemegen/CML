@@ -16,7 +16,7 @@ namespace {
 using namespace cml;
 using namespace soc::stm32l452xx::system;
 
-uint16 reload = 0;
+uint16_t reload = 0;
 
 wwdg::Early_wakeup_callback callback;
 
@@ -39,10 +39,10 @@ namespace soc {
 namespace stm32l452xx {
 namespace system {
 
-void wwdg::enable(Prescaler a_prescaler, uint16 a_reload, uint16 a_window, uint16 a_irq_priority)
+void wwdg::enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window, uint16_t a_irq_priority)
 {
     WWDG->CR = (WWDG_CR_WDGA | a_reload);
-    WWDG->CFR = static_cast<uint32>(a_prescaler) | a_window;
+    WWDG->CFR = static_cast<uint32_t>(a_prescaler) | a_window;
 
     NVIC_SetPriority(WWDG_IRQn, a_irq_priority);
     NVIC_EnableIRQ(WWDG_IRQn);

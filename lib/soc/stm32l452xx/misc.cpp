@@ -29,7 +29,7 @@ void misc::delay_us(time::tick a_time)
     assert(a_time > 0);
 
     DWT->CYCCNT = 0;
-    const uint32 max = DWT->CYCCNT + (mcu::get_sysclk_frequency_hz() / MHz(1) * (a_time - 1));
+    const uint32_t max = DWT->CYCCNT + (mcu::get_sysclk_frequency_hz() / MHz(1) * (a_time - 1));
     while (DWT->CYCCNT < max);
 }
 

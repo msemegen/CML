@@ -9,7 +9,6 @@
 #include <cml/utils/Logger.hpp>
 
 //cml
-#include <cml/integer.hpp>
 #include <cml/common/cstring.hpp>
 #include <cml/debug/assert.hpp>
 
@@ -25,7 +24,7 @@ constexpr const char* tags[] =
     "[omg] "
 };
 
-constexpr uint32 tag_length = 6;
+constexpr uint32_t tag_length = 6;
 
 } // namespace ::
 
@@ -60,9 +59,9 @@ void Logger::write(const char* a_p_message, Stream_type a_type)
 
     if (true == this->is_stream_enabled(a_type))
     {
-        const uint32 message_length = cstring::length(a_p_message, config::console::line_buffer_capacity);
+        const uint32_t message_length = cstring::length(a_p_message, config::console::line_buffer_capacity);
 
-        this->p_io_stream->transmit_bytes_polling(tags[static_cast<uint32>(a_type)], tag_length);
+        this->p_io_stream->transmit_bytes_polling(tags[static_cast<uint32_t>(a_type)], tag_length);
         this->p_io_stream->transmit_bytes_polling(a_p_message, message_length);
         this->p_io_stream->transmit_bytes_polling(&(config::new_line_character), 1);
     }

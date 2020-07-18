@@ -1,5 +1,12 @@
 #pragma once
 
+/*
+    Name: type_traits.hpp
+
+    Copyright(c) 2020 Mateusz Semegen
+    This code is licensed under MIT license (see LICENSE file for details)
+*/
+
 namespace cml {
 
 #ifdef __GNUG__

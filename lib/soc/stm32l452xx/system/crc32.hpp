@@ -7,11 +7,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //externals
 #include <stm32l452xx.h>
 
 //cml
-#include <cml/integer.hpp>
 #include <cml/bit.hpp>
 
 namespace soc {
@@ -22,7 +24,7 @@ class crc32
 {
 public:
 
-    enum class In_data_reverse : cml::uint32
+    enum class In_data_reverse : uint32_t
     {
         none      = 0,
         byte      = CRC_CR_REV_IN_0,
@@ -30,7 +32,7 @@ public:
         word      = CRC_CR_REV_IN_0 | CRC_CR_REV_IN_1
     };
 
-    enum class Out_data_reverse : cml::uint32
+    enum class Out_data_reverse : uint32_t
     {
         none    = 0,
         enabled = CRC_CR_REV_OUT
@@ -39,22 +41,22 @@ public:
     static void enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse);
     static void disable();
 
-    static void update_uint8(cml::uint8 a_value)
+    static void update_uint8(uint8_t a_value)
     {
         CRC->DR = a_value;
     }
 
-    static void update_uint16(cml::uint16 a_value)
+    static void update_uint16(uint16_t a_value)
     {
         CRC->DR = a_value;
     }
 
-    static void update_uint32(cml::uint32 a_value)
+    static void update_uint32(uint32_t a_value)
     {
         CRC->DR = a_value;
     }
 
-    static cml::uint32 get_value()
+    static uint32_t get_value()
     {
         return CRC->DR;
     }

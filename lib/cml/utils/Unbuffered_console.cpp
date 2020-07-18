@@ -31,7 +31,7 @@ USART::Result Unbuffered_console::write(const char* a_p_string)
 {
     assert(nullptr != this->p_io_stream);
 
-    uint32 message_length = cstring::length(a_p_string);
+    uint32_t message_length = cstring::length(a_p_string);
     return this->p_io_stream->transmit_bytes_polling(a_p_string, message_length);
 }
 
@@ -48,7 +48,7 @@ USART::Result Unbuffered_console::write_line(const char* a_p_string)
     assert(nullptr != this->p_io_stream);
     assert(nullptr != a_p_string);
 
-    uint32 message_length = cstring::length(a_p_string);
+    uint32_t message_length = cstring::length(a_p_string);
 
     USART::Result ret = this->p_io_stream->transmit_bytes_polling(a_p_string, message_length);
 
@@ -70,7 +70,7 @@ USART::Result Unbuffered_console::read_key(char* a_p_character)
     return this->p_io_stream->receive_bytes_polling(a_p_character, 1);
 }
 
-USART::Result Unbuffered_console::read_line(char* a_p_buffer, uint32 a_buffer_size)
+USART::Result Unbuffered_console::read_line(char* a_p_buffer, uint32_t a_buffer_size)
 {
     assert(nullptr != a_p_buffer);
     assert(a_buffer_size > 0);

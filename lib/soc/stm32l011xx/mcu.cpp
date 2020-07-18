@@ -44,7 +44,7 @@ using namespace cml;
 void mcu::enable_msi_clock(Msi_frequency a_freq)
 {
     clear_flag(&(RCC->CR), RCC_CR_MSION);
-    set_flag(&(RCC->ICSCR), RCC_ICSCR_MSIRANGE, static_cast<uint32>(a_freq) << RCC_ICSCR_MSIRANGE_Pos);
+    set_flag(&(RCC->ICSCR), RCC_ICSCR_MSIRANGE, static_cast<uint32_t>(a_freq) << RCC_ICSCR_MSIRANGE_Pos);
     set_flag(&(RCC->CR), RCC_CR_MSION);
 
     while (false == is_flag(RCC->CR, RCC_CR_MSIRDY));
@@ -109,9 +109,9 @@ void mcu::enable_pll(const Pll_config& a_config)
     while (false == is_flag(RCC->CR, RCC_CR_HSIRDY));
 
     set_flag(&(RCC->CFGR), RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL | RCC_CFGR_PLLDIV,
-                           static_cast<uint32>(a_config.source)  |
-                           static_cast<uint32>(a_config.divider) |
-                           static_cast<uint32>(a_config.multiplier));
+                           static_cast<uint32_t>(a_config.source)  |
+                           static_cast<uint32_t>(a_config.divider) |
+                           static_cast<uint32_t>(a_config.multiplier));
 
     set_flag(&(RCC->CR), RCC_CR_PLLON);
 
@@ -136,7 +136,7 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         set_flag(&(RCC->APB1ENR), RCC_APB1ENR_PWREN);
     }
 
-    uint32 frequency_hz = 0;
+    uint32_t frequency_hz = 0;
 
     switch (a_source)
     {
@@ -223,7 +223,7 @@ mcu::Pll_config mcu::get_pll_config()
     };
 }
 
-mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq, Voltage_scaling a_voltage_scaling)
+mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling)
 {
     switch (a_voltage_scaling)
     {
@@ -274,7 +274,7 @@ mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq, Voltage_scalin
     return Flash_latency::unknown;
 }
 
-mcu::Voltage_scaling mcu::select_voltage_scaling(Sysclk_source a_source, uint32 a_sysclk_freq)
+mcu::Voltage_scaling mcu::select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq)
 {
     if (Sysclk_source::msi == a_source || (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz(4)))
     {
@@ -322,13 +322,13 @@ void mcu::set_voltage_scaling(Voltage_scaling a_scaling)
 {
     assert(a_scaling != Voltage_scaling::unknown);
 
-    set_flag(&(PWR->CR), PWR_CR_VOS, static_cast<uint32>(a_scaling));
+    set_flag(&(PWR->CR), PWR_CR_VOS, static_cast<uint32_t>(a_scaling));
 }
 
 void mcu::set_sysclk_source(Sysclk_source a_sysclk_source)
 {
-    set_flag(&(RCC->CFGR), RCC_CFGR_SW, static_cast<uint32>(a_sysclk_source));
-    while (false == is_flag(RCC->CFGR, static_cast<uint32>(a_sysclk_source) << RCC_CFGR_SWS_Pos));
+    set_flag(&(RCC->CFGR), RCC_CFGR_SW, static_cast<uint32_t>(a_sysclk_source));
+    while (false == is_flag(RCC->CFGR, static_cast<uint32_t>(a_sysclk_source) << RCC_CFGR_SWS_Pos));
 }
 
 void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
@@ -337,9 +337,9 @@ void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
     assert(Bus_prescalers::APB1::unknown != a_prescalers.apb1);
     assert(Bus_prescalers::APB2::unknown != a_prescalers.apb2);
 
-    set_flag(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32>(a_prescalers.ahb));
-    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32>(a_prescalers.apb1));
-    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<uint32>(a_prescalers.apb2));
+    set_flag(&(RCC->CFGR), RCC_CFGR_HPRE,  static_cast<uint32_t>(a_prescalers.ahb));
+    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32_t>(a_prescalers.apb1));
+    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<uint32_t>(a_prescalers.apb2));
 }
 
 void mcu::increase_sysclk_frequency(Sysclk_source a_source,
@@ -407,13 +407,13 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source,
     SystemCoreClock = a_frequency_hz;
 }
 
-uint32 mcu::calculate_frequency_from_pll_configuration()
+uint32_t mcu::calculate_frequency_from_pll_configuration()
 {
-    constexpr uint32 m_lut[] = { 3, 4, 6, 8, 12, 16, 24, 32, 48 };
-    constexpr uint32 d_lut[] = { 2, 3, 4 };
+    constexpr uint32_t m_lut[] = { 3, 4, 6, 8, 12, 16, 24, 32, 48 };
+    constexpr uint32_t d_lut[] = { 2, 3, 4 };
 
-    const uint32 mi = (get_flag(RCC->CFGR, RCC_CFGR_PLLMUL) >> RCC_CFGR_PLLMUL_Pos) - 0;
-    const uint32 di = (get_flag(RCC->CFGR, RCC_CFGR_PLLDIV) >> RCC_CFGR_PLLDIV_Pos) - 1;
+    const uint32_t mi = (get_flag(RCC->CFGR, RCC_CFGR_PLLMUL) >> RCC_CFGR_PLLMUL_Pos) - 0;
+    const uint32_t di = (get_flag(RCC->CFGR, RCC_CFGR_PLLDIV) >> RCC_CFGR_PLLDIV_Pos) - 1;
 
     assert(di < sizeof(d_lut) / sizeof(d_lut[0]));
     assert(mi < sizeof(m_lut) / sizeof(m_lut[0]));

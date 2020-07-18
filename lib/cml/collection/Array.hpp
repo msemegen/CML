@@ -7,8 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
-#include <cml/integer.hpp>
 #include <cml/debug/assert.hpp>
 
 namespace cml {
@@ -19,7 +21,7 @@ class Array
 {
 public:
 
-    Array(Type_t* a_p_buffer, uint32 a_capacity)
+    Array(Type_t* a_p_buffer, uint32_t a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
     {
@@ -36,18 +38,18 @@ public:
     Array<Type_t>& operator = (Array<Type_t>&&)      = default;
     Array<Type_t>& operator = (const Array<Type_t>&) = default;
 
-    uint32 get_capacity() const
+    uint32_t get_capacity() const
     {
         return this->capacity;
     }
 
-    Type_t& operator[](uint32 a_index)
+    Type_t& operator[](uint32_t a_index)
     {
         assert(a_index < this->capacity);
         return this->p_buffer[a_index];
     }
 
-    const Type_t& operator[](uint32 a_index) const
+    const Type_t& operator[](uint32_t a_index) const
     {
         assert(a_index < this->capacity);
         return this->p_buffer[a_index];
@@ -80,7 +82,7 @@ public:
 private:
 
     Type_t* p_buffer;
-    uint32 capacity;
+    uint32_t capacity;
 };
 
 } // namespace collection

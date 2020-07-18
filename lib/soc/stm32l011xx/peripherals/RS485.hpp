@@ -36,10 +36,10 @@ public:
 
     struct Config
     {
-        cml::uint32 baud_rate     = 0;
+        uint32_t baud_rate        = 0;
         Oversampling oversampling = Oversampling::unknown;
         Stop_bits stop_bits       = Stop_bits::unknown;
-        cml::uint8 address        = 0;
+        uint8_t address           = 0;
     };
 
 public:
@@ -56,20 +56,20 @@ public:
     bool enable(const Config& a_config,
                 const USART::Clock& a_clock,
                 Output_pin* a_p_flow_control_pin,
-                cml::uint32 a_irq_priority,
+                uint32_t a_irq_priority,
                 cml::time::tick a_timeout);
 
     void disable();
 
     template<typename Data_t>
-    Result transmit_polling(cml::uint8 a_address, const Data_t& a_data)
+    Result transmit_polling(uint8_t a_address, const Data_t& a_data)
     {
         static_assert(true == cml::is_pod<Data_t>());
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data));
     }
 
     template<typename Data_t>
-    Result transmit_polling(cml::uint8 a_address, const Data_t& a_data, cml::time::tick a_timeout)
+    Result transmit_polling(uint8_t a_address, const Data_t& a_data, cml::time::tick a_timeout)
     {
         static_assert(true == cml::is_pod<Data_t>());
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data), a_timeout);
@@ -89,14 +89,14 @@ public:
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
-    Result transmit_bytes_polling(cml::uint8 a_address, const void* a_p_data, cml::uint32 a_data_size_in_words);
-    Result transmit_bytes_polling(cml::uint8 a_address,
+    Result transmit_bytes_polling(uint8_t a_address, const void* a_p_data, uint32_t a_data_size_in_words);
+    Result transmit_bytes_polling(uint8_t a_address,
                                   const void* a_p_data,
-                                  cml::uint32 a_data_size_in_words,
+                                  uint32_t a_data_size_in_words,
                                   cml::time::tick a_timeout_ms);
 
-    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words);
-    Result receive_bytes_polling(void* a_p_data, cml::uint32 a_data_size_in_words, cml::time::tick a_timeout_ms);
+    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words);
+    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
 
     void register_transmit_callback(const TX_callback& a_callback);
     void register_receive_callback(const RX_callback& a_callback);
@@ -106,7 +106,7 @@ public:
     void unregister_receive_callback();
     void unregister_bus_status_callback();
 
-    void set_baud_rate(cml::uint32 a_baud_rate);
+    void set_baud_rate(uint32_t a_baud_rate);
     void set_oversampling(Oversampling a_oversampling);
     void set_stop_bits(Stop_bits a_stop_bits);
 
@@ -115,7 +115,7 @@ public:
     Oversampling get_oversampling() const;
     Stop_bits    get_stop_bits()    const;
 
-    cml::uint32 get_baud_rate() const
+    uint32_t get_baud_rate() const
     {
         return this->baud_rate;
     }
@@ -133,7 +133,7 @@ private:
     RX_callback rx_callback;
     Bus_status_callback bus_status_callback;
 
-    cml::uint32 baud_rate;
+    uint32_t baud_rate;
     USART::Clock clock;
 
 private:

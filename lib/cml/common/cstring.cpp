@@ -11,15 +11,15 @@
 namespace cml {
 namespace common {
 
-uint32 cstring::length(const char* a_p_string, uint32 a_max_length)
+uint32_t cstring::length(const char* a_p_string, uint32_t a_max_length)
 {
-    uint32 i = 0;
+    uint32_t i = 0;
     while ((*a_p_string) != '\0' && i < a_max_length) { i++; a_p_string++; }
 
     return i;
 }
 
-bool cstring::equals(const char* a_p_string_1, const char* a_p_string_2, uint32 a_max_length)
+bool cstring::equals(const char* a_p_string_1, const char* a_p_string_2, uint32_t a_max_length)
 {
     bool the_same = true;
 
@@ -37,12 +37,12 @@ bool cstring::equals(const char* a_p_string_1, const char* a_p_string_2, uint32 
     return the_same;
 }
 
-uint32 cstring::join(char* a_p_destination,
-                     uint32 a_destination_capacity,
-                     const char* a_p_source,
-                     uint32 a_source_length)
+uint32_t cstring::join(char* a_p_destination,
+                       uint32_t a_destination_capacity,
+                       const char* a_p_source,
+                       uint32_t a_source_length)
 {
-    uint32 i = 0;
+    uint32_t i = 0;
     for (;i < a_source_length && i + 1 < a_destination_capacity; i++)
     {
         a_p_destination[i] = a_p_source[i];
@@ -53,15 +53,15 @@ uint32 cstring::join(char* a_p_destination,
     return i;
 }
 
-uint32 cstring::format_raw(Buffer* a_p_destinaition_buffer,
-                           Buffer* a_p_number_buffer,
-                           const char* a_p_format,
-                           const Argument* a_p_argv,
-                           uint32 a_argc)
+uint32_t cstring::format_raw(Buffer* a_p_destinaition_buffer,
+                             Buffer* a_p_number_buffer,
+                             const char* a_p_format,
+                             const Argument* a_p_argv,
+                             uint32_t a_argc)
 {
-    bool argument          = false;
-    uint32 argument_index  = 0;
-    uint32 length          = 0;
+    bool argument           = false;
+    uint32_t argument_index = 0;
+    uint32_t length         = 0;
 
     while (*a_p_format != '\0' && length + 1 < a_p_destinaition_buffer->capacity)
     {
@@ -72,10 +72,10 @@ uint32 cstring::format_raw(Buffer* a_p_destinaition_buffer,
                 case 'd':
                 case 'i':
                 {
-                    uint32 number_length = cstring::from_signed_integer(a_p_argv[argument_index++].get_int32(),
-                                                                        a_p_number_buffer->p_data,
-                                                                        a_p_number_buffer->capacity,
-                                                                        cstring::Radix::dec);
+                    uint32_t number_length = cstring::from_signed_integer(a_p_argv[argument_index++].get_int32(),
+                                                                          a_p_number_buffer->p_data,
+                                                                          a_p_number_buffer->capacity,
+                                                                          cstring::Radix::dec);
 
                     length += cstring::join(a_p_destinaition_buffer->p_data + length,
                                             a_p_destinaition_buffer->capacity - length,
@@ -88,10 +88,10 @@ uint32 cstring::format_raw(Buffer* a_p_destinaition_buffer,
 
                 case 'u':
                 {
-                    uint32 number_length = cstring::from_unsigned_integer(a_p_argv[argument_index++].get_uint32(),
-                                                                          a_p_number_buffer->p_data,
-                                                                          a_p_number_buffer->capacity,
-                                                                          cstring::Radix::dec);
+                    uint32_t number_length = cstring::from_unsigned_integer(a_p_argv[argument_index++].get_uint32(),
+                                                                            a_p_number_buffer->p_data,
+                                                                            a_p_number_buffer->capacity,
+                                                                            cstring::Radix::dec);
 
                     length += cstring::join(a_p_destinaition_buffer->p_data + length,
                                             a_p_destinaition_buffer->capacity - length,

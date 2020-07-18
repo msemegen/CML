@@ -7,8 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
-#include <cml/integer.hpp>
 #include <cml/debug/assert.hpp>
 
 namespace cml {
@@ -19,7 +21,7 @@ class Vector
 {
 public:
 
-    Vector(Type_t* a_p_buffer, uint32 a_capacity)
+    Vector(Type_t* a_p_buffer, uint32_t a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
         , length()
@@ -65,24 +67,24 @@ public:
         this->length = 0;
     }
 
-    Type_t& operator[] (uint32 a_index)
+    Type_t& operator[] (uint32_t a_index)
     {
         assert(a_index < this->length);
         return this->p_buffer[a_index];
     }
 
-    const Type_t& operator[] (uint32 a_index) const
+    const Type_t& operator[] (uint32_t a_index) const
     {
         assert(a_index < this->length);
         return this->p_buffer[a_index];
     }
 
-    uint32 get_length() const
+    uint32_t get_length() const
     {
         return this->length;
     }
 
-    uint32 get_capacity() const
+    uint32_t get_capacity() const
     {
         return this->capacity;
     }
@@ -100,9 +102,9 @@ public:
 private:
 
     Type_t* p_buffer;
-    uint32 capacity;
+    uint32_t capacity;
 
-    uint32 length;
+    uint32_t length;
 };
 
 } // namespace collection

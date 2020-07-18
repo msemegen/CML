@@ -20,7 +20,7 @@ using namespace cml::collection;
 using namespace cml::common;
 using namespace cml::hal::peripherals;
 
-bool rx_callback(uint32 a_byte, bool a_idle, void* a_p_user_data)
+bool rx_callback(uint32_t a_byte, bool a_idle, void* a_p_user_data)
 {
     if (false == a_idle)
     {
@@ -30,7 +30,7 @@ bool rx_callback(uint32 a_byte, bool a_idle, void* a_p_user_data)
     return true;
 }
 
-bool tx_callback(volatile uint16* a_p_data, bool a_transfer_complete, void* a_p_user_data)
+bool tx_callback(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data)
 {
     Buffered_console* p_this = reinterpret_cast<Buffered_console*>(a_p_user_data);
 
@@ -214,7 +214,7 @@ USART::Result Buffered_console::read_key(char* a_p_character)
     return ret;
 }
 
-USART::Result Buffered_console::read_line(char* a_p_buffer, uint32 a_buffer_size)
+USART::Result Buffered_console::read_line(char* a_p_buffer, uint32_t a_buffer_size)
 {
     assert(nullptr != a_p_buffer);
 

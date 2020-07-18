@@ -40,10 +40,10 @@ mcu::Sysclk_frequency_change_callback pre_sysclk_frequency_change_callback;
 mcu::Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
 
 template<typename Config_t>
-uint32 get_pll_register_config_from_factor(const Config_t& a_config, uint32 a_enable_flag)
+uint32_t get_pll_register_config_from_factor(const Config_t& a_config, uint32_t a_enable_flag)
 {
     return (Config_t::Divider::unknown != a_config.divider
-            ? (static_cast<uint32>(a_config.divider) | (true == a_config.output_enabled
+            ? (static_cast<uint32_t>(a_config.divider) | (true == a_config.output_enabled
                                                         ? a_enable_flag
                                                         : 0))
             : 0);
@@ -61,7 +61,7 @@ void mcu::enable_msi_clock(Msi_frequency a_freq)
 {
     clear_flag(&(RCC->CR), RCC_CR_MSION);
 
-    set_flag(&(RCC->CR), RCC_CR_MSIRANGE, static_cast<uint32>(a_freq) << RCC_CR_MSIRANGE_Pos);
+    set_flag(&(RCC->CR), RCC_CR_MSIRANGE, static_cast<uint32_t>(a_freq) << RCC_CR_MSIRANGE_Pos);
 
     set_flag(&(RCC->CR), RCC_CR_MSION);
 
@@ -130,8 +130,8 @@ void mcu::enable_pll(const Pll_config& a_config)
 
     disable_pll();
 
-    RCC->PLLCFGR = static_cast<uint32>(a_config.source)     |
-                   static_cast<uint32>(a_config.m)          |
+    RCC->PLLCFGR = static_cast<uint32_t>(a_config.source)   |
+                   static_cast<uint32_t>(a_config.m)        |
                    (a_config.pll.n << RCC_PLLCFGR_PLLN_Pos) |
                    get_pll_register_config_from_factor(a_config.pll.p, RCC_PLLCFGR_PLLPEN) |
                    get_pll_register_config_from_factor(a_config.pll.q, RCC_PLLCFGR_PLLQEN) |
@@ -170,7 +170,7 @@ void mcu::set_clk48_clock_mux_source(Clk48_mux_source a_source)
 
     assert(get_clk48_mux_freqency_hz() <= MHz(48));
 
-    set_flag(&(RCC->CCIPR), RCC_CCIPR_CLK48SEL, static_cast<uint32>(a_source));
+    set_flag(&(RCC->CCIPR), RCC_CCIPR_CLK48SEL, static_cast<uint32_t>(a_source));
 }
 
 void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
@@ -190,7 +190,7 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         set_flag(&(RCC->AHB1ENR), RCC_AHB1ENR_FLASHEN);
     }
 
-    uint32 frequency_hz = 0;
+    uint32_t frequency_hz = 0;
 
     switch (a_source)
     {
@@ -247,7 +247,7 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
 
 void mcu::set_nvic(const NVIC_config& a_config)
 {
-    NVIC_SetPriorityGrouping(static_cast<uint32>(a_config.grouping));
+    NVIC_SetPriorityGrouping(static_cast<uint32_t>(a_config.grouping));
     __set_BASEPRI(a_config.base_priority);
 }
 
@@ -311,7 +311,7 @@ mcu::Pll_config mcu::get_pll_config()
     };
 }
 
-uint32 mcu::get_clk48_mux_freqency_hz()
+uint32_t mcu::get_clk48_mux_freqency_hz()
 {
     Clk48_mux_source source = get_clk48_mux_source();
 
@@ -337,7 +337,7 @@ uint32 mcu::get_clk48_mux_freqency_hz()
 
         case mcu::Clk48_mux_source::msi:
         {
-            uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             return msi_frequency_lut[msi_range];
 
         }
@@ -347,7 +347,7 @@ uint32 mcu::get_clk48_mux_freqency_hz()
     return 0;
 }
 
-mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq,
+mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq,
                                              Voltage_scaling a_voltage_scaling)
 {
     switch (a_voltage_scaling)
@@ -415,7 +415,7 @@ mcu::Flash_latency mcu::select_flash_latency(uint32 a_syclk_freq,
     return Flash_latency::unknown;
 }
 
-mcu::Voltage_scaling mcu::select_voltage_scaling(Sysclk_source a_source, uint32 a_sysclk_freq)
+mcu::Voltage_scaling mcu::select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq)
 {
     if ((Sysclk_source::msi == a_source && a_sysclk_freq <= MHz(24)) ||
         (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz(26)))
@@ -437,24 +437,24 @@ void mcu::set_flash_latency(Flash_latency a_latency)
 {
     assert(a_latency != Flash_latency::unknown);
 
-    set_flag(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<uint32>(a_latency));
+    set_flag(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<uint32_t>(a_latency));
 
-    while (false == is_flag(FLASH->ACR, static_cast<uint32>(a_latency)));
+    while (false == is_flag(FLASH->ACR, static_cast<uint32_t>(a_latency)));
 }
 
 void mcu::set_voltage_scaling(Voltage_scaling a_scaling)
 {
     assert(a_scaling != Voltage_scaling::unkown);
 
-    set_flag(&(PWR->CR1), PWR_CR1_VOS, static_cast<uint32>(a_scaling));
+    set_flag(&(PWR->CR1), PWR_CR1_VOS, static_cast<uint32_t>(a_scaling));
 
     while (false == is_bit(PWR->SR2, PWR_SR2_VOSF_Pos));
 }
 
 void mcu::set_sysclk_source(Sysclk_source a_sysclk_source)
 {
-    set_flag(&(RCC->CFGR), RCC_CFGR_SW, static_cast<uint32>(a_sysclk_source));
-    while (false == is_flag(RCC->CFGR, static_cast<uint32>(a_sysclk_source) << RCC_CFGR_SWS_Pos));
+    set_flag(&(RCC->CFGR), RCC_CFGR_SW, static_cast<uint32_t>(a_sysclk_source));
+    while (false == is_flag(RCC->CFGR, static_cast<uint32_t>(a_sysclk_source) << RCC_CFGR_SWS_Pos));
 }
 
 void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
@@ -463,13 +463,13 @@ void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
     assert(Bus_prescalers::APB1::unknown != a_prescalers.apb1);
     assert(Bus_prescalers::APB2::unknown != a_prescalers.apb2);
 
-    set_flag(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32>(a_prescalers.ahb));
-    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32>(a_prescalers.apb1));
-    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<uint32>(a_prescalers.apb2));
+    set_flag(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32_t>(a_prescalers.ahb));
+    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32_t>(a_prescalers.apb1));
+    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<uint32_t>(a_prescalers.apb2));
 }
 
 void mcu::increase_sysclk_frequency(Sysclk_source a_source,
-                                    uint32 a_frequency_hz,
+                                    uint32_t a_frequency_hz,
                                     const Bus_prescalers& a_prescalers)
 {
     auto new_voltage_scaling = select_voltage_scaling(a_source, a_frequency_hz);
@@ -495,7 +495,7 @@ void mcu::increase_sysclk_frequency(Sysclk_source a_source,
 }
 
 void mcu::decrease_sysclk_frequency(Sysclk_source a_source,
-                                    uint32 a_frequency_hz,
+                                    uint32_t a_frequency_hz,
                                     const Bus_prescalers& a_prescalers)
 {
     set_sysclk_source(a_source);
@@ -521,18 +521,18 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source,
     SystemCoreClock = a_frequency_hz;
 }
 
-uint32 mcu::calculate_pll_r_output_frequency()
+uint32_t mcu::calculate_pll_r_output_frequency()
 {
-    uint32 m = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
-    uint32 n = (static_cast<uint32>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN)) >> RCC_PLLCFGR_PLLN_Pos);
+    const uint32_t m = (static_cast<uint32_t>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
+    const uint32_t n = (static_cast<uint32_t>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN)) >> RCC_PLLCFGR_PLLN_Pos);
 
-    uint32 pllvco = 0;
+    uint32_t pllvco = 0;
 
     switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
     {
         case Pll_config::Source::msi:
         {
-            uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             pllvco = (msi_frequency_lut[msi_range] / m) * n;
         }
         break;
@@ -552,23 +552,23 @@ uint32 mcu::calculate_pll_r_output_frequency()
 
     assert(pllvco >= MHz(96) && pllvco <= MHz(344));
 
-    uint32 pllr = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
+    uint32_t pllr = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
     return pllvco / pllr;
 }
 
-uint32 mcu::calculate_pll_q_output_frequency()
+uint32_t mcu::calculate_pll_q_output_frequency()
 {
-    uint32 m =  (get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
-    uint32 n =   get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN) >> RCC_PLLCFGR_PLLN_Pos;
-    uint32 q = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ) >> RCC_PLLCFGR_PLLQ_Pos) * 2u) + 2u;
+    const uint32_t m =  (get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
+    const uint32_t n =   get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN) >> RCC_PLLCFGR_PLLN_Pos;
+    const uint32_t q = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ) >> RCC_PLLCFGR_PLLQ_Pos) * 2u) + 2u;
 
-    uint32 ret = 0;
+    uint32_t ret = 0;
 
     switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
     {
         case Pll_config::Source::msi:
         {
-            uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            const uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             ret = ((msi_frequency_lut[msi_range] / m) * n) / q;
         }
         break;
@@ -589,19 +589,19 @@ uint32 mcu::calculate_pll_q_output_frequency()
     return ret;
 }
 
-uint32 mcu::calculate_pllsai1_q_output_frequency()
+uint32_t mcu::calculate_pllsai1_q_output_frequency()
 {
-    uint32 m = (get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
-    uint32 n = (get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N) >> RCC_PLLSAI1CFGR_PLLSAI1N_Pos) + 1u;
-    uint32 q = ((get_flag(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1Q) >> RCC_PLLSAI1CFGR_PLLSAI1Q_Pos) * 2u) + 2u;
+    const uint32_t m = (get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
+    const uint32_t n = (get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N) >> RCC_PLLSAI1CFGR_PLLSAI1N_Pos) + 1u;
+    const uint32_t q = ((get_flag(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1Q) >> RCC_PLLSAI1CFGR_PLLSAI1Q_Pos) * 2u) + 2u;
 
-    uint32 ret = 0;
+    uint32_t ret = 0;
 
     switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
     {
         case Pll_config::Source::msi:
         {
-            uint32 msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             ret = ((msi_frequency_lut[msi_range] / m) * n) / q;
         }
         break;

@@ -27,7 +27,7 @@ using namespace cml::utils;
 
 void print_assert(void* a_p_user_data,
                   const char* a_p_file,
-                  uint32 a_line,
+                  uint32_t a_line,
                   const char* a_p_expression)
 {
     reinterpret_cast<Logger*>(a_p_user_data)->omg("%s : %u -> %s", a_p_file, a_line, a_p_expression);
@@ -109,8 +109,8 @@ int main()
         assert::register_print({ print_assert, &logger });
         assert::register_halt({ halt, nullptr });
 
-        uint8 array_buffer[3];
-        Array<uint8> array(array_buffer, sizeof(array_buffer));
+        uint8_t array_buffer[3];
+        Array<uint8_t> array(array_buffer, sizeof(array_buffer));
 
         array[3] = 3;
     }
