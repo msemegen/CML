@@ -20,9 +20,9 @@ namespace {
 using namespace cml;
 using namespace cml::hal::peripherals;
 
-int32 compute_temperature(const ADC::Calibration_data& a_calibration_data, uint32 measure)
+int32_t compute_temperature(const ADC::Calibration_data& a_calibration_data, uint32_t measure)
 {
-    int32 temperature = 100 * ((measure * 330 / 300) - a_calibration_data.temperature_sensor_data_1);
+    int32_t temperature = 100 * ((measure * 330 / 300) - a_calibration_data.temperature_sensor_data_1);
     temperature /= (a_calibration_data.temperature_sensor_data_2 - a_calibration_data.temperature_sensor_data_1);
 
     return temperature + 30;
@@ -110,7 +110,7 @@ int main()
 
                 while (true)
                 {
-                    uint16 r = 0;
+                    uint16_t r = 0;
                     adc.read_polling(&r, 1);
 
                     console.write_line("temp: %d, adc: %u\r", compute_temperature(adc.get_calibration_data(), r), r);

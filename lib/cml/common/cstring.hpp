@@ -7,8 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
-#include <cml/integer.hpp>
 #include <cml/numeric_traits.hpp>
 #include <cml/common/memory.hpp>
 #include <cml/debug/assert.hpp>
@@ -18,7 +20,7 @@ namespace common {
 
 struct cstring
 {
-    static constexpr uint32 format_number_buffer_capacity = 12;
+    static constexpr uint32_t format_number_buffer_capacity = 12;
 
     enum class Radix
     {
@@ -28,26 +30,26 @@ struct cstring
         hex = 16
     };
 
-    static uint32 length(const char* a_p_string, uint32 a_max_length = numeric_traits<uint32>::get_max());
-    static bool equals(const char* a_p_string_1, const char* a_p_string_2, uint32 a_max_length);
+    static uint32_t length(const char* a_p_string, uint32_t a_max_length = numeric_traits<uint32_t>::get_max());
+    static bool equals(const char* a_p_string_1, const char* a_p_string_2, uint32_t a_max_length);
 
-    static void reverse(char* a_p_string, uint32 a_length)
+    static void reverse(char* a_p_string, uint32_t a_length)
     {
         assert(a_length > 0);
 
-        for (uint32 i = 0; i < a_length - 1; i++)
+        for (uint32_t i = 0; i < a_length - 1; i++)
         {
             memory::swap(&(a_p_string[i]), &(a_p_string[a_length - i - 1]));
         }
     }
 
-    static uint32 join(char* a_p_destination,
-                       uint32 a_destination_capacity,
-                       const char* a_p_source,
-                       uint32 a_source_length);
+    static uint32_t join(char* a_p_destination,
+                         uint32_t a_destination_capacity,
+                         const char* a_p_source,
+                         uint32_t a_source_length);
 
     template<typename Type_t>
-    static Type_t to_signed_integer(const char* a_p_string, uint32 a_length)
+    static Type_t to_signed_integer(const char* a_p_string, uint32_t a_length)
     {
         assert(nullptr != a_p_string && 0 != a_p_string[0]);
         assert(a_length > 0);
@@ -56,7 +58,7 @@ struct cstring
 
         const Type_t min = '-' == a_p_string[0] ? 0 : 1;
 
-        for (uint32 i = a_length - 1, m = 1; i + a_length + min != a_length; i--, m *= 10)
+        for (uint32_t i = a_length - 1, m = 1; i + a_length + min != a_length; i--, m *= 10)
         {
             assert(a_p_string[i] >= '0' && a_p_string[i] <= '9');
             retval += (a_p_string[i] - '0') * m;
@@ -66,14 +68,14 @@ struct cstring
     }
 
     template<typename Type_t>
-    static Type_t to_unsigned_integer(const char* a_p_string, uint32 a_length)
+    static Type_t to_unsigned_integer(const char* a_p_string, uint32_t a_length)
     {
         assert(nullptr != a_p_string && 0 != a_p_string[0]);
         assert(a_length > 0);
 
         Type_t retval = 0;
 
-        for (uint32 i = a_length - 1, m = 1; i + a_length + 1 != a_length; i--, m *= 10)
+        for (uint32_t i = a_length - 1, m = 1; i + a_length + 1 != a_length; i--, m *= 10)
         {
             retval += (a_p_string[i] - '0') * m;
         }
@@ -82,12 +84,12 @@ struct cstring
     }
 
     template<typename Type_t>
-    static uint32 from_unsigned_integer(Type_t a_value, char* a_p_buffer, uint32 a_buffer_capacity, Radix a_base)
+    static uint32_t from_unsigned_integer(Type_t a_value, char* a_p_buffer, uint32_t a_buffer_capacity, Radix a_base)
     {
         static_assert(true == numeric_traits<Type_t>::is_unsigned);
         assert(a_buffer_capacity > 1);
 
-        uint32 ret = 0;
+        uint32_t ret = 0;
 
         if (0 == a_value)
         {
@@ -111,12 +113,12 @@ struct cstring
     }
 
     template<typename Type_t>
-    static uint32 from_signed_integer(Type_t a_value, char* a_p_buffer, uint32 a_buffer_capacity, Radix a_base)
+    static uint32_t from_signed_integer(Type_t a_value, char* a_p_buffer, uint32_t a_buffer_capacity, Radix a_base)
     {
         static_assert(true == numeric_traits<Type_t>::is_signed);
         assert(a_buffer_capacity > 1);
 
-        uint32 ret    = 0;
+        uint32_t ret  = 0;
         bool negative = a_value < 0;
 
         if (0 == a_value)
@@ -146,7 +148,7 @@ struct cstring
     }
 
     template<typename ... Types_t>
-    static uint32 format(char* a_p_buffer, uint32 a_buffer_capacity, const char* a_p_format, Types_t ... a_params)
+    static uint32_t format(char* a_p_buffer, uint32_t a_buffer_capacity, const char* a_p_format, Types_t ... a_params)
     {
         const Argument args[] = { Argument{a_params}... };
         char number_buffer_data[format_number_buffer_capacity];
@@ -169,8 +171,8 @@ private:
 
     struct Buffer
     {
-        char* p_data          = nullptr;
-        const uint32 capacity = 0;
+        char* p_data            = nullptr;
+        const uint32_t capacity = 0;
     };
 
     class Argument
@@ -195,79 +197,79 @@ private:
             memory::copy(this->data, a_other.data, sizeof(a_other.data));
         }
 
-        explicit Argument(uint32 a_value)
-            : data { static_cast<uint8>((a_value >> 24u) & 0xFF),
-                     static_cast<uint8>((a_value >> 16u) & 0xFF),
-                     static_cast<uint8>((a_value >> 8u)  & 0xFF),
-                     static_cast<uint8>((a_value >> 0u)  & 0xFF) }
+        static_assert(sizeof(unsigned int) == sizeof(uint32_t));
+        explicit Argument(unsigned int a_value)
+            : data { static_cast<uint8_t>((a_value >> 24u) & 0xFF),
+                     static_cast<uint8_t>((a_value >> 16u) & 0xFF),
+                     static_cast<uint8_t>((a_value >> 8u)  & 0xFF),
+                     static_cast<uint8_t>((a_value >> 0u)  & 0xFF) }
             , type(Type::unsigned_int)
         {}
 
-        explicit Argument(int32 a_value)
-            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
-                    static_cast<uint8>((a_value >> 16u) & 0xFF),
-                    static_cast<uint8>((a_value >> 8u)  & 0xFF),
-                    static_cast<uint8>((a_value >> 0u)  & 0xFF) }
+        static_assert(sizeof(signed int) == sizeof(int32_t));
+        explicit Argument(signed int a_value)
+            : data{ static_cast<uint8_t>((a_value >> 24u) & 0xFF),
+                    static_cast<uint8_t>((a_value >> 16u) & 0xFF),
+                    static_cast<uint8_t>((a_value >> 8u)  & 0xFF),
+                    static_cast<uint8_t>((a_value >> 0u)  & 0xFF) }
             , type(Type::signed_int)
         {}
 
-        explicit Argument(uint16 a_value)
+        static_assert(sizeof(unsigned long int) == sizeof(uint32_t));
+        explicit Argument(unsigned long int a_value)
+            : Argument(static_cast<unsigned int>(a_value))
+        {}
+
+        static_assert(sizeof(signed long int) == sizeof(int32_t));
+        explicit Argument(signed long int a_value)
+            : Argument(static_cast<signed int>(a_value))
+        {}
+
+        static_assert(sizeof(unsigned short int) == sizeof(uint16_t));
+        explicit Argument(unsigned short int a_value)
             : data{ 0u,
                     0u,
-                    static_cast<uint8>((a_value >> 8u) & 0xFF),
-                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
+                    static_cast<uint8_t>((a_value >> 8u) & 0xFF),
+                    static_cast<uint8_t>((a_value >> 0u) & 0xFF) }
             , type(Type::unsigned_int)
         {}
 
-        explicit Argument(int16 a_value)
+        static_assert(sizeof(signed short int) == sizeof(int16_t));
+        explicit Argument(signed short int a_value)
             : data{ 0u,
                     0u,
-                    static_cast<uint8>((a_value >> 8u) & 0xFF),
-                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
+                    static_cast<uint8_t>((a_value >> 8u) & 0xFF),
+                    static_cast<uint8_t>((a_value >> 0u) & 0xFF) }
             , type(Type::signed_int)
         {}
 
-        explicit Argument(uint8 a_value)
-            : data{ 0u, 0u, 0u, static_cast<uint8>(a_value) }
+        static_assert(sizeof(unsigned char) == sizeof(uint8_t));
+        explicit Argument(unsigned char a_value)
+            : data{ 0u, 0u, 0u, a_value }
             , type(Argument::Type::unsigned_int)
         {}
 
-        explicit Argument(int8 a_value)
-            : data{ 0u, 0u, 0u, static_cast<uint8>(a_value) }
+        static_assert(sizeof(signed char) == sizeof(int8_t));
+        explicit Argument(signed char a_value)
+            : data{ 0u, 0u, 0u, static_cast<uint8_t>(a_value) }
             , type(Argument::Type::character)
         {}
 
         explicit Argument(const char* a_p_value)
-            : data{ static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 24u) & 0xFF),
-                    static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 16u) & 0xFF),
-                    static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 8u)  & 0xFF),
-                    static_cast<uint8>((reinterpret_cast<uint32>(a_p_value) >> 0u)  & 0xFF) }
+            : data{ static_cast<uint8_t>((reinterpret_cast<uint32_t>(a_p_value) >> 24u) & 0xFF),
+                    static_cast<uint8_t>((reinterpret_cast<uint32_t>(a_p_value) >> 16u) & 0xFF),
+                    static_cast<uint8_t>((reinterpret_cast<uint32_t>(a_p_value) >> 8u)  & 0xFF),
+                    static_cast<uint8_t>((reinterpret_cast<uint32_t>(a_p_value) >> 0u)  & 0xFF) }
             , type(Type::cstring)
         {}
 
-        explicit Argument(int a_value)
-            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
-                    static_cast<uint8>((a_value >> 16u) & 0xFF),
-                    static_cast<uint8>((a_value >> 8u) & 0xFF),
-                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
-            , type(Type::signed_int)
-        {}
-
-        explicit Argument(unsigned int a_value)
-            : data{ static_cast<uint8>((a_value >> 24u) & 0xFF),
-                    static_cast<uint8>((a_value >> 16u) & 0xFF),
-                    static_cast<uint8>((a_value >> 8u) & 0xFF),
-                    static_cast<uint8>((a_value >> 0u) & 0xFF) }
-            , type(Type::unsigned_int)
-        {}
-
-        uint32 get_uint32() const
+        uint32_t get_uint32() const
         {
             assert(this->type == Type::unsigned_int);
             return (this->data[0] << 24u) | (this->data[1] << 16u) | (this->data[2] << 8u) | (this->data[3] << 0u);
         }
 
-        int32 get_int32() const
+        int32_t get_int32() const
         {
             assert(this->type == Type::signed_int);
             return (this->data[0] << 24u) | (this->data[1] << 16u) | (this->data[2] << 8u) | (this->data[3] << 0u);
@@ -301,17 +303,17 @@ private:
 
     private:
 
-        byte data[sizeof(uint32)] = { 0 };
+        uint8_t data[sizeof(uint32_t)] = { 0 };
         Type type = Type::unknown;
     };
 
 private:
 
-    static uint32 format_raw(Buffer* a_p_destinaition_buffer,
-                             Buffer* a_p_number_buffer,
-                             const char* a_p_format,
-                             const Argument* a_p_argv,
-                             uint32 a_argc);
+    static uint32_t format_raw(Buffer* a_p_destinaition_buffer,
+                               Buffer* a_p_number_buffer,
+                               const char* a_p_format,
+                               const Argument* a_p_argv,
+                               uint32_t a_argc);
 };
 
 } // namespace common

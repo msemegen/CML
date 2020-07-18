@@ -91,7 +91,7 @@ int main()
             {
                 while (true)
                 {
-                    uint32 v = 0;
+                    uint32_t v = 0;
                     bool ok = rng::get_value_polling(&v, 30);
 
                     if (true == ok)

@@ -7,9 +7,11 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
 #include <cml/bit.hpp>
-#include <cml/integer.hpp>
 #include <cml/common/cstring.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/utils/config.hpp>
@@ -21,7 +23,7 @@ class Logger
 {
 public:
 
-    enum class Stream_type : uint8
+    enum class Stream_type : uint8_t
     {
         inf,
         wrn,
@@ -52,7 +54,7 @@ public:
 
     bool is_stream_enabled(Stream_type a_type)
     {
-        return is_bit(this->verbosity, static_cast<uint32>(a_type));
+        return is_bit(this->verbosity, static_cast<uint32_t>(a_type));
     }
 
     void set_verbosity(bool a_inf, bool a_wrn, bool a_err, bool a_omg)
@@ -67,7 +69,7 @@ public:
 
     void set_verbose()
     {
-        set_flag(&(this->verbosity), static_cast<uint8>(0xFu));
+        set_flag(&(this->verbosity), static_cast<uint8_t>(0xFu));
     }
 
     void inf(const char* a_p_message);
@@ -107,7 +109,7 @@ private:
 
     void write(const char* a_p_message, Stream_type a_type);
 
-    uint8 create_verbosity_mask(bool a_inf, bool a_wrn, bool a_err, bool a_omg)
+    uint8_t create_verbosity_mask(bool a_inf, bool a_wrn, bool a_err, bool a_omg)
     {
         return (true == a_inf ? 0x1u : 0x0u) | 
                (true == a_wrn ? 0x2u : 0x0u) |
@@ -118,7 +120,7 @@ private:
 private:
 
     hal::peripherals::USART* p_io_stream;
-    uint8 verbosity;
+    uint8_t verbosity;
 
     char line_buffer[config::logger::line_buffer_capacity];
 };

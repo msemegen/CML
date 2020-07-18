@@ -47,7 +47,7 @@ namespace soc {
 
 using namespace cml;
 
-void systick::enable(uint32 a_start_value, uint32 a_priority)
+void systick::enable(uint32_t a_start_value, uint32_t a_priority)
 {
     assert(a_start_value > 0);
 

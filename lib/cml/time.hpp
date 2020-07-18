@@ -7,15 +7,17 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
-#include <cml/integer.hpp>
 #include <cml/numeric_traits.hpp>
 
 namespace cml {
 
 struct time
 {
-    using tick = uint32;
+    using tick = uint32_t;
 
     static constexpr tick infinity = numeric_traits<tick>::get_max();
 

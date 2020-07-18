@@ -30,11 +30,11 @@ using namespace soc::stm32l452xx::peripherals;
 
 ADC* p_adc_1 = nullptr;
 
-bool is_channel(ADC::Channel::Id a_type, const ADC::Channel* a_p_channels, uint32 a_channels_count)
+bool is_channel(ADC::Channel::Id a_type, const ADC::Channel* a_p_channels, uint32_t a_channels_count)
 {
     bool found = false;
 
-    for (uint32 i = 0; i < a_channels_count && false == found; i++)
+    for (uint32_t i = 0; i < a_channels_count && false == found; i++)
     {
         found = a_type == a_p_channels[i].id;
     }
@@ -64,7 +64,7 @@ using namespace cml::utils;
 
 void adc_interrupt_handler(ADC* a_p_this)
 {
-    uint32 isr = ADC1->ISR;
+    const uint32_t isr = ADC1->ISR;
 
     if (true == is_flag(isr, ADC_ISR_EOC))
     {
@@ -86,7 +86,7 @@ void adc_interrupt_handler(ADC* a_p_this)
 
 bool ADC::enable(Resolution a_resolution,
                  const Asynchronous_clock& a_clock,
-                 uint32 a_irq_priority,
+                 uint32_t a_irq_priority,
                  time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
@@ -97,14 +97,14 @@ bool ADC::enable(Resolution a_resolution,
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
     clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
-    set_flag(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<uint32>(a_clock.divider));
+    set_flag(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<uint32_t>(a_clock.divider));
 
     return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
 
 bool ADC::enable(Resolution a_resolution,
                  const Synchronous_clock& a_clock,
-                 uint32 a_irq_priority,
+                 uint32_t a_irq_priority,
                  time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
@@ -116,7 +116,7 @@ bool ADC::enable(Resolution a_resolution,
     time::tick start = counter::get();
 
     set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
-    set_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<uint32>(a_clock.divider));
+    set_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<uint32_t>(a_clock.divider));
 
     return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
@@ -134,7 +134,7 @@ void ADC::disable()
     p_adc_1 = nullptr;
 }
 
-void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_count)
+void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_count)
 {
     assert(nullptr != p_adc_1);
     assert(nullptr != a_p_channels);
@@ -144,37 +144,37 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32 a_channels_cou
 
     ADC1->SQR1 = a_channels_count - 1;
 
-    for (uint32 i = 0; i < a_channels_count && i < 4; i++)
+    for (uint32_t i = 0; i < a_channels_count && i < 4; i++)
     {
         assert(Channel::Id::unknown != a_p_channels[i].id);
         set_flag(&(ADC1->SQR1), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
-    for (uint32 i = 4; i < a_channels_count && i < 9; i++)
+    for (uint32_t i = 4; i < a_channels_count && i < 9; i++)
     {
         assert(Channel::Id::unknown != a_p_channels[i].id);
         set_flag(&(ADC1->SQR2), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
-    for (uint32 i = 9; i < a_channels_count && i < 14; i++)
+    for (uint32_t i = 9; i < a_channels_count && i < 14; i++)
     {
         assert(Channel::Id::unknown != a_p_channels[i].id);
         set_flag(&(ADC1->SQR3), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
-    for (uint32 i = 14; i < a_channels_count && i < 16; i++)
+    for (uint32_t i = 14; i < a_channels_count && i < 16; i++)
     {
         assert(Channel::Id::unknown != a_p_channels[i].id);
         set_flag(&(ADC1->SQR4), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
-    volatile uint32* p_SMPRs = reinterpret_cast<volatile uint32*>(&(ADC1->SMPR1));
+    volatile uint32_t* p_SMPRs = reinterpret_cast<volatile uint32_t*>(&(ADC1->SMPR1));
 
-    for (uint32 i = 0; i < a_channels_count; i++)
+    for (uint32_t i = 0; i < a_channels_count; i++)
     {
-        const uint32 channel_id        = static_cast<uint32_t>(a_p_channels[i].id);
-        const uint32 sampling_time_val = static_cast<uint32_t>(a_p_channels[i].sampling_time);
-        const uint32 register_index    = channel_id / 10;
+        const uint32_t channel_id        = static_cast<uint32_t>(a_p_channels[i].id);
+        const uint32_t sampling_time_val = static_cast<uint32_t>(a_p_channels[i].sampling_time);
+        const uint32_t register_index    = channel_id / 10;
 
         set_flag(&(p_SMPRs[register_index]), sampling_time_val << ((channel_id - (register_index * 10)) * 3));
     }
@@ -216,7 +216,7 @@ void ADC::clear_active_channels()
     clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN);
 }
 
-void ADC::read_polling(uint16* a_p_data, uint32 a_count)
+void ADC::read_polling(uint16_t* a_p_data, uint32_t a_count)
 {
     assert(nullptr != p_adc_1);
     assert(nullptr != a_p_data);
@@ -226,7 +226,7 @@ void ADC::read_polling(uint16* a_p_data, uint32 a_count)
 
     set_flag(&(ADC1->CR), ADC_CR_ADSTART);
 
-    for (uint32 i = 0; i < a_count; i++)
+    for (uint32_t i = 0; i < a_count; i++)
     {
         wait::until(&(ADC1->ISR), ADC_ISR_EOC, false);
         a_p_data[i] = static_cast<uint16_t>(ADC1->DR);
@@ -239,7 +239,7 @@ void ADC::read_polling(uint16* a_p_data, uint32 a_count)
     clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
 }
 
-bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time::tick a_timeout)
+bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeout)
 {
     assert(nullptr != p_adc_1);
     assert(nullptr != a_p_data);
@@ -253,7 +253,7 @@ bool ADC::read_polling(uint16* a_p_data, uint32 a_count, time::tick a_timeout)
     bool ret         = true;
     time::tick start = counter::get();
 
-    for (uint32 i = 0; i < a_count && true == ret; i++)
+    for (uint32_t i = 0; i < a_count && true == ret; i++)
     {
         ret = wait::until(&(ADC1->ISR), ADC_ISR_EOC, false, start, a_timeout);
 
@@ -311,7 +311,7 @@ void ADC::set_resolution(Resolution a_resolution)
         clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
     }
 
-    set_flag(&(ADC1->CFGR), static_cast<uint32>(a_resolution));
+    set_flag(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
 
     if (true == is_started)
     {
@@ -319,7 +319,7 @@ void ADC::set_resolution(Resolution a_resolution)
     }
 }
 
-bool ADC::enable(Resolution a_resolution, time::tick a_start, uint32 a_irq_priority, time::tick a_timeout)
+bool ADC::enable(Resolution a_resolution, time::tick a_start, uint32_t a_irq_priority, time::tick a_timeout)
 {
     p_adc_1 = this;
 

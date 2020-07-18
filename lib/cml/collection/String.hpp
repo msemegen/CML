@@ -7,6 +7,9 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
 #include <cml/numeric_traits.hpp>
 #include <cml/common/cstring.hpp>
@@ -20,13 +23,13 @@ class String
 {
 public:
 
-    String(char* a_p_buffer, uint32 a_capacity)
+    String(char* a_p_buffer, uint32_t a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
         , length(0)
     {}
 
-    String(char* a_p_buffer, uint32 a_capacity, const char* a_p_init)
+    String(char* a_p_buffer, uint32_t a_capacity, const char* a_p_init)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
         , length(common::cstring::length(a_p_init, a_capacity))
@@ -49,7 +52,7 @@ public:
         return retval;
     }
 
-    uint32 append(const char* a_p_string, uint32 a_length)
+    uint32_t append(const char* a_p_string, uint32_t a_length)
     {
         const decltype(this->length) start = this->length;
 
@@ -91,12 +94,12 @@ public:
         return 0 == this->length;
     }
 
-    uint32 get_length() const
+    uint32_t get_length() const
     {
         return this->length;
     }
 
-    uint32 get_capacity() const
+    uint32_t get_capacity() const
     {
         return this->capacity;
     }
@@ -105,8 +108,8 @@ private:
 
     char* p_buffer;
 
-    const uint32 capacity;
-    uint32 length;
+    const uint32_t capacity;
+    uint32_t length;
  };
 
 } // namespace collection

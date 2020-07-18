@@ -7,9 +7,11 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
 #include <cml/bit.hpp>
-#include <cml/integer.hpp>
 #include <cml/time.hpp>
 #include <cml/hal/counter.hpp>
 
@@ -29,14 +31,14 @@ public:
     wait& operator = (const wait&) = delete;
 
     template<typename Register_t>
-    static void until(const Register_t* a_p_register, uint32 a_flag, bool a_status)
+    static void until(const Register_t* a_p_register, uint32_t a_flag, bool a_status)
     {
         while (a_status == is_flag(*a_p_register, a_flag));
     }
 
     template<typename Register_t>
     static bool until(const Register_t* a_p_register,
-                      uint32 a_flag,
+                      uint32_t a_flag,
                       bool a_status,
                       time::tick a_start,
                       time::tick a_timeout)

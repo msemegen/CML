@@ -7,11 +7,11 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //soc
 #include <soc/stm32l011xx/peripherals/GPIO.hpp>
-
-//cml
-#include <cml/integer.hpp>
 
 namespace soc {
 namespace stm32l011xx {
@@ -21,7 +21,7 @@ class exti_controller
 {
 public:
 
-    enum class Interrupt_mode : cml::uint32
+    enum class Interrupt_mode : uint32_t
     {
         rising  = 0x1,
         falling = 0x2,
@@ -44,7 +44,7 @@ public:
     exti_controller& operator = (exti_controller&&)      = delete;
     exti_controller& operator = (const exti_controller&) = delete;
 
-    static void enable(cml::uint32 a_priority);
+    static void enable(uint32_t a_priority);
     static void disable();
 
     static void register_callback(peripherals::Input_pin* a_p_pin,
@@ -57,15 +57,15 @@ public:
 constexpr exti_controller::Interrupt_mode operator | (exti_controller::Interrupt_mode a_f1,
                                                       exti_controller::Interrupt_mode a_f2)
 {
-    return static_cast<exti_controller::Interrupt_mode>(static_cast<cml::uint32>(a_f1) |
-                                                        static_cast<cml::uint32>(a_f2));
+    return static_cast<exti_controller::Interrupt_mode>(static_cast<uint32_t>(a_f1) |
+                                                        static_cast<uint32_t>(a_f2));
 }
 
 constexpr exti_controller::Interrupt_mode operator & (exti_controller::Interrupt_mode a_f1,
                                                       exti_controller::Interrupt_mode a_f2)
 {
-    return static_cast<exti_controller::Interrupt_mode>(static_cast<cml::uint32>(a_f1) &
-                                                        static_cast<cml::uint32>(a_f2));
+    return static_cast<exti_controller::Interrupt_mode>(static_cast<uint32_t>(a_f1) &
+                                                        static_cast<uint32_t>(a_f2));
 }
 
 constexpr exti_controller::Interrupt_mode operator |= (exti_controller::Interrupt_mode& a_f1,

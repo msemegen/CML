@@ -23,10 +23,10 @@ using namespace cml;
 
 struct control_flags
 {
-    static constexpr uint32 reload               = 0xAAAAu;
-    static constexpr uint32 enable               = 0xCCCCu;
-    static constexpr uint32 write_access_enable  = 0x5555u;
-    static constexpr uint32 write_access_disable = 0x0000u;
+    static constexpr uint32_t reload               = 0xAAAAu;
+    static constexpr uint32_t enable               = 0xCCCCu;
+    static constexpr uint32_t write_access_enable  = 0x5555u;
+    static constexpr uint32_t write_access_disable = 0x0000u;
 };
 
 } // namespace ::
@@ -39,7 +39,7 @@ using namespace cml;
 using namespace cml::utils;
 
 bool iwdg::enable(Prescaler a_prescaler,
-                  uint16 a_reload,
+                  uint16_t a_reload,
                   const Window& a_window,
                   time::tick a_timeout)
 {
@@ -53,7 +53,7 @@ bool iwdg::enable(Prescaler a_prescaler,
     IWDG->KR = control_flags::enable;
     IWDG->KR = control_flags::write_access_enable;
 
-    IWDG->PR = static_cast<uint32>(a_prescaler);
+    IWDG->PR = static_cast<uint32_t>(a_prescaler);
     bool ret = wait::until(&(IWDG->SR), IWDG_SR_PVU, true, start, a_timeout);
 
     if (true == ret)

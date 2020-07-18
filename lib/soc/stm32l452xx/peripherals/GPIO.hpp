@@ -7,12 +7,14 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //externals
 #include <stm32l4xx.h>
 
 //cml
 #include <cml/bit.hpp>
-#include <cml/integer.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/debug/assert.hpp>
 
@@ -24,7 +26,7 @@ class GPIO : private cml::Non_copyable
 {
 public:
 
-    enum class Id : cml::uint32
+    enum class Id : uint32_t
     {
         a = 0,
         b = 1,
@@ -34,20 +36,20 @@ public:
         h = 7
     };
 
-    enum class Level : cml::uint32
+    enum class Level : uint32_t
     {
         low  = 0x0u,
         high = 0x1u
     };
 
-    enum class Mode : cml::uint32
+    enum class Mode : uint32_t
     {
         push_pull  = 0,
         open_drain = 1,
         unknown
     };
 
-    enum class Pull : cml::uint32
+    enum class Pull : uint32_t
     {
         none    = 0x0u,
         up      = 0x1u,
@@ -55,7 +57,7 @@ public:
         unknown
     };
 
-    enum class Speed : cml::uint32
+    enum class Speed : uint32_t
     {
         low     = 0x0u,
         medium  = 0x1u,
@@ -90,7 +92,7 @@ public:
         return this->id;
     }
 
-    bool is_pin_taken(cml::uint8 a_pin) const
+    bool is_pin_taken(uint8_t a_pin) const
     {
         return cml::is_bit(this->flags, a_pin);
     }
@@ -102,12 +104,12 @@ public:
 
 private:
 
-    void take_pin(cml::uint8 a_pin)
+    void take_pin(uint8_t a_pin)
     {
         cml::set_bit(&(this->flags), a_pin);
     }
 
-    void give_pin(cml::uint8 a_pin)
+    void give_pin(uint8_t a_pin)
     {
         cml::clear_bit(&(this->flags), a_pin);
     }
@@ -116,7 +118,7 @@ private:
 
     Id id;
 
-    cml::uint32 flags;
+    uint32_t flags;
     GPIO_TypeDef* p_gpio;
 
 private:
@@ -145,7 +147,7 @@ public:
 
 public:
 
-    Output_pin(GPIO* a_p_port, cml::uint8 a_pin)
+    Output_pin(GPIO* a_p_port, uint8_t a_pin)
         : p_port(a_p_port)
         , pin(a_pin)
     {
@@ -178,7 +180,7 @@ public:
         return this->p_port;
     }
 
-    cml::uint8 get_pin() const
+    uint8_t get_pin() const
     {
         return this->pin;
     }
@@ -186,7 +188,7 @@ public:
 private:
 
     GPIO* p_port;
-    const cml::uint8 pin;
+    const uint8_t pin;
 };
 
 class Input_pin : private cml::Non_copyable
@@ -198,7 +200,7 @@ public:
 
 public:
 
-    Input_pin(GPIO* a_p_port, cml::uint8 a_pin)
+    Input_pin(GPIO* a_p_port, uint8_t a_pin)
         : p_port(a_p_port)
         , pin(a_pin)
     {
@@ -224,7 +226,7 @@ public:
         return this->p_port;
     }
 
-    cml::uint8 get_pin() const
+    uint8_t get_pin() const
     {
         return this->pin;
     }
@@ -232,7 +234,7 @@ public:
 private:
 
     GPIO* p_port;
-    const cml::uint8 pin;
+    const uint8_t pin;
 };
 
 class Alternate_function_pin : private cml::Non_copyable
@@ -245,15 +247,15 @@ public:
 
     struct Config
     {
-        Mode mode             = Mode::unknown;
-        Pull pull             = Pull::unknown;
-        Speed speed           = Speed::unknown;
-        cml::uint32 function  = 0;
+        Mode mode         = Mode::unknown;
+        Pull pull         = Pull::unknown;
+        Speed speed       = Speed::unknown;
+        uint32_t function = 0;
     };
 
 public:
 
-    Alternate_function_pin(GPIO* a_p_port, cml::uint8 a_pin)
+    Alternate_function_pin(GPIO* a_p_port, uint8_t a_pin)
         : p_port(a_p_port)
         , pin(a_pin)
         , function(0)
@@ -273,13 +275,13 @@ public:
     void set_mode(Mode a_mode);
     void set_pull(Pull a_pull);
     void set_speed(Speed a_speed);
-    void set_function(cml::uint32 a_function);
+    void set_function(uint32_t a_function);
 
     Mode  get_mode()  const;
     Pull  get_pull()  const;
     Speed get_speed() const;
 
-    cml::uint32 get_function() const
+    uint32_t get_function() const
     {
         return this->function;
     }
@@ -287,9 +289,9 @@ public:
 private:
 
     GPIO* p_port;
-    const cml::uint8 pin;
+    const uint8_t pin;
 
-    cml::uint32 function;
+    uint32_t function;
 };
 
 class Analog_pin : private cml::Non_copyable
@@ -300,7 +302,7 @@ public:
 
 public:
 
-    Analog_pin(GPIO* a_p_port, cml::uint8 a_pin)
+    Analog_pin(GPIO* a_p_port, uint8_t a_pin)
         : p_port(a_p_port)
         , pin(a_pin)
     {
@@ -325,7 +327,7 @@ public:
         return this->p_port;
     }
 
-    cml::uint8 get_pin() const
+    uint8_t get_pin() const
     {
         return this->pin;
     }
@@ -333,7 +335,7 @@ public:
 private:
 
     GPIO* p_port;
-    const cml::uint8 pin;
+    const uint8_t pin;
 };
 
 } // namespace peripherals

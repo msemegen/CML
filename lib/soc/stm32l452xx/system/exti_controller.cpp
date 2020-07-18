@@ -37,7 +37,7 @@ extern "C"
 
 using namespace cml;
 
-static bool interrupt_handler(uint32 a_pr1, uint32 a_index)
+static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
 {
     assert(nullptr != handlers[a_index].callback.function);
 
@@ -92,7 +92,7 @@ void EXTI4_IRQHandler()
 
 void EXTI9_5_IRQHandler()
 {
-    for (uint32 i = 5u; i <= 9u; i++)
+    for (uint32_t i = 5u; i <= 9u; i++)
     {
         if (true == interrupt_handler(EXTI->PR1, i))
         {
@@ -103,7 +103,7 @@ void EXTI9_5_IRQHandler()
 
 void EXTI15_10_IRQHandler()
 {
-    for (uint32 i = 10u; i <= 15u; i++)
+    for (uint32_t i = 10u; i <= 15u; i++)
     {
         if (true == interrupt_handler(EXTI->PR1, i))
         {
@@ -121,7 +121,7 @@ namespace system {
 using namespace cml;
 using namespace soc::stm32l452xx::peripherals;
 
-void exti_controller::enable(uint32 a_priority)
+void exti_controller::enable(uint32_t a_priority)
 {
     NVIC_SetPriority(EXTI0_IRQn,     a_priority);
     NVIC_SetPriority(EXTI1_IRQn,     a_priority);
@@ -160,7 +160,7 @@ void exti_controller::register_callback(Input_pin* a_p_pin,
     assert(nullptr == handlers[static_cast<uint32_t>(a_p_pin->get_pin())].callback.function);
 
     set_flag(&(SYSCFG->EXTICR[a_p_pin->get_pin() / 4u]),
-            (static_cast<uint32>(a_p_pin->get_port()->get_id()) << ((static_cast<uint32_t>(a_p_pin->get_pin()) % 4u) * 4u)));
+            (static_cast<uint32_t>(a_p_pin->get_port()->get_id()) << ((static_cast<uint32_t>(a_p_pin->get_pin()) % 4u) * 4u)));
 
     clear_bit(&(EXTI->RTSR1), a_p_pin->get_pin());
     clear_bit(&(EXTI->FTSR1), a_p_pin->get_pin());
@@ -199,7 +199,7 @@ void exti_controller::unregister_callback(const Input_pin& a_pin)
     clear_bit(&(EXTI->FTSR1), a_pin.get_pin());
 
     clear_flag(&(SYSCFG->EXTICR[a_pin.get_pin() / 4u]),
-               (static_cast<uint32>(a_pin.get_port()->get_id()) << ((static_cast<uint32_t>(a_pin.get_pin()) % 4u) * 4u)));
+               (static_cast<uint32_t>(a_pin.get_port()->get_id()) << ((static_cast<uint32_t>(a_pin.get_pin()) % 4u) * 4u)));
 
     handlers[a_pin.get_pin()] = { { nullptr, nullptr }, nullptr };
 }

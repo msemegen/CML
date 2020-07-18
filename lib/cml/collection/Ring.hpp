@@ -7,8 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //cml
-#include <cml/integer.hpp>
 #include <cml/debug/assert.hpp>
 
 namespace cml {
@@ -19,7 +21,7 @@ class Ring
 {
 public:
 
-    Ring(Type_t* a_p_buffer, uint32 a_capacity)
+    Ring(Type_t* a_p_buffer, uint32_t a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
         , head(0)
@@ -90,17 +92,17 @@ public:
         return this->full;
     }
 
-    uint32 get_head_index() const
+    uint32_t get_head_index() const
     {
         return this->head;
     }
 
-    uint32 get_tail_index() const
+    uint32_t get_tail_index() const
     {
         return this->tail;
     }
 
-    uint32 get_capacity() const
+    uint32_t get_capacity() const
     {
         return this->capacity;
     }
@@ -108,10 +110,10 @@ public:
 private:
 
     Type_t* p_buffer;
-    uint32 capacity;
+    uint32_t capacity;
 
-    uint32 head;
-    mutable uint32 tail;
+    uint32_t head;
+    mutable uint32_t tail;
     mutable bool full;
 };
 

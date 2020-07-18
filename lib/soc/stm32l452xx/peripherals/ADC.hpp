@@ -7,11 +7,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //externals
 #include <stm32l452xx.h>
 
 //cml
-#include <cml/integer.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/time.hpp>
 
@@ -23,12 +25,12 @@ class ADC : private cml::Non_copyable
 {
 public:
 
-    enum class Id : cml::uint32
+    enum class Id : uint32_t
     {
         _1 = 0u
     };
 
-    enum class Resolution : cml::uint32
+    enum class Resolution : uint32_t
     {
         _6_bit  = ADC_CFGR_RES_1 | ADC_CFGR_RES_0,
         _8_bit  = ADC_CFGR_RES_1,
@@ -38,7 +40,7 @@ public:
 
     struct Channel
     {
-        enum class Id : cml::uint32
+        enum class Id : uint32_t
         {
             voltage_reference,
             _1,
@@ -62,7 +64,7 @@ public:
             unknown
         };
 
-        enum class Sampling_time : cml::uint32
+        enum class Sampling_time : uint32_t
         {
             _2_5_clock_cycles   = 0x0u,
             _6_5_clock_cycles   = 0x1u,
@@ -81,7 +83,7 @@ public:
 
     struct Synchronous_clock
     {
-        enum class Divider : cml::uint32
+        enum class Divider : uint32_t
         {
             _1 = ADC_CCR_CKMODE_0,
             _2 = ADC_CCR_CKMODE_1,
@@ -101,7 +103,7 @@ public:
 
     struct Asynchronous_clock
     {
-        enum class Divider : cml::uint32
+        enum class Divider : uint32_t
         {
             _1 = 0x0u,
             _2 = ADC_CCR_PRESC_0,
@@ -130,14 +132,14 @@ public:
 
     struct Calibration_data
     {
-        cml::uint16 temperature_sensor_data_1  = 0;
-        cml::uint16 temperature_sensor_data_2  = 0;
-        cml::uint16 internal_voltage_reference = 0;
+        uint16_t temperature_sensor_data_1  = 0;
+        uint16_t temperature_sensor_data_2  = 0;
+        uint16_t internal_voltage_reference = 0;
     };
 
     struct Conversion_callback
     {
-        using Function = bool(*)(cml::uint16 a_value, bool a_series_end, void* a_p_user_data);
+        using Function = bool(*)(uint16_t a_value, bool a_series_end, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -154,26 +156,26 @@ public:
 
     bool enable(Resolution a_resolution,
                 const Asynchronous_clock& a_clock,
-                cml::uint32 a_irq_priority,
+                uint32_t a_irq_priority,
                 cml::time::tick a_timeout);
 
     bool enable(Resolution a_resolution,
                 const Synchronous_clock& a_clock,
-                cml::uint32 a_irq_priority,
+                uint32_t a_irq_priority,
                 cml::time::tick a_timeout);
 
     void disable();
 
-    void set_active_channels(const Channel* a_p_channels, cml::uint32 a_channels_count);
+    void set_active_channels(const Channel* a_p_channels, uint32_t a_channels_count);
     void clear_active_channels();
 
-    void read_polling(cml::uint16* a_p_data, cml::uint32 a_count);
-    bool read_polling(cml::uint16* a_p_data, cml::uint32 a_count, cml::time::tick a_timeout);
+    void read_polling(uint16_t* a_p_data, uint32_t a_count);
+    bool read_polling(uint16_t* a_p_data, uint32_t a_count, cml::time::tick a_timeout);
 
     void start_read_it(const Conversion_callback& a_callback);
     void stop_read_it();
 
-    cml::uint32 get_active_channels_count() const
+    uint32_t get_active_channels_count() const
     {
         return (ADC1->SQR1 & 0xFu) + 1;
     }
@@ -182,9 +184,9 @@ public:
 
     constexpr Calibration_data get_calibration_data() const
     {
-        return { *(reinterpret_cast<const cml::uint16*>(0x1FFF75A8)),
-                 *(reinterpret_cast<const cml::uint16*>(0x1FFF75CA)),
-                 *(reinterpret_cast<const cml::uint16*>(0x1FFF75AA))
+        return { *(reinterpret_cast<const uint16_t*>(0x1FFF75A8)),
+                 *(reinterpret_cast<const uint16_t*>(0x1FFF75CA)),
+                 *(reinterpret_cast<const uint16_t*>(0x1FFF75AA))
         };
     }
 
@@ -197,7 +199,7 @@ private:
 
     bool enable(Resolution a_resolution,
                 cml::time::tick a_start,
-                cml::uint32 a_irq_priority,
+                uint32_t a_irq_priority,
                 cml::time::tick a_timeout);
 
 private:

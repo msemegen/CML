@@ -7,8 +7,8 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
-#include <cml/integer.hpp>
+//std
+#include <cstdint>
 
 namespace cml {
 namespace utils {
@@ -17,8 +17,8 @@ struct config
 {
     struct console
     {
-        static constexpr uint32 line_buffer_capacity  = 128u;
-        static constexpr uint32 input_buffer_capacity = 16u;
+        static constexpr uint32_t line_buffer_capacity  = 128u;
+        static constexpr uint32_t input_buffer_capacity = 16u;
 
         console()               = delete;
         console(console&&)      = delete;
@@ -34,11 +34,11 @@ struct config
 
     struct command_line
     {
-        static constexpr uint32 callbacks_buffer_capacity           = 20u;
-        static constexpr uint32 callback_parameters_buffer_capacity = 4u;
-        static constexpr uint32 input_buffer_capacity               = 16u;
-        static constexpr uint32 line_buffer_capacity                = 128u;
-        static constexpr uint32 commands_carousel_capacity          = 5u;
+        static constexpr uint32_t callbacks_buffer_capacity           = 20u;
+        static constexpr uint32_t callback_parameters_buffer_capacity = 4u;
+        static constexpr uint32_t input_buffer_capacity               = 16u;
+        static constexpr uint32_t line_buffer_capacity                = 128u;
+        static constexpr uint32_t commands_carousel_capacity          = 5u;
 
         command_line()                    = delete;
         command_line(command_line&&)      = delete;
@@ -57,7 +57,7 @@ struct config
 
     struct logger
     {
-        static constexpr uint32 line_buffer_capacity = 128u;
+        static constexpr uint32_t line_buffer_capacity = 128u;
 
         logger()              = delete;
         logger(logger&&)      = delete;

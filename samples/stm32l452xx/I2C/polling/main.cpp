@@ -223,8 +223,8 @@ int main()
             I2C_slave i2c_slave_bus(I2C_slave::Id::_1);
             i2c_slave_bus.enable({ false, true, false, 0x00200205, 0x11 }, I2C_slave::Clock_source::sysclk, 0x1u);
 
-            uint8 data_to_send[]    = { 0x00u, 0x00u };
-            uint8 data_to_receive[] = { 0xFFu, 0xFFu };
+            uint8_t data_to_send[]    = { 0x00u, 0x00u };
+            uint8_t data_to_receive[] = { 0xFFu, 0xFFu };
 
             while (true)
             {

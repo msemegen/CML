@@ -7,13 +7,15 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+//std
+#include <cstdint>
+
 //externals
 #include <stm32l452xx.h>
 
 //cml
 #include <cml/bit.hpp>
 #include <cml/frequency.hpp>
-#include <cml/integer.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -22,7 +24,7 @@ class mcu
 {
 public:
 
-    enum class Clock : cml::uint32
+    enum class Clock : uint32_t
     {
         msi = RCC_CR_MSION,
         hsi = RCC_CR_HSION,
@@ -31,14 +33,14 @@ public:
         lsi
     };
 
-    enum class Sysclk_source : cml::uint32
+    enum class Sysclk_source : uint32_t
     {
         msi = RCC_CFGR_SW_MSI,
         hsi = RCC_CFGR_SW_HSI,
         pll = RCC_CFGR_SW_PLL,
     };
 
-    enum class Clk48_mux_source : cml::uint32
+    enum class Clk48_mux_source : uint32_t
     {
         hsi48      = 0x0u,
         pll_sai1_q = RCC_CCIPR_CLK48SEL_0,
@@ -46,7 +48,7 @@ public:
         msi        = RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1,
     };
 
-    enum class Msi_frequency : cml::uint32
+    enum class Msi_frequency : uint32_t
     {
         _100_kHz = 0,
         _200_kHz = 1,
@@ -62,22 +64,22 @@ public:
         _48_MHz  = 11,
     };
 
-    enum class Hsi_frequency : cml::uint32
+    enum class Hsi_frequency : uint32_t
     {
         _16_MHz,
     };
 
-    enum class Lsi_frequency : cml::uint32
+    enum class Lsi_frequency : uint32_t
     {
         _32_kHz,
     };
 
-    enum class Hsi48_frequency : cml::uint32
+    enum class Hsi48_frequency : uint32_t
     {
         _48_MHz
     };
 
-    enum class Flash_latency : cml::uint32
+    enum class Flash_latency : uint32_t
     {
         _0 = FLASH_ACR_LATENCY_0WS,
         _1 = FLASH_ACR_LATENCY_1WS,
@@ -87,14 +89,14 @@ public:
         unknown
     };
 
-    enum class Voltage_scaling : cml::uint32
+    enum class Voltage_scaling : uint32_t
     {
         _1 = PWR_CR1_VOS_0,
         _2 = PWR_CR1_VOS_1,
         unkown
     };
 
-    enum class Reset_source : cml::uint32
+    enum class Reset_source : uint32_t
     {
         illegal_low_power    = RCC_CSR_LPWRRSTF,
         window_watchdog      = RCC_CSR_WWDGRSTF,
@@ -106,7 +108,7 @@ public:
         firewall             = RCC_CSR_FWRSTF
     };
 
-    enum class FPU_mode : cml::uint32
+    enum class FPU_mode : uint32_t
     {
         disabled               = 0x0u,
         privileged_access_only = 0xAu << 20u,
@@ -115,14 +117,14 @@ public:
 
     struct Pll_config
     {
-        enum class Source : cml::uint32
+        enum class Source : uint32_t
         {
             msi = RCC_PLLCFGR_PLLSRC_MSI,
             hsi = RCC_PLLCFGR_PLLSRC_HSI,
             unknown
         };
 
-        enum class M : cml::uint32
+        enum class M : uint32_t
         {
             _1 = 0,
             _2 = RCC_PLLCFGR_PLLM_0,
@@ -139,7 +141,7 @@ public:
         {
             struct R
             {
-                enum class Divider : cml::uint32
+                enum class Divider : uint32_t
                 {
                     _2 = 0,
                     _4 = RCC_PLLCFGR_PLLR_0,
@@ -154,7 +156,7 @@ public:
 
             struct Q
             {
-                enum class Divider : cml::uint32
+                enum class Divider : uint32_t
                 {
                     _2 = 0,
                     _4 = RCC_PLLCFGR_PLLQ_0 >> RCC_PLLCFGR_PLLQ_Pos,
@@ -169,7 +171,7 @@ public:
 
             struct P
             {
-                enum class Divider : cml::uint32
+                enum class Divider : uint32_t
                 {
                     _7  = 0u,
                     _17 = RCC_PLLCFGR_PLLP_Msk,
@@ -180,7 +182,7 @@ public:
                 bool output_enabled = false;
             };
 
-            cml::uint32 n = 0;
+            uint32_t n = 0;
 
             R r;
             Q q;
@@ -191,7 +193,7 @@ public:
         {
             struct R
             {
-                enum class Divider : cml::uint32
+                enum class Divider : uint32_t
                 {
                     _2 = 0,
                     _4 = RCC_PLLSAI1CFGR_PLLSAI1R_0,
@@ -206,7 +208,7 @@ public:
 
             struct Q
             {
-                enum class Divider : cml::uint32
+                enum class Divider : uint32_t
                 {
                     _2 = 0,
                     _4 = RCC_PLLSAI1CFGR_PLLSAI1Q_0,
@@ -221,7 +223,7 @@ public:
 
             struct P
             {
-                enum class Divider : cml::uint32
+                enum class Divider : uint32_t
                 {
                     _7  = 0u,
                     _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk,
@@ -232,7 +234,7 @@ public:
                 bool output_enabled = false;
             };
 
-            cml::uint32 n = 0;
+            uint32_t n = 0;
 
             R r;
             Q q;
@@ -248,8 +250,8 @@ public:
 
     struct Device_id
     {
-        const cml::uint8  serial_number[12] = { 0 };
-        const cml::uint32 type              = 0;
+        const uint8_t  serial_number[12] = { 0 };
+        const uint32_t type              = 0;
     };
 
     struct Sysclk_frequency_change_callback
@@ -262,7 +264,7 @@ public:
 
     struct Bus_prescalers
     {
-        enum class AHB : cml::uint32
+        enum class AHB : uint32_t
         {
             _1   = RCC_CFGR_HPRE_DIV1,
             _2   = RCC_CFGR_HPRE_DIV2,
@@ -276,7 +278,7 @@ public:
             unknown
         };
 
-        enum class APB1 : cml::uint32
+        enum class APB1 : uint32_t
         {
             _1  = RCC_CFGR_PPRE1_DIV1,
             _2  = RCC_CFGR_PPRE1_DIV2,
@@ -286,7 +288,7 @@ public:
             unknown
         };
 
-        enum class APB2 : cml::uint32
+        enum class APB2 : uint32_t
         {
             _1  = RCC_CFGR_PPRE2_DIV1,
             _2  = RCC_CFGR_PPRE2_DIV2,
@@ -303,7 +305,7 @@ public:
 
     struct NVIC_config
     {
-        enum class Grouping : cml::uint32
+        enum class Grouping : uint32_t
         {
             _0 = 0x7,
             _1 = 0x6,
@@ -313,8 +315,8 @@ public:
             unknown
         };
 
-        Grouping grouping            = Grouping::unknown;
-        cml::uint32 base_priority = 0;
+        Grouping grouping      = Grouping::unknown;
+        uint32_t base_priority = 0;
     };
 
 public:
@@ -339,7 +341,7 @@ public:
 
     static void set_fpu_mode(FPU_mode a_mode)
     {
-        cml::set_flag(&(SCB->CPACR), ((3u << 10u * 2u) | (3u << 11u * 2u)), static_cast<cml::uint32>(a_mode));
+        cml::set_flag(&(SCB->CPACR), ((3u << 10u * 2u) | (3u << 11u * 2u)), static_cast<uint32_t>(a_mode));
     }
 
     static void enable_dwt()
@@ -394,11 +396,11 @@ public:
         return static_cast<Clk48_mux_source>(cml::get_flag(RCC->CCIPR, RCC_CCIPR_CLK48SEL));
     }
 
-    static cml::uint32 get_clk48_mux_freqency_hz();
+    static uint32_t get_clk48_mux_freqency_hz();
 
     static Device_id get_device_id()
     {
-        cml::uint8* p_id_location = reinterpret_cast<cml::uint8*>(UID_BASE);
+        const uint8_t* p_id_location = reinterpret_cast<uint8_t*>(UID_BASE);
 
         return { { p_id_location[0], p_id_location[1], p_id_location[2],  p_id_location[3],
                    p_id_location[4], p_id_location[5], p_id_location[6],  p_id_location[7],
@@ -436,7 +438,7 @@ public:
             case Clock::hsi:
             case Clock::pll:
             {
-                return cml::is_flag(RCC->CR, static_cast<cml::uint32>(a_clock));
+                return cml::is_flag(RCC->CR, static_cast<uint32_t>(a_clock));
             }
             break;
 
@@ -490,8 +492,8 @@ private:
     mcu& operator = (const mcu&) = delete;
     mcu& operator = (mcu&&)      = delete;
 
-    static Flash_latency select_flash_latency(cml::uint32 a_syclk_freq, Voltage_scaling a_voltage_scaling);
-    static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, cml::uint32 a_sysclk_freq);
+    static Flash_latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
+    static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);
 
     static void set_flash_latency(Flash_latency a_latency);
     static void set_voltage_scaling(Voltage_scaling a_scaling);
@@ -506,9 +508,9 @@ private:
                                           cml::frequency a_frequency_hz,
                                           const Bus_prescalers& a_prescalers);
 
-    static cml::uint32 calculate_pll_r_output_frequency();
-    static cml::uint32 calculate_pll_q_output_frequency();
-    static cml::uint32 calculate_pllsai1_q_output_frequency();
+    static uint32_t calculate_pll_r_output_frequency();
+    static uint32_t calculate_pll_q_output_frequency();
+    static uint32_t calculate_pllsai1_q_output_frequency();
 };
 
 } // namespace stm32l452xx

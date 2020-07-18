@@ -169,14 +169,14 @@ int main()
 
             delay::ms(500);
 
-            const uint8 data_to_send[] = { 0x1u, 0x2u };
-            uint8 data_to_receive[]    = { 0xFF, 0xFF };
+            const uint8_t data_to_send[] = { 0x1u, 0x2u };
+            uint8_t data_to_receive[]    = { 0xFF, 0xFF };
 
             if (true == i2c_master_bus.is_slave_connected(0x11, 10))
             {
                 console.write_line("Slave detected!");
 
-                uint32 bytes = 0;
+                uint32_t bytes = 0;
 
                 while (true)
                 {

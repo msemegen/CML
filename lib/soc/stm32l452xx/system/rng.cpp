@@ -34,8 +34,8 @@ void RNG_IRQHandler()
 {
     assert(nullptr != new_value_callback.function);
 
-    uint32 isr = RNG->SR;
-    uint32 val = 0;
+    const uint32_t isr = RNG->SR;
+    uint32_t val = 0;
 
     if (true == is_flag(isr, RNG_SR_DRDY))
     {
@@ -60,11 +60,10 @@ namespace soc {
 namespace stm32l452xx {
 namespace system {
 
-using namespace cml;
 using namespace cml::utils;
 using namespace soc::stm32l452xx;
 
-bool rng::enable(uint32 a_irq_priority, time::tick a_timeout)
+bool rng::enable(uint32_t a_irq_priority, time::tick a_timeout)
 {
     assert(mcu::get_clk48_mux_freqency_hz() <= MHz(48));
     assert(a_timeout > 0);
@@ -99,7 +98,7 @@ void rng::disable()
     NVIC_DisableIRQ(RNG_IRQn);
 }
 
-bool rng::get_value_polling(uint32* a_p_value, time::tick a_timeout)
+bool rng::get_value_polling(uint32_t* a_p_value, time::tick a_timeout)
 {
     assert(a_timeout > 0);
 

@@ -121,7 +121,7 @@ int main()
                 {
                     while (true)
                     {
-                        uint32 sleep_value = 0;
+                        uint32_t sleep_value = 0;
                         rng::get_value_polling(&sleep_value, 30);
 
                         delay::ms(sleep_value % 1500);

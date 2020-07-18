@@ -30,7 +30,7 @@ void assert::register_print(const Print& a_callback)
     print = a_callback;
 }
 
-void assert::trap(const char* a_p_file, uint32 a_line, const char* a_p_expression)
+void assert::trap(const char* a_p_file, uint32_t a_line, const char* a_p_expression)
 {
     if (nullptr != print.p_function)
     {
