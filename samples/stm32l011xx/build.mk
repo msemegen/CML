@@ -68,12 +68,12 @@ $(C_OBJECTS_RELEASE): $(OUTDIR_RELEASE)/%.o : %.c
 $(CPP_OBJECTS_RELEASE): $(OUTDIR_RELEASE)/%.o : %.cpp
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
-	$(CPP) -c -o $@ $< $(CPPFLAGS) $(RELEASE_FLAGS)
+	$(CXX) -c -o $@ $< $(CPPFLAGS) $(RELEASE_FLAGS)
 
 $(S_OBJECTS_RELEASE): $(OUTDIR_RELEASE)/%.o : %.s
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
-	$(CPP) -c -o $@ $< $(CFLAGS) $(RELEASE_FLAGS)
+	$(CXX) -c -o $@ $< $(CFLAGS) $(RELEASE_FLAGS)
 
 $(C_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%.o : %.c
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
@@ -83,16 +83,16 @@ $(C_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%.o : %.c
 $(CPP_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%.o : %.cpp
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
-	$(CPP) -c -o $@ $< $(CPPFLAGS) $(DEBUG_FLAGS)
+	$(CXX) -c -o $@ $< $(CPPFLAGS) $(DEBUG_FLAGS)
 
 $(S_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%.o : %.s
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
-	$(CPP) -c -o $@ $< $(CFLAGS) $(DEBUG_FLAGS)
+	$(CXX) -c -o $@ $< $(CFLAGS) $(DEBUG_FLAGS)
 
 $(OUTPUT_NAME).elf : $(C_OBJECTS_RELEASE) $(CPP_OBJECTS_RELEASE) $(S_OBJECTS_RELEASE)
 	bash -c 'echo -e "$@ \e[01;36m[linking]\e[0m" '
-	$(CPP) $^ $(MAIN_LDFLAGS_RELEASE)  -o $(OUTDIR)/$(OUTPUT_NAME).elf
+	$(CXX) $^ $(MAIN_LDFLAGS_RELEASE)  -o $(OUTDIR)/$(OUTPUT_NAME).elf
 
 $(OUTPUT_NAME).bin : $(OUTPUT_NAME).elf
 	bash -c 'echo -e "$@ \e[01;36m[Final build]\e[0m" '
@@ -101,7 +101,7 @@ $(OUTPUT_NAME).bin : $(OUTPUT_NAME).elf
 
 $(OUTPUT_NAME)_d.elf : $(C_OBJECTS_DEBUG) $(CPP_OBJECTS_DEBUG) $(S_OBJECTS_DEBUG)
 	bash -c 'echo -e "$@ \e[01;36m[linking]\e[0m" '
-	$(CPP) $^ $(MAIN_LDFLAGS_DEBUG)  -o $(OUTDIR)/$(OUTPUT_NAME)_d.elf
+	$(CXX) $^ $(MAIN_LDFLAGS_DEBUG)  -o $(OUTDIR)/$(OUTPUT_NAME)_d.elf
 
 $(OUTPUT_NAME)_d.bin : $(OUTPUT_NAME)_d.elf
 	bash -c 'echo -e "$@ \e[01;36m[Final build]\e[0m" '

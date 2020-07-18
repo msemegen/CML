@@ -1,5 +1,5 @@
 CC     := arm-none-eabi-gcc
-CPP    := arm-none-eabi-g++
+CXX    := arm-none-eabi-g++
 AS     := arm-none-eabi-as
 LD     := arm-none-eabi-ld
 CP     := arm-none-eabi-objcopy
