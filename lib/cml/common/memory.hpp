@@ -15,7 +15,12 @@ namespace common {
 
 struct memory
 {
-    static void copy(void* a_p_destination, const void* a_p_source, uint32_t a_size_in_bytes);
+    static uint32_t copy(void* a_p_destination,
+                         uint32_t a_destination_capacity_in_bytes,
+
+                         const void* a_p_source,
+                         uint32_t a_source_size_in_bytes);
+
     static void move(void* a_p_destination, const void* a_p_source, uint32_t a_size_in_bytes);
     static void set(void* a_p_destination, uint8_t a_data, uint32_t a_size_in_bytes);
     static void clear(void* a_p_destination, uint32_t a_size_in_bytes);

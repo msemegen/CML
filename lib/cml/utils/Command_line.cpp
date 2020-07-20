@@ -13,37 +13,20 @@
 #include <cml/debug/assert.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 
-namespace
-{
-
-using namespace cml;
-using namespace cml::collection;
-
-bool rx_callback(uint32_t a_byte, bool a_idle, void* a_p_user_data)
-{
-    if (false == a_idle)
-    {
-        reinterpret_cast<Ring<char>*>(a_p_user_data)->push(static_cast<char>(a_byte));
-    }
-
-    return true;
-}
-
-} // namespace
-
 namespace cml {
 namespace utils {
 
+using namespace cml::collection;
 using namespace cml::common;
 using namespace cml::hal;
 
 void Command_line::update()
 {
-    if (false == this->input_buffer_view.is_empty())
+    char c[] = { 0, 0, 0 };
+    uint32_t length = this->read_character.function(c, sizeof(c), this->read_character.p_user_data);
+    if (1 == length)
     {
-        char c = this->input_buffer_view.read();
-
-        switch (c)
+        switch (c[0])
         {
             case '\n':
             {
@@ -62,8 +45,9 @@ void Command_line::update()
                     if (false == command_executed)
                     {
                         this->write_new_line();
-                        this->p_io_stream->transmit_bytes_polling(this->p_command_not_found_message,
-                                                                  this->command_not_found_message_length);
+                        this->write_string.function(this->p_command_not_found_message,
+                                                    this->command_not_found_message_length,
+                                                    this->write_string.p_user_data);
                     }
 
                     this->line_length = 0;
@@ -79,49 +63,25 @@ void Command_line::update()
                 if (this->line_length > 0)
                 {
                     this->line_buffer[this->line_length--] = 0;
-                    this->p_io_stream->transmit_bytes_polling("\b \b", 3);
+                    this->write_string.function("\b \b", 3, this->write_string.p_user_data);
                 }
-            }
-            break;
-
-            case '\033':
-            {
-                this->escape_sequence_buffer_view.push_back(c);
             }
             break;
 
             default:
             {
-                if (false == this->escape_sequence_buffer_view.is_empty())
+                if (this->line_length + 1 < config::command_line::line_buffer_capacity)
                 {
-                    this->escape_sequence_buffer_view.push_back(c);
-
-                    if (true == this->escape_sequence_buffer_view.is_full())
-                    {
-                        this->execute_escape_sequence(this->escape_sequence_buffer[1],
-                                                      this->escape_sequence_buffer[2]);
-
-                        this->escape_sequence_buffer_view.clear();
-                    }
-                }
-                else if (this->line_length + 1 < config::command_line::line_buffer_capacity)
-                {
-                    this->line_buffer[this->line_length++] = c;
-                    this->p_io_stream->transmit_bytes_polling(&c, 1);
+                    this->line_buffer[this->line_length++] = c[0];
+                    this->write_character.function(c[0], this->write_character.p_user_data);
                 }
             }
         }
     }
-}
-
-void Command_line::enable()
-{
-    this->p_io_stream->register_receive_callback({ rx_callback, &(this->input_buffer_view) });
-}
-
-void Command_line::disable()
-{
-    this->p_io_stream->unregister_receive_callback();
+    else if (3 == length && '\033' == c[0])
+    {
+        this->execute_escape_sequence(c[1], c[2]);
+    }
 }
 
 Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(char* a_p_line,
@@ -200,36 +160,34 @@ void Command_line::execute_escape_sequence(char a_first, char a_second)
 {
     if ('[' == a_first && this->commands_carousel.get_length() > 0)
     {
+        this->write_string.function("\033[2K\r", 5, this->write_string.p_user_data);
+        this->write_prompt();
+
         switch (a_second)
         {
             case 'A':
             {
-                this->p_io_stream->transmit_bytes_polling("\033[2K\r", 5);
-                this->write_prompt();
-
                 const Commands_carousel::Command& command = this->commands_carousel.read_next();
 
-                memory::copy(this->line_buffer, command.buffer, command.length);
+                memory::copy(this->line_buffer, sizeof(this->line_buffer), command.buffer, command.length);
                 this->line_length = command.length;
 
-                this->p_io_stream->transmit_bytes_polling(command.buffer, command.length);
+                this->write_string.function(command.buffer, command.length, this->write_string.p_user_data);
             }
             break;
 
             case 'B':
             {
-                this->p_io_stream->transmit_bytes_polling("\033[2K\r", 5);
-                this->write_prompt();
-
                 const Commands_carousel::Command& command = this->commands_carousel.read_prev();
 
-                memory::copy(this->line_buffer, command.buffer, command.length);
+                memory::copy(this->line_buffer, sizeof(this->line_buffer), command.buffer, command.length);
                 this->line_length = command.length;
 
-                this->p_io_stream->transmit_bytes_polling(command.buffer, command.length);
+                this->write_string.function(command.buffer, command.length, this->write_string.p_user_data);
             }
             break;
         }
+
     }
 }
 
@@ -241,7 +199,14 @@ void Command_line::Commands_carousel::push(const char* a_p_line, uint32_t a_leng
     }
 
     this->commands[this->write_index].length = a_length;
-    memory::copy(this->commands[this->write_index++].buffer, a_p_line, a_length);
+
+    memory::copy(this->commands[this->write_index].buffer,
+                 sizeof(this->commands[this->write_index].buffer),
+
+                 a_p_line,
+                 a_length);
+
+    this->write_index++;
 
     if (this->length < config::command_line::commands_carousel_capacity)
     {
