@@ -236,20 +236,21 @@ bool USART::enable(const Config& a_config,
                    const Frame_format& a_frame_format,
                    const Clock &a_clock,
                    uint32_t a_irq_priority,
-                   time::tick a_timeout)
+                   time::tick a_timeout_ms)
 {
     assert(nullptr                    == p_usart_2);
     assert(0                          != a_config.baud_rate);
     assert(Flow_control_flag::unknown != a_config.flow_control);
     assert(Stop_bits::unknown         != a_config.stop_bits);
     assert(Sampling_method::unknown   != a_config.sampling_method);
+    assert(Mode_flag::unknown         != a_config.mode);
 
     assert(Parity::unknown      != a_frame_format.parity);
     assert(Word_length::unknown != a_frame_format.word_length);
 
     assert(Clock::Source::unknown != a_clock.source);
     assert(0                      != a_clock.frequency_hz);
-    assert(a_timeout > 0);
+    assert(a_timeout_ms > 0);
 
     time::tick start = counter::get();
 
@@ -289,22 +290,19 @@ bool USART::enable(const Config& a_config,
                   static_cast<uint32_t>(a_config.sampling_method);
 
     USART2->CR1 = static_cast<uint32_t>(a_config.oversampling)      |
+                  static_cast<uint32_t>(a_config.mode)              |
                   static_cast<uint32_t>(a_frame_format.parity)      |
                   static_cast<uint32_t>(a_frame_format.word_length) |
-                  USART_CR1_UE | USART_CR1_RE | USART_CR1_TE;
+                  USART_CR1_UE;
 
     this->baud_rate    = a_config.baud_rate;
     this->clock        = a_clock;
     this->frame_format = a_frame_format;
 
-    bool ret = wait::until(&(USART2->ISR), USART_ISR_REACK | USART_ISR_TEACK, false, start, a_timeout);
+    uint32_t wait_flag = (true == is_flag(USART2->CR1, USART_CR1_RE) ? USART_ISR_REACK : 0) |
+                         (true == is_flag(USART2->CR1, USART_CR1_TE) ? USART_ISR_TEACK : 0);
 
-    if (false == ret)
-    {
-        this->disable();
-    }
-
-    return ret;
+    return wait::until(&(USART2->ISR), wait_flag, false, start, a_timeout_ms);
 }
 
 void USART::disable()
@@ -323,6 +321,7 @@ void USART::disable()
 
 USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words)
 {
+    assert(true == is_flag(USART2->CR1, USART_CR1_TE));
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
@@ -361,6 +360,7 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
 
 USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, time::tick a_timeout)
 {
+    assert(true == is_flag(USART2->CR1, USART_CR1_TE));
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
@@ -404,6 +404,7 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
 
 USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words)
 {
+    assert(true == is_flag(USART2->CR1, USART_CR1_RE));
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
@@ -450,6 +451,7 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
 USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, time::tick a_timeout)
 {
+    assert(true == is_flag(USART2->CR1, USART_CR1_RE));
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
@@ -501,6 +503,7 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
 void USART::register_transmit_callback(const TX_callback& a_callback)
 {
+    assert(true == is_flag(USART2->CR1, USART_CR1_TE));
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_callback.function);
 
@@ -512,6 +515,7 @@ void USART::register_transmit_callback(const TX_callback& a_callback)
 
 void USART::register_receive_callback(const RX_callback& a_callback)
 {
+    assert(true == is_flag(USART2->CR1, USART_CR1_RE));
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_callback.function);
 
@@ -646,6 +650,22 @@ void USART::set_frame_format(const Frame_format& a_frame_format)
     this->frame_format = a_frame_format;
 }
 
+bool USART::set_mode(Mode_flag a_mode, time::tick a_timeout_ms)
+{
+    assert(nullptr != p_usart_2 && nullptr == p_rs485);
+    assert(Mode_flag::unknown != a_mode);
+    assert(a_timeout_ms > 0);
+
+    time::tick start = counter::get();
+
+    set_flag(&(USART2->CR1), USART_CR1_TE | USART_CR1_RE, static_cast<uint32_t>(a_mode));
+
+    uint32_t wait_flag = (true == is_flag(USART2->CR1, USART_CR1_RE) ? USART_ISR_REACK : 0) |
+                         (true == is_flag(USART2->CR1, USART_CR1_TE) ? USART_ISR_TEACK : 0);
+
+    return wait::until(&(USART2->ISR), wait_flag, false, start, a_timeout_ms);
+}
+
 USART::Oversampling USART::get_oversampling() const
 {
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
@@ -672,6 +692,11 @@ USART::Sampling_method USART::get_sampling_method() const
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
 
     return static_cast<Sampling_method>(get_flag(USART2->CR3, USART_CR3_ONEBIT));
+}
+
+USART::Mode_flag USART::get_mode() const
+{
+    return static_cast<Mode_flag>(get_flag(USART2->CR1, USART_CR1_TE | USART_CR1_RE));
 }
 
 bool USART::is_enabled() const

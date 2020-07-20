@@ -11,8 +11,32 @@
 #include <cml/hal/systick.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
-#include <cml/utils/Buffered_console.hpp>
-#include <cml/utils/delay.hpp>
+#include <cml/utils/Console.hpp>
+
+namespace
+{
+
+using namespace cml::hal::peripherals;
+
+uint32_t write_character(char a_character, void* a_p_user_data)
+{
+    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
+    return p_console_usart->transmit_bytes_polling(&a_character, 1).data_length_in_words;
+}
+
+uint32_t write_string(const char* a_p_string, uint32_t a_length, void* a_p_user_data)
+{
+    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
+    return p_console_usart->transmit_bytes_polling(a_p_string, a_length).data_length_in_words;
+}
+
+uint32_t read_key(char* a_p_out, uint32_t a_length, void* a_p_user_data)
+{
+    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
+    return p_console_usart->receive_bytes_polling(a_p_out, a_length).data_length_in_words;
+}
+
+} // namespace ::
 
 int main()
 {
@@ -36,7 +60,8 @@ int main()
             USART::Oversampling::_16,
             USART::Stop_bits::_1,
             USART::Flow_control_flag::none,
-            USART::Sampling_method::three_sample_bit
+            USART::Sampling_method::three_sample_bit,
+            USART::Mode_flag::rx | USART::Mode_flag::tx
         };
 
         USART::Frame_format usart_frame_format
@@ -77,9 +102,10 @@ int main()
 
         if (true == usart_ready)
         {
-            Buffered_console console(&console_usart);
+            Console console({ write_character, &console_usart },
+                            { write_string,    &console_usart },
+                            { read_key,        &console_usart });
 
-            console.enable();
             console.write_line("CML Console sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             while (true)

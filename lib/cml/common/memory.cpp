@@ -12,19 +12,30 @@
 namespace cml {
 namespace common {
 
-void memory::copy(void* a_p_destination, const void* a_p_source, uint32_t a_size_in_bytes)
+uint32_t memory::copy(void* a_p_destination,
+                      uint32_t a_destination_capacity_in_bytes,
+
+                      const void* a_p_source,
+                      uint32_t a_source_size_in_bytes)
 {
-    assert(a_size_in_bytes > 0);
     assert(nullptr != a_p_destination);
+    assert(a_destination_capacity_in_bytes > 0);
+
     assert(nullptr != a_p_source);
+    assert(a_source_size_in_bytes > 0);
 
     uint8_t* p_destination  = static_cast<uint8_t*>(a_p_destination);
     const uint8_t* p_source = static_cast<const uint8_t*>(a_p_source);
 
-    for (decltype(a_size_in_bytes) i = 0; i < a_size_in_bytes; i++)
+    uint32_t length = a_destination_capacity_in_bytes > a_source_size_in_bytes ?
+                      a_source_size_in_bytes : a_destination_capacity_in_bytes;
+
+    for (uint32_t i = 0; i < length; i++)
     {
         p_destination[i] = p_source[i];
     }
+
+    return length;
 }
 
 void memory::move(void* a_p_destination, const void* a_p_source, uint32_t a_size_in_bytes)

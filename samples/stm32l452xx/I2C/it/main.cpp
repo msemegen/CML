@@ -15,10 +15,10 @@
 #include <cml/hal/peripherals/I2C.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/utils/delay.hpp>
-#include <cml/utils/Buffered_console.hpp>
+#include <cml/utils/Console.hpp>
 
-#define MASTER
-//#define SLAVE
+//#define MASTER
+#define SLAVE
 
 namespace
 {
@@ -26,7 +26,7 @@ namespace
     using namespace cml::hal::peripherals;
     using namespace cml::utils;
 
-void print_status(Buffered_console* a_p_console,
+void print_status(Console* a_p_console,
                   const char* a_p_tag,
                   I2C_base::Bus_status_flag a_bus_status,
                   uint32_t a_bytes)
@@ -228,6 +228,24 @@ bool bus_status_callback(I2C_base::Bus_status_flag a_bus_status, void*)
     return true;
 }
 
+uint32_t write_character(char a_character, void* a_p_user_data)
+{
+    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
+    return p_console_usart->transmit_bytes_polling(&a_character, 1).data_length_in_words;
+}
+
+uint32_t write_string(const char* a_p_string, uint32_t a_length, void* a_p_user_data)
+{
+    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
+    return p_console_usart->transmit_bytes_polling(a_p_string, a_length).data_length_in_words;
+}
+
+uint32_t read_key(char* a_p_out, uint32_t a_length, void* a_p_user_data)
+{
+    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
+    return p_console_usart->receive_bytes_polling(a_p_out, a_length).data_length_in_words;
+}
+
 } // namespace ::
 
 int main()
@@ -292,7 +310,8 @@ int main()
                                                   USART::Oversampling::_16,
                                                   USART::Stop_bits::_1,
                                                   USART::Flow_control_flag::none,
-                                                  USART::Sampling_method::three_sample_bit
+                                                  USART::Sampling_method::three_sample_bit,
+                                                  USART::Mode_flag::tx
                                                 },
 
                                                 { USART::Word_length::_8_bit,
@@ -308,9 +327,9 @@ int main()
         {
 #if defined MASTER && !defined SLAVE
 
-            Buffered_console console(&console_usart);
-
-            console.enable();
+            Console console({ write_character, &console_usart },
+                            { write_string,    &console_usart },
+                            { read_key,        &console_usart });
             console.write_line("CML I2C master sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             I2C_master i2c_master_bus(I2C_master::Id::_1);
@@ -362,9 +381,9 @@ int main()
 
 #if defined SLAVE && !defined MASTER
 
-            Buffered_console console(&console_usart);
-
-            console.enable();
+            Console console({ write_character, &console_usart },
+                            { write_string,    &console_usart },
+                            { read_key,        &console_usart });
             console.write_line("CML I2C slave sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             I2C_slave i2c_slave_bus(I2C_slave::Id::_1);
@@ -379,7 +398,7 @@ int main()
             {
                 i2c_slave_bus.register_receive_callback({ rx_callback, &(rx_context) }, rx_context.get_length());
                 while (false == rx_context.is_stop() && I2C_slave::Bus_status_flag::ok == bus_status);
-                uint32 r = rx_context.get_i();
+                uint32_t r = rx_context.get_i();
 
                 if (true == rx_context.is_full() && I2C_slave::Bus_status_flag::ok == bus_status)
                 {

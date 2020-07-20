@@ -143,7 +143,7 @@ struct cstring
 
         a_p_buffer[ret] = 0;
         reverse(a_p_buffer, ret);
-        
+
         return ret;
     }
 
@@ -188,13 +188,13 @@ private:
         Argument(Argument&& a_other)
             : type(a_other.type)
         {
-            memory::copy(this->data, a_other.data, sizeof(a_other.data));
+            memory::copy(this->data, sizeof(this->data), a_other.data, sizeof(a_other.data));
         }
 
         Argument(const Argument& a_other)
             : type(a_other.type)
         {
-            memory::copy(this->data, a_other.data, sizeof(a_other.data));
+            memory::copy(this->data, sizeof(this->data), a_other.data, sizeof(a_other.data));
         }
 
         static_assert(sizeof(unsigned int) == sizeof(uint32_t));

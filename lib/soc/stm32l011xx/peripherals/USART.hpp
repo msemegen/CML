@@ -49,12 +49,19 @@ public:
         unknown
     };
 
-    enum class Flow_control_flag: uint32_t
+    enum class Flow_control_flag : uint32_t
     {
         none                          = 0x0u,
         request_to_send               = USART_CR3_RTSE,
         clear_to_send                 = USART_CR3_CTSE,
         unknown
+    };
+
+    enum class Mode_flag : uint32_t
+    {
+        tx      = USART_CR1_TE,
+        rx      = USART_CR1_RE,
+        unknown = 0x0u
     };
 
     enum class Sampling_method : uint32_t
@@ -88,7 +95,6 @@ public:
         overrun        = 0x4,
         noise_detected = 0x8,
         unknown        = 0x10
-
     };
 
     struct Frame_format
@@ -104,6 +110,7 @@ public:
         Stop_bits stop_bits             = Stop_bits::unknown;
         Flow_control_flag flow_control  = Flow_control_flag::unknown;
         Sampling_method sampling_method = Sampling_method::unknown;
+        Mode_flag mode                  = Mode_flag::unknown;
     };
 
     struct Clock
@@ -172,7 +179,7 @@ public:
                 const Frame_format& a_frame_format,
                 const Clock& a_clock,
                 uint32_t a_irq_priority,
-                cml::time::tick a_timeout);
+                cml::time::tick a_timeout_ms);
 
     void disable();
 
@@ -224,6 +231,7 @@ public:
     void set_flow_control(Flow_control_flag a_flow_control);
     void set_sampling_method(Sampling_method a_sampling_method);
     void set_frame_format(const Frame_format& a_frame_format);
+    bool set_mode(Mode_flag a_mode, cml::time::tick a_timeout_ms);
 
     bool is_transmit_callback_registered() const
     {
@@ -244,6 +252,7 @@ public:
     Stop_bits         get_stop_bits()       const;
     Flow_control_flag get_flow_control()    const;
     Sampling_method   get_sampling_method() const;
+    Mode_flag         get_mode()            const;
 
     bool is_enabled() const;
 
@@ -310,6 +319,22 @@ constexpr USART::Flow_control_flag operator & (USART::Flow_control_flag a_f1, US
 }
 
 constexpr USART::Flow_control_flag operator |= (USART::Flow_control_flag& a_f1, USART::Flow_control_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
+
+constexpr USART::Mode_flag operator | (USART::Mode_flag a_f1, USART::Mode_flag a_f2)
+{
+    return static_cast<USART::Mode_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+}
+
+constexpr USART::Mode_flag operator & (USART::Mode_flag a_f1, USART::Mode_flag a_f2)
+{
+    return static_cast<USART::Mode_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+}
+
+constexpr USART::Mode_flag operator |= (USART::Mode_flag& a_f1, USART::Mode_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;
