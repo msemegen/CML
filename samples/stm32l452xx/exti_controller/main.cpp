@@ -15,9 +15,9 @@ namespace {
 
 using namespace cml::hal::peripherals;
 
-bool exti_callback(Input_pin::Level, void* a_p_user_data)
+bool exti_callback(pin::Level, void* a_p_user_data)
 {
-    reinterpret_cast<Output_pin*>(a_p_user_data)->toggle_level();
+    reinterpret_cast<pin::Out*>(a_p_user_data)->toggle_level();
     return true;
 }
 
@@ -48,15 +48,16 @@ int main()
         gpio_port_a.enable();
         gpio_port_c.enable();
 
-        Output_pin led_pin(&gpio_port_a, 5u);
-        led_pin.enable({ Output_pin::Mode::push_pull, Output_pin::Pull::down, Output_pin::Speed::low });
-        led_pin.set_level(Output_pin::Level::low);
+        pin::Out led_pin;
+        pin::In  button_pin;
 
-        Input_pin button(&gpio_port_c, 13u);
-        button.enable(Input_pin::Pull::none);
+        pin::out::enable(&gpio_port_a, 5u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
+        pin::in::enable(&gpio_port_c, 13u, pin::Pull::none, &button_pin);
+
+        led_pin.set_level(pin::Level::low);
 
         exti_controller::enable(0x5u);
-        exti_controller::register_callback(&button, 
+        exti_controller::register_callback(&button_pin, 
                                            exti_controller::Interrupt_mode::rising,
                                            { exti_callback, &led_pin });
 

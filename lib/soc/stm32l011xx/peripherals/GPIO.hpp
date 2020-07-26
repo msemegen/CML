@@ -22,16 +22,14 @@ namespace soc {
 namespace stm32l011xx {
 namespace peripherals {
 
-class GPIO : private cml::Non_copyable
+struct pin
 {
-public:
+    pin()            = delete;
+    pin(pin&&)       = delete;
+    pin(const pin&&) = delete;
 
-    enum class Id : uint32_t
-    {
-        a = 0,
-        b = 1,
-        c = 2,
-    };
+    pin& operator = (pin&&)      = delete;
+    pin& operator = (const pin&) = delete;
 
     enum class Level : uint32_t
     {
@@ -61,6 +59,177 @@ public:
         high    = 0x2u,
         ultra   = 0x3u,
         unknown
+    };
+
+    class In : private cml::Non_copyable
+    {
+    public:
+
+        In(GPIO* a_p_port, uint8_t a_pin)
+            : p_port(a_p_port)
+            , pin(a_pin)
+        {
+            assert(nullptr != a_p_port);
+            assert(a_pin < 16);
+        }
+
+        ~In()
+        {
+            this->disable();
+        }
+
+        void enable(Pull a_pull);
+        void disable();
+
+        void set_pull(Pull a_pull);
+
+        Pull  get_pull() const;
+        Level get_level() const;
+
+        GPIO* get_port() const
+        {
+            return this->p_port;
+        }
+
+        uint8_t get_pin() const
+        {
+            return this->pin;
+        }
+
+    private:
+
+        GPIO* p_port;
+        const uint8_t pin;
+    };
+
+    class Out : private cml::Non_copyable
+    {
+    public:
+
+        struct Config
+        {
+            Mode  mode = Mode::unknown;
+            Pull  pull = Pull::unknown;
+            Speed speed = Speed::unknown;
+        };
+
+    public:
+
+        Out(GPIO* a_p_port, uint8_t a_pin)
+            : p_port(a_p_port)
+            , pin(a_pin)
+        {
+            assert(nullptr != a_p_port);
+            assert(a_pin < 16);
+        }
+
+        ~Out()
+        {
+            this->disable();
+        }
+
+        void enable(const Config& a_config);
+        void disable();
+
+        void set_level(Level a_level);
+        void toggle_level();
+
+        void set_mode(Mode a_mode);
+        void set_pull(Pull a_pull);
+        void set_speed(Speed a_speed);
+
+        Level get_level() const;
+        Mode  get_mode()  const;
+        Pull  get_pull()  const;
+        Speed get_speed() const;
+
+        GPIO* get_port() const
+        {
+            return this->p_port;
+        }
+
+        uint8_t get_pin() const
+        {
+            return this->pin;
+        }
+
+    private:
+
+        GPIO* p_port;
+        const uint8_t pin;
+    };
+
+    class Analog : private cml::Non_copyable
+    {
+    public:
+
+        Analog(GPIO* a_p_port, uint8_t a_pin)
+            : p_port(a_p_port)
+            , pin(a_pin)
+        {
+            assert(nullptr != a_p_port);
+            assert(a_pin < 16);
+        }
+
+        void enable(Pull a_pull);
+        void disable();
+
+        void set_pull(Pull a_pull);
+
+        Pull get_pull() const;
+
+        GPIO* get_port() const
+        {
+            return this->p_port;
+        }
+
+        uint8_t get_pin() const
+        {
+            return this->pin;
+        }
+
+    private:
+
+        GPIO* p_port;
+        const uint8_t pin;
+    };
+
+    class af_controller
+    {
+    public:
+
+        struct Config
+        {
+            Mode mode   = Mode::unknown;
+            Pull pull   = Pull::unknown;
+            Speed speed = Speed::unknown;
+
+            uint32_t function = 0;
+        };
+
+    public:
+
+        af_controller()                      = delete;
+        af_controller(af_controller&&)       = delete;
+        af_controller(const af_controller&&) = delete;
+
+        af_controller& operator = (af_controller&&)      = delete;
+        af_controller& operator = (const af_controller&) = delete;
+
+        static void enable(GPIO* a_p_port, uint32_t a_pin, const Config& a_config);
+        static void disable(GPIO* a_p_port, uint32_t a_pin);
+    };
+};
+
+class GPIO : private cml::Non_copyable
+{
+public:
+
+    enum class Id : uint32_t
+    {
+        a = 0,
+        b = 1,
+        c = 2,
     };
 
 public:
@@ -121,238 +290,10 @@ private:
 
 private:
 
-    friend class Output_pin;
-    friend class Input_pin;
-    friend class Alternate_function_pin;
-    friend class Analog_pin;
-};
-
-class Output_pin : private cml::Non_copyable
-{
-public:
-
-    using Mode  = GPIO::Mode;
-    using Pull  = GPIO::Pull;
-    using Speed = GPIO::Speed;
-    using Level = GPIO::Level;
-
-    struct Config
-    {
-        Mode  mode  = Mode::unknown;
-        Pull  pull  = Pull::unknown;
-        Speed speed = Speed::unknown;
-    };
-
-public:
-
-    Output_pin(GPIO* a_p_port, uint8_t a_pin)
-        : p_port(a_p_port)
-        , pin(a_pin)
-    {
-        assert(nullptr != a_p_port);
-        assert(a_pin < 16);
-    }
-
-    ~Output_pin()
-    {
-        this->disable();
-    }
-
-    void enable(const Config& a_config);
-    void disable();
-
-    void set_level(Level a_level);
-    void toggle_level();
-
-    void set_mode(Mode a_mode);
-    void set_pull(Pull a_pull);
-    void set_speed(Speed a_speed);
-
-    Level get_level() const;
-    Mode  get_mode()  const;
-    Pull  get_pull()  const;
-    Speed get_speed() const;
-
-    GPIO* get_port() const
-    {
-        return this->p_port;
-    }
-
-    uint8_t get_pin() const
-    {
-        return this->pin;
-    }
-
-private:
-
-    GPIO* p_port;
-    const uint8_t pin;
-};
-
-class Input_pin : private cml::Non_copyable
-{
-public:
-
-    using Pull  = GPIO::Pull;
-    using Level = GPIO::Level;
-
-public:
-
-    Input_pin(GPIO* a_p_port, uint8_t a_pin)
-        : p_port(a_p_port)
-        , pin(a_pin)
-    {
-        assert(nullptr != a_p_port);
-        assert(a_pin < 16);
-    }
-
-    ~Input_pin()
-    {
-        this->disable();
-    }
-
-    Input_pin()                 = delete;
-    Input_pin(Input_pin&&)      = default;
-    Input_pin(const Input_pin&) = default;
-
-    Input_pin& operator = (Input_pin&&)      = default;
-    Input_pin& operator = (const Input_pin&) = default;
-
-    void enable(Pull a_pull);
-    void disable();
-
-    void set_pull(Pull a_pull);
-
-    Pull  get_pull() const;
-    Level get_level() const;
-
-    GPIO* get_port() const
-    {
-        return this->p_port;
-    }
-
-    uint8_t get_pin() const
-    {
-        return this->pin;
-    }
-
-private:
-
-    GPIO* p_port;
-    const uint8_t pin;
-};
-
-class Alternate_function_pin : private cml::Non_copyable
-{
-public:
-
-    using Mode  = GPIO::Mode;
-    using Pull  = GPIO::Pull;
-    using Speed = GPIO::Speed;
-
-    struct Config
-    {
-        Mode mode         = GPIO::Mode::unknown;
-        Pull pull         = GPIO::Pull::unknown;
-        Speed speed       = GPIO::Speed::unknown;
-        uint32_t function = 0;
-    };
-
-public:
-
-    Alternate_function_pin(GPIO* a_p_port, uint8_t a_pin)
-        : p_port(a_p_port)
-        , pin(a_pin)
-        , function(0)
-    {
-        assert(nullptr != a_p_port);
-        assert(a_pin < 16);
-    }
-
-    ~Alternate_function_pin()
-    {
-        this->disable();
-    }
-
-    Alternate_function_pin()                              = delete;
-    Alternate_function_pin(Alternate_function_pin&&)      = default;
-    Alternate_function_pin(const Alternate_function_pin&) = default;
-
-    Alternate_function_pin& operator = (Alternate_function_pin&&)      = default;
-    Alternate_function_pin& operator = (const Alternate_function_pin&) = default;
-
-    void enable(const Config& a_config);
-    void disable();
-
-    void set_mode(Mode a_mode);
-    void set_pull(Pull a_pull);
-    void set_speed(Speed a_speed);
-    void set_function(uint32_t a_function);
-
-    Mode  get_mode()  const;
-    Pull  get_pull()  const;
-    Speed get_speed() const;
-
-    uint32_t get_function() const
-    {
-        return this->function;
-    }
-
-    GPIO* get_port() const
-    {
-        return this->p_port;
-    }
-
-    uint8_t get_pin() const
-    {
-        return this->pin;
-    }
-
-private:
-
-    GPIO* p_port;
-    const uint8_t pin;
-
-    uint32_t function;
-};
-
-class Analog_pin : private cml::Non_copyable
-{
-public:
-
-    using Pull = GPIO::Pull;
-
-public:
-
-    Analog_pin(GPIO* a_p_port, uint8_t a_pin)
-        : p_port(a_p_port)
-        , pin(a_pin)
-    {
-        assert(nullptr != a_p_port);
-        assert(a_pin < 16);
-    }
-
-    void enable(Pull a_pull);
-    void disable();
-
-    void set_pull(Pull a_pull);
-
-    Pull get_pull() const;
-
-    GPIO* get_port() const
-    {
-        return this->p_port;
-    }
-
-    uint8_t get_pin() const
-    {
-        return this->pin;
-    }
-
-private:
-
-    GPIO* p_port;
-    const uint8_t pin;
+    friend pin::In;
+    friend pin::Out;
+    friend pin::Analog;
+    friend pin::af_controller;
 };
 
 } // namespace peripherals

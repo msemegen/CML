@@ -77,11 +77,11 @@ int main()
             mcu::get_sysclk_frequency_hz(),
         };
 
-        Alternate_function_pin::Config usart_pin_config =
+        pin::af::Config usart_pin_config =
         {
-            Alternate_function_pin::Mode::push_pull,
-            Alternate_function_pin::Pull::up,
-            Alternate_function_pin::Speed::low,
+            pin::Mode::push_pull,
+            pin::Pull::up,
+            pin::Speed::low,
             0x7u
         };
 
@@ -93,11 +93,8 @@ int main()
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        Alternate_function_pin console_usart_TX_pin(&gpio_port_a, 2);
-        Alternate_function_pin console_usart_RX_pin(&gpio_port_a, 3);
-
-        console_usart_TX_pin.enable(usart_pin_config);
-        console_usart_RX_pin.enable(usart_pin_config);
+        pin::af::enable(&gpio_port_a, 2u, usart_pin_config);
+        pin::af::enable(&gpio_port_a, 3u, usart_pin_config);
 
         USART console_usart(USART::Id::_2);
         bool usart_ready = console_usart.enable(usart_config, usart_frame_format, usart_clock, 0x1u, 10);

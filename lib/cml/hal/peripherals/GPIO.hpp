@@ -20,11 +20,8 @@ namespace hal {
 namespace peripherals {
 
 #ifdef STM32L452xx
-using GPIO                   = soc::stm32l452xx::peripherals::GPIO;
-using Output_pin             = soc::stm32l452xx::peripherals::Output_pin;
-using Input_pin              = soc::stm32l452xx::peripherals::Input_pin;
-using Alternate_function_pin = soc::stm32l452xx::peripherals::Alternate_function_pin;
-using Analog_pin             = soc::stm32l452xx::peripherals::Analog_pin;
+using GPIO = soc::stm32l452xx::peripherals::GPIO;
+using pin  = soc::stm32l452xx::peripherals::pin;
 #endif // STM32L452xx
 
 #ifdef STM32L011xx

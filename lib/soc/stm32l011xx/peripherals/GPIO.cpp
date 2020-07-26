@@ -9,6 +9,7 @@
 
 //this
 #include <soc/stm32l011xx/peripherals/GPIO.hpp>
+#include "..\..\stm32l452xx\peripherals\GPIO.hpp"
 
 namespace {
 
