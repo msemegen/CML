@@ -21,12 +21,13 @@ namespace
 using namespace cml;
 using namespace cml::collection;
 using namespace cml::common;
+using namespace cml::hal;
 using namespace cml::hal::peripherals;
 using namespace cml::utils;
 
 void led_cli_callback(const Vector<Command_line::Callback::Parameter>& a_params, void* a_p_user_data)
 {
-    Output_pin* p_led_pin = reinterpret_cast<Output_pin*>(a_p_user_data);
+    pin::Out* p_led_pin = reinterpret_cast<pin::Out*>(a_p_user_data);
 
     if (2 == a_params.get_length())
     {
@@ -34,7 +35,7 @@ void led_cli_callback(const Vector<Command_line::Callback::Parameter>& a_params,
 
         if (true == is_on)
         {
-            p_led_pin->set_level(Output_pin::Level::high);
+            p_led_pin->set_level(pin::Level::high);
         }
         else
         {
@@ -42,10 +43,15 @@ void led_cli_callback(const Vector<Command_line::Callback::Parameter>& a_params,
 
             if (true == is_off)
             {
-                p_led_pin->set_level(Output_pin::Level::low);
+                p_led_pin->set_level(pin::Level::low);
             }
         }
     }
+}
+
+void reset_callback(const Vector<Command_line::Callback::Parameter>& a_params, void* a_p_user_data)
+{
+    mcu::reset();
 }
 
 uint32_t write_character(char a_character, void* a_p_user_data)
@@ -103,11 +109,11 @@ int main()
             mcu::get_sysclk_frequency_hz(),
         };
 
-        Alternate_function_pin::Config usart_pin_config =
+        pin::af::Config usart_pin_config =
         {
-            Alternate_function_pin::Mode::push_pull,
-            Alternate_function_pin::Pull::up,
-            Alternate_function_pin::Speed::low,
+            pin::Mode::push_pull,
+            pin::Pull::up,
+            pin::Speed::low,
             0x4u
         };
 
@@ -119,11 +125,8 @@ int main()
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        Alternate_function_pin console_usart_TX_pin(&gpio_port_a, 2);
-        Alternate_function_pin console_usart_RX_pin(&gpio_port_a, 15);
-
-        console_usart_TX_pin.enable(usart_pin_config);
-        console_usart_RX_pin.enable(usart_pin_config);
+        pin::af::enable(&gpio_port_a, 2u, usart_pin_config);
+        pin::af::enable(&gpio_port_a, 15u, usart_pin_config);
 
         USART console_usart(USART::Id::_2);
         bool usart_ready = console_usart.enable(usart_config, usart_frame_format, usart_clock, 0x1u, 10);
@@ -133,8 +136,8 @@ int main()
             GPIO gpio_port_b(GPIO::Id::b);
             gpio_port_b.enable();
 
-            Output_pin led_pin(&gpio_port_b, 3);
-            led_pin.enable({ Output_pin::Mode::push_pull, Output_pin::Pull::down, Output_pin::Speed::low });
+            pin::Out led_pin;
+            pin::out::enable(&gpio_port_b, 3u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
 
             char preamble[36];
             cstring::format(preamble,
@@ -151,6 +154,7 @@ int main()
                                       "Command not found");
 
             command_line.register_callback({ "led", led_cli_callback, &led_pin });
+            command_line.register_callback({ "reset", reset_callback, nullptr });
             command_line.write_prompt();
 
             while (true)

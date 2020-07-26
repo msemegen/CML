@@ -30,7 +30,7 @@ void print_assert(void* a_p_user_data,
                   uint32_t a_line,
                   const char* a_p_expression)
 {
-    reinterpret_cast<Logger*>(a_p_user_data)->omg("%s : %u -> %s", a_p_file, a_line, a_p_expression);
+    reinterpret_cast<Logger*>(a_p_user_data)->omg("%s : %u -> %s\n", a_p_file, a_line, a_p_expression);
 }
 
 void halt(void*)
@@ -86,11 +86,11 @@ int main()
             mcu::get_sysclk_frequency_hz()
         };
 
-        Alternate_function_pin::Config usart_pin_config =
+        pin::af::Config usart_pin_config =
         {
-            Alternate_function_pin::Mode::push_pull,
-            Alternate_function_pin::Pull::up,
-            Alternate_function_pin::Speed::ultra,
+            pin::Mode::push_pull,
+            pin::Pull::up,
+            pin::Speed::ultra,
             0x4u
         };
 
@@ -102,11 +102,8 @@ int main()
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        Alternate_function_pin console_usart_tx_pin(&gpio_port_a, 2);
-        Alternate_function_pin console_usart_rx_pin(&gpio_port_a, 15);
-
-        console_usart_tx_pin.enable(usart_pin_config);
-        console_usart_rx_pin.enable(usart_pin_config);
+        pin::af::enable(&gpio_port_a, 2u, usart_pin_config);
+        pin::af::enable(&gpio_port_a, 15u, usart_pin_config);
 
         USART console_usart(USART::Id::_2);
         console_usart.enable(usart_config, usart_frame_format, usart_clock, 0x1u, 10);

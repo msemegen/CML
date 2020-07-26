@@ -17,8 +17,8 @@
 #include <cml/utils/delay.hpp>
 #include <cml/utils/Console.hpp>
 
-//#define MASTER
-#define SLAVE
+#define MASTER
+//#define SLAVE
 
 namespace
 {
@@ -127,35 +127,27 @@ int main()
         gpio_port_a.enable();
         gpio_port_b.enable();
 
-        Alternate_function_pin console_usart_tx_pin(&gpio_port_a, 2);
-        Alternate_function_pin console_usart_rx_pin(&gpio_port_a, 3);
+        pin::af::Config usart_pin_config =
+        {
+            pin::Mode::push_pull,
+            pin::Pull::up,
+            pin::Speed::low,
+            0x7u
+        };
 
-        Alternate_function_pin i2c_scl_pin(&gpio_port_b, 8);
-        Alternate_function_pin i2c_sda_pin(&gpio_port_b, 9);
+        pin::af::Config i2c_pin_config =
+        {
+            pin::Mode::open_drain,
+            pin::Pull::up,
+            pin::Speed::high,
+            0x4u
+        };
 
-        console_usart_tx_pin.enable({ Alternate_function_pin::Mode::push_pull,
-                                      Alternate_function_pin::Pull::up,
-                                      Alternate_function_pin::Speed::low,
-                                      0x7u
-                                   });
+        pin::af::enable(&gpio_port_a, 2u, usart_pin_config);
+        pin::af::enable(&gpio_port_a, 3u, usart_pin_config);
 
-        console_usart_rx_pin.enable({ Alternate_function_pin::Mode::push_pull,
-                                      Alternate_function_pin::Pull::up,
-                                      Alternate_function_pin::Speed::low,
-                                      0x7u
-                                   });
-
-        i2c_scl_pin.enable({ Alternate_function_pin::Mode::open_drain,
-                             Alternate_function_pin::Pull::up,
-                             Alternate_function_pin::Speed::high,
-                             0x4u
-                          });
-
-        i2c_sda_pin.enable({ Alternate_function_pin::Mode::open_drain,
-                             Alternate_function_pin::Pull::up,
-                             Alternate_function_pin::Speed::high,
-                             0x4u
-                          });
+        pin::af::enable(&gpio_port_b, 8u, i2c_pin_config);
+        pin::af::enable(&gpio_port_b, 9u, i2c_pin_config);
 
         USART console_usart(USART::Id::_2);
         bool usart_ready = console_usart.enable({ 115200u,

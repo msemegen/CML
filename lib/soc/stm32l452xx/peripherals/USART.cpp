@@ -386,6 +386,8 @@ bool USART::enable(const Config& a_config,
     uint32_t wait_flag = (true == is_flag(USART2->CR1, USART_CR1_RE) ? USART_ISR_REACK : 0) |
                          (true == is_flag(USART2->CR1, USART_CR1_TE) ? USART_ISR_TEACK : 0);
 
+
+
     return wait::until(&(USART2->ISR), wait_flag, false, start, a_timeout_ms);
 }
 
@@ -843,7 +845,7 @@ bool USART::is_enabled() const
 
 bool RS485::enable(const Config& a_config,
                    const USART::Clock& a_clock,
-                   Output_pin* a_p_flow_control_pin,
+                   pin::Out* a_p_flow_control_pin,
                    uint32_t a_irq_priority,
                    time::tick a_timeout)
 {
@@ -910,7 +912,7 @@ bool RS485::enable(const Config& a_config,
 
     if (true == ret)
     {
-        this->p_flow_control_pin->set_level(Output_pin::Level::low);
+        this->p_flow_control_pin->set_level(pin::Level::low);
     }
     else
     {
@@ -954,7 +956,7 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address, const void* a_p_d
     bool error = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
-    this->p_flow_control_pin->set_level(Output_pin::Level::high);
+    this->p_flow_control_pin->set_level(pin::Level::high);
 
     while (false == is_flag(this->p_usart->ISR, USART_ISR_TC) && false == error)
     {
@@ -975,7 +977,7 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address, const void* a_p_d
         error = is_USART_ISR_error(this->p_usart->ISR);
     }
 
-    this->p_flow_control_pin->set_level(Output_pin::Level::low);
+    this->p_flow_control_pin->set_level(pin::Level::low);
 
     if (true == error)
     {
@@ -1008,7 +1010,7 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address,
     bool error     = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
-    this->p_flow_control_pin->set_level(Output_pin::Level::high);
+    this->p_flow_control_pin->set_level(pin::Level::high);
 
     while (false == is_flag(this->p_usart->ISR, USART_ISR_TC) &&
            false ==  error &&
@@ -1031,7 +1033,7 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address,
         error = is_USART_ISR_error(this->p_usart->ISR);
     }
 
-    this->p_flow_control_pin->set_level(Output_pin::Level::low);
+    this->p_flow_control_pin->set_level(pin::Level::low);
 
     if (true == error)
     {
@@ -1162,7 +1164,7 @@ void RS485::register_transmit_callback(const TX_callback& a_callback)
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
     set_flag(&(this->p_usart->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
 
-    this->p_flow_control_pin->set_level(Output_pin::Level::high);
+    this->p_flow_control_pin->set_level(pin::Level::high);
 }
 
 void RS485::register_receive_callback(const RX_callback& a_callback)
@@ -1197,7 +1199,7 @@ void RS485::unregister_transmit_callback()
     assert(nullptr != controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
 
-    this->p_flow_control_pin->set_level(Output_pin::Level::low);
+    this->p_flow_control_pin->set_level(pin::Level::low);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
 

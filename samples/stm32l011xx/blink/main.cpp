@@ -38,10 +38,10 @@ int main()
         GPIO gpio_port_b(GPIO::Id::b);
         gpio_port_b.enable();
 
-        Output_pin led_pin(&gpio_port_b, 3u);
-        led_pin.enable({ Output_pin::Mode::push_pull, Output_pin::Pull::down, Output_pin::Speed::low });
+        pin::Out led_pin;
+        pin::out::enable(&gpio_port_b, 3u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
 
-        led_pin.set_level(Output_pin::Level::low);
+        led_pin.set_level(pin::Level::low);
 
         while (true)
         {
