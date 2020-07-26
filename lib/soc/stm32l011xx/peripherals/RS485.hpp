@@ -8,6 +8,7 @@
 */
 
 //soc
+#include <soc/stm32l011xx/peripherals/GPIO.hpp>
 #include <soc/stm32l011xx/peripherals/USART.hpp>
 
 //cml
@@ -17,8 +18,6 @@
 namespace soc {
 namespace stm32l011xx {
 namespace peripherals {
-
-class Output_pin;
 
 class RS485 : public cml::Non_copyable
 {
@@ -55,7 +54,7 @@ public:
 
     bool enable(const Config& a_config,
                 const USART::Clock& a_clock,
-                Output_pin* a_p_flow_control_pin,
+                pin::Out* a_p_flow_control_pin,
                 uint32_t a_irq_priority,
                 cml::time::tick a_timeout);
 
@@ -127,7 +126,7 @@ public:
 
 private:
 
-    Output_pin* p_flow_control_pin;
+    pin::Out* p_flow_control_pin;
 
     TX_callback tx_callback;
     RX_callback rx_callback;

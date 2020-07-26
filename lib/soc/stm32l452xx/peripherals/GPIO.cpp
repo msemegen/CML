@@ -169,7 +169,6 @@ void pin::Out::set_mode(Mode a_mode)
     assert(Mode::unknown != a_mode);
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-
     set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
              0x1u << this->id,
              static_cast<uint32_t>(a_mode) << this->id);
@@ -180,7 +179,6 @@ void pin::Out::set_pull(Pull a_pull)
     assert(Pull::unknown != a_pull);
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-
     set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
              0x3u << (this->id * 2),
              static_cast<uint32_t>(a_pull) << (this->id * 2));
@@ -190,7 +188,6 @@ void pin::Out::set_speed(Speed a_speed)
 {
     assert(Speed::unknown != a_speed);
     assert(nullptr != this->p_port && 0xFF != this->id);
-
 
     set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR), 0x3u << (this->id * 2),
              static_cast<uint32_t>(a_speed) << (this->id * 2));
@@ -418,7 +415,6 @@ void pin::analog::enable(GPIO* a_p_port, uint32_t a_id, Pull a_pull, Analog* a_p
     {
         a_p_out_pin->id     = a_id;
         a_p_out_pin->p_port = a_p_port;
-
     }
 }
 

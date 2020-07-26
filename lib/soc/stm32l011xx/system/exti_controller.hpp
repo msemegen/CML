@@ -29,7 +29,7 @@ public:
 
     struct Callback
     {
-        using Function = bool(*)(peripherals::Input_pin::Level a_level, void* a_p_user_data);
+        using Function = bool(*)(peripherals::pin::Level a_level, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -47,11 +47,11 @@ public:
     static void enable(uint32_t a_priority);
     static void disable();
 
-    static void register_callback(peripherals::Input_pin* a_p_pin,
+    static void register_callback(peripherals::pin::In* a_p_pin,
                                   Interrupt_mode a_mode,
                                   const Callback& a_callback);
 
-    static void unregister_callback(const peripherals::Input_pin& a_pin);
+    static void unregister_callback(const peripherals::pin::In& a_pin);
 };
 
 constexpr exti_controller::Interrupt_mode operator | (exti_controller::Interrupt_mode a_f1,

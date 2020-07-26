@@ -26,7 +26,7 @@ using namespace soc::stm32l011xx::system;
 struct Handler
 {
     exti_controller::Callback callback;
-    Input_pin const* p_pin = nullptr;
+    pin::In const* p_pin = nullptr;
 };
 
 Handler handlers[16];
@@ -111,32 +111,32 @@ void exti_controller::disable()
     NVIC_DisableIRQ(EXTI4_15_IRQn);
 }
 
-void exti_controller::register_callback(Input_pin* a_p_pin,
+void exti_controller::register_callback(pin::In* a_p_pin,
                                         Interrupt_mode a_mode,
                                         const Callback& a_callback)
 {
     assert(nullptr != a_p_pin);
     assert(true == mcu::is_syscfg_enabled());
-    assert(nullptr == handlers[static_cast<uint32_t>(a_p_pin->get_pin())].callback.function);
+    assert(nullptr == handlers[static_cast<uint32_t>(a_p_pin->get_id())].callback.function);
 
-    set_flag(&(SYSCFG->EXTICR[a_p_pin->get_pin() / 4u]),
-            (static_cast<uint32_t>(a_p_pin->get_port()->get_id()) << ((static_cast<uint32_t>(a_p_pin->get_pin()) % 4u) * 4u)));
+    set_flag(&(SYSCFG->EXTICR[a_p_pin->get_id() / 4u]),
+            (static_cast<uint32_t>(a_p_pin->get_port()->get_id()) << ((static_cast<uint32_t>(a_p_pin->get_id()) % 4u) * 4u)));
 
-    clear_bit(&(EXTI->RTSR), a_p_pin->get_pin());
-    clear_bit(&(EXTI->FTSR), a_p_pin->get_pin());
-    set_bit(&(EXTI->IMR), a_p_pin->get_pin());
+    clear_bit(&(EXTI->RTSR), a_p_pin->get_id());
+    clear_bit(&(EXTI->FTSR), a_p_pin->get_id());
+    set_bit(&(EXTI->IMR), a_p_pin->get_id());
 
     switch (a_mode)
     {
         case Interrupt_mode::rising:
         {
-            set_bit(&(EXTI->RTSR), a_p_pin->get_pin());
+            set_bit(&(EXTI->RTSR), a_p_pin->get_id());
         }
         break;
 
         case Interrupt_mode::falling:
         {
-            set_bit(&(EXTI->FTSR), a_p_pin->get_pin());
+            set_bit(&(EXTI->FTSR), a_p_pin->get_id());
         }
         break;
 
@@ -144,24 +144,24 @@ void exti_controller::register_callback(Input_pin* a_p_pin,
         {
             if ((Interrupt_mode::rising | Interrupt_mode::falling) == a_mode)
             {
-                set_bit(&(EXTI->RTSR), a_p_pin->get_pin());
-                set_bit(&(EXTI->FTSR), a_p_pin->get_pin());
+                set_bit(&(EXTI->RTSR), a_p_pin->get_id());
+                set_bit(&(EXTI->FTSR), a_p_pin->get_id());
             }
         }
     }
 
-    handlers[a_p_pin->get_pin()] = { a_callback, a_p_pin };
+    handlers[a_p_pin->get_id()] = { a_callback, a_p_pin };
 }
 
-void exti_controller::unregister_callback(const Input_pin& a_pin)
+void exti_controller::unregister_callback(const pin::In& a_pin)
 {
-    clear_bit(&(EXTI->RTSR), a_pin.get_pin());
-    clear_bit(&(EXTI->FTSR), a_pin.get_pin());
+    clear_bit(&(EXTI->RTSR), a_pin.get_id());
+    clear_bit(&(EXTI->FTSR), a_pin.get_id());
 
-    clear_flag(&(SYSCFG->EXTICR[a_pin.get_pin() / 4u]),
-               (static_cast<uint32_t>(a_pin.get_port()->get_id()) << ((static_cast<uint32_t>(a_pin.get_pin()) % 4u) * 4u)));
+    clear_flag(&(SYSCFG->EXTICR[a_pin.get_id() / 4u]),
+               (static_cast<uint32_t>(a_pin.get_port()->get_id()) << ((static_cast<uint32_t>(a_pin.get_id()) % 4u) * 4u)));
 
-    handlers[a_pin.get_pin()] = { { nullptr, nullptr }, nullptr };
+    handlers[a_pin.get_id()] = { { nullptr, nullptr }, nullptr };
 }
 
 } // namespace system
