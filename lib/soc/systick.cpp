@@ -21,6 +21,9 @@
 //cml
 #include <cml/bit.hpp>
 
+//soc
+#include <soc/interrupt_guard.hpp>
+
 namespace
 {
 
@@ -66,11 +69,13 @@ void systick::disable()
 
 void systick::register_tick_callback(const Tick_callback& a_callback)
 {
+    Interrupt_guard guard;
     callback = a_callback;
 }
 
 void systick::unregister_tick_callback()
 {
+    Interrupt_guard guard;
     callback.function    = nullptr;
     callback.p_user_data = nullptr;
 }
