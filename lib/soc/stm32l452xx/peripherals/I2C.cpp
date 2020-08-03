@@ -12,6 +12,7 @@
 
 //soc
 #include <soc/counter.hpp>
+#include <soc/Interrupt_guard.hpp>
 #include <soc/stm32l452xx/mcu.hpp>
 
 //cml
@@ -585,6 +586,8 @@ void I2C_master::register_transmit_callback(uint16_t a_slave_address,
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
+    Interrupt_guard guard;
+
     this->rx_callback = { nullptr, nullptr };
     this->tx_callback = a_callback;
 
@@ -604,6 +607,8 @@ void I2C_master::register_receive_callback(uint16_t a_slave_address,
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
+    Interrupt_guard guard;
+
     this->tx_callback = { nullptr, nullptr };
     this->rx_callback = a_callback;
 
@@ -619,6 +624,8 @@ void I2C_master::register_bus_status_callback(const Bus_status_callback& a_callb
     assert(nullptr != this->p_i2c);
     assert(nullptr != a_callback.function);
 
+    Interrupt_guard guard;
+
     this->bus_status_callback = a_callback;
     set_flag(&(this->p_i2c->CR1), I2C_CR1_NACKIE);
 }
@@ -626,6 +633,8 @@ void I2C_master::register_bus_status_callback(const Bus_status_callback& a_callb
 void I2C_master::unregister_bus_status_callback()
 {
     assert(nullptr != this->p_i2c);
+
+    Interrupt_guard guard;
 
     clear_flag(&(this->p_i2c->CR1), I2C_CR1_NACKIE);
 
@@ -902,6 +911,8 @@ void I2C_slave::register_transmit_callback(const TX_callback& a_callback, uint32
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
+    Interrupt_guard guard;
+
     this->rx_callback = { nullptr, nullptr };
     this->tx_callback = a_callback;
 
@@ -915,6 +926,8 @@ void I2C_slave::register_receive_callback(const RX_callback& a_callback, uint32_
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
+    Interrupt_guard guard;
+
     this->tx_callback = { nullptr, nullptr };
     this->rx_callback = a_callback;
 
@@ -926,6 +939,8 @@ void I2C_slave::register_bus_status_callback(const Bus_status_callback& a_callba
     assert(nullptr != this->p_i2c);
     assert(nullptr != a_callback.function);
 
+    Interrupt_guard guard;
+
     this->bus_status_callback = a_callback;
     set_flag(&(this->p_i2c->CR1), I2C_CR1_NACKIE | I2C_CR1_ADDRIE);
 }
@@ -933,6 +948,8 @@ void I2C_slave::register_bus_status_callback(const Bus_status_callback& a_callba
 void I2C_slave::unregister_bus_status_callback()
 {
     assert(nullptr != this->p_i2c);
+
+    Interrupt_guard guard;
 
     clear_flag(&(this->p_i2c->CR1), I2C_CR1_NACKIE | I2C_CR1_ADDRIE);
 

@@ -45,7 +45,7 @@ public:
 
     static bool get_value_polling(uint32_t* a_p_value, cml::time::tick a_timeout);
 
-    static void get_value_it(const New_value_callback& a_callback);
+    static void register_new_value_callback(const New_value_callback& a_callback);
 };
 
 } // namespace system

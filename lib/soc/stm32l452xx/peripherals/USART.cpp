@@ -14,6 +14,7 @@
 
 //soc
 #include <soc/counter.hpp>
+#include <soc/Interrupt_guard.hpp>
 
 //cml
 #include <cml/debug/assert.hpp>
@@ -605,6 +606,8 @@ void USART::register_transmit_callback(const TX_callback& a_callback)
 
     assert(nullptr != a_callback.function);
 
+    Interrupt_guard guard;
+
     this->tx_callback = a_callback;
 
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
@@ -618,6 +621,8 @@ void USART::register_receive_callback(const RX_callback& a_callback)
            nullptr != controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
 
     assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
 
     this->rx_callback = a_callback;
 
@@ -633,6 +638,8 @@ void USART::register_bus_status_callback(const Bus_status_callback& a_callback)
 
     assert(nullptr != a_callback.function);
 
+    Interrupt_guard guard;
+
     this->bus_status_callback = a_callback;
 
     set_flag(&(USART2->CR1), USART_CR1_PEIE);
@@ -645,6 +652,8 @@ void USART::unregister_transmit_callback()
     assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr != controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
 
+    Interrupt_guard guard;
+
     clear_flag(&(this->p_usart->CR1), USART_CR1_TXEIE | USART_CR1_TCIE);
 
     this->tx_callback = { nullptr, nullptr };
@@ -656,6 +665,8 @@ void USART::unregister_receive_callback()
     assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr != controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
 
+    Interrupt_guard guard;
+
     clear_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE | USART_CR1_IDLEIE);
 
     this->rx_callback = { nullptr, nullptr };
@@ -666,6 +677,8 @@ void USART::unregister_bus_status_callback()
     assert(nullptr != this->p_usart);
     assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr != controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
+
+    Interrupt_guard guard;
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_PEIE);
     clear_flag(&(this->p_usart->CR3), USART_CR3_EIE);
@@ -1159,6 +1172,8 @@ void RS485::register_transmit_callback(const TX_callback& a_callback)
 
     assert(nullptr != a_callback.function);
 
+    Interrupt_guard guard;
+
     this->tx_callback = a_callback;
 
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
@@ -1173,6 +1188,8 @@ void RS485::register_receive_callback(const RX_callback& a_callback)
     assert(nullptr != controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
 
+    Interrupt_guard guard;
+
     this->rx_callback = a_callback;
 
     set_flag(&(this->p_usart->ICR), USART_ICR_IDLECF);
@@ -1184,6 +1201,8 @@ void RS485::register_bus_status_callback(const Bus_status_callback& a_callback)
     assert(nullptr != this->p_usart);
     assert(nullptr != controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
+
+    Interrupt_guard guard;
 
     this->bus_status_callback = a_callback;
 
@@ -1199,6 +1218,8 @@ void RS485::unregister_transmit_callback()
     assert(nullptr != controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
 
+    Interrupt_guard guard;
+
     this->p_flow_control_pin->set_level(pin::Level::low);
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
@@ -1212,6 +1233,8 @@ void RS485::unregister_receive_callback()
     assert(nullptr != controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
 
+    Interrupt_guard guard;
+
     set_flag(&(this->p_usart->ICR), USART_ICR_CMCF);
     clear_flag(&(this->p_usart->CR1), USART_CR1_RXNEIE);
 
@@ -1223,6 +1246,8 @@ void RS485::unregister_bus_status_callback()
     assert(nullptr != this->p_usart);
     assert(nullptr != controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
+
+    Interrupt_guard guard;
 
     clear_flag(&(USART2->CR1), USART_CR1_PEIE);
     clear_flag(&(USART2->CR3), USART_CR3_EIE);

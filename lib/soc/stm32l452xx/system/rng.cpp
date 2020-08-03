@@ -10,6 +10,7 @@
 
 //soc
 #include <soc/counter.hpp>
+#include <soc/Interrupt_guard.hpp>
 #include <soc/stm32l452xx/mcu.hpp>
 
 //cml
@@ -114,9 +115,11 @@ bool rng::get_value_polling(uint32_t* a_p_value, time::tick a_timeout)
     return ret;
 }
 
-void rng::get_value_it(const New_value_callback& a_callback)
+void rng::register_new_value_callback(const New_value_callback& a_callback)
 {
     assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
 
     new_value_callback = a_callback;
     set_flag(&(RNG->CR), RNG_CR_IE);

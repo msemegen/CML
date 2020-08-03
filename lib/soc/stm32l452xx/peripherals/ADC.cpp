@@ -12,6 +12,7 @@
 
 //soc
 #include <soc/counter.hpp>
+#include <soc/Interrupt_guard.hpp>
 
 //cml
 #include <cml/debug/assert.hpp>
@@ -279,10 +280,12 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
     return ret;
 }
 
-void ADC::start_read_it(const Conversion_callback& a_callback)
+void ADC::register_conversion_callback(const Conversion_callback& a_callback)
 {
     assert(nullptr != p_adc_1);
     assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
 
     this->callaback = a_callback;
 
@@ -290,9 +293,11 @@ void ADC::start_read_it(const Conversion_callback& a_callback)
     set_flag(&(ADC1->CR), ADC_CR_ADSTART);
 }
 
-void ADC::stop_read_it()
+void ADC::unregister_conversion_callback()
 {
     assert(nullptr != p_adc_1);
+
+    Interrupt_guard guard;
 
     clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
     clear_flag(&(ADC1->CR), ADC_CR_ADSTART);

@@ -14,6 +14,7 @@
 #ifdef CML_ASSERT
 #include <soc/stm32l011xx/mcu.hpp>
 #endif
+#include <soc/Interrupt_guard.hpp>
 
 //cml
 #include <cml/debug/assert.hpp>
@@ -119,6 +120,8 @@ void exti_controller::register_callback(pin::In* a_p_pin,
     assert(true == mcu::is_syscfg_enabled());
     assert(nullptr == handlers[static_cast<uint32_t>(a_p_pin->get_id())].callback.function);
 
+    Interrupt_guard guard;
+
     set_flag(&(SYSCFG->EXTICR[a_p_pin->get_id() / 4u]),
             (static_cast<uint32_t>(a_p_pin->get_port()->get_id()) << ((static_cast<uint32_t>(a_p_pin->get_id()) % 4u) * 4u)));
 
@@ -155,6 +158,8 @@ void exti_controller::register_callback(pin::In* a_p_pin,
 
 void exti_controller::unregister_callback(const pin::In& a_pin)
 {
+    Interrupt_guard guard;
+
     clear_bit(&(EXTI->RTSR), a_pin.get_id());
     clear_bit(&(EXTI->FTSR), a_pin.get_id());
 

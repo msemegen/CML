@@ -164,8 +164,8 @@ public:
     void read_polling(uint16_t* a_p_data, uint32_t a_count);
     bool read_polling(uint16_t* a_p_data, uint32_t a_count, cml::time::tick a_timeout);
 
-    void start_read_it(const Conversion_callback& a_callback);
-    void stop_read_it();
+    void register_conversion_callback(const Conversion_callback& a_callback);
+    void unregister_conversion_callback();
 
     void set_resolution(Resolution a_resolution);
 

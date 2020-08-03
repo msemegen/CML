@@ -22,7 +22,7 @@
 #include <cml/bit.hpp>
 
 //soc
-#include <soc/interrupt_guard.hpp>
+#include <soc/Interrupt_guard.hpp>
 
 namespace
 {

@@ -10,6 +10,9 @@
 //this
 #include <soc/stm32l011xx/system/wwdg.hpp>
 
+//soc
+#include <soc/Interrupt_guard.hpp>
+
 //cml
 #include <cml/bit.hpp>
 
@@ -54,12 +57,16 @@ void wwdg::enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window, u
 
 void wwdg::register_early_wakeup_callback(const Callback& a_callback)
 {
+    Interrupt_guard guard;
+
     callback = a_callback;
     set_flag(&(WWDG->CFR), WWDG_CFR_EWI);
 }
 
 void wwdg::unregister_early_wakeup_callback()
 {
+    Interrupt_guard guard;
+
     clear_flag(&(WWDG->CFR), WWDG_CFR_EWI);
     callback = { nullptr, nullptr };
 }

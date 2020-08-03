@@ -13,6 +13,7 @@
 
 //soc
 #include <soc/counter.hpp>
+#include <soc/Interrupt_guard.hpp>
 
 //cml
 #include <cml/debug/assert.hpp>
@@ -506,6 +507,8 @@ void USART::register_transmit_callback(const TX_callback& a_callback)
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_callback.function);
 
+    Interrupt_guard guard;
+
     this->tx_callback = a_callback;
 
     set_flag(&(USART2->ICR), USART_ICR_TCCF);
@@ -518,6 +521,8 @@ void USART::register_receive_callback(const RX_callback& a_callback)
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_callback.function);
 
+    Interrupt_guard guard;
+
     this->rx_callback = a_callback;
 
     set_flag(&(USART2->ICR), USART_ICR_IDLECF);
@@ -529,6 +534,8 @@ void USART::register_bus_status_callback(const Bus_status_callback& a_callback)
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_callback.function);
 
+    Interrupt_guard guard;
+
     this->bus_status_callback = a_callback;
 
     set_flag(&(USART2->CR1), USART_CR1_PEIE);
@@ -539,6 +546,8 @@ void USART::unregister_transmit_callback()
 {
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
 
+    Interrupt_guard guard;
+
     clear_flag(&(USART2->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
 
     this->tx_callback = { nullptr, nullptr };
@@ -548,6 +557,8 @@ void USART::unregister_receive_callback()
 {
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
 
+    Interrupt_guard guard;
+
     clear_flag(&(USART2->CR1), USART_CR1_RXNEIE);
 
     this->rx_callback  = { nullptr, nullptr };
@@ -556,6 +567,8 @@ void USART::unregister_receive_callback()
 void USART::unregister_bus_status_callback()
 {
     assert(nullptr != p_usart_2 && nullptr == p_rs485);
+
+    Interrupt_guard guard;
 
     clear_flag(&(USART2->CR1), USART_CR1_PEIE);
     clear_flag(&(USART2->CR3), USART_CR3_EIE);
