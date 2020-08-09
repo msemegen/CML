@@ -1,19 +1,19 @@
 #pragma once
 
 /*
-    Name: systick.hpp
+    Name: Interrupt_guard.hpp
 
     Copyright(c) 2020 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
 //soc
-#include <soc/systick.hpp>
+#include <soc/Interrupt_guard.hpp>
 
 namespace cml {
 namespace hal {
 
-using systick = soc::systick;
+using Interrupt_guard = soc::Interrupt_guard;
 
 } // namespace hal
 } // namespace cml
