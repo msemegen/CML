@@ -7,13 +7,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//externals
+// externals
 #include <stm32l011xx.h>
 
-//cml
+// cml
 #include <cml/Non_copyable.hpp>
 #include <cml/time.hpp>
 
@@ -24,7 +24,6 @@ namespace peripherals {
 class ADC : private cml::Non_copyable
 {
 public:
-
     enum class Id
     {
         _1 = 0
@@ -131,15 +130,16 @@ public:
 
     struct Conversion_callback
     {
-        using Function = bool(*)(uint16_t a_value, bool a_series_end, void* a_p_user_data);
+        using Function = bool (*)(uint16_t a_value, bool a_series_end, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
 public:
-
-    ADC(Id){}
+    ADC(Id)
+    {
+    }
 
     ~ADC()
     {
@@ -175,8 +175,7 @@ public:
     {
         return { *(reinterpret_cast<const uint16_t*>(0x1FF8007A)),
                  *(reinterpret_cast<const uint16_t*>(0x1FF8007E)),
-                 *(reinterpret_cast<const uint16_t*>(0x1FF80078))
-        };
+                 *(reinterpret_cast<const uint16_t*>(0x1FF80078)) };
     }
 
     constexpr Id get_id() const
@@ -185,14 +184,9 @@ public:
     }
 
 private:
-
-    bool enable(Resolution a_resolution,
-                cml::time::tick a_start,
-                uint32_t a_irq_priority,
-                cml::time::tick a_timeout);
+    bool enable(Resolution a_resolution, cml::time::tick a_start, uint32_t a_irq_priority, cml::time::tick a_timeout);
 
 private:
-
     friend void adc_interrupt_handler(ADC* a_p_this);
 };
 

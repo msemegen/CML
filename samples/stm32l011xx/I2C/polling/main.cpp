@@ -5,73 +5,62 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #include <cml/bit.hpp>
 #include <cml/frequency.hpp>
 #include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
-#include <cml/hal/systick.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/I2C.hpp>
 #include <cml/hal/peripherals/USART.hpp>
-#include <cml/utils/delay.hpp>
+#include <cml/hal/systick.hpp>
 #include <cml/utils/Console.hpp>
+#include <cml/utils/delay.hpp>
 
 //#define MASTER
 #define SLAVE
 
-namespace
-{
-    using namespace cml::hal::peripherals;
-    using namespace cml::utils;
+namespace {
+using namespace cml::hal::peripherals;
+using namespace cml::utils;
 
-void print_status(Console* a_p_console,
-                  const char* a_p_tag,
-                  I2C_base::Bus_status_flag a_bus_status,
-                  uint32_t a_bytes)
+void print_status(Console* a_p_console, const char* a_p_tag, I2C_base::Bus_status_flag a_bus_status, uint32_t a_bytes)
 {
     a_p_console->write("[%s] status: ", a_p_tag);
 
     switch (a_bus_status)
     {
-        case I2C_base::Bus_status_flag::ok:
-        {
+        case I2C_base::Bus_status_flag::ok: {
             a_p_console->write("ok ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::buffer_error:
-        {
+        case I2C_base::Bus_status_flag::buffer_error: {
             a_p_console->write("overrun / underrun ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::arbitration_lost:
-        {
+        case I2C_base::Bus_status_flag::arbitration_lost: {
             a_p_console->write("arbitration lost ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::misplaced:
-        {
+        case I2C_base::Bus_status_flag::misplaced: {
             a_p_console->write("misplaced ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::crc_error:
-        {
+        case I2C_base::Bus_status_flag::crc_error: {
             a_p_console->write("crc error ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::nack:
-        {
+        case I2C_base::Bus_status_flag::nack: {
             a_p_console->write("nack ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::unknown:
-        {
+        case I2C_base::Bus_status_flag::unknown: {
             a_p_console->write("unknown ");
         }
         break;
@@ -98,8 +87,7 @@ uint32_t read_key(char* a_p_out, uint32_t a_length, void* a_p_user_data)
     return p_console_usart->receive_bytes_polling(a_p_out, a_length).data_length_in_words;
 }
 
-
-} // namespace ::
+} // namespace
 
 int main()
 {
@@ -109,27 +97,16 @@ int main()
     using namespace cml::utils;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
-    mcu::set_sysclk(mcu::Sysclk_source::hsi, { mcu::Bus_prescalers::AHB::_1,
-                                               mcu::Bus_prescalers::APB1::_1,
-                                               mcu::Bus_prescalers::APB2::_1 });
+    mcu::set_sysclk(mcu::Sysclk_source::hsi,
+                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
-        constexpr pin::af::Config console_usart_pin_config
-        {
-            pin::Mode::push_pull,
-            pin::Pull::up,
-            pin::Speed::low,
-            0x4u
+        constexpr pin::af::Config console_usart_pin_config {
+            pin::Mode::push_pull, pin::Pull::up, pin::Speed::low, 0x4u
         };
 
-        constexpr pin::af::Config i2c_pin_config
-        {
-            pin::Mode::open_drain,
-            pin::Pull::up,
-            pin::Speed::high,
-            0x1u
-        };
+        constexpr pin::af::Config i2c_pin_config { pin::Mode::open_drain, pin::Pull::up, pin::Speed::high, 0x1u };
 
         mcu::disable_msi_clock();
         mcu::enable_syscfg();
@@ -155,26 +132,23 @@ int main()
                                                   USART::Stop_bits::_1,
                                                   USART::Flow_control_flag::none,
                                                   USART::Sampling_method::three_sample_bit,
-                                                  USART::Mode_flag::tx
-                                                },
+                                                  USART::Mode_flag::tx },
+
+                                                { USART::Word_length::_8_bit, USART::Parity::none },
 
                                                 {
-                                                    USART::Word_length::_8_bit,
-                                                    USART::Parity::none
+                                                    USART::Clock::Source::sysclk,
+                                                    mcu::get_sysclk_frequency_hz(),
                                                 },
-
-                                                { USART::Clock::Source::sysclk,
-                                                  mcu::get_sysclk_frequency_hz(),
-                                                },
-                                                0x1u, 10);
+                                                0x1u,
+                                                10);
 
         if (true == usart_ready)
         {
 #if defined MASTER && !defined SLAVE
 
-            Console console({ write_character, &console_usart },
-                            { write_string,    &console_usart },
-                            { read_key,        &console_usart });
+            Console console(
+                { write_character, &console_usart }, { write_string, &console_usart }, { read_key, &console_usart });
 
             console.write_line("CML I2C master sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
@@ -194,18 +168,15 @@ int main()
 
                 while (true)
                 {
-                    auto i2c_status = i2c_master_bus.transmit_bytes_polling(0x11,
-                                                                            data_to_send,
-                                                                            sizeof(data_to_send), 10);
+                    auto i2c_status =
+                        i2c_master_bus.transmit_bytes_polling(0x11, data_to_send, sizeof(data_to_send), 10);
 
                     if (I2C_master::Bus_status_flag::ok == i2c_status.bus_status)
                     {
                         bytes = i2c_status.data_length;
 
-                        i2c_status = i2c_master_bus.receive_bytes_polling(0x11,
-                                                                          data_to_receive,
-                                                                          sizeof(data_to_receive),
-                                                                          10);
+                        i2c_status =
+                            i2c_master_bus.receive_bytes_polling(0x11, data_to_receive, sizeof(data_to_receive), 10);
 
                         if (I2C_master::Bus_status_flag::ok == i2c_status.bus_status)
                         {
@@ -215,21 +186,20 @@ int main()
                         }
                     }
 
-
                     print_status(&console, "capcom", i2c_status.bus_status, bytes);
                     delay::ms(1000);
                 }
             }
             console.write_line("No slave detected...");
-            while (true);
+            while (true)
+                ;
 
 #endif // defined MASTER && !defined SLAVE
 
 #if defined SLAVE && !defined MASTER
 
-            Console console({ write_character, &console_usart },
-                            { write_string,    &console_usart },
-                            { read_key,        &console_usart });
+            Console console(
+                { write_character, &console_usart }, { write_string, &console_usart }, { read_key, &console_usart });
             console.write_line("CML I2C slave sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             I2C_slave i2c_slave_bus(I2C_slave::Id::_1);
@@ -244,7 +214,6 @@ int main()
 
                 if (i2c_status.data_length > 0 && I2C_slave::Bus_status_flag::ok == i2c_status.bus_status)
                 {
-
                     print_status(&console, "receive_bytes_polling", i2c_status.bus_status, i2c_status.data_length);
 
                     i2c_status = i2c_slave_bus.transmit_bytes_polling(&data_to_send, sizeof(data_to_send));
@@ -271,5 +240,6 @@ int main()
         }
     }
 
-    while (true);
+    while (true)
+        ;
 }

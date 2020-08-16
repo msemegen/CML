@@ -7,14 +7,14 @@
 
 #ifdef STM32L452xx
 
-//this
+// this
 #include <soc/stm32l452xx/peripherals/ADC.hpp>
 
-//soc
-#include <soc/counter.hpp>
+// soc
 #include <soc/Interrupt_guard.hpp>
+#include <soc/counter.hpp>
 
-//cml
+// cml
 #include <cml/debug/assert.hpp>
 #include <cml/utils/delay.hpp>
 #include <cml/utils/wait.hpp>
@@ -23,8 +23,7 @@
 #include <soc/stm32l452xx/mcu.hpp>
 #endif // CML_ASSERT
 
-namespace
-{
+namespace {
 
 using namespace cml;
 using namespace soc::stm32l452xx::peripherals;
@@ -43,10 +42,9 @@ bool is_channel(ADC::Channel::Id a_type, const ADC::Channel* a_p_channels, uint3
     return found;
 }
 
-} // namespace ::
+} // namespace
 
-extern "C"
-{
+extern "C" {
 
 void ADC1_IRQHandler()
 {
@@ -70,7 +68,7 @@ void adc_interrupt_handler(ADC* a_p_this)
     if (true == is_flag(isr, ADC_ISR_EOC))
     {
         const bool series_end = is_flag(isr, ADC_ISR_EOS);
-        const bool ret = a_p_this->callaback.function(ADC1->DR, series_end, a_p_this->callaback.p_user_data);
+        const bool ret        = a_p_this->callaback.function(ADC1->DR, series_end, a_p_this->callaback.p_user_data);
 
         if (true == series_end)
         {
@@ -111,8 +109,8 @@ bool ADC::enable(Resolution a_resolution,
     assert(nullptr == p_adc_1);
     assert(Synchronous_clock::Divider::unknown != a_clock.divider);
     assert(Synchronous_clock::Divider::_1 == a_clock.divider ?
-           mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
-           true);
+               mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
+               true);
 
     time::tick start = counter::get();
 

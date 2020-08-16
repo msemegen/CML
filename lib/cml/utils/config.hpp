@@ -7,7 +7,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
 namespace cml {
@@ -25,8 +25,8 @@ struct config
         console(const console&) = delete;
         ~console()              = delete;
 
-        console& operator = (console&)       = delete;
-        console& operator = (const console&) = delete;
+        console& operator=(console&) = delete;
+        console& operator=(const console&) = delete;
 
         static_assert(line_buffer_capacity > 1);
         static_assert(input_buffer_capacity > 1);
@@ -45,8 +45,8 @@ struct config
         command_line(const command_line&) = delete;
         ~command_line()                   = delete;
 
-        command_line& operator = (command_line&)       = delete;
-        command_line& operator = (const command_line&) = delete;
+        command_line& operator=(command_line&) = delete;
+        command_line& operator=(const command_line&) = delete;
 
         static_assert(callbacks_buffer_capacity > 0);
         static_assert(callback_parameters_buffer_capacity > 0);
@@ -64,12 +64,11 @@ struct config
         logger(const logger&) = delete;
         ~logger()             = delete;
 
-        logger& operator = (logger&)       = delete;
-        logger& operator = (const logger&) = delete;
+        logger& operator=(logger&) = delete;
+        logger& operator=(const logger&) = delete;
 
         static_assert(line_buffer_capacity > 1);
     };
-
 
     inline static const char new_line_character = '\n';
 
@@ -78,9 +77,9 @@ struct config
     config(const config&) = delete;
     ~config()             = delete;
 
-    config& operator = (config&)       = delete;
-    config& operator = (const config&) = delete;
+    config& operator=(config&) = delete;
+    config& operator=(const config&) = delete;
 };
 
-} // namespace cml
 } // namespace utils
+} // namespace cml

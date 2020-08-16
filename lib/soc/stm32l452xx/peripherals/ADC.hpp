@@ -7,13 +7,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//externals
+// externals
 #include <stm32l452xx.h>
 
-//cml
+// cml
 #include <cml/Non_copyable.hpp>
 #include <cml/time.hpp>
 
@@ -24,7 +24,6 @@ namespace peripherals {
 class ADC : private cml::Non_copyable
 {
 public:
-
     enum class Id : uint32_t
     {
         _1 = 0u
@@ -105,16 +104,16 @@ public:
     {
         enum class Divider : uint32_t
         {
-            _1 = 0x0u,
-            _2 = ADC_CCR_PRESC_0,
-            _4 = ADC_CCR_PRESC_1,
-            _6 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1,
-            _8 = ADC_CCR_PRESC_2,
-            _10 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_2,
-            _12 = ADC_CCR_PRESC_1 | ADC_CCR_PRESC_2,
-            _16 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1 | ADC_CCR_PRESC_2,
-            _32 = ADC_CCR_PRESC_3,
-            _64 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_3,
+            _1   = 0x0u,
+            _2   = ADC_CCR_PRESC_0,
+            _4   = ADC_CCR_PRESC_1,
+            _6   = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1,
+            _8   = ADC_CCR_PRESC_2,
+            _10  = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_2,
+            _12  = ADC_CCR_PRESC_1 | ADC_CCR_PRESC_2,
+            _16  = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1 | ADC_CCR_PRESC_2,
+            _32  = ADC_CCR_PRESC_3,
+            _64  = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_3,
             _128 = ADC_CCR_PRESC_1 | ADC_CCR_PRESC_3,
             _256 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1 | ADC_CCR_PRESC_3,
             unknown
@@ -139,15 +138,16 @@ public:
 
     struct Conversion_callback
     {
-        using Function = bool(*)(uint16_t a_value, bool a_series_end, void* a_p_user_data);
+        using Function = bool (*)(uint16_t a_value, bool a_series_end, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
 public:
-
-    ADC(Id) {}
+    ADC(Id)
+    {
+    }
 
     ~ADC()
     {
@@ -186,8 +186,7 @@ public:
     {
         return { *(reinterpret_cast<const uint16_t*>(0x1FFF75A8)),
                  *(reinterpret_cast<const uint16_t*>(0x1FFF75CA)),
-                 *(reinterpret_cast<const uint16_t*>(0x1FFF75AA))
-        };
+                 *(reinterpret_cast<const uint16_t*>(0x1FFF75AA)) };
     }
 
     constexpr Id get_id() const
@@ -196,18 +195,12 @@ public:
     }
 
 private:
-
-    bool enable(Resolution a_resolution,
-                cml::time::tick a_start,
-                uint32_t a_irq_priority,
-                cml::time::tick a_timeout);
+    bool enable(Resolution a_resolution, cml::time::tick a_start, uint32_t a_irq_priority, cml::time::tick a_timeout);
 
 private:
-
     Conversion_callback callaback;
 
 private:
-
     friend void adc_interrupt_handler(ADC* a_p_this);
 };
 

@@ -7,10 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
-#include <cml/time.hpp>
+// cml
 #include <cml/debug/assert.hpp>
 #include <cml/hal/counter.hpp>
+#include <cml/time.hpp>
 
 #ifdef STM32L452xx
 #include <soc/stm32l452xx/misc.hpp>
@@ -26,19 +26,19 @@ namespace utils {
 class delay
 {
 public:
-
     delay()             = delete;
     delay(delay&&)      = delete;
     delay(const delay&) = delete;
     ~delay()            = delete;
 
-    delay& operator = (delay&&)      = delete;
-    delay& operator = (const delay&) = delete;
+    delay& operator=(delay&&) = delete;
+    delay& operator=(const delay&) = delete;
 
     static void ms(time::tick a_time)
     {
         time::tick start = hal::counter::get();
-        while (time::diff(hal::counter::get(), start) <= a_time);
+        while (time::diff(hal::counter::get(), start) <= a_time)
+            ;
     }
 
     inline static void us(time::tick a_time)

@@ -5,10 +5,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <soc/interrupt_guard.hpp>
 
-//externals
+// externals
 #ifdef STM32L452xx
 #include <stm32l4xx.h>
 #endif

@@ -5,13 +5,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
-#include <cml/hal/systick.hpp>
 #include <cml/hal/peripherals/ADC.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
+#include <cml/hal/systick.hpp>
 #include <cml/utils/Console.hpp>
 #include <cml/utils/delay.hpp>
 
@@ -46,7 +46,7 @@ uint32_t read_key(char* a_p_out, uint32_t a_length, void* a_p_user_data)
     return p_console_usart->receive_bytes_polling(a_p_out, a_length).data_length_in_words;
 }
 
-} // namespace ::
+} // namespace
 
 int main()
 {
@@ -56,9 +56,8 @@ int main()
     using namespace cml::utils;
 
     mcu::enable_msi_clock(mcu::Msi_frequency::_4194_kHz);
-    mcu::set_sysclk(mcu::Sysclk_source::msi, { mcu::Bus_prescalers::AHB::_1,
-                                               mcu::Bus_prescalers::APB1::_1,
-                                              mcu::Bus_prescalers::APB2::_1 });
+    mcu::set_sysclk(mcu::Sysclk_source::msi,
+                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::msi == mcu::get_sysclk_source())
     {
@@ -75,35 +74,18 @@ int main()
 
         if (true == periph_ready)
         {
-            USART::Config usart_config =
-            {
-                115200u,
-                USART::Oversampling::_16,
-                USART::Stop_bits::_1,
-                USART::Flow_control_flag::none,
-                USART::Sampling_method::three_sample_bit,
-                USART::Mode_flag::tx
-            };
+            USART::Config usart_config = { 115200u,
+                                           USART::Oversampling::_16,
+                                           USART::Stop_bits::_1,
+                                           USART::Flow_control_flag::none,
+                                           USART::Sampling_method::three_sample_bit,
+                                           USART::Mode_flag::tx };
 
-            USART::Frame_format usart_frame_format
-            {
-                USART::Word_length::_8_bit,
-                USART::Parity::none
-            };
+            USART::Frame_format usart_frame_format { USART::Word_length::_8_bit, USART::Parity::none };
 
-            USART::Clock usart_clock
-            {
-                USART::Clock::Source::sysclk,
-                mcu::get_sysclk_frequency_hz()
-            };
+            USART::Clock usart_clock { USART::Clock::Source::sysclk, mcu::get_sysclk_frequency_hz() };
 
-            pin::af::Config usart_pin_config =
-            {
-                pin::Mode::push_pull,
-                pin::Pull::up,
-                pin::Speed::ultra,
-                0x4u
-            };
+            pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::ultra, 0x4u };
 
             GPIO gpio_port_a(GPIO::Id::a);
             gpio_port_a.enable();
@@ -120,8 +102,8 @@ int main()
                 adc.set_active_channels(ADC::Sampling_time::_160_5_clock_cycles, enabled_channels, 1);
 
                 Console console({ write_character, &console_usart },
-                                { write_string,    &console_usart },
-                                { read_key,        &console_usart });
+                                { write_string, &console_usart },
+                                { read_key, &console_usart });
 
                 console.write_line("CML ADC sample. CPU speed: %d MHz\n", mcu::get_sysclk_frequency_hz() / MHz(1));
 
@@ -137,5 +119,6 @@ int main()
         }
     }
 
-    while (true);
+    while (true)
+        ;
 }

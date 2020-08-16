@@ -7,23 +7,21 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
 namespace cml {
 
-template<typename Type_t>
-class numeric_traits
+template<typename Type_t> class numeric_traits
 {
 public:
-
     numeric_traits()                      = delete;
     numeric_traits(numeric_traits&&)      = delete;
     numeric_traits(const numeric_traits&) = delete;
     ~numeric_traits()                     = delete;
 
-    numeric_traits& operator = (numeric_traits&&)      = delete;
-    numeric_traits& operator = (const numeric_traits&) = delete;
+    numeric_traits& operator=(numeric_traits&&) = delete;
+    numeric_traits& operator=(const numeric_traits&) = delete;
 
     static constexpr Type_t get_min()
     {
@@ -36,23 +34,20 @@ public:
     }
 
 public:
-
     static constexpr bool is_signed   = false;
     static constexpr bool is_unsigned = false;
 };
 
-template<>
-class numeric_traits<uint8_t>
+template<> class numeric_traits<uint8_t>
 {
 public:
-
     numeric_traits()                      = delete;
     numeric_traits(numeric_traits&&)      = delete;
     numeric_traits(const numeric_traits&) = delete;
     ~numeric_traits()                     = delete;
 
-    numeric_traits& operator = (numeric_traits&&)      = delete;
-    numeric_traits& operator = (const numeric_traits&) = delete;
+    numeric_traits& operator=(numeric_traits&&) = delete;
+    numeric_traits& operator=(const numeric_traits&) = delete;
 
     static constexpr uint8_t get_min()
     {
@@ -67,23 +62,20 @@ public:
     }
 
 public:
-
     static constexpr bool is_signed   = false;
     static constexpr bool is_unsigned = true;
 };
 
-template<>
-class numeric_traits<int8_t>
+template<> class numeric_traits<int8_t>
 {
 public:
-
     numeric_traits()                      = delete;
     numeric_traits(numeric_traits&&)      = delete;
     numeric_traits(const numeric_traits&) = delete;
     ~numeric_traits()                     = delete;
 
-    numeric_traits& operator = (numeric_traits&&)      = delete;
-    numeric_traits& operator = (const numeric_traits&) = delete;
+    numeric_traits& operator=(numeric_traits&&) = delete;
+    numeric_traits& operator=(const numeric_traits&) = delete;
 
     static constexpr int8_t get_min()
     {
@@ -98,23 +90,20 @@ public:
     }
 
 public:
-
     static constexpr bool is_signed   = true;
     static constexpr bool is_unsigned = false;
 };
 
-template<>
-class numeric_traits<uint16_t>
+template<> class numeric_traits<uint16_t>
 {
 public:
-
     numeric_traits()                      = delete;
     numeric_traits(numeric_traits&&)      = delete;
     numeric_traits(const numeric_traits&) = delete;
     ~numeric_traits()                     = delete;
 
-    numeric_traits& operator = (numeric_traits&&)      = delete;
-    numeric_traits& operator = (const numeric_traits&) = delete;
+    numeric_traits& operator=(numeric_traits&&) = delete;
+    numeric_traits& operator=(const numeric_traits&) = delete;
 
     static uint16_t get_min()
     {
@@ -129,23 +118,20 @@ public:
     }
 
 public:
-
     static constexpr bool is_signed   = false;
     static constexpr bool is_unsigned = true;
 };
 
-template<>
-class numeric_traits<int16_t>
+template<> class numeric_traits<int16_t>
 {
 public:
-
     numeric_traits()                      = delete;
     numeric_traits(numeric_traits&&)      = delete;
     numeric_traits(const numeric_traits&) = delete;
     ~numeric_traits()                     = delete;
 
-    numeric_traits& operator = (numeric_traits&&)      = delete;
-    numeric_traits& operator = (const numeric_traits&) = delete;
+    numeric_traits& operator=(numeric_traits&&) = delete;
+    numeric_traits& operator=(const numeric_traits&) = delete;
 
     static constexpr int16_t get_min()
     {
@@ -160,23 +146,20 @@ public:
     }
 
 public:
-
     static constexpr bool is_signed   = true;
     static constexpr bool is_unsigned = false;
 };
 
-template<>
-class numeric_traits<uint32_t>
+template<> class numeric_traits<uint32_t>
 {
 public:
-
     numeric_traits()                      = delete;
     numeric_traits(numeric_traits&&)      = delete;
     numeric_traits(const numeric_traits&) = delete;
     ~numeric_traits()                     = delete;
 
-    numeric_traits& operator = (numeric_traits&&)      = delete;
-    numeric_traits& operator = (const numeric_traits&) = delete;
+    numeric_traits& operator=(numeric_traits&&) = delete;
+    numeric_traits& operator=(const numeric_traits&) = delete;
 
     static constexpr uint32_t get_min()
     {
@@ -191,23 +174,20 @@ public:
     }
 
 public:
-
     static constexpr bool is_signed   = false;
     static constexpr bool is_unsigned = true;
 };
 
-template<>
-class numeric_traits<int32_t>
+template<> class numeric_traits<int32_t>
 {
 public:
-
     numeric_traits()                      = delete;
     numeric_traits(numeric_traits&&)      = delete;
     numeric_traits(const numeric_traits&) = delete;
     ~numeric_traits()                     = delete;
 
-    numeric_traits& operator = (numeric_traits&&)      = delete;
-    numeric_traits& operator = (const numeric_traits&) = delete;
+    numeric_traits& operator=(numeric_traits&&) = delete;
+    numeric_traits& operator=(const numeric_traits&) = delete;
 
     static constexpr int32_t get_min()
     {
@@ -222,23 +202,20 @@ public:
     }
 
 public:
-
     static constexpr bool is_signed   = true;
     static constexpr bool is_unsigned = false;
 };
 
-template<>
-class numeric_traits<uint64_t>
+template<> class numeric_traits<uint64_t>
 {
 public:
-
     numeric_traits()                      = delete;
     numeric_traits(numeric_traits&&)      = delete;
     numeric_traits(const numeric_traits&) = delete;
     ~numeric_traits()                     = delete;
 
-    numeric_traits& operator = (numeric_traits&&)      = delete;
-    numeric_traits& operator = (const numeric_traits&) = delete;
+    numeric_traits& operator=(numeric_traits&&) = delete;
+    numeric_traits& operator=(const numeric_traits&) = delete;
 
     static constexpr uint64_t get_min()
     {
@@ -253,23 +230,20 @@ public:
     }
 
 public:
-
     static constexpr bool is_signed   = false;
     static constexpr bool is_unsigned = true;
 };
 
-template<>
-class numeric_traits<int64_t>
+template<> class numeric_traits<int64_t>
 {
 public:
-
     numeric_traits()                      = delete;
     numeric_traits(numeric_traits&&)      = delete;
     numeric_traits(const numeric_traits&) = delete;
     ~numeric_traits()                     = delete;
 
-    numeric_traits& operator = (numeric_traits&&)      = delete;
-    numeric_traits& operator = (const numeric_traits&) = delete;
+    numeric_traits& operator=(numeric_traits&&) = delete;
+    numeric_traits& operator=(const numeric_traits&) = delete;
 
     static constexpr int64_t get_min()
     {
@@ -284,7 +258,6 @@ public:
     }
 
 public:
-
     static constexpr bool is_signed   = true;
     static constexpr bool is_unsigned = false;
 };

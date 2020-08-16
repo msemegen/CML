@@ -5,7 +5,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <cml/common/memory.hpp>
 #include <cml/debug/assert.hpp>
 
@@ -27,8 +27,8 @@ uint32_t memory::copy(void* a_p_destination,
     uint8_t* p_destination  = static_cast<uint8_t*>(a_p_destination);
     const uint8_t* p_source = static_cast<const uint8_t*>(a_p_source);
 
-    uint32_t length = a_destination_capacity_in_bytes > a_source_size_in_bytes ?
-                      a_source_size_in_bytes : a_destination_capacity_in_bytes;
+    uint32_t length = a_destination_capacity_in_bytes > a_source_size_in_bytes ? a_source_size_in_bytes :
+                                                                                 a_destination_capacity_in_bytes;
 
     for (uint32_t i = 0; i < length; i++)
     {
@@ -52,7 +52,7 @@ void memory::move(void* a_p_destination, const void* a_p_source, uint32_t a_size
         uint32_t size_in_bytes = a_size_in_bytes;
 
         p_destination += size_in_bytes;
-        p_source      += size_in_bytes;
+        p_source += size_in_bytes;
 
         while (0 != (size_in_bytes--))
         {

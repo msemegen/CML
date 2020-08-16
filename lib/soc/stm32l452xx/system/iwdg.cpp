@@ -5,14 +5,14 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <soc/stm32l452xx/system/iwdg.hpp>
 
-//soc
+// soc
 #include <soc/counter.hpp>
 #include <soc/stm32l452xx/mcu.hpp>
 
-//cml
+// cml
 #include <cml/bit.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/utils/wait.hpp>
@@ -29,7 +29,7 @@ struct control_flags
     static constexpr uint32_t write_access_disable = 0x0000u;
 };
 
-} // namespace ::
+} // namespace
 
 namespace soc {
 namespace stm32l452xx {
@@ -38,10 +38,7 @@ namespace system {
 using namespace cml;
 using namespace cml::utils;
 
-bool iwdg::enable(Prescaler a_prescaler,
-                  uint16_t a_reload,
-                  const Window& a_window,
-                  time::tick a_timeout)
+bool iwdg::enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_window, time::tick a_timeout)
 {
     assert((true == a_window.enable && a_window.value <= 0xFFFu) || (false == a_window.enable));
     assert(true == mcu::is_clock_enabled(mcu::Clock::lsi));
@@ -59,7 +56,7 @@ bool iwdg::enable(Prescaler a_prescaler,
     if (true == ret)
     {
         IWDG->RLR = a_reload;
-        ret = wait::until(&(IWDG->SR), IWDG_SR_RVU, true, start, a_timeout);
+        ret       = wait::until(&(IWDG->SR), IWDG_SR_RVU, true, start, a_timeout);
     }
 
     if (true == ret)
@@ -67,7 +64,7 @@ bool iwdg::enable(Prescaler a_prescaler,
         if (true == a_window.enable)
         {
             IWDG->WINR = a_window.value;
-            ret = wait::until(&(IWDG->SR), IWDG_SR_WVU, true, start, a_timeout);
+            ret        = wait::until(&(IWDG->SR), IWDG_SR_WVU, true, start, a_timeout);
         }
         else
         {

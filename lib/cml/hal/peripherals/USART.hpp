@@ -7,7 +7,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #ifdef STM32L452xx
 #include <soc/stm32l452xx/peripherals/USART.hpp>
 #endif // STM32L452xx

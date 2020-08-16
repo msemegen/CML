@@ -7,15 +7,15 @@
 
 #ifdef STM32L452xx
 
-//this
+// this
 #include <soc/stm32l452xx/misc.hpp>
 
-//soc
+// soc
 #include <soc/stm32l452xx/mcu.hpp>
 
-//cml
-#include <cml/frequency.hpp>
+// cml
 #include <cml/debug/assert.hpp>
+#include <cml/frequency.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -28,9 +28,10 @@ void misc::delay_us(time::tick a_time)
     assert(mcu::get_sysclk_frequency_hz() >= MHz(1));
     assert(a_time > 0);
 
-    DWT->CYCCNT = 0;
+    DWT->CYCCNT        = 0;
     const uint32_t max = DWT->CYCCNT + (mcu::get_sysclk_frequency_hz() / MHz(1) * (a_time - 1));
-    while (DWT->CYCCNT < max);
+    while (DWT->CYCCNT < max)
+        ;
 }
 
 } // namespace stm32l452xx

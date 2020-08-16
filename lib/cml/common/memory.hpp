@@ -7,7 +7,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
 namespace cml {
@@ -26,8 +26,7 @@ struct memory
     static void clear(void* a_p_destination, uint32_t a_size_in_bytes);
     static bool equals(const void* a_p_first, const void* a_p_second, uint32_t a_size_in_bytes);
 
-    template<typename Type_t>
-    static void swap(Type_t* a_p_first, Type_t* a_p_second)
+    template<typename Type_t> static void swap(Type_t* a_p_first, Type_t* a_p_second)
     {
         Type_t tmp = *(a_p_first);
 
@@ -40,8 +39,8 @@ struct memory
     memory(const memory&) = delete;
     ~memory()             = delete;
 
-    memory& operator = (memory&&)      = delete;
-    memory& operator = (const memory&) = delete;
+    memory& operator=(memory&&) = delete;
+    memory& operator=(const memory&) = delete;
 };
 
 } // namespace common

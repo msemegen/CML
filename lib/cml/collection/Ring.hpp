@@ -7,20 +7,18 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//cml
+// cml
 #include <cml/debug/assert.hpp>
 
 namespace cml {
 namespace collection {
 
-template<typename Type_t>
-class Ring
+template<typename Type_t> class Ring
 {
 public:
-
     Ring(Type_t* a_p_buffer, uint32_t a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
@@ -37,8 +35,8 @@ public:
     Ring(const Ring&) = default;
     ~Ring()           = default;
 
-    Ring& operator = (Ring&&)      = default;
-    Ring& operator = (const Ring&) = default;
+    Ring& operator=(Ring&&) = default;
+    Ring& operator=(const Ring&) = default;
 
     bool push(const Type_t& a_data)
     {
@@ -108,7 +106,6 @@ public:
     }
 
 private:
-
     Type_t* p_buffer;
     uint32_t capacity;
 

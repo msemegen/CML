@@ -7,7 +7,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #ifdef STM32L452xx
 #include <soc/stm32l452xx/mcu.hpp>
 #endif // STM32L452xx
@@ -27,5 +27,5 @@ using mcu = soc::stm32l452xx::mcu;
 using mcu = soc::stm32l011xx::mcu;
 #endif // STM32L011xx
 
-} // namespace cml
 } // namespace hal
+} // namespace cml

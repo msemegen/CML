@@ -7,15 +7,15 @@
 
 #ifdef STM32L011xx
 
-//this
+// this
 #include <soc/stm32l011xx/misc.hpp>
 
-//soc
+// soc
 #include <soc/stm32l011xx/mcu.hpp>
 
-//cml
-#include <cml/frequency.hpp>
+// cml
 #include <cml/debug/assert.hpp>
+#include <cml/frequency.hpp>
 
 namespace soc {
 namespace stm32l011xx {
@@ -33,7 +33,7 @@ void misc::delay_us(time::tick a_time)
     __asm__ __volatile__("1: sub %0, #1 \n"
                          "   cmp %0, #0 \n"
                          "   bne  1b    \n"
-                         : "+r" (count));
+                         : "+r"(count));
 }
 
 } // namespace stm32l011xx

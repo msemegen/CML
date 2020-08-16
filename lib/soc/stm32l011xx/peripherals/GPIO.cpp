@@ -7,7 +7,7 @@
 
 #ifdef STM32L011xx
 
-//this
+// this
 #include <soc/stm32l011xx/peripherals/GPIO.hpp>
 
 namespace {
@@ -54,18 +54,17 @@ struct Controller
 {
     GPIO_TypeDef* p_registers = nullptr;
 
-    void(*p_enable)()  = nullptr;
-    void(*p_disable)() = nullptr;
+    void (*p_enable)()  = nullptr;
+    void (*p_disable)() = nullptr;
 };
 
-Controller controllers[] =
-{
+Controller controllers[] = {
     { GPIOA, gpio_a_enable, gpio_a_disable },
     { GPIOB, gpio_b_enable, gpio_b_disable },
     { GPIOC, gpio_c_enable, gpio_c_disable },
 };
 
-} // namespace ::
+} // namespace
 
 namespace soc {
 namespace stm32l011xx {
@@ -99,15 +98,16 @@ pin::Pull pin::In::get_pull() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    return static_cast<Pull>((get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR, 
-                                       static_cast<uint32_t>(0x3u << this->id)) << this->id));
+    return static_cast<Pull>(
+        (get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR, static_cast<uint32_t>(0x3u << this->id))
+         << this->id));
 }
 
 void pin::Out::set_level(Level a_level)
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    constexpr uint8_t mul[] = { 16, 0 };
+    constexpr uint8_t mul[]                           = { 16, 0 };
     static_cast<GPIO_TypeDef*>(*(this->p_port))->BSRR = 0x1u << (this->id + mul[static_cast<uint32_t>(a_level)]);
 }
 
@@ -143,7 +143,8 @@ void pin::Out::set_speed(Speed a_speed)
     assert(Speed::unknown != a_speed);
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR), 0x3u << (this->id * 2),
+    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
+             0x3u << (this->id * 2),
              static_cast<uint32_t>(a_speed) << (this->id * 2));
 }
 
@@ -174,7 +175,7 @@ pin::Speed pin::Out::get_speed() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    return static_cast<Speed>((get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR, 
+    return static_cast<Speed>((get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR,
                                         static_cast<uint32_t>(0x1u << this->id) << this->id)));
 }
 
@@ -238,7 +239,7 @@ void pin::Af::set_function(uint32_t a_function)
     af_register |= a_function << ((this->id - (af_register_index * 8u)) * 4u);
 
     p_port->AFR[af_register_index] = af_register;
-    this->function = a_function;
+    this->function                 = a_function;
 }
 
 pin::Mode pin::Af::get_mode() const
@@ -246,7 +247,7 @@ pin::Mode pin::Af::get_mode() const
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Mode>(get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER,
-                             static_cast<uint32_t>(0x1u << this->id) << this->id));
+                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
 pin::Pull pin::Af::get_pull() const
@@ -298,7 +299,7 @@ void pin::in::disable(GPIO* a_p_port, uint32_t a_id)
 
     const uint32_t flag = (0x3u << (a_id * 2));
 
-    set_flag(&(p_port->MODER),   flag);
+    set_flag(&(p_port->MODER), flag);
     clear_flag(&(p_port->PUPDR), flag);
 
     a_p_port->give_pin(a_id);
@@ -311,17 +312,17 @@ void pin::out::enable(GPIO* a_p_port, uint32_t a_id, const Config& a_config, Out
     assert(true == a_p_port->is_enabled());
     assert(false == a_p_port->is_pin_taken(a_id));
 
-    assert(Pull::unknown  != a_config.pull);
+    assert(Pull::unknown != a_config.pull);
     assert(Speed::unknown != a_config.speed);
-    assert(Mode::unknown  != a_config.mode);
+    assert(Mode::unknown != a_config.mode);
 
     const uint32_t clear_flag_2bit = 0x3u << (a_id * 2);
-    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(a_p_port));
+    GPIO_TypeDef* p_port           = static_cast<GPIO_TypeDef*>(*(a_p_port));
 
     set_flag(&(p_port->OSPEEDR), clear_flag_2bit, static_cast<uint32_t>(a_config.speed) << (a_id * 2));
-    set_flag(&(p_port->PUPDR),   clear_flag_2bit, static_cast<uint32_t>(a_config.pull) << (a_id * 2));
-    set_flag(&(p_port->MODER),   clear_flag_2bit, 0x1u << (a_id * 2));
-    set_flag(&(p_port->OTYPER),  0x1u << a_id, static_cast<uint32_t>(a_config.mode) << a_id);
+    set_flag(&(p_port->PUPDR), clear_flag_2bit, static_cast<uint32_t>(a_config.pull) << (a_id * 2));
+    set_flag(&(p_port->MODER), clear_flag_2bit, 0x1u << (a_id * 2));
+    set_flag(&(p_port->OTYPER), 0x1u << a_id, static_cast<uint32_t>(a_config.mode) << a_id);
 
     a_p_port->take_pin(a_id);
 
@@ -342,9 +343,9 @@ void pin::out::disable(GPIO* a_p_port, uint32_t a_id)
 
     const uint32_t flag = (0x3u << (a_id * 2));
 
-    set_flag(&(p_port->MODER),     flag);
+    set_flag(&(p_port->MODER), flag);
     clear_flag(&(p_port->OSPEEDR), flag);
-    clear_flag(&(p_port->PUPDR),   flag);
+    clear_flag(&(p_port->PUPDR), flag);
 
     a_p_port->give_pin(a_id);
 }
@@ -390,18 +391,18 @@ void pin::af::enable(GPIO* a_p_port, uint32_t a_id, const Config& a_config, Af* 
     assert(true == a_p_port->is_enabled());
     assert(false == a_p_port->is_pin_taken(a_id));
 
-    assert(Pull::unknown  != a_config.pull);
+    assert(Pull::unknown != a_config.pull);
     assert(Speed::unknown != a_config.speed);
-    assert(Mode::unknown  != a_config.mode);
+    assert(Mode::unknown != a_config.mode);
 
     const uint32_t clear_flag_2bit = 0x3u << (a_id * 2);
 
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(a_p_port));
 
     set_flag(&(p_port->OSPEEDR), clear_flag_2bit, static_cast<uint32_t>(a_config.speed) << (a_id * 2));
-    set_flag(&(p_port->PUPDR),   clear_flag_2bit, static_cast<uint32_t>(a_config.pull)  << (a_id * 2));
-    set_flag(&(p_port->MODER),   clear_flag_2bit, 0x2u << (a_id * 2));
-    set_flag(&(p_port->OTYPER),  0x1u << a_id,   static_cast<uint32_t>(a_config.mode) << a_id);
+    set_flag(&(p_port->PUPDR), clear_flag_2bit, static_cast<uint32_t>(a_config.pull) << (a_id * 2));
+    set_flag(&(p_port->MODER), clear_flag_2bit, 0x2u << (a_id * 2));
+    set_flag(&(p_port->OTYPER), 0x1u << a_id, static_cast<uint32_t>(a_config.mode) << a_id);
 
     uint32_t af_register_index = a_id >> 3u;
     uint32_t af_register       = p_port->AFR[af_register_index];
@@ -431,9 +432,9 @@ void pin::af::disable(GPIO* a_p_port, uint32_t a_id)
 
     const uint32_t flag = (0x3u << (a_id * 2));
 
-    set_flag(&(p_port->MODER),     flag);
+    set_flag(&(p_port->MODER), flag);
     clear_flag(&(p_port->OSPEEDR), flag);
-    clear_flag(&(p_port->PUPDR),   flag);
+    clear_flag(&(p_port->PUPDR), flag);
 
     a_p_port->give_pin(a_id);
 }

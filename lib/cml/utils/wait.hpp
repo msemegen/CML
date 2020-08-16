@@ -7,13 +7,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//cml
+// cml
 #include <cml/bit.hpp>
-#include <cml/time.hpp>
 #include <cml/hal/counter.hpp>
+#include <cml/time.hpp>
 
 namespace cml {
 namespace utils {
@@ -21,27 +21,22 @@ namespace utils {
 class wait
 {
 public:
-
     wait()            = delete;
     wait(wait&&)      = delete;
     wait(const wait&) = delete;
     ~wait()           = delete;
 
-    wait& operator = (wait&&)      = delete;
-    wait& operator = (const wait&) = delete;
+    wait& operator=(wait&&) = delete;
+    wait& operator=(const wait&) = delete;
 
-    template<typename Register_t>
-    static void until(const Register_t* a_p_register, uint32_t a_flag, bool a_status)
+    template<typename Register_t> static void until(const Register_t* a_p_register, uint32_t a_flag, bool a_status)
     {
-        while (a_status == is_flag(*a_p_register, a_flag));
+        while (a_status == is_flag(*a_p_register, a_flag))
+            ;
     }
 
-    template<typename Register_t>
-    static bool until(const Register_t* a_p_register,
-                      uint32_t a_flag,
-                      bool a_status,
-                      time::tick a_start,
-                      time::tick a_timeout)
+    template<typename Register_t> static bool
+    until(const Register_t* a_p_register, uint32_t a_flag, bool a_status, time::tick a_start, time::tick a_timeout)
     {
         bool status  = true;
         bool timeout = false;

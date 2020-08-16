@@ -5,16 +5,16 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <soc/stm32l452xx/system/exti_controller.hpp>
 
-//soc
+// soc
 #include <soc/stm32l452xx/peripherals/GPIO.hpp>
 #ifdef CML_ASSERT
 #include <soc/stm32l452xx/mcu.hpp>
 #endif
 
-//cml
+// cml
 #include <cml/debug/assert.hpp>
 
 namespace {
@@ -30,10 +30,9 @@ struct Handler
 
 Handler handlers[16];
 
-} // namespace ::
+} // namespace
 
-extern "C"
-{
+extern "C" {
 
 using namespace cml;
 
@@ -123,12 +122,12 @@ using namespace soc::stm32l452xx::peripherals;
 
 void exti_controller::enable(uint32_t a_priority)
 {
-    NVIC_SetPriority(EXTI0_IRQn,     a_priority);
-    NVIC_SetPriority(EXTI1_IRQn,     a_priority);
-    NVIC_SetPriority(EXTI2_IRQn,     a_priority);
-    NVIC_SetPriority(EXTI3_IRQn,     a_priority);
-    NVIC_SetPriority(EXTI4_IRQn,     a_priority);
-    NVIC_SetPriority(EXTI9_5_IRQn,   a_priority);
+    NVIC_SetPriority(EXTI0_IRQn, a_priority);
+    NVIC_SetPriority(EXTI1_IRQn, a_priority);
+    NVIC_SetPriority(EXTI2_IRQn, a_priority);
+    NVIC_SetPriority(EXTI3_IRQn, a_priority);
+    NVIC_SetPriority(EXTI4_IRQn, a_priority);
+    NVIC_SetPriority(EXTI9_5_IRQn, a_priority);
     NVIC_SetPriority(EXTI15_10_IRQn, a_priority);
 
     NVIC_EnableIRQ(EXTI0_IRQn);
@@ -142,25 +141,24 @@ void exti_controller::enable(uint32_t a_priority)
 
 void exti_controller::disable()
 {
-     NVIC_DisableIRQ(EXTI0_IRQn);
-     NVIC_DisableIRQ(EXTI1_IRQn);
-     NVIC_DisableIRQ(EXTI2_IRQn);
-     NVIC_DisableIRQ(EXTI3_IRQn);
-     NVIC_DisableIRQ(EXTI4_IRQn);
-     NVIC_DisableIRQ(EXTI9_5_IRQn);
-     NVIC_DisableIRQ(EXTI15_10_IRQn);
+    NVIC_DisableIRQ(EXTI0_IRQn);
+    NVIC_DisableIRQ(EXTI1_IRQn);
+    NVIC_DisableIRQ(EXTI2_IRQn);
+    NVIC_DisableIRQ(EXTI3_IRQn);
+    NVIC_DisableIRQ(EXTI4_IRQn);
+    NVIC_DisableIRQ(EXTI9_5_IRQn);
+    NVIC_DisableIRQ(EXTI15_10_IRQn);
 }
 
-void exti_controller::register_callback(pin::In* a_p_pin,
-                                        Interrupt_mode a_mode,
-                                        const Callback& a_callback)
+void exti_controller::register_callback(pin::In* a_p_pin, Interrupt_mode a_mode, const Callback& a_callback)
 {
     assert(nullptr != a_p_pin);
     assert(true == mcu::is_syscfg_enabled());
     assert(nullptr == handlers[static_cast<uint32_t>(a_p_pin->get_id())].callback.function);
 
     set_flag(&(SYSCFG->EXTICR[a_p_pin->get_id() / 4u]),
-            (static_cast<uint32_t>(a_p_pin->get_port()->get_id()) << ((static_cast<uint32_t>(a_p_pin->get_id()) % 4u) * 4u)));
+             (static_cast<uint32_t>(a_p_pin->get_port()->get_id())
+              << ((static_cast<uint32_t>(a_p_pin->get_id()) % 4u) * 4u)));
 
     clear_bit(&(EXTI->RTSR1), a_p_pin->get_id());
     clear_bit(&(EXTI->FTSR1), a_p_pin->get_id());
@@ -168,20 +166,17 @@ void exti_controller::register_callback(pin::In* a_p_pin,
 
     switch (a_mode)
     {
-        case Interrupt_mode::rising:
-        {
+        case Interrupt_mode::rising: {
             set_bit(&(EXTI->RTSR1), a_p_pin->get_id());
         }
         break;
 
-        case Interrupt_mode::falling:
-        {
+        case Interrupt_mode::falling: {
             set_bit(&(EXTI->FTSR1), a_p_pin->get_id());
         }
         break;
 
-        default:
-        {
+        default: {
             if ((Interrupt_mode::rising | Interrupt_mode::falling) == a_mode)
             {
                 set_bit(&(EXTI->RTSR1), a_p_pin->get_id());
@@ -198,12 +193,13 @@ void exti_controller::unregister_callback(const pin::In& a_pin)
     clear_bit(&(EXTI->RTSR1), a_pin.get_id());
     clear_bit(&(EXTI->FTSR1), a_pin.get_id());
 
-    clear_flag(&(SYSCFG->EXTICR[a_pin.get_id() / 4u]),
-               (static_cast<uint32_t>(a_pin.get_port()->get_id()) << ((static_cast<uint32_t>(a_pin.get_id()) % 4u) * 4u)));
+    clear_flag(
+        &(SYSCFG->EXTICR[a_pin.get_id() / 4u]),
+        (static_cast<uint32_t>(a_pin.get_port()->get_id()) << ((static_cast<uint32_t>(a_pin.get_id()) % 4u) * 4u)));
 
     handlers[a_pin.get_id()] = { { nullptr, nullptr }, nullptr };
 }
 
+} // namespace system
 } // namespace stm32l452xx
-} // namespace hal
-} // namespace cml
+} // namespace soc

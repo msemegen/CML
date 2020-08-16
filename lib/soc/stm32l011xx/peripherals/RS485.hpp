@@ -7,11 +7,11 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//soc
+// soc
 #include <soc/stm32l011xx/peripherals/GPIO.hpp>
 #include <soc/stm32l011xx/peripherals/USART.hpp>
 
-//cml
+// cml
 #include <cml/Non_copyable.hpp>
 #include <cml/type_traits.hpp>
 
@@ -22,7 +22,6 @@ namespace peripherals {
 class RS485 : public cml::Non_copyable
 {
 public:
-
     using Oversampling    = USART::Oversampling;
     using Stop_bits       = USART::Stop_bits;
     using Bus_status_flag = USART::Bus_status_flag;
@@ -42,10 +41,10 @@ public:
     };
 
 public:
-
     RS485(USART::Id)
         : p_flow_control_pin(nullptr)
-    {}
+    {
+    }
 
     ~RS485()
     {
@@ -60,8 +59,7 @@ public:
 
     void disable();
 
-    template<typename Data_t>
-    Result transmit_polling(uint8_t a_address, const Data_t& a_data)
+    template<typename Data_t> Result transmit_polling(uint8_t a_address, const Data_t& a_data)
     {
         static_assert(true == cml::is_pod<Data_t>());
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data));
@@ -74,15 +72,13 @@ public:
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data), a_timeout);
     }
 
-    template<typename Data_t>
-    Result receive_polling(Data_t* a_p_data)
+    template<typename Data_t> Result receive_polling(Data_t* a_p_data)
     {
         static_assert(true == cml::is_pod<Data_t>());
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
-    template<typename Data_t>
-    Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
     {
         static_assert(true == cml::is_pod<Data_t>());
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
@@ -112,7 +108,7 @@ public:
     bool is_enabled() const;
 
     Oversampling get_oversampling() const;
-    Stop_bits    get_stop_bits()    const;
+    Stop_bits get_stop_bits() const;
 
     uint32_t get_baud_rate() const
     {
@@ -125,7 +121,6 @@ public:
     }
 
 private:
-
     pin::Out* p_flow_control_pin;
 
     TX_callback tx_callback;
@@ -136,10 +131,9 @@ private:
     USART::Clock clock;
 
 private:
-
     friend void rs485_interrupt_handler(RS485* a_p_this);
 };
 
-} // namespace soc
-} // namespace stm32l011xx
 } // namespace peripherals
+} // namespace stm32l011xx
+} // namespace soc

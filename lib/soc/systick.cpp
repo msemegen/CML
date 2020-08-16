@@ -5,10 +5,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <soc/systick.hpp>
 
-//externals
+// externals
 
 #ifdef STM32L452xx
 #include <stm32l4xx.h>
@@ -18,23 +18,21 @@
 #include <stm32l0xx.h>
 #endif
 
-//cml
+// cml
 #include <cml/bit.hpp>
 
-//soc
+// soc
 #include <soc/Interrupt_guard.hpp>
 
-namespace
-{
+namespace {
 
 using namespace soc;
 
 systick::Tick_callback callback;
 
-} // namespace ::
+} // namespace
 
-extern "C"
-{
+extern "C" {
 
 void SysTick_Handler()
 {

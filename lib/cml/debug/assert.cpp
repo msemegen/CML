@@ -5,17 +5,17 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <cml/debug/assert.hpp>
 
 namespace {
 
 using namespace cml::debug;
 
-assert::Halt  halt{ nullptr, nullptr };
-assert::Print print{ nullptr, nullptr };
+assert::Halt halt { nullptr, nullptr };
+assert::Print print { nullptr, nullptr };
 
-} // namespace ::
+} // namespace
 
 namespace cml {
 namespace debug {

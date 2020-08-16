@@ -7,7 +7,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//soc
+// soc
 #include <soc/Interrupt_guard.hpp>
 
 namespace cml {
