@@ -7,7 +7,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #include <cml/time.hpp>
 
 namespace soc {
@@ -16,13 +16,12 @@ namespace stm32l452xx {
 class misc
 {
 public:
-
     misc()            = delete;
     misc(misc&&)      = delete;
     misc(const misc&) = delete;
 
-    misc& operator = (misc&&)      = delete;
-    misc& operator = (const misc&) = delete;
+    misc& operator=(misc&&) = delete;
+    misc& operator=(const misc&) = delete;
 
     static void delay_us(cml::time::tick a_time);
 };

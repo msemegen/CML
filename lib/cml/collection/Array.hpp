@@ -7,20 +7,18 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//cml
+// cml
 #include <cml/debug/assert.hpp>
 
 namespace cml {
 namespace collection {
 
-template<typename Type_t>
-class Array
+template<typename Type_t> class Array
 {
 public:
-
     Array(Type_t* a_p_buffer, uint32_t a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
@@ -31,12 +29,12 @@ public:
         }
     }
 
-    Array()                      = delete;
-    Array(Array<Type_t>&&)       = default;
-    Array(const Array<Type_t>&)  = default;
+    Array()                     = delete;
+    Array(Array<Type_t>&&)      = default;
+    Array(const Array<Type_t>&) = default;
 
-    Array<Type_t>& operator = (Array<Type_t>&&)      = default;
-    Array<Type_t>& operator = (const Array<Type_t>&) = default;
+    Array<Type_t>& operator=(Array<Type_t>&&) = default;
+    Array<Type_t>& operator=(const Array<Type_t>&) = default;
 
     uint32_t get_capacity() const
     {
@@ -55,7 +53,7 @@ public:
         return this->p_buffer[a_index];
     }
 
-    bool operator == (const Array<Type_t>& a_other) const
+    bool operator==(const Array<Type_t>& a_other) const
     {
         bool retval = this->capacity == a_other.capacity;
 
@@ -67,7 +65,7 @@ public:
         return retval;
     }
 
-    bool operator == (Array<Type_t>&& a_other) const
+    bool operator==(Array<Type_t>&& a_other) const
     {
         bool retval = this->capacity == a_other.capacity;
 
@@ -80,7 +78,6 @@ public:
     }
 
 private:
-
     Type_t* p_buffer;
     uint32_t capacity;
 };

@@ -5,15 +5,15 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <soc/stm32l452xx/system/rng.hpp>
 
-//soc
-#include <soc/counter.hpp>
+// soc
 #include <soc/Interrupt_guard.hpp>
+#include <soc/counter.hpp>
 #include <soc/stm32l452xx/mcu.hpp>
 
-//cml
+// cml
 #include <cml/debug/assert.hpp>
 #include <cml/utils/wait.hpp>
 
@@ -23,10 +23,9 @@ using namespace soc::stm32l452xx::system;
 
 rng::New_value_callback new_value_callback;
 
-} // namespace ::
+} // namespace
 
-extern "C"
-{
+extern "C" {
 
 using namespace cml;
 using namespace cml::debug;
@@ -36,17 +35,15 @@ void RNG_IRQHandler()
     assert(nullptr != new_value_callback.function);
 
     const uint32_t isr = RNG->SR;
-    uint32_t val = 0;
+    uint32_t val       = 0;
 
     if (true == is_flag(isr, RNG_SR_DRDY))
     {
         val = RNG->DR;
     }
 
-    new_value_callback.function(val,
-                                is_flag(isr, RNG_SR_CECS),
-                                is_flag(isr, RNG_SR_SECS),
-                                new_value_callback.p_user_data);
+    new_value_callback.function(
+        val, is_flag(isr, RNG_SR_CECS), is_flag(isr, RNG_SR_SECS), new_value_callback.p_user_data);
 
     NVIC_ClearPendingIRQ(RNG_IRQn);
 

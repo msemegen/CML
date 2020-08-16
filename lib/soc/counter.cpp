@@ -5,7 +5,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <soc/counter.hpp>
 
 namespace {
@@ -14,7 +14,7 @@ using namespace cml;
 
 time::tick cnt = 0;
 
-} // namespace ::
+} // namespace
 
 namespace soc {
 

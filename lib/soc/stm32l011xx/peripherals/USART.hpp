@@ -7,16 +7,16 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//externals
+// externals
 #include <stm32l0xx.h>
 
-//cml
+// cml
+#include <cml/Non_copyable.hpp>
 #include <cml/bit.hpp>
 #include <cml/frequency.hpp>
-#include <cml/Non_copyable.hpp>
 #include <cml/time.hpp>
 #include <cml/type_traits.hpp>
 
@@ -27,7 +27,6 @@ namespace peripherals {
 class USART : private cml::Non_copyable
 {
 public:
-
     enum class Id : uint32_t
     {
         _2 = 0,
@@ -51,9 +50,9 @@ public:
 
     enum class Flow_control_flag : uint32_t
     {
-        none                          = 0x0u,
-        request_to_send               = USART_CR3_RTSE,
-        clear_to_send                 = USART_CR3_CTSE,
+        none            = 0x0u,
+        request_to_send = USART_CR3_RTSE,
+        clear_to_send   = USART_CR3_CTSE,
         unknown
     };
 
@@ -135,7 +134,7 @@ public:
 
     struct TX_callback
     {
-        using Function = bool(*)(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data);
+        using Function = bool (*)(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -143,7 +142,7 @@ public:
 
     struct RX_callback
     {
-        using Function = bool(*)(uint32_t a_data, bool a_idle, void* a_p_user_data);
+        using Function = bool (*)(uint32_t a_data, bool a_idle, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -151,17 +150,17 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = bool(*)(Bus_status_flag a_bus_status, void* a_p_user_data);
+        using Function = bool (*)(Bus_status_flag a_bus_status, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
 public:
-
     USART(Id)
         : baud_rate(0)
-    {}
+    {
+    }
 
     ~USART()
     {
@@ -172,8 +171,8 @@ public:
     USART(USART&)       = default;
     USART(const USART&) = default;
 
-    USART& operator = (USART&&)      = default;
-    USART& operator = (const USART&) = default;
+    USART& operator=(USART&&) = default;
+    USART& operator=(const USART&) = default;
 
     bool enable(const Config& a_config,
                 const Frame_format& a_frame_format,
@@ -183,29 +182,25 @@ public:
 
     void disable();
 
-    template<typename Data_t>
-    Result transmit_polling(const Data_t& a_data)
+    template<typename Data_t> Result transmit_polling(const Data_t& a_data)
     {
         static_assert(true == cml::is_pod<Data_t>());
         return this->transmit_bytes_polling(&a_data, sizeof(a_data));
     }
 
-    template<typename Data_t>
-    Result transmit_polling(const Data_t& a_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result transmit_polling(const Data_t& a_data, cml::time::tick a_timeout)
     {
         static_assert(true == cml::is_pod<Data_t>());
         return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout);
     }
 
-    template<typename Data_t>
-    Result receive_polling(Data_t* a_p_data)
+    template<typename Data_t> Result receive_polling(Data_t* a_p_data)
     {
         static_assert(true == cml::is_pod<Data_t>());
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
-    template<typename Data_t>
-    Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
     {
         static_assert(true == cml::is_pod<Data_t>());
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
@@ -248,11 +243,11 @@ public:
         return nullptr != this->tx_callback.function;
     }
 
-    Oversampling      get_oversampling()    const;
-    Stop_bits         get_stop_bits()       const;
-    Flow_control_flag get_flow_control()    const;
-    Sampling_method   get_sampling_method() const;
-    Mode_flag         get_mode()            const;
+    Oversampling get_oversampling() const;
+    Stop_bits get_stop_bits() const;
+    Flow_control_flag get_flow_control() const;
+    Sampling_method get_sampling_method() const;
+    Mode_flag get_mode() const;
 
     bool is_enabled() const;
 
@@ -277,7 +272,6 @@ public:
     }
 
 private:
-
     TX_callback tx_callback;
     RX_callback rx_callback;
     Bus_status_callback bus_status_callback;
@@ -288,53 +282,52 @@ private:
     Frame_format frame_format;
 
 private:
-
     friend void usart_interrupt_handler(USART* a_p_this);
 };
 
-constexpr USART::Bus_status_flag operator | (USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
+constexpr USART::Bus_status_flag operator|(USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
 {
     return static_cast<USART::Bus_status_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Bus_status_flag operator & (USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
+constexpr USART::Bus_status_flag operator&(USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
 {
     return static_cast<USART::Bus_status_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Bus_status_flag operator |= (USART::Bus_status_flag& a_f1, USART::Bus_status_flag a_f2)
+constexpr USART::Bus_status_flag operator|=(USART::Bus_status_flag& a_f1, USART::Bus_status_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;
 }
 
-constexpr USART::Flow_control_flag operator | (USART::Flow_control_flag a_f1, USART::Flow_control_flag a_f2)
+constexpr USART::Flow_control_flag operator|(USART::Flow_control_flag a_f1, USART::Flow_control_flag a_f2)
 {
     return static_cast<USART::Flow_control_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Flow_control_flag operator & (USART::Flow_control_flag a_f1, USART::Flow_control_flag a_f2)
+constexpr USART::Flow_control_flag operator&(USART::Flow_control_flag a_f1, USART::Flow_control_flag a_f2)
 {
     return static_cast<USART::Flow_control_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Flow_control_flag operator |= (USART::Flow_control_flag& a_f1, USART::Flow_control_flag a_f2)
+constexpr USART::Flow_control_flag operator|=(USART::Flow_control_flag& a_f1, USART::Flow_control_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;
 }
 
-constexpr USART::Mode_flag operator | (USART::Mode_flag a_f1, USART::Mode_flag a_f2)
+constexpr USART::Mode_flag operator|(USART::Mode_flag a_f1, USART::Mode_flag a_f2)
 {
     return static_cast<USART::Mode_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Mode_flag operator & (USART::Mode_flag a_f1, USART::Mode_flag a_f2)
+constexpr USART::Mode_flag operator&(USART::Mode_flag a_f1, USART::Mode_flag a_f2)
 {
     return static_cast<USART::Mode_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Mode_flag operator |= (USART::Mode_flag& a_f1, USART::Mode_flag a_f2)
+constexpr USART::Mode_flag operator|=(USART::Mode_flag& a_f1, USART::Mode_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;

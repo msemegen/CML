@@ -5,10 +5,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <cml/utils/Command_line.hpp>
 
-//cml
+// cml
 #include <cml/common/memory.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/hal/peripherals/USART.hpp>
@@ -22,24 +22,21 @@ using namespace cml::hal;
 
 void Command_line::update()
 {
-    char c[] = { 0, 0, 0 };
+    char c[]        = { 0, 0, 0 };
     uint32_t length = this->read_character.function(c, sizeof(c), this->read_character.p_user_data);
     if (1 == length)
     {
         switch (c[0])
         {
-            case '\n':
-            {
+            case '\n': {
                 if (this->line_length > 0)
                 {
                     this->line_buffer[this->line_length] = 0;
 
                     this->commands_carousel.push(this->line_buffer, this->line_length);
 
-                    this->callback_parameters_buffer_view = this->get_callback_parameters(this->line_buffer,
-                                                                                          this->line_length,
-                                                                                          " -",
-                                                                                          2);
+                    this->callback_parameters_buffer_view =
+                        this->get_callback_parameters(this->line_buffer, this->line_length, " -", 2);
 
                     bool command_executed = this->execute_command(this->callback_parameters_buffer_view);
                     if (false == command_executed)
@@ -58,8 +55,7 @@ void Command_line::update()
             }
             break;
 
-            case '\b':
-            {
+            case '\b': {
                 if (this->line_length > 0)
                 {
                     this->line_buffer[this->line_length--] = 0;
@@ -68,8 +64,7 @@ void Command_line::update()
             }
             break;
 
-            default:
-            {
+            default: {
                 if (this->line_length + 1 < config::command_line::line_buffer_capacity)
                 {
                     this->line_buffer[this->line_length++] = c[0];
@@ -92,8 +87,7 @@ Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(
     Vector<Callback::Parameter> ret(this->callback_parameters_buffer,
                                     config::command_line::callback_parameters_buffer_capacity);
 
-    auto contains = [](char a_character, const char* a_p_separators, uint32_t a_separators_count)
-    {
+    auto contains = [](char a_character, const char* a_p_separators, uint32_t a_separators_count) {
         bool ret = false;
 
         for (decltype(a_separators_count) i = 0; i < a_separators_count && false == ret; i++)
@@ -135,12 +129,12 @@ bool Command_line::execute_command(const Vector<Callback::Parameter>& a_paramete
 {
     uint32_t index = this->callbacks_buffer_view.get_capacity();
 
-    for (uint32_t i = 0; i < this->callbacks_buffer_view.get_length() &&
-                             this->callbacks_buffer_view.get_capacity() == index; i++)
+    for (uint32_t i = 0;
+         i < this->callbacks_buffer_view.get_length() && this->callbacks_buffer_view.get_capacity() == index;
+         i++)
     {
-        if (true == cstring::equals(a_parameters[0].a_p_value,
-                                    this->callbacks_buffer_view[i].p_name,
-                                    a_parameters[0].length))
+        if (true ==
+            cstring::equals(a_parameters[0].a_p_value, this->callbacks_buffer_view[i].p_name, a_parameters[0].length))
         {
             index = i;
         }
@@ -165,8 +159,7 @@ void Command_line::execute_escape_sequence(char a_first, char a_second)
 
         switch (a_second)
         {
-            case 'A':
-            {
+            case 'A': {
                 const Commands_carousel::Command& command = this->commands_carousel.read_next();
 
                 memory::copy(this->line_buffer, sizeof(this->line_buffer), command.buffer, command.length);
@@ -176,8 +169,7 @@ void Command_line::execute_escape_sequence(char a_first, char a_second)
             }
             break;
 
-            case 'B':
-            {
+            case 'B': {
                 const Commands_carousel::Command& command = this->commands_carousel.read_prev();
 
                 memory::copy(this->line_buffer, sizeof(this->line_buffer), command.buffer, command.length);
@@ -187,7 +179,6 @@ void Command_line::execute_escape_sequence(char a_first, char a_second)
             }
             break;
         }
-
     }
 }
 

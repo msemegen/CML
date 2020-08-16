@@ -7,10 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//cml
+// cml
 #include <cml/common/cstring.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/utils/config.hpp>
@@ -21,10 +21,9 @@ namespace utils {
 class Console
 {
 public:
-
     struct Write_character_handler
     {
-        using Function = uint32_t(*)(char a_character, void* a_p_user_data);
+        using Function = uint32_t (*)(char a_character, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -32,7 +31,7 @@ public:
 
     struct Write_string_handler
     {
-        using Function = uint32_t(*)(const char* a_p_string, uint32_t a_length, void* a_p_user_data);
+        using Function = uint32_t (*)(const char* a_p_string, uint32_t a_length, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -40,14 +39,13 @@ public:
 
     struct Read_character_handler
     {
-        using Function = uint32_t(*)(char* a_p_out, uint32_t a_buffer_size, void* a_p_user_data);
+        using Function = uint32_t (*)(char* a_p_out, uint32_t a_buffer_size, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
 public:
-
     Console(const Write_character_handler& a_write_character_handler,
             const Write_string_handler& a_write_string_handler,
             const Read_character_handler& a_read_character_handler)
@@ -65,8 +63,8 @@ public:
     Console(const Console&) = default;
     ~Console()              = default;
 
-    Console& operator = (Console&&)      = default;
-    Console& operator = (const Console&) = default;
+    Console& operator=(Console&&) = default;
+    Console& operator=(const Console&) = default;
 
     uint32_t write(char a_character)
     {
@@ -82,13 +80,10 @@ public:
                                            this->write_string.p_user_data);
     }
 
-    template<typename ... Params_t>
-    uint32_t write(const char* a_p_format, Params_t ... a_params)
+    template<typename... Params_t> uint32_t write(const char* a_p_format, Params_t... a_params)
     {
-        uint32_t length = common::cstring::format(this->line_buffer,
-                                                  config::console::line_buffer_capacity,
-                                                  a_p_format,
-                                                  a_params ...);
+        uint32_t length =
+            common::cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params...);
 
         return this->write_string.function(this->line_buffer, length, this->write_string.p_user_data);
     }
@@ -101,12 +96,12 @@ public:
 
     uint32_t write_line(const char* a_p_string)
     {
-        uint32_t length = common::memory::copy(this->line_buffer,
-                                               config::command_line::line_buffer_capacity,
+        uint32_t length =
+            common::memory::copy(this->line_buffer,
+                                 config::command_line::line_buffer_capacity,
 
-                                               a_p_string,
-                                               common::cstring::length(a_p_string,
-                                                                       config::command_line::line_buffer_capacity));
+                                 a_p_string,
+                                 common::cstring::length(a_p_string, config::command_line::line_buffer_capacity));
 
         if (length < config::command_line::line_buffer_capacity)
         {
@@ -120,13 +115,10 @@ public:
         return this->write_string.function(this->line_buffer, length, this->write_string.p_user_data);
     }
 
-    template<typename ... Params_t>
-    uint32_t write_line(const char* a_p_format, Params_t ... a_params)
+    template<typename... Params_t> uint32_t write_line(const char* a_p_format, Params_t... a_params)
     {
-        uint32_t length = common::cstring::format(this->line_buffer,
-                                                  config::console::line_buffer_capacity,
-                                                  a_p_format,
-                                                  a_params ...);
+        uint32_t length =
+            common::cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params...);
 
         if (length < config::command_line::line_buffer_capacity)
         {
@@ -164,10 +156,9 @@ public:
     }
 
 private:
-
     Write_character_handler write_character;
-    Write_string_handler    write_string;
-    Read_character_handler  read_character;
+    Write_string_handler write_string;
+    Read_character_handler read_character;
 
     char line_buffer[config::console::line_buffer_capacity];
     char input_buffer[config::console::input_buffer_capacity];

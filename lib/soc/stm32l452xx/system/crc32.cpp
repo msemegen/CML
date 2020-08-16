@@ -7,7 +7,7 @@
 
 #ifdef STM32L452xx
 
-//this
+// this
 #include <soc/stm32l452xx/system/crc32.hpp>
 
 namespace soc {

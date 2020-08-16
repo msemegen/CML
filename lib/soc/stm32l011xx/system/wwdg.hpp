@@ -7,10 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//externals
+// externals
 #include <stm32l011xx.h>
 
 namespace soc {
@@ -20,7 +20,6 @@ namespace system {
 class wwdg
 {
 public:
-
     enum class Prescaler : uint32_t
     {
         _1 = 0,
@@ -31,20 +30,19 @@ public:
 
     struct Callback
     {
-        using Function = void(*)(void* a_p_user_data);
+        using Function = void (*)(void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
 public:
-
     wwdg()            = delete;
     wwdg(wwdg&&)      = delete;
     wwdg(const wwdg&) = delete;
 
-    wwdg& operator = (wwdg&&)      = delete;
-    wwdg& operator = (const wwdg&) = delete;
+    wwdg& operator=(wwdg&&) = delete;
+    wwdg& operator=(const wwdg&) = delete;
 
     static void enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window, uint16_t a_irq_priority);
     static void register_early_wakeup_callback(const Callback& a_callback);

@@ -5,7 +5,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #include <cml/frequency.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
@@ -21,7 +21,7 @@ bool exti_callback(pin::Level, void* a_p_user_data)
     return true;
 }
 
-} // namespace ::
+} // namespace
 
 int main()
 {
@@ -31,13 +31,10 @@ int main()
     using namespace cml::hal::system;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
-    mcu::enable_pll({ mcu::Pll_config::Source::hsi,
-                      false,
-                      mcu::Pll_config::Multiplier::_4,
-                      mcu::Pll_config::Divider::_2 });
-    mcu::set_sysclk(mcu::Sysclk_source::pll, { mcu::Bus_prescalers::AHB::_1,
-                                               mcu::Bus_prescalers::APB1::_1,
-                                               mcu::Bus_prescalers::APB2::_1 });
+    mcu::enable_pll(
+        { mcu::Pll_config::Source::hsi, false, mcu::Pll_config::Multiplier::_4, mcu::Pll_config::Divider::_2 });
+    mcu::set_sysclk(mcu::Sysclk_source::pll,
+                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::pll == mcu::get_sysclk_source())
     {
@@ -58,12 +55,14 @@ int main()
         pin::in::enable(&gpio_port_a, 9u, pin::Pull::down, &exti_in);
 
         exti_controller::enable(0x5u);
-        exti_controller::register_callback(&exti_in,
-                                           exti_controller::Interrupt_mode::rising,
-                                           { exti_callback, &led_pin });
+        exti_controller::register_callback(
+            &exti_in, exti_controller::Interrupt_mode::rising, { exti_callback, &led_pin });
 
-        while (true){}
+        while (true)
+        {
+        }
     }
 
-    while (true);
+    while (true)
+        ;
 }

@@ -7,15 +7,15 @@
 
 #ifdef STM32L011xx
 
-//this
+// this
 #include <soc/stm32l011xx/peripherals/ADC.hpp>
 
-//soc
-#include <soc/counter.hpp>
+// soc
 #include <soc/Interrupt_guard.hpp>
+#include <soc/counter.hpp>
 #include <soc/stm32l011xx/mcu.hpp>
 
-//cml
+// cml
 #include <cml/bit.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/utils/delay.hpp>
@@ -41,10 +41,9 @@ bool is_channel(ADC::Channel a_type, const ADC::Channel* a_p_channels, uint32_t 
     return found;
 }
 
-} // namespace ::
+} // namespace
 
-extern "C"
-{
+extern "C" {
 
 void ADC1_COMP_IRQHandler()
 {
@@ -68,7 +67,7 @@ void adc_interrupt_handler(ADC* a_p_this)
     if (true == is_flag(isr, ADC_ISR_EOC))
     {
         const bool series_end = is_flag(isr, ADC_ISR_EOS);
-        const bool ret = callaback.function(ADC1->DR, series_end, callaback.p_user_data);
+        const bool ret        = callaback.function(ADC1->DR, series_end, callaback.p_user_data);
 
         if (true == series_end)
         {
@@ -83,7 +82,10 @@ void adc_interrupt_handler(ADC* a_p_this)
     }
 }
 
-bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32_t a_irq_priority, time::tick a_timeout)
+bool ADC::enable(Resolution a_resolution,
+                 const Synchronous_clock& a_clock,
+                 uint32_t a_irq_priority,
+                 time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
     assert(a_timeout > 0);
@@ -96,7 +98,10 @@ bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint
     return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
 
-bool ADC::enable(Resolution a_resolution, const Asynchronous_clock& a_clock, uint32_t a_irq_priority, time::tick a_timeout)
+bool ADC::enable(Resolution a_resolution,
+                 const Asynchronous_clock& a_clock,
+                 uint32_t a_irq_priority,
+                 time::tick a_timeout)
 {
     assert(nullptr == p_adc_1);
     assert(true == mcu::is_clock_enabled(mcu::Clock::hsi));
@@ -194,7 +199,7 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
     set_flag(&(ADC1->CR), ADC_CR_ADSTART);
 
-    bool ret = true;
+    bool ret         = true;
     time::tick start = counter::get();
 
     for (uint32_t i = 0; i < a_count && true == ret; i++)

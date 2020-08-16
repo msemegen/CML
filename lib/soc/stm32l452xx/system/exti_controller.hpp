@@ -7,10 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//soc
+// soc
 #include <soc/stm32l452xx/peripherals/GPIO.hpp>
 
 namespace soc {
@@ -20,7 +20,6 @@ namespace system {
 class exti_controller
 {
 public:
-
     enum class Interrupt_mode : uint32_t
     {
         rising  = 0x1,
@@ -29,47 +28,42 @@ public:
 
     struct Callback
     {
-        using Function = bool(*)(peripherals::pin::Level a_level, void* a_p_user_data);
+        using Function = bool (*)(peripherals::pin::Level a_level, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
 public:
-
     exti_controller()                       = delete;
     exti_controller(exti_controller&&)      = delete;
     exti_controller(const exti_controller&) = delete;
 
-    exti_controller& operator = (exti_controller&&)      = delete;
-    exti_controller& operator = (const exti_controller&) = delete;
+    exti_controller& operator=(exti_controller&&) = delete;
+    exti_controller& operator=(const exti_controller&) = delete;
 
     static void enable(uint32_t a_priority);
     static void disable();
 
-    static void register_callback(peripherals::pin::In* a_p_pin,
-                                  Interrupt_mode a_mode,
-                                  const Callback& a_callback);
+    static void register_callback(peripherals::pin::In* a_p_pin, Interrupt_mode a_mode, const Callback& a_callback);
 
     static void unregister_callback(const peripherals::pin::In& a_pin);
 };
 
-constexpr exti_controller::Interrupt_mode operator | (exti_controller::Interrupt_mode a_f1,
-                                                      exti_controller::Interrupt_mode a_f2)
+constexpr exti_controller::Interrupt_mode operator|(exti_controller::Interrupt_mode a_f1,
+                                                    exti_controller::Interrupt_mode a_f2)
 {
-    return static_cast<exti_controller::Interrupt_mode>(static_cast<uint32_t>(a_f1) | 
-                                                        static_cast<uint32_t>(a_f2));
+    return static_cast<exti_controller::Interrupt_mode>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
-constexpr exti_controller::Interrupt_mode operator & (exti_controller::Interrupt_mode a_f1,
-                                                      exti_controller::Interrupt_mode a_f2)
+constexpr exti_controller::Interrupt_mode operator&(exti_controller::Interrupt_mode a_f1,
+                                                    exti_controller::Interrupt_mode a_f2)
 {
-    return static_cast<exti_controller::Interrupt_mode>(static_cast<uint32_t>(a_f1) &
-                                                        static_cast<uint32_t>(a_f2));
+    return static_cast<exti_controller::Interrupt_mode>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
-constexpr exti_controller::Interrupt_mode operator |= (exti_controller::Interrupt_mode& a_f1,
-                                                       exti_controller::Interrupt_mode a_f2)
+constexpr exti_controller::Interrupt_mode operator|=(exti_controller::Interrupt_mode& a_f1,
+                                                     exti_controller::Interrupt_mode a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;

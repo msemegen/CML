@@ -7,10 +7,10 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//cml
+// cml
 #include <cml/numeric_traits.hpp>
 
 namespace cml {

@@ -7,13 +7,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//externals
+// externals
 #include <stm32l0xx.h>
 
-//cml
+// cml
 #include <cml/bit.hpp>
 
 namespace soc {
@@ -23,7 +23,6 @@ namespace system {
 class crc32
 {
 public:
-
     enum class In_data_reverse : uint32_t
     {
         none      = 0,
@@ -67,14 +66,13 @@ public:
     }
 
 private:
-
     crc32()             = delete;
     crc32(crc32&&)      = delete;
     crc32(const crc32&) = delete;
     ~crc32()            = default;
 
-    crc32& operator = (crc32&&)      = delete;
-    crc32& operator = (const crc32&) = delete;
+    crc32& operator=(crc32&&) = delete;
+    crc32& operator=(const crc32&) = delete;
 };
 
 } // namespace system

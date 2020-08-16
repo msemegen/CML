@@ -23,7 +23,7 @@ namespace system {
 using exti_controller = soc::stm32l452xx::system::exti_controller;
 #endif // STM32L452xx
 
-#ifdef  STM32L011xx
+#ifdef STM32L011xx
 using exti_controller = soc::stm32l011xx::system::exti_controller;
 #endif // STM32L011xx
 

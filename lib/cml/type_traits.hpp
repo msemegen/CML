@@ -11,8 +11,7 @@ namespace cml {
 
 #ifdef __GNUG__
 
-template<typename Type_t>
-bool is_pod()
+template<typename Type_t> bool is_pod()
 {
     return __is_pod(Type_t);
 }

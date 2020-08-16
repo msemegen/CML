@@ -5,19 +5,18 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #include <cml/collection/Vector.hpp>
 #include <cml/common/cstring.hpp>
 #include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
-#include <cml/hal/systick.hpp>
 #include <cml/hal/peripherals/USART.hpp>
+#include <cml/hal/systick.hpp>
 #include <cml/utils/Command_line.hpp>
 #include <cml/utils/Console.hpp>
 
-namespace
-{
+namespace {
 
 using namespace cml::collection;
 using namespace cml::common;
@@ -72,7 +71,7 @@ uint32_t read_key(char* a_p_out, uint32_t a_length, void* a_p_user_data)
     return p_console_usart->receive_bytes_polling(a_p_out, a_length).data_length_in_words;
 }
 
-} // namespace ::
+} // namespace
 
 int main()
 {
@@ -82,43 +81,28 @@ int main()
     using namespace cml::utils;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
-    mcu::set_sysclk(mcu::Sysclk_source::hsi, { mcu::Bus_prescalers::AHB::_1,
-                                               mcu::Bus_prescalers::APB1::_1,
-                                               mcu::Bus_prescalers::APB2::_1 });
+    mcu::set_sysclk(mcu::Sysclk_source::hsi,
+                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
         mcu::set_nvic({ mcu::NVIC_config::Grouping::_4, 16u << 4u });
 
-        USART::Config usart_config =
-        {
-            115200u,
-            USART::Oversampling::_16,
-            USART::Stop_bits::_1,
-            USART::Flow_control_flag::none,
-            USART::Sampling_method::three_sample_bit,
-            USART::Mode_flag::rx | USART::Mode_flag::tx
-        };
+        USART::Config usart_config = { 115200u,
+                                       USART::Oversampling::_16,
+                                       USART::Stop_bits::_1,
+                                       USART::Flow_control_flag::none,
+                                       USART::Sampling_method::three_sample_bit,
+                                       USART::Mode_flag::rx | USART::Mode_flag::tx };
 
-        USART::Frame_format usart_frame_format
-        {
-            USART::Word_length::_8_bit,
-            USART::Parity::none
-        };
+        USART::Frame_format usart_frame_format { USART::Word_length::_8_bit, USART::Parity::none };
 
-        USART::Clock usart_clock
-        {
+        USART::Clock usart_clock {
             USART::Clock::Source::sysclk,
             mcu::get_sysclk_frequency_hz(),
         };
 
-        pin::af::Config usart_pin_config =
-        {
-            pin::Mode::push_pull,
-            pin::Pull::up,
-            pin::Speed::low,
-            0x7u
-        };
+        pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::low, 0x7u };
 
         mcu::disable_msi_clock();
 
@@ -139,15 +123,14 @@ int main()
             pin::Out led_pin;
             pin::out::enable(&gpio_port_a, 5, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
 
-            Console console({ write_character, &console_usart },
-                            { write_string,    &console_usart },
-                            { read_key,        &console_usart });
+            Console console(
+                { write_character, &console_usart }, { write_string, &console_usart }, { read_key, &console_usart });
 
             console.write_line("\nCML CLI sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             Command_line command_line({ write_character, &console_usart },
-                                      { write_string,    &console_usart },
-                                      { read_key,        &console_usart },
+                                      { write_string, &console_usart },
+                                      { read_key, &console_usart },
                                       "cmd > ",
                                       "Command not found");
 
@@ -163,5 +146,6 @@ int main()
         }
     }
 
-    while (true);
+    while (true)
+        ;
 }

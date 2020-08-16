@@ -7,13 +7,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//externals
+// externals
 #include <stm32l0xx.h>
 
-//cml
+// cml
 #include <cml/bit.hpp>
 #include <cml/frequency.hpp>
 
@@ -93,10 +93,10 @@ struct mcu
 
         enum class Multiplier
         {
-            _3 = RCC_CFGR_PLLMUL3,
-            _4 = RCC_CFGR_PLLMUL4,
-            _6 = RCC_CFGR_PLLMUL6,
-            _8 = RCC_CFGR_PLLMUL8,
+            _3  = RCC_CFGR_PLLMUL3,
+            _4  = RCC_CFGR_PLLMUL4,
+            _6  = RCC_CFGR_PLLMUL6,
+            _8  = RCC_CFGR_PLLMUL8,
             _12 = RCC_CFGR_PLLMUL12,
             _16 = RCC_CFGR_PLLMUL16,
             _24 = RCC_CFGR_PLLMUL24,
@@ -122,13 +122,13 @@ struct mcu
 
     struct Device_id
     {
-        const uint8_t  serial_number[12] = { 0 };
-        const uint32_t type              = 0;
+        const uint8_t serial_number[12] = { 0 };
+        const uint32_t type             = 0;
     };
 
     struct Sysclk_frequency_change_callback
     {
-        using Function = void(*)(void* a_p_user_data);
+        using Function = void (*)(void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -169,13 +169,12 @@ struct mcu
             unknown
         };
 
-        AHB  ahb  = AHB::unknown;
+        AHB ahb   = AHB::unknown;
         APB1 apb1 = APB1::unknown;
         APB2 apb2 = APB2::unknown;
     };
 
 public:
-
     static void enable_msi_clock(Msi_frequency a_freq);
     static void enable_hsi_clock(Hsi_frequency a_freq);
     static void enable_lsi_clock(Lsi_frequency a_freq);
@@ -217,12 +216,20 @@ public:
     {
         const uint8_t* p_id_location = reinterpret_cast<uint8_t*>(UID_BASE);
 
-        return { { p_id_location[0], p_id_location[1], p_id_location[2],  p_id_location[3],
-                   p_id_location[4], p_id_location[5], p_id_location[6],  p_id_location[7],
-                   p_id_location[8], p_id_location[9], p_id_location[10], p_id_location[11] },
+        return { { p_id_location[0],
+                   p_id_location[1],
+                   p_id_location[2],
+                   p_id_location[3],
+                   p_id_location[4],
+                   p_id_location[5],
+                   p_id_location[6],
+                   p_id_location[7],
+                   p_id_location[8],
+                   p_id_location[9],
+                   p_id_location[10],
+                   p_id_location[11] },
 
-                  DBGMCU->IDCODE
-        };
+                 DBGMCU->IDCODE };
     }
 
     static Sysclk_source get_sysclk_source()
@@ -251,14 +258,12 @@ public:
         {
             case Clock::msi:
             case Clock::hsi:
-            case Clock::pll:
-            {
+            case Clock::pll: {
                 return cml::is_flag(RCC->CR, static_cast<uint32_t>(a_clock));
             }
             break;
 
-            case Clock::lsi:
-            {
+            case Clock::lsi: {
                 return cml::is_flag(RCC->CSR, RCC_CSR_LSION);
             }
             break;
@@ -292,14 +297,13 @@ public:
     }
 
 private:
-
     mcu()           = delete;
     mcu(const mcu&) = delete;
     mcu(mcu&&)      = delete;
     ~mcu()          = default;
 
-    mcu& operator = (const mcu&) = delete;
-    mcu& operator = (mcu&&)      = delete;
+    mcu& operator=(const mcu&) = delete;
+    mcu& operator=(mcu&&) = delete;
 
     static Flash_latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
     static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);

@@ -7,7 +7,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #ifdef STM32L452xx
 #include <soc/stm32l452xx/peripherals/I2C.hpp>
 #endif // STM32L452xx
@@ -33,5 +33,5 @@ using I2C_slave  = soc::stm32l011xx::peripherals::I2C_slave;
 #endif // STM32L011xx
 
 } // namespace peripherals
-} // namespace cml
 } // namespace hal
+} // namespace cml

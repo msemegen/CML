@@ -7,14 +7,14 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//cml
-#include <cml/numeric_traits.hpp>
+// cml
 #include <cml/common/cstring.hpp>
 #include <cml/common/memory.hpp>
 #include <cml/debug/assert.hpp>
+#include <cml/numeric_traits.hpp>
 
 namespace cml {
 namespace collection {
@@ -22,12 +22,12 @@ namespace collection {
 class String
 {
 public:
-
     String(char* a_p_buffer, uint32_t a_capacity)
         : p_buffer(a_p_buffer)
         , capacity(a_capacity)
         , length(0)
-    {}
+    {
+    }
 
     String(char* a_p_buffer, uint32_t a_capacity, const char* a_p_init)
         : p_buffer(a_p_buffer)
@@ -80,7 +80,7 @@ public:
 
     void clear()
     {
-        this->length = 0;
+        this->length      = 0;
         this->p_buffer[0] = 0;
     }
 
@@ -105,12 +105,11 @@ public:
     }
 
 private:
-
     char* p_buffer;
 
     const uint32_t capacity;
     uint32_t length;
- };
+};
 
 } // namespace collection
 } // namespace cml

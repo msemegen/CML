@@ -7,13 +7,13 @@
 
 #ifdef STM32L011xx
 
-//this
+// this
 #include <soc/stm32l011xx/system/wwdg.hpp>
 
-//soc
+// soc
 #include <soc/Interrupt_guard.hpp>
 
-//cml
+// cml
 #include <cml/bit.hpp>
 
 namespace {
@@ -25,10 +25,9 @@ uint16_t reload = 0;
 
 wwdg::Callback callback;
 
-} // namespace ::
+} // namespace
 
-extern "C"
-{
+extern "C" {
 
 void WWDG_IRQHandler()
 {
@@ -48,7 +47,7 @@ using namespace cml;
 
 void wwdg::enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window, uint16_t a_irq_priority)
 {
-    WWDG->CR = (WWDG_CR_WDGA | a_reload);
+    WWDG->CR  = (WWDG_CR_WDGA | a_reload);
     WWDG->CFR = static_cast<uint32_t>(a_prescaler) | a_window;
 
     NVIC_SetPriority(WWDG_IRQn, a_irq_priority);

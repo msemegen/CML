@@ -7,13 +7,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//externals
+// externals
 #include <stm32l011xx.h>
 
-//cml
+// cml
 #include <cml/time.hpp>
 
 namespace soc {
@@ -23,7 +23,6 @@ namespace system {
 class iwdg
 {
 public:
-
     enum class Prescaler : uint32_t
     {
         _4   = 0x0u,
@@ -42,18 +41,14 @@ public:
     };
 
 public:
-
     iwdg()            = delete;
     iwdg(iwdg&&)      = delete;
     iwdg(const iwdg&) = delete;
 
-    iwdg& operator = (iwdg&&)      = delete;
-    iwdg& operator = (const iwdg&) = delete;
+    iwdg& operator=(iwdg&&) = delete;
+    iwdg& operator=(const iwdg&) = delete;
 
-    static bool enable(Prescaler a_prescaler,
-                       uint16_t a_reload,
-                       const Window& a_window,
-                       cml::time::tick a_timeout);
+    static bool enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_window, cml::time::tick a_timeout);
 
     static void disable();
     static void feed();

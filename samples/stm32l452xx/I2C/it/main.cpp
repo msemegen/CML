@@ -5,74 +5,63 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #include <cml/bit.hpp>
 #include <cml/frequency.hpp>
 #include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
-#include <cml/hal/systick.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/I2C.hpp>
 #include <cml/hal/peripherals/USART.hpp>
-#include <cml/utils/delay.hpp>
+#include <cml/hal/systick.hpp>
 #include <cml/utils/Console.hpp>
+#include <cml/utils/delay.hpp>
 
 //#define MASTER
 #define SLAVE
 
-namespace
-{
-    using namespace cml;
-    using namespace cml::hal::peripherals;
-    using namespace cml::utils;
+namespace {
+using namespace cml;
+using namespace cml::hal::peripherals;
+using namespace cml::utils;
 
-void print_status(Console* a_p_console,
-                  const char* a_p_tag,
-                  I2C_base::Bus_status_flag a_bus_status,
-                  uint32_t a_bytes)
+void print_status(Console* a_p_console, const char* a_p_tag, I2C_base::Bus_status_flag a_bus_status, uint32_t a_bytes)
 {
     a_p_console->write("[%s] status: ", a_p_tag);
 
     switch (a_bus_status)
     {
-        case I2C_base::Bus_status_flag::ok:
-        {
+        case I2C_base::Bus_status_flag::ok: {
             a_p_console->write("ok ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::buffer_error:
-        {
+        case I2C_base::Bus_status_flag::buffer_error: {
             a_p_console->write("overrun / underrun ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::arbitration_lost:
-        {
+        case I2C_base::Bus_status_flag::arbitration_lost: {
             a_p_console->write("arbitration lost ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::misplaced:
-        {
+        case I2C_base::Bus_status_flag::misplaced: {
             a_p_console->write("misplaced ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::crc_error:
-        {
+        case I2C_base::Bus_status_flag::crc_error: {
             a_p_console->write("crc error ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::nack:
-        {
+        case I2C_base::Bus_status_flag::nack: {
             a_p_console->write("nack ");
         }
         break;
 
-        case I2C_base::Bus_status_flag::unknown:
-        {
+        case I2C_base::Bus_status_flag::unknown: {
             a_p_console->write("unknown ");
         }
         break;
@@ -84,7 +73,6 @@ void print_status(Console* a_p_console,
 class Tx_context
 {
 public:
-
     void inc()
     {
         this->data[0]++;
@@ -105,7 +93,7 @@ public:
 
     void reset()
     {
-        this->i = 0;
+        this->i    = 0;
         this->stop = false;
     }
 
@@ -130,16 +118,14 @@ public:
     }
 
 private:
-
     mutable uint32_t i = 0;
-    bool stop = false;
-    uint8_t data[2] = { 0x0u, 0x0u };
+    bool stop          = false;
+    uint8_t data[2]    = { 0x0u, 0x0u };
 };
 
 class Rx_context
 {
 public:
-
     void set(uint8_t a_value)
     {
         assert(this->i < sizeof(this->data));
@@ -161,7 +147,7 @@ public:
 
     void reset()
     {
-        this->i = 0;
+        this->i    = 0;
         this->stop = false;
     }
 
@@ -186,9 +172,8 @@ public:
     }
 
 private:
-
-    uint32_t i = 0;
-    bool stop = false;
+    uint32_t i      = 0;
+    bool stop       = false;
     uint8_t data[2] = { 0x0u, 0x0u };
 };
 
@@ -202,7 +187,7 @@ void rx_callback(uint8_t a_value, bool a_stop, void* a_p_user_data)
     {
         p_rx_context->set(a_value);
     }
-    else if(true == a_stop)
+    else if (true == a_stop)
     {
         p_rx_context->set_stop();
     }
@@ -246,7 +231,7 @@ uint32_t read_key(char* a_p_out, uint32_t a_length, void* a_p_user_data)
     return p_console_usart->receive_bytes_polling(a_p_out, a_length).data_length_in_words;
 }
 
-} // namespace ::
+} // namespace
 
 int main()
 {
@@ -255,9 +240,8 @@ int main()
     using namespace cml::utils;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
-    mcu::set_sysclk(mcu::Sysclk_source::hsi, { mcu::Bus_prescalers::AHB::_1,
-                                               mcu::Bus_prescalers::APB1::_1,
-                                               mcu::Bus_prescalers::APB2::_1 });
+    mcu::set_sysclk(mcu::Sysclk_source::hsi,
+                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
@@ -275,21 +259,9 @@ int main()
         gpio_port_a.enable();
         gpio_port_b.enable();
 
-        pin::af::Config usart_pin_config =
-        {
-            pin::Mode::push_pull,
-            pin::Pull::up,
-            pin::Speed::low,
-            0x7u
-        };
+        pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::low, 0x7u };
 
-        pin::af::Config i2c_pin_config =
-        {
-            pin::Mode::open_drain,
-            pin::Pull::up,
-            pin::Speed::high,
-            0x4u
-        };
+        pin::af::Config i2c_pin_config = { pin::Mode::open_drain, pin::Pull::up, pin::Speed::high, 0x4u };
 
         pin::af::enable(&gpio_port_a, 2u, usart_pin_config);
         pin::af::enable(&gpio_port_a, 3u, usart_pin_config);
@@ -303,25 +275,23 @@ int main()
                                                   USART::Stop_bits::_1,
                                                   USART::Flow_control_flag::none,
                                                   USART::Sampling_method::three_sample_bit,
-                                                  USART::Mode_flag::tx
-                                                },
+                                                  USART::Mode_flag::tx },
 
-                                                { USART::Word_length::_8_bit,
-                                                  USART::Parity::none
-                                                },
+                                                { USART::Word_length::_8_bit, USART::Parity::none },
 
-                                                { USART::Clock::Source::sysclk,
-                                                  mcu::get_sysclk_frequency_hz(),
+                                                {
+                                                    USART::Clock::Source::sysclk,
+                                                    mcu::get_sysclk_frequency_hz(),
                                                 },
-                                                0x1u, 10);
+                                                0x1u,
+                                                10);
 
         if (true == usart_ready)
         {
 #if defined MASTER && !defined SLAVE
 
-            Console console({ write_character, &console_usart },
-                            { write_string,    &console_usart },
-                            { read_key,        &console_usart });
+            Console console(
+                { write_character, &console_usart }, { write_string, &console_usart }, { read_key, &console_usart });
             console.write_line("CML I2C master sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             I2C_master i2c_master_bus(I2C_master::Id::_1);
@@ -340,21 +310,21 @@ int main()
 
                 while (true)
                 {
-                    i2c_master_bus.register_transmit_callback(0x11,
-                                                              { tx_callback, &(tx_context) },
-                                                              tx_context.get_length());
+                    i2c_master_bus.register_transmit_callback(
+                        0x11, { tx_callback, &(tx_context) }, tx_context.get_length());
 
-                    while (false == tx_context.is_stop() && I2C_master::Bus_status_flag::ok == bus_status);
+                    while (false == tx_context.is_stop() && I2C_master::Bus_status_flag::ok == bus_status)
+                        ;
                     uint32_t r = tx_context.get_i();
                     tx_context.reset();
 
                     if (I2C_master::Bus_status_flag::ok == bus_status)
                     {
-                        i2c_master_bus.register_receive_callback(0x11,
-                                                                 { rx_callback, &(rx_context) },
-                                                                 rx_context.get_length());
+                        i2c_master_bus.register_receive_callback(
+                            0x11, { rx_callback, &(rx_context) }, rx_context.get_length());
 
-                        while (false == rx_context.is_stop() && I2C_master::Bus_status_flag::ok == bus_status);
+                        while (false == rx_context.is_stop() && I2C_master::Bus_status_flag::ok == bus_status)
+                            ;
                         r += rx_context.get_i();
                         rx_context.reset();
 
@@ -367,15 +337,15 @@ int main()
                 }
             }
             console.write_line("No slave detected...");
-            while (true);
+            while (true)
+                ;
 
 #endif // defined MASTER && !defined SLAVE
 
 #if defined SLAVE && !defined MASTER
 
-            Console console({ write_character, &console_usart },
-                            { write_string,    &console_usart },
-                            { read_key,        &console_usart });
+            Console console(
+                { write_character, &console_usart }, { write_string, &console_usart }, { read_key, &console_usart });
             console.write_line("CML I2C slave sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
             I2C_slave i2c_slave_bus(I2C_slave::Id::_1);
@@ -389,7 +359,8 @@ int main()
             while (true)
             {
                 i2c_slave_bus.register_receive_callback({ rx_callback, &(rx_context) }, rx_context.get_length());
-                while (false == rx_context.is_stop() && I2C_slave::Bus_status_flag::ok == bus_status);
+                while (false == rx_context.is_stop() && I2C_slave::Bus_status_flag::ok == bus_status)
+                    ;
                 uint32_t r = rx_context.get_i();
 
                 if (true == rx_context.is_full() && I2C_slave::Bus_status_flag::ok == bus_status)
@@ -397,8 +368,9 @@ int main()
                     rx_context.reset();
                     print_status(&console, "register_receive_callback", bus_status, r);
 
-                    i2c_slave_bus.register_transmit_callback( { tx_callback, &(tx_context) }, tx_context.get_length());
-                    while (false == tx_context.is_stop() && I2C_master::Bus_status_flag::ok == bus_status);
+                    i2c_slave_bus.register_transmit_callback({ tx_callback, &(tx_context) }, tx_context.get_length());
+                    while (false == tx_context.is_stop() && I2C_master::Bus_status_flag::ok == bus_status)
+                        ;
                     r = tx_context.get_i();
                     tx_context.inc();
 
@@ -427,5 +399,6 @@ int main()
         }
     }
 
-    while (true);
+    while (true)
+        ;
 }

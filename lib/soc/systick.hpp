@@ -7,22 +7,21 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
-//cml
-#include <cml/time.hpp>
+// cml
 #include <cml/debug/assert.hpp>
+#include <cml/time.hpp>
 
 namespace soc {
 
 class systick
 {
 public:
-
     struct Tick_callback
     {
-        using Function = void(*)(void* a_p_user_data);
+        using Function = void (*)(void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -37,14 +36,13 @@ public:
     static bool is_enabled();
 
 private:
-
     systick()               = delete;
     systick(systick&&)      = delete;
     systick(const systick&) = delete;
     ~systick()              = default;
 
-    systick& operator = (systick&&)      = delete;
-    systick& operator = (const systick&) = delete;
+    systick& operator=(systick&&) = delete;
+    systick& operator=(const systick&) = delete;
 };
 
 } // namespace soc

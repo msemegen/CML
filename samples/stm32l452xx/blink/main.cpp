@@ -5,13 +5,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//cml
+// cml
 #include <cml/bit.hpp>
 #include <cml/frequency.hpp>
 #include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
-#include <cml/hal/systick.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
+#include <cml/hal/systick.hpp>
 #include <cml/utils/delay.hpp>
 
 int main()
@@ -22,9 +22,8 @@ int main()
     using namespace cml::utils;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
-    mcu::set_sysclk(mcu::Sysclk_source::hsi, { mcu::Bus_prescalers::AHB::_1,
-                                               mcu::Bus_prescalers::APB1::_1,
-                                               mcu::Bus_prescalers::APB2::_1 });
+    mcu::set_sysclk(mcu::Sysclk_source::hsi,
+                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 });
 
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
@@ -49,5 +48,6 @@ int main()
         }
     }
 
-    while (true);
+    while (true)
+        ;
 }

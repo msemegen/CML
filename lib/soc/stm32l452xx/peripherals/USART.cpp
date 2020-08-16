@@ -7,16 +7,16 @@
 
 #ifdef STM32L452xx
 
-//this
+// this
 #include <soc/stm32l452xx/peripherals/GPIO.hpp>
 #include <soc/stm32l452xx/peripherals/RS485.hpp>
 #include <soc/stm32l452xx/peripherals/USART.hpp>
 
-//soc
-#include <soc/counter.hpp>
+// soc
 #include <soc/Interrupt_guard.hpp>
+#include <soc/counter.hpp>
 
-//cml
+// cml
 #include <cml/debug/assert.hpp>
 #include <cml/utils/wait.hpp>
 
@@ -117,8 +117,8 @@ void clear_USART_ISR_errors(volatile uint32_t* a_p_icr)
 
 struct Controller
 {
-    using Enable_function  = void(*)(USART::Clock::Source a_clock_source, uint32_t a_irq_priority);
-    using Disable_function = void(*)();
+    using Enable_function  = void (*)(USART::Clock::Source a_clock_source, uint32_t a_irq_priority);
+    using Disable_function = void (*)();
 
     USART_TypeDef* p_registers = nullptr;
     USART* p_usart_handle      = nullptr;
@@ -128,17 +128,13 @@ struct Controller
     Disable_function disable = nullptr;
 };
 
-Controller controllers[] =
-{
-    { USART1, nullptr, nullptr, usart_1_enable, usart_1_disable },
-    { USART2, nullptr, nullptr, usart_2_enable, usart_2_disable },
-    { USART3, nullptr, nullptr, usart_3_enable, usart_3_disable }
-};
+Controller controllers[] = { { USART1, nullptr, nullptr, usart_1_enable, usart_1_disable },
+                             { USART2, nullptr, nullptr, usart_2_enable, usart_2_disable },
+                             { USART3, nullptr, nullptr, usart_3_enable, usart_3_disable } };
 
-} // namespace ::
+} // namespace
 
-extern "C"
-{
+extern "C" {
 
 static void interrupt_handler(uint32_t a_index)
 {
@@ -189,19 +185,16 @@ void usart_interrupt_handler(USART* a_p_this)
 
     if (nullptr != a_p_this->tx_callback.function)
     {
-        if (true == is_flag(isr, USART_ISR_TXE) &&
-            true == is_flag(cr1, USART_CR1_TXEIE))
+        if (true == is_flag(isr, USART_ISR_TXE) && true == is_flag(cr1, USART_CR1_TXEIE))
         {
-            if (false == a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR),
-                                                        false,
-                                                        a_p_this->tx_callback.p_user_data))
+            if (false ==
+                a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR), false, a_p_this->tx_callback.p_user_data))
             {
                 a_p_this->unregister_transmit_callback();
             }
         }
 
-        if (true == is_flag(isr, USART_ISR_TC) &&
-            true == is_flag(cr1, USART_CR1_TCIE))
+        if (true == is_flag(isr, USART_ISR_TC) && true == is_flag(cr1, USART_CR1_TCIE))
         {
             if (false == a_p_this->tx_callback.function(nullptr, true, a_p_this->tx_callback.p_user_data))
             {
@@ -216,9 +209,7 @@ void usart_interrupt_handler(USART* a_p_this)
 
         if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
         {
-            status = a_p_this->rx_callback.function(a_p_this->p_usart->RDR,
-                                                    false,
-                                                    a_p_this->rx_callback.p_user_data);
+            status = a_p_this->rx_callback.function(a_p_this->p_usart->RDR, false, a_p_this->rx_callback.p_user_data);
         }
 
         else if (true == is_flag(isr, USART_ISR_IDLE) && true == is_flag(cr1, USART_CR1_IDLEIE))
@@ -233,8 +224,7 @@ void usart_interrupt_handler(USART* a_p_this)
         }
     }
 
-    if (nullptr != a_p_this->bus_status_callback.function &&
-        true == is_flag(cr3, USART_CR3_EIE) &&
+    if (nullptr != a_p_this->bus_status_callback.function && true == is_flag(cr3, USART_CR3_EIE) &&
         true == is_flag(cr1, USART_CR1_PEIE))
     {
         USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR(isr);
@@ -257,19 +247,16 @@ void rs485_interrupt_handler(RS485* a_p_this)
 
     if (nullptr != a_p_this->tx_callback.function)
     {
-        if (true == is_flag(isr, USART_ISR_TXE) &&
-            true == is_flag(cr1, USART_CR1_TXEIE))
+        if (true == is_flag(isr, USART_ISR_TXE) && true == is_flag(cr1, USART_CR1_TXEIE))
         {
-            if (false == a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR),
-                                                        false,
-                                                        a_p_this->tx_callback.p_user_data))
+            if (false ==
+                a_p_this->tx_callback.function(&(a_p_this->p_usart->TDR), false, a_p_this->tx_callback.p_user_data))
             {
                 a_p_this->unregister_transmit_callback();
             }
         }
 
-        if (true == is_flag(isr, USART_ISR_TC) &&
-            true == is_flag(cr1, USART_CR1_TCIE))
+        if (true == is_flag(isr, USART_ISR_TC) && true == is_flag(cr1, USART_CR1_TCIE))
         {
             if (false == a_p_this->tx_callback.function(nullptr, true, a_p_this->tx_callback.p_user_data))
             {
@@ -288,10 +275,7 @@ void rs485_interrupt_handler(RS485* a_p_this)
 
             if (false == is_flag(rdr, 0x100))
             {
-                status = a_p_this->rx_callback.function(rdr,
-                                                        false,
-                                                        a_p_this->rx_callback.p_user_data);
-
+                status = a_p_this->rx_callback.function(rdr, false, a_p_this->rx_callback.p_user_data);
             }
         }
         else if (true == is_flag(isr, USART_ISR_IDLE) && true == is_flag(cr1, USART_CR1_IDLEIE))
@@ -306,8 +290,7 @@ void rs485_interrupt_handler(RS485* a_p_this)
         }
     }
 
-    if (nullptr != a_p_this->bus_status_callback.function &&
-        true == is_flag(cr3, USART_CR3_EIE) &&
+    if (nullptr != a_p_this->bus_status_callback.function && true == is_flag(cr3, USART_CR3_EIE) &&
         true == is_flag(cr1, USART_CR1_PEIE))
     {
         USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR(isr);
@@ -322,7 +305,7 @@ void rs485_interrupt_handler(RS485* a_p_this)
 
 bool USART::enable(const Config& a_config,
                    const Frame_format& a_frame_format,
-                   const Clock &a_clock,
+                   const Clock& a_clock,
                    uint32_t a_irq_priority,
                    time::tick a_timeout_ms)
 {
@@ -330,16 +313,16 @@ bool USART::enable(const Config& a_config,
     assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
 
-    assert(0                          != a_config.baud_rate);
+    assert(0 != a_config.baud_rate);
     assert(Flow_control_flag::unknown != a_config.flow_control);
-    assert(Stop_bits::unknown         != a_config.stop_bits);
-    assert(Sampling_method::unknown   != a_config.sampling_method);
+    assert(Stop_bits::unknown != a_config.stop_bits);
+    assert(Sampling_method::unknown != a_config.sampling_method);
 
-    assert(Parity::unknown      != a_frame_format.parity);
+    assert(Parity::unknown != a_frame_format.parity);
     assert(Word_length::unknown != a_frame_format.word_length);
 
     assert(Clock::Source::unknown != a_clock.source);
-    assert(0                      != a_clock.frequency_hz);
+    assert(0 != a_clock.frequency_hz);
     assert(a_timeout_ms > 0);
 
     time::tick start = counter::get();
@@ -351,21 +334,18 @@ bool USART::enable(const Config& a_config,
 
     switch (a_config.oversampling)
     {
-        case Oversampling::_16:
-        {
+        case Oversampling::_16: {
             this->p_usart->BRR = a_clock.frequency_hz / a_config.baud_rate;
         }
         break;
 
-        case Oversampling::_8:
-        {
+        case Oversampling::_8: {
             const uint32_t usartdiv = 2 * a_clock.frequency_hz / a_config.baud_rate;
-            this->p_usart->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
+            this->p_usart->BRR      = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
 
-        case Oversampling::unknown:
-        {
+        case Oversampling::unknown: {
             assert(a_config.oversampling != Oversampling::unknown);
         }
         break;
@@ -374,11 +354,9 @@ bool USART::enable(const Config& a_config,
     this->p_usart->CR2 = static_cast<uint32_t>(a_config.stop_bits);
     this->p_usart->CR3 = static_cast<uint32_t>(a_config.flow_control) | static_cast<uint32_t>(a_config.sampling_method);
 
-    this->p_usart->CR1 = static_cast<uint32_t>(a_config.oversampling)      |
-                         static_cast<uint32_t>(a_config.mode)              |
-                         static_cast<uint32_t>(a_frame_format.parity)      |
-                         static_cast<uint32_t>(a_frame_format.word_length) |
-                         USART_CR1_UE;
+    this->p_usart->CR1 = static_cast<uint32_t>(a_config.oversampling) | static_cast<uint32_t>(a_config.mode) |
+                         static_cast<uint32_t>(a_frame_format.parity) |
+                         static_cast<uint32_t>(a_frame_format.word_length) | USART_CR1_UE;
 
     this->baud_rate    = a_config.baud_rate;
     this->clock        = a_clock;
@@ -386,8 +364,6 @@ bool USART::enable(const Config& a_config,
 
     uint32_t wait_flag = (true == is_flag(USART2->CR1, USART_CR1_RE) ? USART_ISR_REACK : 0) |
                          (true == is_flag(USART2->CR1, USART_CR1_TE) ? USART_ISR_TEACK : 0);
-
-
 
     return wait::until(&(USART2->ISR), wait_flag, false, start, a_timeout_ms);
 }
@@ -419,8 +395,8 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
 
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
 
-    uint32_t words = 0;
-    bool error = false;
+    uint32_t words             = 0;
+    bool error                 = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
     while (false == is_flag(this->p_usart->ISR, USART_ISR_TC) && false == error)
@@ -449,7 +425,8 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
     return { bus_status, words };
 }
 
-USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, time::tick a_timeout_ms)
+USART::Result
+USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, time::tick a_timeout_ms)
 {
     assert(nullptr != this->p_usart);
     assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
@@ -463,12 +440,11 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
 
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
 
-    uint32_t words = 0;
-    bool error = false;
+    uint32_t words             = 0;
+    bool error                 = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
-    while (false == is_flag(this->p_usart->ISR, USART_ISR_TC) &&
-           false ==  error &&
+    while (false == is_flag(this->p_usart->ISR, USART_ISR_TC) && false == error &&
            a_timeout_ms < time::diff(counter::get(), start))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_TXE) && words < a_data_size_in_words)
@@ -506,8 +482,8 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
     set_flag(&(this->p_usart->ICR), USART_ICR_IDLECF);
 
-    uint32_t words = 0;
-    bool error = false;
+    uint32_t words             = 0;
+    bool error                 = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
     while (false == is_flag(this->p_usart->ISR, USART_ISR_IDLE) && false == error)
@@ -558,12 +534,11 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
     set_flag(&(this->p_usart->ICR), USART_ICR_IDLECF);
 
-    uint32_t ret = 0;
-    bool error = false;
+    uint32_t ret               = 0;
+    bool error                 = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
-    while (false == is_flag(this->p_usart->ISR, USART_ISR_IDLE) &&
-           false == error &&
+    while (false == is_flag(this->p_usart->ISR, USART_ISR_IDLE) && false == error &&
            a_timeout_ms >= time::diff(counter::get(), start))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_RXNE))
@@ -698,21 +673,18 @@ void USART::set_baud_rate(uint32_t a_baud_rate)
 
     switch (oversampling)
     {
-        case Oversampling::_8:
-        {
+        case Oversampling::_8: {
             const uint32_t usartdiv = 2 * this->clock.frequency_hz / a_baud_rate;
-            this->p_usart->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
+            this->p_usart->BRR      = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
 
-        case Oversampling::_16:
-        {
+        case Oversampling::_16: {
             this->p_usart->BRR = this->clock.frequency_hz / a_baud_rate;
         }
         break;
 
-        case Oversampling::unknown:
-        {
+        case Oversampling::unknown: {
             assert(Oversampling::unknown != oversampling);
         }
         break;
@@ -782,10 +754,9 @@ void USART::set_frame_format(const Frame_format& a_frame_format)
 
     clear_flag(&(this->p_usart->CR1), USART_CR1_UE);
     set_flag(&(this->p_usart->CR1),
-               USART_CR1_PCE | USART_CR1_M,
-               static_cast<uint32_t>(a_frame_format.parity)      |
-               static_cast<uint32_t>(a_frame_format.word_length) |
-               USART_CR1_UE);
+             USART_CR1_PCE | USART_CR1_M,
+             static_cast<uint32_t>(a_frame_format.parity) | static_cast<uint32_t>(a_frame_format.word_length) |
+                 USART_CR1_UE);
 
     this->frame_format = a_frame_format;
 }
@@ -808,7 +779,6 @@ bool USART::set_mode(Mode_flag a_mode, time::tick a_timeout_ms)
 
     return wait::until(&(USART2->ISR), wait_flag, false, start, a_timeout_ms);
 }
-
 
 USART::Oversampling USART::get_oversampling() const
 {
@@ -866,12 +836,12 @@ bool RS485::enable(const Config& a_config,
     assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_rs485_handle &&
            nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle);
 
-    assert(nullptr            != a_p_flow_control_pin);
-    assert(0                  != a_config.baud_rate);
+    assert(nullptr != a_p_flow_control_pin);
+    assert(0 != a_config.baud_rate);
     assert(Stop_bits::unknown != a_config.stop_bits);
 
     assert(USART::Clock::Source::unknown != a_clock.source);
-    assert(0                             != a_clock.frequency_hz);
+    assert(0 != a_clock.frequency_hz);
     assert(a_timeout > 0);
 
     time::tick start = counter::get();
@@ -883,33 +853,29 @@ bool RS485::enable(const Config& a_config,
 
     switch (a_config.oversampling)
     {
-        case Oversampling::_16:
-        {
+        case Oversampling::_16: {
             this->p_usart->BRR = a_clock.frequency_hz / a_config.baud_rate;
         }
         break;
 
-        case Oversampling::_8:
-        {
+        case Oversampling::_8: {
             const uint32_t usartdiv = 2 * a_clock.frequency_hz / a_config.baud_rate;
-            this->p_usart->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
+            this->p_usart->BRR      = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
 
-        case Oversampling::unknown:
-        {
+        case Oversampling::unknown: {
             assert(a_config.oversampling != Oversampling::unknown);
         }
         break;
     }
 
     this->p_usart->CR3 = USART_CR3_ONEBIT;
-    this->p_usart->CR2 = static_cast<uint32_t>(a_config.stop_bits) |
-                         (a_config.address << USART_CR2_ADD_Pos) |
-                         USART_CR2_ADDM7;
+    this->p_usart->CR2 =
+        static_cast<uint32_t>(a_config.stop_bits) | (a_config.address << USART_CR2_ADD_Pos) | USART_CR2_ADDM7;
 
-    this->p_usart->CR1 = static_cast<uint32_t>(a_config.oversampling) |
-                         USART_CR1_M0 | USART_CR1_UE | USART_CR1_TE | USART_CR1_RE | USART_CR1_MME | USART_CR1_WAKE;
+    this->p_usart->CR1 = static_cast<uint32_t>(a_config.oversampling) | USART_CR1_M0 | USART_CR1_UE | USART_CR1_TE |
+                         USART_CR1_RE | USART_CR1_MME | USART_CR1_WAKE;
 
     this->p_usart->RQR = USART_RQR_MMRQ;
 
@@ -917,11 +883,8 @@ bool RS485::enable(const Config& a_config,
     this->baud_rate          = a_config.baud_rate;
     this->clock              = a_clock;
 
-    bool ret = wait::until(&(this->p_usart->ISR),
-                           USART_ISR_TEACK | USART_ISR_REACK | USART_ISR_RWU,
-                           false,
-                           start,
-                           a_timeout);
+    bool ret =
+        wait::until(&(this->p_usart->ISR), USART_ISR_TEACK | USART_ISR_REACK | USART_ISR_RWU, false, start, a_timeout);
 
     if (true == ret)
     {
@@ -949,7 +912,7 @@ void RS485::disable()
     controllers[static_cast<uint32_t>(this->id)].disable();
     controllers[static_cast<uint32_t>(this->id)].p_rs485_handle = nullptr;
 
-    this->p_usart = nullptr;
+    this->p_usart            = nullptr;
     this->p_flow_control_pin = nullptr;
 }
 
@@ -965,8 +928,8 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address, const void* a_p_d
 
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
 
-    uint32_t words = 0;
-    bool error = false;
+    uint32_t words             = 0;
+    bool error                 = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
     this->p_flow_control_pin->set_level(pin::Level::high);
@@ -1019,14 +982,13 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address,
 
     set_flag(&(this->p_usart->ICR), USART_ICR_TCCF);
 
-    uint32_t words = 0;
-    bool error     = false;
+    uint32_t words             = 0;
+    bool error                 = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
     this->p_flow_control_pin->set_level(pin::Level::high);
 
-    while (false == is_flag(this->p_usart->ISR, USART_ISR_TC) &&
-           false ==  error &&
+    while (false == is_flag(this->p_usart->ISR, USART_ISR_TC) && false == error &&
            a_timeout_ms < time::diff(counter::get(), start))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_TXE))
@@ -1068,8 +1030,8 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
     set_flag(&(this->p_usart->ICR), USART_ICR_IDLECF);
 
-    uint32_t words = 0;
-    bool error     = false;
+    uint32_t words             = 0;
+    bool error                 = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
     while (false == is_flag(this->p_usart->ISR, USART_ISR_IDLE) && false == error)
@@ -1121,12 +1083,11 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
     set_flag(&(this->p_usart->ICR), USART_ICR_IDLECF);
 
-    uint32_t words = 0;
-    bool error     = false;
+    uint32_t words             = 0;
+    bool error                 = false;
     Bus_status_flag bus_status = Bus_status_flag::ok;
 
-    while (false == is_flag(this->p_usart->ISR, USART_ISR_IDLE) &&
-           false == error &&
+    while (false == is_flag(this->p_usart->ISR, USART_ISR_IDLE) && false == error &&
            a_timeout_ms >= time::diff(counter::get(), start))
     {
         if (true == is_flag(this->p_usart->ISR, USART_ISR_RXNE))
@@ -1267,27 +1228,23 @@ void RS485::set_baud_rate(uint32_t a_baud_rate)
 
     switch (oversampling)
     {
-        case Oversampling::_8:
-        {
+        case Oversampling::_8: {
             const uint32_t usartdiv = 2 * this->clock.frequency_hz / a_baud_rate;
-            this->p_usart->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
+            this->p_usart->BRR      = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
 
-        case Oversampling::_16:
-        {
+        case Oversampling::_16: {
             this->p_usart->BRR = this->clock.frequency_hz / a_baud_rate;
         }
         break;
 
-        case Oversampling::unknown:
-        {
+        case Oversampling::unknown: {
             assert(Oversampling::unknown != oversampling);
         }
         break;
     }
 }
-
 
 void RS485::set_oversampling(Oversampling a_oversampling)
 {

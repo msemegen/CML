@@ -7,7 +7,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
 namespace soc {
@@ -30,8 +30,9 @@ namespace soc {
  *     }   // guard's destructor called here
  *     // Interrupts are enabled.
  */
-class Interrupt_guard {
-  public:
+class Interrupt_guard
+{
+public:
     Interrupt_guard();
     ~Interrupt_guard();
 
@@ -40,7 +41,7 @@ class Interrupt_guard {
     Interrupt_guard& operator=(Interrupt_guard&&) = delete;
     Interrupt_guard& operator=(const Interrupt_guard&) = delete;
 
-  private:
+private:
     uint32_t primask;
 };
 
