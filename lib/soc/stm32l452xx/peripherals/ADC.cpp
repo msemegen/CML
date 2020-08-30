@@ -68,17 +68,12 @@ void adc_interrupt_handler(ADC* a_p_this)
     if (true == is_flag(isr, ADC_ISR_EOC))
     {
         const bool series_end = is_flag(isr, ADC_ISR_EOS);
-        const bool ret        = a_p_this->callaback.function(ADC1->DR, series_end, a_p_this->callaback.p_user_data);
+
+        a_p_this->callaback.function(ADC1->DR, series_end, a_p_this, a_p_this->callaback.p_user_data);
 
         if (true == series_end)
         {
             set_flag(&(ADC1->ISR), ADC_ISR_EOS);
-        }
-
-        if (true == series_end || false == ret)
-        {
-            set_flag(&(ADC1->CR), ADC_CR_ADSTP);
-            clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
         }
     }
 }
@@ -135,7 +130,6 @@ void ADC::disable()
 
 void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_count)
 {
-    assert(nullptr != p_adc_1);
     assert(nullptr != a_p_channels);
     assert(a_channels_count > 0);
 
@@ -201,8 +195,6 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_c
 
 void ADC::clear_active_channels()
 {
-    assert(nullptr != p_adc_1);
-
     ADC1->SQR1 = 0;
 
     ADC1->SQR2 = 0;
@@ -217,7 +209,6 @@ void ADC::clear_active_channels()
 
 void ADC::read_polling(uint16_t* a_p_data, uint32_t a_count)
 {
-    assert(nullptr != p_adc_1);
     assert(nullptr != a_p_data);
     assert(a_count > 0);
 
@@ -240,7 +231,6 @@ void ADC::read_polling(uint16_t* a_p_data, uint32_t a_count)
 
 bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeout)
 {
-    assert(nullptr != p_adc_1);
     assert(nullptr != a_p_data);
     assert(a_count > 0);
     assert(a_timeout > 0);
@@ -280,7 +270,6 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
 void ADC::register_conversion_callback(const Conversion_callback& a_callback)
 {
-    assert(nullptr != p_adc_1);
     assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
@@ -293,9 +282,9 @@ void ADC::register_conversion_callback(const Conversion_callback& a_callback)
 
 void ADC::unregister_conversion_callback()
 {
-    assert(nullptr != p_adc_1);
-
     Interrupt_guard guard;
+
+    set_flag(&(ADC1->CR), ADC_CR_ADSTP);
 
     clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
     clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
@@ -305,8 +294,6 @@ void ADC::unregister_conversion_callback()
 
 void ADC::set_resolution(Resolution a_resolution)
 {
-    assert(nullptr != p_adc_1);
-
     bool is_started = is_flag(ADC1->CR, ADC_CR_ADSTART);
 
     if (true == is_started)

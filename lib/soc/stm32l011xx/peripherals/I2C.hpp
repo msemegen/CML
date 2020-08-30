@@ -57,30 +57,6 @@ public:
         uint32_t data_length       = 0;
     };
 
-    struct TX_callback
-    {
-        using Function = void (*)(volatile uint32_t* a_p_data, bool a_stop, void* a_p_user_data);
-
-        Function function = nullptr;
-        void* p_user_data = nullptr;
-    };
-
-    struct RX_callback
-    {
-        using Function = void (*)(uint8_t a_data, bool a_stop, void* a_p_user_data);
-
-        Function function = nullptr;
-        void* p_user_data = nullptr;
-    };
-
-    struct Bus_status_callback
-    {
-        using Function = bool (*)(Bus_status_flag a_bus_status, void* a_p_user_data);
-
-        Function function = nullptr;
-        void* p_user_data = nullptr;
-    };
-
 public:
     Clock_source get_clock_source() const;
 
@@ -115,16 +91,8 @@ protected:
     {
     }
 
-    void bus_status_interrupt_handler(uint32_t a_isr);
-    void rxne_interrupt_handler(uint32_t a_isr, uint32_t a_cr1);
-    void txe_interrupt_handler(uint32_t a_isr, uint32_t a_cr1);
-    void stopf_interrupt_handler(uint32_t a_isr, uint32_t a_cr1);
-
 protected:
     Id id;
-    RX_callback rx_callback;
-    TX_callback tx_callback;
-    Bus_status_callback bus_status_callback;
 };
 
 constexpr I2C_base::Bus_status_flag operator|(I2C_base::Bus_status_flag a_f1, I2C_base::Bus_status_flag a_f2)
@@ -151,9 +119,29 @@ public:
     using Bus_status_flag = I2C_base::Bus_status_flag;
     using Result          = I2C_base::Result;
 
-    using TX_callback         = I2C_base::TX_callback;
-    using RX_callback         = I2C_base::RX_callback;
-    using Bus_status_callback = I2C_base::Bus_status_callback;
+    struct Transmit_callback
+    {
+        using Function = void (*)(volatile uint32_t* a_p_data, bool a_stop, I2C_master* a_p_this, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    struct Receive_callback
+    {
+        using Function = void (*)(uint8_t a_data, bool a_stop, I2C_master* a_p_this, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    struct Bus_status_callback
+    {
+        using Function = void (*)(Bus_status_flag a_bus_status, I2C_master* a_p_this, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
 
     struct Config
     {
@@ -217,16 +205,41 @@ public:
                                  uint32_t a_data_size_in_bytes,
                                  cml::time::tick a_timeout);
 
-    void
-    register_transmit_callback(uint16_t a_slave_address, const TX_callback& a_callback, uint32_t a_data_size_in_bytes);
+    void register_transmit_callback(uint16_t a_slave_address,
+                                    const Transmit_callback& a_callback,
+                                    uint32_t a_data_size_in_bytes);
 
-    void
-    register_receive_callback(uint16_t a_slave_address, const RX_callback& a_callback, uint32_t a_data_size_in_bytes);
+    void register_receive_callback(uint16_t a_slave_address,
+                                   const Receive_callback& a_callback,
+                                   uint32_t a_data_size_in_bytes);
 
     void register_bus_status_callback(const Bus_status_callback& a_callback);
+
+    void unregister_transmit_callback();
+    void unregister_receive_callback();
     void unregister_bus_status_callback();
 
     bool is_slave_connected(uint16_t a_slave_address, cml::time::tick a_timeout) const;
+
+    bool is_transmit_callback() const
+    {
+        return nullptr != this->transmit_callback.function;
+    }
+
+    bool is_receive_callback() const
+    {
+        return nullptr != this->receive_callback.function;
+    }
+
+    bool is_bus_status_callback() const
+    {
+        return nullptr != this->bus_status_callback.function;
+    }
+
+private:
+    Transmit_callback transmit_callback;
+    Receive_callback receive_callback;
+    Bus_status_callback bus_status_callback;
 
 private:
     friend void i2c_master_interrupt_handler(I2C_master* a_p_this);
@@ -240,10 +253,6 @@ public:
     using Bus_status_flag = I2C_base::Bus_status_flag;
     using Result          = I2C_base::Result;
 
-    using TX_callback         = I2C_base::TX_callback;
-    using RX_callback         = I2C_base::RX_callback;
-    using Bus_status_callback = I2C_base::Bus_status_callback;
-
     struct Config
     {
         bool analog_filter = false;
@@ -251,6 +260,38 @@ public:
         bool crc_enable    = false;
         uint32_t timings   = 0;
         uint16_t address   = 0;
+    };
+
+    struct Transmit_callback
+    {
+        using Function = void (*)(volatile uint32_t* a_p_data, bool a_stop, I2C_slave* a_p_this, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    struct Receive_callback
+    {
+        using Function = void (*)(uint8_t a_data, bool a_stop, I2C_slave* a_p_this, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    struct Bus_status_callback
+    {
+        using Function = void (*)(Bus_status_flag a_bus_status, I2C_slave* a_p_this, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    struct Addres_match_callback
+    {
+        using Function = void (*)(I2C_slave* a_p_this, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
     };
 
 public:
@@ -265,11 +306,11 @@ public:
     }
 
     void enable(const Config& a_config, Clock_source a_clock_source, uint32_t a_irq_priority);
-
     void diasble();
 
     template<typename Data_t> Result transmit_polling(const Data_t& a_data)
     {
+        static_assert(true == cml::is_pod<Data_t>());
         return this->transmit_bytes_polling(&a_data, sizeof(a_data));
     }
 
@@ -297,12 +338,41 @@ public:
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes);
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes, cml::time::tick a_timeout);
 
-    void register_transmit_callback(const TX_callback& a_callback, uint32_t a_data_size_in_bytes);
-
-    void register_receive_callback(const RX_callback& a_callback, uint32_t a_data_size_in_bytes);
-
+    void register_transmit_callback(const Transmit_callback& a_callback, uint32_t a_data_size_in_bytes);
+    void register_receive_callback(const Receive_callback& a_callback, uint32_t a_data_size_in_bytes);
     void register_bus_status_callback(const Bus_status_callback& a_callback);
+    void register_address_match_callback(const Addres_match_callback& a_callback);
+
+    void unregister_transmit_callback();
+    void unregister_receive_callback();
     void unregister_bus_status_callback();
+    void unregister_address_match_callback();
+
+    bool is_transmit_callback() const
+    {
+        return nullptr != this->transmit_callback.function;
+    }
+
+    bool is_receive_callback() const
+    {
+        return nullptr != this->receive_callback.function;
+    }
+
+    bool is_bus_status_callback() const
+    {
+        return nullptr != this->bus_status_callback.function;
+    }
+
+    bool is_address_match_callback() const
+    {
+        return nullptr != this->address_match_callback.function;
+    }
+
+private:
+    Transmit_callback transmit_callback;
+    Receive_callback receive_callback;
+    Bus_status_callback bus_status_callback;
+    Addres_match_callback address_match_callback;
 
 private:
     friend void i2c_slave_interrupt_handler(I2C_slave* a_p_this);

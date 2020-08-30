@@ -36,67 +36,53 @@ extern "C" {
 
 using namespace cml;
 
-static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
+static void interrupt_handler(uint32_t a_pr1, uint32_t a_index)
 {
     assert(nullptr != handlers[a_index].callback.function);
 
     if (true == is_bit(a_pr1, a_index))
     {
-        return handlers[a_index].callback.function(handlers[a_index].p_pin->get_level(),
-                                                   handlers[a_index].callback.p_user_data);
+        handlers[a_index].callback.function(handlers[a_index].p_pin->get_level(),
+                                            handlers[a_index].callback.p_user_data);
     }
-
-    return false;
 }
 
 void EXTI0_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 0))
-    {
-        set_bit(&(EXTI->PR1), 0);
-    }
+    interrupt_handler(EXTI->PR1, 0);
+    set_bit(&(EXTI->PR1), 0);
 }
 
 void EXTI1_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 1))
-    {
-        set_bit(&(EXTI->PR1), 1);
-    }
+    interrupt_handler(EXTI->PR1, 1);
+    set_bit(&(EXTI->PR1), 1);
 }
 
 void EXTI2_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 2))
-    {
-        set_bit(&(EXTI->PR1), 2);
-    }
+    interrupt_handler(EXTI->PR1, 2);
+    set_bit(&(EXTI->PR1), 2);
 }
 
 void EXTI3_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 3))
-    {
-        set_bit(&(EXTI->PR1), 3);
-    }
+    interrupt_handler(EXTI->PR1, 3);
+    set_bit(&(EXTI->PR1), 3);
 }
 
 void EXTI4_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 4))
-    {
-        set_bit(&(EXTI->PR1), 4);
-    }
+    interrupt_handler(EXTI->PR1, 4);
+    set_bit(&(EXTI->PR1), 4);
 }
 
 void EXTI9_5_IRQHandler()
 {
     for (uint32_t i = 5u; i <= 9u; i++)
     {
-        if (true == interrupt_handler(EXTI->PR1, i))
-        {
-            set_bit(&(EXTI->PR1), i);
-        }
+        interrupt_handler(EXTI->PR1, i);
+        set_bit(&(EXTI->PR1), i);
     }
 }
 
@@ -104,10 +90,8 @@ void EXTI15_10_IRQHandler()
 {
     for (uint32_t i = 10u; i <= 15u; i++)
     {
-        if (true == interrupt_handler(EXTI->PR1, i))
-        {
-            set_bit(&(EXTI->PR1), i);
-        }
+        interrupt_handler(EXTI->PR1, i);
+        set_bit(&(EXTI->PR1), i);
     }
 }
 

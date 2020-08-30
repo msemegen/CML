@@ -35,21 +35,17 @@ void RNG_IRQHandler()
     assert(nullptr != new_value_callback.function);
 
     const uint32_t isr = RNG->SR;
-    uint32_t val       = 0;
+    uint32_t value     = 0;
 
     if (true == is_flag(isr, RNG_SR_DRDY))
     {
-        val = RNG->DR;
+        value = RNG->DR;
     }
 
     new_value_callback.function(
-        val, is_flag(isr, RNG_SR_CECS), is_flag(isr, RNG_SR_SECS), new_value_callback.p_user_data);
+        value, is_flag(isr, RNG_SR_CECS), is_flag(isr, RNG_SR_SECS), new_value_callback.p_user_data);
 
     NVIC_ClearPendingIRQ(RNG_IRQn);
-
-    clear_flag(&(RNG->CR), RNG_CR_IE);
-
-    new_value_callback = { nullptr, nullptr };
 }
 
 } // extern "C"
@@ -120,6 +116,16 @@ void rng::register_new_value_callback(const New_value_callback& a_callback)
 
     new_value_callback = a_callback;
     set_flag(&(RNG->CR), RNG_CR_IE);
+}
+
+void rng::unregister_new_value_callback()
+{
+    assert(nullptr != new_value_callback.function);
+
+    Interrupt_guard guard;
+
+    clear_flag(&(RNG->CR), RNG_CR_IE);
+    new_value_callback = { nullptr, nullptr };
 }
 
 } // namespace system

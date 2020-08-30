@@ -132,17 +132,20 @@ public:
         uint32_t data_length_in_words = 0;
     };
 
-    struct TX_callback
+    struct Transmit_callback
     {
-        using Function = bool (*)(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data);
+        using Function = void (*)(volatile uint16_t* a_p_data,
+                                  bool a_transfer_complete,
+                                  USART* a_p_this,
+                                  void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
-    struct RX_callback
+    struct Receive_callback
     {
-        using Function = bool (*)(uint32_t a_data, bool a_idle, void* a_p_user_data);
+        using Function = void (*)(uint32_t a_data, bool a_idle, USART* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -150,7 +153,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = bool (*)(Bus_status_flag a_bus_status, void* a_p_user_data);
+        using Function = void (*)(Bus_status_flag a_bus_status, USART* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -212,8 +215,8 @@ public:
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words);
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout);
 
-    void register_transmit_callback(const TX_callback& a_callback);
-    void register_receive_callback(const RX_callback& a_callback);
+    void register_transmit_callback(const Transmit_callback& a_callback);
+    void register_receive_callback(const Receive_callback& a_callback);
     void register_bus_status_callback(const Bus_status_callback& a_callback);
 
     void unregister_transmit_callback();
@@ -228,19 +231,19 @@ public:
     void set_frame_format(const Frame_format& a_frame_format);
     bool set_mode(Mode_flag a_mode, cml::time::tick a_timeout_ms);
 
-    bool is_transmit_callback_registered() const
+    bool is_transmit_callback() const
     {
-        return nullptr != this->tx_callback.function;
+        return nullptr != this->transmit_callback.function;
     }
 
-    bool is_receive_callback_registered() const
+    bool is_receive_callback() const
     {
-        return nullptr != this->rx_callback.function;
+        return nullptr != this->receive_callback.function;
     }
 
-    bool is_bus_status_callback_registered() const
+    bool is_bus_status_callback() const
     {
-        return nullptr != this->tx_callback.function;
+        return nullptr != this->bus_status_callback.function;
     }
 
     Oversampling get_oversampling() const;
@@ -272,8 +275,8 @@ public:
     }
 
 private:
-    TX_callback tx_callback;
-    RX_callback rx_callback;
+    Transmit_callback transmit_callback;
+    Receive_callback receive_callback;
     Bus_status_callback bus_status_callback;
 
     uint32_t baud_rate;
