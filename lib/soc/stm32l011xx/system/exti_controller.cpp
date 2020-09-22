@@ -38,49 +38,36 @@ extern "C" {
 
 using namespace cml;
 
-static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
+static void interrupt_handler(uint32_t a_index)
 {
     assert(nullptr != handlers[a_index].callback.function);
 
-    if (true == is_bit(a_pr1, a_index))
+    if (true == is_bit(EXTI->PR, a_index))
     {
-        return handlers[a_index].callback.function(handlers[a_index].p_pin->get_level(),
-                                                   handlers[a_index].callback.p_user_data);
-    }
+        handlers[a_index].callback.function(handlers[a_index].p_pin->get_level(),
+                                            handlers[a_index].callback.p_user_data);
 
-    return false;
+        set_bit(&(EXTI->PR), a_index);
+    }
 }
 
 void EXTI0_1_IRQHandler()
 {
-    for (uint32_t i = 0u; i <= 1u; i++)
-    {
-        if (true == interrupt_handler(EXTI->PR, i))
-        {
-            set_bit(&(EXTI->PR), i);
-        }
-    }
+    interrupt_handler(0);
+    interrupt_handler(1);
 }
 
 void EXTI2_3_IRQHandler()
 {
-    for (uint32_t i = 2u; i <= 3u; i++)
-    {
-        if (true == interrupt_handler(EXTI->PR, i))
-        {
-            set_bit(&(EXTI->PR), i);
-        }
-    }
+    interrupt_handler(2);
+    interrupt_handler(3);
 }
 
 void EXTI4_15_IRQHandler()
 {
     for (uint32_t i = 4u; i <= 15u; i++)
     {
-        if (true == interrupt_handler(EXTI->PR, i))
-        {
-            set_bit(&(EXTI->PR), i);
-        }
+        interrupt_handler(i);
     }
 }
 

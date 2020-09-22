@@ -25,10 +25,10 @@ struct assert
 
     struct Print
     {
-        using Function = void (*)(void* a_p_user_data,
-                                  const char* a_p_file,
-                                  uint32_t a_line,
-                                  const char* a_p_expression);
+        using Function = void (*)(const char* a_p_file,
+                                  const char* a_p_line,
+                                  const char* a_p_expression,
+                                  void* a_p_user_data);
 
         Function p_function = nullptr;
         void* p_user_data   = nullptr;

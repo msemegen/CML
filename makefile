@@ -14,7 +14,6 @@ CML_CPP_FILES := lib/cml/common/*.cpp                  \
 				 lib/soc/stm32l452xx/system/*.cpp      \
 
 CML_HPP_FILES := lib/cml/*.hpp                         \
-				 lib/cml/collection/*.hpp              \
 				 lib/cml/common/*.hpp                  \
 				 lib/cml/debug/*.hpp                   \
 				 lib/cml/hal/*.hpp                     \
@@ -29,8 +28,8 @@ CML_HPP_FILES := lib/cml/*.hpp                         \
 				 lib/soc/stm32l452xx/peripherals/*.hpp \
 				 lib/soc/stm32l452xx/system/*.hpp      \
 
-STM32L011XX_SAMPLES := samples/stm32l011xx/*/*.cpp samples/stm32l011xx/*/*/*.cpp
-STM32L452XX_SAMPLES := samples/stm32l452xx/*/*.cpp samples/stm32l452xx/*/*/*.cpp
+STM32L011XX_SAMPLES := samples/stm32l011xx/*/*.cpp
+STM32L452XX_SAMPLES := samples/stm32l452xx/*/*.cpp
 
 .PHONY: format
 

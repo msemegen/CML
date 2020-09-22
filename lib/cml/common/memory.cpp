@@ -7,7 +7,6 @@
 
 // this
 #include <cml/common/memory.hpp>
-#include <cml/debug/assert.hpp>
 
 namespace cml {
 namespace common {

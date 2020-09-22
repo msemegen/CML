@@ -244,12 +244,12 @@ public:
 
     static constexpr cml::frequency get_hsi_frequency_hz()
     {
-        return cml::MHz(16u);
+        return cml::MHz_to_Hz(16u);
     }
 
     static constexpr cml::frequency get_lsi_frequency_hz()
     {
-        return cml::kHz(37u);
+        return cml::kHz_to_Hz(37u);
     }
 
     static bool is_clock_enabled(Clock a_clock)

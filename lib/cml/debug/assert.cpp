@@ -34,7 +34,27 @@ void assert::trap(const char* a_p_file, uint32_t a_line, const char* a_p_express
 {
     if (nullptr != print.p_function)
     {
-        print.p_function(print.p_user_data, a_p_file, a_line, a_p_expression);
+        char number_buffer[10] = { 0 };
+
+        auto line_number_to_string = [&]() -> void {
+            uint32_t i = 0;
+
+            while (0 != a_line)
+            {
+                number_buffer[i++] = (a_line % 10u) + '0';
+                a_line /= 10u;
+            }
+
+            for (uint32_t j = 0; j < i / 2; j++)
+            {
+                char temp                = number_buffer[j];
+                number_buffer[j]         = number_buffer[i - j - 1];
+                number_buffer[i - j - 1] = temp;
+            }
+        };
+
+        line_number_to_string();
+        print.p_function(a_p_file, number_buffer, a_p_expression, print.p_user_data);
     }
 
     if (nullptr != halt.p_function)

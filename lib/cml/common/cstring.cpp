@@ -41,6 +41,12 @@ bool cstring::equals(const char* a_p_string_1, const char* a_p_string_2, uint32_
 uint32_t
 cstring::join(char* a_p_destination, uint32_t a_destination_capacity, const char* a_p_source, uint32_t a_source_length)
 {
+    assert(nullptr != a_p_destination);
+    assert(a_destination_capacity > 0);
+
+    assert(nullptr != a_p_source);
+    assert(a_source_length > 0);
+
     uint32_t i = 0;
     for (; i < a_source_length && i + 1 < a_destination_capacity; i++)
     {

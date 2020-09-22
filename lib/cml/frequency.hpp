@@ -14,19 +14,24 @@ namespace cml {
 
 using frequency = uint32_t;
 
-constexpr static inline frequency Hz(uint32_t a_freq_hz)
+constexpr static inline frequency kHz_to_Hz(uint32_t a_freq)
 {
-    return a_freq_hz;
+    return a_freq * 1000u;
 }
 
-constexpr static inline frequency kHz(uint32_t a_freq_kHz)
+constexpr static inline frequency MHz_to_Hz(uint32_t a_freq)
 {
-    return a_freq_kHz * 1000u;
+    return a_freq * 1000000u;
 }
 
-constexpr static inline frequency MHz(uint32_t a_freq_MHz)
+constexpr static inline frequency Hz_to_kHz(uint32_t a_freq)
 {
-    return a_freq_MHz * 1000000u;
+    return a_freq / 1000;
+}
+
+constexpr static inline frequency Hz_to_MHz(uint32_t a_freq)
+{
+    return a_freq / 1000000;
 }
 
 } // namespace cml

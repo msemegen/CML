@@ -9,9 +9,7 @@
 
 // std
 #include <cstdint>
-
-// cml
-#include <cml/numeric_traits.hpp>
+#include <limits>
 
 namespace cml {
 
@@ -19,7 +17,7 @@ struct time
 {
     using tick = uint32_t;
 
-    static constexpr tick infinity = numeric_traits<tick>::get_max();
+    static constexpr tick infinity = std::numeric_limits<tick>::max();
 
     static inline tick diff(tick a_left, tick a_right)
     {

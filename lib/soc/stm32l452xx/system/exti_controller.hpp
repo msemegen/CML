@@ -28,7 +28,7 @@ public:
 
     struct Callback
     {
-        using Function = bool (*)(peripherals::pin::Level a_level, void* a_p_user_data);
+        using Function = void (*)(peripherals::pin::Level a_level, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -46,7 +46,6 @@ public:
     static void disable();
 
     static void register_callback(peripherals::pin::In* a_p_pin, Interrupt_mode a_mode, const Callback& a_callback);
-
     static void unregister_callback(const peripherals::pin::In& a_pin);
 };
 

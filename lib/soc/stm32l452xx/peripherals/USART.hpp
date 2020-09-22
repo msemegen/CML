@@ -9,6 +9,7 @@
 
 // std
 #include <cstdint>
+#include <type_traits>
 
 // externals
 #include <stm32l4xx.h>
@@ -18,7 +19,6 @@
 #include <cml/bit.hpp>
 #include <cml/frequency.hpp>
 #include <cml/time.hpp>
-#include <cml/type_traits.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -132,7 +132,7 @@ public:
         };
 
         Source source               = Source::unknown;
-        cml::frequency frequency_hz = cml::Hz(0);
+        cml::frequency frequency_hz = 0;
     };
 
     struct Result
@@ -141,17 +141,20 @@ public:
         uint32_t data_length_in_words = 0;
     };
 
-    struct TX_callback
+    struct Transmit_callback
     {
-        using Function = bool (*)(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data);
+        using Function = void (*)(volatile uint16_t* a_p_data,
+                                  bool a_transfer_complete,
+                                  USART* a_p_this,
+                                  void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
-    struct RX_callback
+    struct Receive_callback
     {
-        using Function = bool (*)(uint32_t a_data, bool a_idle, void* a_p_user_data);
+        using Function = void (*)(uint32_t a_data, bool a_idle, USART* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -159,7 +162,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = bool (*)(Bus_status_flag a_bus_status, void* a_p_user_data);
+        using Function = void (*)(Bus_status_flag a_bus_status, USART* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -168,7 +171,6 @@ public:
 public:
     USART(Id a_id)
         : id(a_id)
-        , p_usart(nullptr)
         , baud_rate(0)
     {
     }
@@ -188,35 +190,38 @@ public:
 
     template<typename Data_t> Result transmit_polling(const Data_t& a_data)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(&a_data, sizeof(a_data));
     }
 
     template<typename Data_t> Result transmit_polling(const Data_t& a_data, cml::time::tick a_timeout)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout);
     }
 
     template<typename Data_t> Result receive_polling(Data_t* a_p_data)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
     template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
     Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words);
     Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
+    Result transmit_word(uint16_t a_word);
+    Result transmit_word(uint16_t a_word, cml::time::tick a_timeout_ms);
+
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words);
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
 
-    void register_transmit_callback(const TX_callback& a_callback);
-    void register_receive_callback(const RX_callback& a_callback);
+    void register_transmit_callback(const Transmit_callback& a_callback);
+    void register_receive_callback(const Receive_callback& a_callback);
     void register_bus_status_callback(const Bus_status_callback& a_callback);
 
     void unregister_transmit_callback();
@@ -231,19 +236,19 @@ public:
     void set_frame_format(const Frame_format& a_frame_format);
     bool set_mode(Mode_flag a_mode, cml::time::tick a_timeout_ms);
 
-    bool is_transmit_callback_registered() const
+    bool is_transmit_callback() const
     {
-        return nullptr != this->tx_callback.function;
+        return nullptr != this->transmit_callback.function;
     }
 
-    bool is_receive_callback_registered() const
+    bool is_receive_callback() const
     {
-        return nullptr != this->rx_callback.function;
+        return nullptr != this->receive_callback.function;
     }
 
-    bool is_bus_status_callback_registered() const
+    bool is_bus_status_callback() const
     {
-        return nullptr != this->tx_callback.function;
+        return nullptr != this->bus_status_callback.function;
     }
 
     Oversampling get_oversampling() const;
@@ -276,10 +281,9 @@ public:
 
 private:
     Id id;
-    USART_TypeDef* p_usart;
 
-    TX_callback tx_callback;
-    RX_callback rx_callback;
+    Transmit_callback transmit_callback;
+    Receive_callback receive_callback;
     Bus_status_callback bus_status_callback;
 
     uint32_t baud_rate;

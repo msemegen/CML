@@ -100,45 +100,32 @@ void usart_interrupt_handler(USART* a_p_this)
     const uint32_t cr1 = USART2->CR1;
     const uint32_t cr3 = USART2->CR3;
 
-    if (nullptr != a_p_this->tx_callback.function)
+    if (nullptr != a_p_this->transmit_callback.function)
     {
         if (true == is_flag(isr, USART_ISR_TXE) && true == is_flag(cr1, USART_CR1_TXEIE))
         {
-            if (false == a_p_this->tx_callback.function(reinterpret_cast<volatile uint16_t*>(&(USART2->TDR)),
-                                                        false,
-                                                        a_p_this->tx_callback.p_user_data))
-            {
-                a_p_this->unregister_transmit_callback();
-            }
+            a_p_this->transmit_callback.function(reinterpret_cast<volatile uint16_t*>(&(USART2->TDR)),
+                                                 false,
+                                                 a_p_this,
+                                                 a_p_this->transmit_callback.p_user_data);
         }
 
         if (true == is_flag(isr, USART_ISR_TC) && true == is_flag(cr1, USART_CR1_TCIE))
         {
-            if (false == a_p_this->tx_callback.function(nullptr, true, a_p_this->tx_callback.p_user_data))
-            {
-                a_p_this->unregister_transmit_callback();
-            }
+            a_p_this->transmit_callback.function(nullptr, true, a_p_this, a_p_this->transmit_callback.p_user_data);
         }
     }
 
-    if (nullptr != a_p_this->rx_callback.function)
+    if (nullptr != a_p_this->receive_callback.function)
     {
-        bool status = true;
-
         if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
         {
-            status = a_p_this->rx_callback.function(USART2->RDR, false, a_p_this->rx_callback.p_user_data);
+            a_p_this->receive_callback.function(USART2->RDR, false, a_p_this, a_p_this->receive_callback.p_user_data);
         }
-
         else if (true == is_flag(isr, USART_ISR_IDLE) && true == is_flag(cr1, USART_CR1_IDLEIE))
         {
+            a_p_this->receive_callback.function(0x0u, true, a_p_this, a_p_this->receive_callback.p_user_data);
             set_flag(&(USART2->ICR), USART_ICR_IDLECF);
-            status = a_p_this->rx_callback.function(0x0u, true, a_p_this->rx_callback.p_user_data);
-        }
-
-        if (false == status)
-        {
-            a_p_this->unregister_receive_callback();
         }
     }
 
@@ -147,9 +134,9 @@ void usart_interrupt_handler(USART* a_p_this)
     {
         USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR();
 
-        if (status != USART::Bus_status_flag::ok &&
-            true == a_p_this->bus_status_callback.function(status, a_p_this->bus_status_callback.p_user_data))
+        if (status != USART::Bus_status_flag::ok)
         {
+            a_p_this->bus_status_callback.function(status, a_p_this, a_p_this->bus_status_callback.p_user_data);
             clear_USART_ISR_errors();
         }
     }
@@ -163,49 +150,37 @@ void rs485_interrupt_handler(RS485* a_p_this)
     const uint32_t cr1 = USART2->CR1;
     const uint32_t cr3 = USART2->CR3;
 
-    if (nullptr != a_p_this->tx_callback.function)
+    if (nullptr != a_p_this->transmit_callback.function)
     {
         if (true == is_flag(isr, USART_ISR_TXE) && true == is_flag(cr1, USART_CR1_TXEIE))
         {
-            if (false == a_p_this->tx_callback.function(reinterpret_cast<volatile uint16_t*>(&(USART2->TDR)),
-                                                        false,
-                                                        a_p_this->tx_callback.p_user_data))
-            {
-                a_p_this->unregister_transmit_callback();
-            }
+            a_p_this->transmit_callback.function(reinterpret_cast<volatile uint16_t*>(&(USART2->TDR)),
+                                                 false,
+                                                 a_p_this,
+                                                 a_p_this->transmit_callback.p_user_data);
         }
 
         if (true == is_flag(isr, USART_ISR_TC) && true == is_flag(cr1, USART_CR1_TCIE))
         {
-            if (false == a_p_this->tx_callback.function(nullptr, true, a_p_this->tx_callback.p_user_data))
-            {
-                a_p_this->unregister_transmit_callback();
-            }
+            a_p_this->transmit_callback.function(nullptr, true, a_p_this, a_p_this->transmit_callback.p_user_data);
         }
     }
 
-    if (nullptr != a_p_this->rx_callback.function)
+    if (nullptr != a_p_this->receive_callback.function)
     {
-        bool status = true;
-
         if (true == is_flag(isr, USART_ISR_RXNE) && true == is_flag(cr1, USART_CR1_RXNEIE))
         {
             const uint16_t rdr = USART2->RDR;
 
             if (false == is_flag(rdr, 0x100))
             {
-                status = a_p_this->rx_callback.function(rdr, false, a_p_this->rx_callback.p_user_data);
+                a_p_this->receive_callback.function(rdr, false, a_p_this, a_p_this->receive_callback.p_user_data);
             }
         }
         else if (true == is_flag(isr, USART_ISR_IDLE) && true == is_flag(cr1, USART_CR1_IDLEIE))
         {
+            a_p_this->receive_callback.function(0x0u, true, a_p_this, a_p_this->receive_callback.p_user_data);
             set_flag(&(USART2->ICR), USART_ICR_IDLECF);
-            status = a_p_this->rx_callback.function(0x0u, true, a_p_this->rx_callback.p_user_data);
-        }
-
-        if (false == status)
-        {
-            a_p_this->unregister_receive_callback();
         }
     }
 
@@ -214,9 +189,9 @@ void rs485_interrupt_handler(RS485* a_p_this)
     {
         USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR();
 
-        if (status != USART::Bus_status_flag::ok &&
-            true == a_p_this->bus_status_callback.function(status, a_p_this->bus_status_callback.p_user_data))
+        if (status != USART::Bus_status_flag::ok)
         {
+            a_p_this->bus_status_callback.function(status, a_p_this, a_p_this->bus_status_callback.p_user_data);
             clear_USART_ISR_errors();
         }
     }
@@ -228,7 +203,6 @@ bool USART::enable(const Config& a_config,
                    uint32_t a_irq_priority,
                    time::tick a_timeout_ms)
 {
-    assert(nullptr == p_usart_2);
     assert(0 != a_config.baud_rate);
     assert(Flow_control_flag::unknown != a_config.flow_control);
     assert(Stop_bits::unknown != a_config.stop_bits);
@@ -291,8 +265,6 @@ bool USART::enable(const Config& a_config,
 
 void USART::disable()
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
-
     USART2->CR1 = 0;
     USART2->CR2 = 0;
     USART2->CR3 = 0;
@@ -305,8 +277,6 @@ void USART::disable()
 
 USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words)
 {
-    assert(true == is_flag(USART2->CR1, USART_CR1_TE));
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
 
@@ -342,13 +312,12 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
     return { status, words };
 }
 
-USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, time::tick a_timeout)
+USART::Result
+USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, time::tick a_timeout_ms)
 {
-    assert(true == is_flag(USART2->CR1, USART_CR1_TE));
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
-    assert(a_timeout > 0);
+    assert(a_timeout_ms > 0);
 
     time::tick start = counter::get();
 
@@ -359,7 +328,7 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
     Bus_status_flag status = Bus_status_flag::ok;
 
     while (false == is_flag(USART2->ISR, USART_ISR_TC) && false == error &&
-           a_timeout < time::diff(counter::get(), start))
+           a_timeout_ms < time::diff(counter::get(), start))
     {
         if (true == is_flag(USART2->ISR, USART_ISR_TXE) && words < a_data_size_in_words)
         {
@@ -385,10 +354,83 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
     return { status, words };
 }
 
+USART::Result USART::transmit_word(uint16_t a_word)
+{
+    set_flag(&(USART2->ICR), USART_ICR_TCCF);
+
+    uint32_t words         = 0;
+    bool error             = false;
+    Bus_status_flag status = Bus_status_flag::ok;
+
+    while (false == is_flag(USART2->ISR, USART_ISR_TC) && false == error)
+    {
+        if (true == is_flag(USART2->ISR, USART_ISR_TXE) && 0 == words)
+        {
+            if (Parity::none == this->frame_format.parity && Word_length::_9_bit == this->frame_format.word_length)
+            {
+                USART2->TDR = a_word & 0x1FFu;
+            }
+            else
+            {
+                USART2->TDR = a_word & 0xFFu;
+            }
+
+            words++;
+        }
+
+        error = is_USART_ISR_error();
+    }
+
+    if (true == error)
+    {
+        status = get_bus_status_flag_from_USART_ISR();
+        clear_USART_ISR_errors();
+    }
+
+    return { status, words };
+}
+
+USART::Result USART::transmit_word(uint16_t a_word, time::tick a_timeout_ms)
+{
+    time::tick start = counter::get();
+
+    set_flag(&(USART2->ICR), USART_ICR_TCCF);
+
+    uint32_t words         = 0;
+    bool error             = false;
+    Bus_status_flag status = Bus_status_flag::ok;
+
+    while (false == is_flag(USART2->ISR, USART_ISR_TC) && false == error &&
+           a_timeout_ms < time::diff(counter::get(), start))
+    {
+        if (true == is_flag(USART2->ISR, USART_ISR_TXE) && 0 == words)
+        {
+            if (Parity::none == this->frame_format.parity && Word_length::_9_bit == this->frame_format.word_length)
+            {
+                USART2->TDR = a_word & 0x1FFu;
+            }
+            else
+            {
+                USART2->TDR = a_word & 0xFFu;
+            }
+
+            words++;
+        }
+
+        error = is_USART_ISR_error();
+    }
+
+    if (true == error)
+    {
+        status = get_bus_status_flag_from_USART_ISR();
+        clear_USART_ISR_errors();
+    }
+
+    return { status, words };
+}
+
 USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words)
 {
-    assert(true == is_flag(USART2->CR1, USART_CR1_RE));
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
 
@@ -434,8 +476,6 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
 USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, time::tick a_timeout)
 {
-    assert(true == is_flag(USART2->CR1, USART_CR1_RE));
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
     assert(a_timeout > 0);
@@ -483,29 +523,25 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
     return { status, words };
 }
 
-void USART::register_transmit_callback(const TX_callback& a_callback)
+void USART::register_transmit_callback(const Transmit_callback& a_callback)
 {
-    assert(true == is_flag(USART2->CR1, USART_CR1_TE));
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
 
-    this->tx_callback = a_callback;
+    this->transmit_callback = a_callback;
 
     set_flag(&(USART2->ICR), USART_ICR_TCCF);
     set_flag(&(USART2->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
 }
 
-void USART::register_receive_callback(const RX_callback& a_callback)
+void USART::register_receive_callback(const Receive_callback& a_callback)
 {
-    assert(true == is_flag(USART2->CR1, USART_CR1_RE));
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
 
-    this->rx_callback = a_callback;
+    this->receive_callback = a_callback;
 
     set_flag(&(USART2->ICR), USART_ICR_IDLECF);
     set_flag(&(USART2->CR1), USART_CR1_RXNEIE | USART_CR1_IDLEIE);
@@ -513,7 +549,6 @@ void USART::register_receive_callback(const RX_callback& a_callback)
 
 void USART::register_bus_status_callback(const Bus_status_callback& a_callback)
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
@@ -526,30 +561,24 @@ void USART::register_bus_status_callback(const Bus_status_callback& a_callback)
 
 void USART::unregister_transmit_callback()
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
-
     Interrupt_guard guard;
 
     clear_flag(&(USART2->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
 
-    this->tx_callback = { nullptr, nullptr };
+    this->transmit_callback = { nullptr, nullptr };
 }
 
 void USART::unregister_receive_callback()
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
-
     Interrupt_guard guard;
 
     clear_flag(&(USART2->CR1), USART_CR1_RXNEIE);
 
-    this->rx_callback = { nullptr, nullptr };
+    this->receive_callback = { nullptr, nullptr };
 }
 
 void USART::unregister_bus_status_callback()
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
-
     Interrupt_guard guard;
 
     clear_flag(&(USART2->CR1), USART_CR1_PEIE);
@@ -560,7 +589,6 @@ void USART::unregister_bus_status_callback()
 
 void USART::set_baud_rate(uint32_t a_baud_rate)
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(0 != a_baud_rate);
 
     const Oversampling oversampling = this->get_oversampling();
@@ -587,7 +615,6 @@ void USART::set_baud_rate(uint32_t a_baud_rate)
 
 void USART::set_oversampling(Oversampling a_oversampling)
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(Oversampling::unknown != a_oversampling);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -597,7 +624,6 @@ void USART::set_oversampling(Oversampling a_oversampling)
 
 void USART::set_stop_bits(Stop_bits a_stop_bits)
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(Stop_bits::unknown != a_stop_bits);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -607,7 +633,6 @@ void USART::set_stop_bits(Stop_bits a_stop_bits)
 
 void USART::set_flow_control(Flow_control_flag a_flow_control)
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(Flow_control_flag::unknown != a_flow_control);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -617,7 +642,6 @@ void USART::set_flow_control(Flow_control_flag a_flow_control)
 
 void USART::set_sampling_method(Sampling_method a_sampling_method)
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(Sampling_method::unknown != a_sampling_method);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -627,7 +651,6 @@ void USART::set_sampling_method(Sampling_method a_sampling_method)
 
 void USART::set_frame_format(const Frame_format& a_frame_format)
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(USART::Word_length::unknown != a_frame_format.word_length);
     assert(USART::Parity::unknown != a_frame_format.parity);
 
@@ -642,7 +665,6 @@ void USART::set_frame_format(const Frame_format& a_frame_format)
 
 bool USART::set_mode(Mode_flag a_mode, time::tick a_timeout_ms)
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
     assert(Mode_flag::unknown != a_mode);
     assert(a_timeout_ms > 0);
 
@@ -658,29 +680,21 @@ bool USART::set_mode(Mode_flag a_mode, time::tick a_timeout_ms)
 
 USART::Oversampling USART::get_oversampling() const
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
-
     return static_cast<Oversampling>(get_flag(USART2->CR1, static_cast<uint32_t>(USART_CR1_OVER8)));
 }
 
 USART::Stop_bits USART::get_stop_bits() const
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
-
     return static_cast<Stop_bits>(get_flag(USART2->CR2, USART_CR2_STOP));
 }
 
 USART::Flow_control_flag USART::get_flow_control() const
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
-
     return static_cast<Flow_control_flag>(get_flag(USART2->CR3, USART_CR3_RTSE | USART_CR3_CTSE));
 }
 
 USART::Sampling_method USART::get_sampling_method() const
 {
-    assert(nullptr != p_usart_2 && nullptr == p_rs485);
-
     return static_cast<Sampling_method>(get_flag(USART2->CR3, USART_CR3_ONEBIT));
 }
 
@@ -700,8 +714,6 @@ bool RS485::enable(const Config& a_config,
                    uint32_t a_irq_priority,
                    time::tick a_timeout)
 {
-    assert(nullptr == p_rs485 && nullptr == p_usart_2);
-
     assert(nullptr != a_p_flow_control_pin);
     assert(0 != a_config.baud_rate);
     assert(Stop_bits::unknown != a_config.stop_bits);
@@ -768,8 +780,6 @@ bool RS485::enable(const Config& a_config,
 
 void RS485::disable()
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
-
     USART2->CR1 = 0;
     USART2->CR2 = 0;
     USART2->CR3 = 0;
@@ -783,9 +793,6 @@ void RS485::disable()
 
 RS485::Result RS485::transmit_bytes_polling(uint8_t a_address, const void* a_p_data, uint32_t a_data_size_in_words)
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
-    assert(nullptr != this->p_flow_control_pin);
-
     assert(a_address <= 0x7F);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
@@ -833,9 +840,6 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address,
                                             uint32_t a_data_size_in_words,
                                             time::tick a_timeout_ms)
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
-    assert(nullptr != this->p_flow_control_pin);
-
     assert(a_address <= 0x7F);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
@@ -884,8 +888,6 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address,
 
 RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words)
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
 
@@ -932,8 +934,6 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
 RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, time::tick a_timeout_ms)
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_words > 0);
     assert(a_timeout_ms > 0);
@@ -982,13 +982,13 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
     return { bus_status, words };
 }
 
-void RS485::register_transmit_callback(const TX_callback& a_callback)
+void RS485::register_transmit_callback(const Transmit_callback& a_callback)
 {
-    assert(nullptr != this->p_flow_control_pin);
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
     assert(nullptr != a_callback.function);
 
-    this->tx_callback = a_callback;
+    Interrupt_guard guard;
+
+    this->transmit_callback = a_callback;
 
     set_flag(&(USART2->ICR), USART_ICR_TCCF);
     set_flag(&(USART2->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
@@ -996,12 +996,13 @@ void RS485::register_transmit_callback(const TX_callback& a_callback)
     this->p_flow_control_pin->set_level(pin::Level::high);
 }
 
-void RS485::register_receive_callback(const RX_callback& a_callback)
+void RS485::register_receive_callback(const Receive_callback& a_callback)
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
     assert(nullptr != a_callback.function);
 
-    this->rx_callback = a_callback;
+    Interrupt_guard guard;
+
+    this->receive_callback = a_callback;
 
     set_flag(&(USART2->ICR), USART_ICR_IDLECF);
     set_flag(&(USART2->CR1), USART_CR1_RXNEIE | USART_CR1_IDLEIE);
@@ -1009,8 +1010,9 @@ void RS485::register_receive_callback(const RX_callback& a_callback)
 
 void RS485::register_bus_status_callback(const Bus_status_callback& a_callback)
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
     assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
 
     this->bus_status_callback = a_callback;
 
@@ -1020,28 +1022,28 @@ void RS485::register_bus_status_callback(const Bus_status_callback& a_callback)
 
 void RS485::unregister_transmit_callback()
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
+    Interrupt_guard guard;
 
     this->p_flow_control_pin->set_level(pin::Level::low);
 
     clear_flag(&(USART2->CR1), USART_CR1_TCIE | USART_CR1_TXEIE);
 
-    this->tx_callback = { nullptr, nullptr };
+    this->transmit_callback = { nullptr, nullptr };
 }
 
 void RS485::unregister_receive_callback()
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
+    Interrupt_guard guard;
 
     set_flag(&(USART2->ICR), USART_ICR_CMCF);
     clear_flag(&(USART2->CR1), USART_CR1_RXNEIE);
 
-    this->rx_callback = { nullptr, nullptr };
+    this->receive_callback = { nullptr, nullptr };
 }
 
 void RS485::unregister_bus_status_callback()
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
+    Interrupt_guard guard;
 
     clear_flag(&(USART2->CR1), USART_CR1_PEIE);
     clear_flag(&(USART2->CR3), USART_CR3_EIE);
@@ -1051,8 +1053,6 @@ void RS485::unregister_bus_status_callback()
 
 void RS485::set_baud_rate(uint32_t a_baud_rate)
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
-
     assert(0 != a_baud_rate);
 
     const Oversampling oversampling = this->get_oversampling();
@@ -1079,7 +1079,6 @@ void RS485::set_baud_rate(uint32_t a_baud_rate)
 
 void RS485::set_oversampling(Oversampling a_oversampling)
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
     assert(Oversampling::unknown != a_oversampling);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -1089,7 +1088,6 @@ void RS485::set_oversampling(Oversampling a_oversampling)
 
 void RS485::set_stop_bits(Stop_bits a_stop_bits)
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
     assert(Stop_bits::unknown != a_stop_bits);
 
     clear_flag(&(USART2->CR1), USART_CR1_UE);
@@ -1104,15 +1102,11 @@ bool RS485::is_enabled() const
 
 RS485::Oversampling RS485::get_oversampling() const
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
-
     return static_cast<Oversampling>(get_flag(USART2->CR1, static_cast<uint32_t>(USART_CR1_OVER8)));
 }
 
 RS485::Stop_bits RS485::get_stop_bits() const
 {
-    assert(nullptr != p_rs485 && nullptr == p_usart_2);
-
     return static_cast<Stop_bits>(get_flag(USART2->CR2, USART_CR2_STOP));
 }
 

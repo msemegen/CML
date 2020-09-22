@@ -138,16 +138,14 @@ public:
 
     struct Conversion_callback
     {
-        using Function = bool (*)(uint16_t a_value, bool a_series_end, void* a_p_user_data);
+        using Function = void (*)(uint16_t a_value, bool a_series_end, ADC* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
 public:
-    ADC(Id)
-    {
-    }
+    ADC(Id) {}
 
     ~ADC()
     {
