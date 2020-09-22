@@ -87,18 +87,6 @@ I2C_base::Bus_status_flag get_bus_status_flag_from_I2C_ISR(uint32_t a_isr)
     return ret;
 }
 
-#ifdef CML_ASSERT
-bool is_master()
-{
-    return nullptr != controller.p_i2c_master_handle;
-}
-
-bool is_slave()
-{
-    return nullptr != controller.p_i2c_slave_handle;
-}
-#endif // CML_ASSERT
-
 } // namespace
 
 extern "C" {
@@ -125,7 +113,6 @@ namespace peripherals {
 
 using namespace cml;
 using namespace cml::utils;
-using namespace cml::collection;
 
 void i2c_master_interrupt_handler(I2C_master* a_p_this)
 {
@@ -258,9 +245,6 @@ I2C_base::Clock_source I2C_base::get_clock_source() const
 
 void I2C_master::enable(const Config& a_config, Clock_source a_clock_source, uint32_t a_irq_priority)
 {
-    assert(false == this->is_enabled());
-    assert(false == is_master() && false == is_slave());
-
     i2c_1_enable(static_cast<uint32_t>(a_clock_source) << RCC_CCIPR_I2C1SEL_Pos, a_irq_priority);
     controller.p_i2c_master_handle = this;
 
@@ -280,9 +264,6 @@ void I2C_master::enable(const Config& a_config, Clock_source a_clock_source, uin
 
 void I2C_master::diasble()
 {
-    assert(true == this->is_enabled());
-    assert(true == is_master());
-
     I2C1->CR1 = 0;
 
     if (true == this->is_fast_plus())
@@ -297,9 +278,6 @@ void I2C_master::diasble()
 I2C_master::Result
 I2C_master::transmit_bytes_polling(uint16_t a_slave_address, const void* a_p_data, uint32_t a_data_size_in_bytes)
 {
-    assert(true == this->is_enabled());
-    assert(true == is_master());
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -340,9 +318,6 @@ I2C_master::Result I2C_master::transmit_bytes_polling(uint16_t a_slave_address,
                                                       uint32_t a_data_size_in_bytes,
                                                       time::tick a_timeout)
 {
-    assert(true == this->is_enabled());
-    assert(true == is_master());
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
     assert(a_timeout > 0);
@@ -384,9 +359,6 @@ I2C_master::Result I2C_master::transmit_bytes_polling(uint16_t a_slave_address,
 I2C_master::Result
 I2C_master::receive_bytes_polling(uint16_t a_slave_address, void* a_p_data, uint32_t a_data_size_in_bytes)
 {
-    assert(true == this->is_enabled());
-    assert(true == is_master());
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -426,9 +398,6 @@ I2C_master::Result I2C_master::receive_bytes_polling(uint16_t a_slave_address,
                                                      uint32_t a_data_size_in_bytes,
                                                      time::tick a_timeout)
 {
-    assert(true == this->is_enabled());
-    assert(true == is_master());
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
     assert(a_timeout > 0);
@@ -471,10 +440,6 @@ void I2C_master::register_transmit_callback(uint16_t a_slave_address,
                                             const Transmit_callback& a_callback,
                                             uint32_t a_data_size_in_bytes)
 {
-    assert(true == this->is_enabled());
-    assert(false == this->is_transmit_callback());
-    assert(true == is_master());
-
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -493,10 +458,6 @@ void I2C_master::register_receive_callback(uint16_t a_slave_address,
                                            const Receive_callback& a_callback,
                                            uint32_t a_data_size_in_bytes)
 {
-    assert(true == this->is_enabled());
-    assert(false == this->is_receive_callback());
-    assert(true == is_master());
-
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -513,10 +474,6 @@ void I2C_master::register_receive_callback(uint16_t a_slave_address,
 
 void I2C_master::register_bus_status_callback(const Bus_status_callback& a_callback)
 {
-    assert(true == this->is_enabled());
-    assert(false == this->is_bus_status_callback());
-    assert(true == is_master());
-
     assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
@@ -528,10 +485,6 @@ void I2C_master::register_bus_status_callback(const Bus_status_callback& a_callb
 
 void I2C_master::unregister_transmit_callback()
 {
-    assert(true == this->is_enabled());
-    assert(true == this->is_transmit_callback());
-    assert(true == is_master());
-
     Interrupt_guard guard;
 
     clear_flag(&(I2C1->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
@@ -541,10 +494,6 @@ void I2C_master::unregister_transmit_callback()
 
 void I2C_master::unregister_receive_callback()
 {
-    assert(true == this->is_enabled());
-    assert(true == this->is_receive_callback());
-    assert(true == is_master());
-
     Interrupt_guard guard;
 
     clear_flag(&(I2C1->CR1), I2C_CR1_RXIE | I2C_CR1_STOPIE);
@@ -554,9 +503,7 @@ void I2C_master::unregister_receive_callback()
 
 void I2C_master::unregister_bus_status_callback()
 {
-    assert(true == this->is_enabled());
-    assert(true == this->is_bus_status_callback());
-    assert(true == is_master());
+    Interrupt_guard guard;
 
     clear_flag(&(I2C1->CR1), I2C_CR1_NACKIE | I2C_CR1_ERRIE);
 
@@ -565,9 +512,6 @@ void I2C_master::unregister_bus_status_callback()
 
 bool I2C_master::is_slave_connected(uint16_t a_slave_address, time::tick a_timeout) const
 {
-    assert(true == this->is_enabled());
-    assert(true == is_master());
-
     assert(a_timeout > 0);
 
     time::tick start = counter::get();
@@ -595,9 +539,6 @@ bool I2C_master::is_slave_connected(uint16_t a_slave_address, time::tick a_timeo
 
 void I2C_slave::enable(const Config& a_config, Clock_source a_clock_source, uint32_t a_irq_priority)
 {
-    assert(false == this->is_enabled());
-    assert(false == is_master() && false == is_slave());
-
     assert(a_config.address <= 0x7F);
 
     i2c_1_enable(static_cast<uint32_t>(a_clock_source) << RCC_CCIPR_I2C1SEL_Pos, a_irq_priority);
@@ -619,9 +560,6 @@ void I2C_slave::enable(const Config& a_config, Clock_source a_clock_source, uint
 
 void I2C_slave::diasble()
 {
-    assert(true == this->is_enabled());
-    assert(true == is_slave());
-
     I2C1->CR1 = 0;
 
     if (true == this->is_fast_plus())
@@ -635,9 +573,6 @@ void I2C_slave::diasble()
 
 I2C_slave::Result I2C_slave::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_bytes)
 {
-    assert(true == this->is_enabled());
-    assert(true == is_slave());
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -681,9 +616,6 @@ I2C_slave::Result I2C_slave::transmit_bytes_polling(const void* a_p_data, uint32
 I2C_slave::Result
 I2C_slave::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_bytes, time::tick a_timeout)
 {
-    assert(true == this->is_enabled());
-    assert(true == is_slave());
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
     assert(a_timeout > 0);
@@ -730,9 +662,6 @@ I2C_slave::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_
 
 I2C_slave::Result I2C_slave::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes)
 {
-    assert(true == this->is_enabled());
-    assert(true == is_slave());
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -775,9 +704,6 @@ I2C_slave::Result I2C_slave::receive_bytes_polling(void* a_p_data, uint32_t a_da
 
 I2C_slave::Result I2C_slave::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes, time::tick a_timeout)
 {
-    assert(true == this->is_enabled());
-    assert(true == is_slave());
-
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
     assert(a_timeout > 0);
@@ -824,10 +750,6 @@ I2C_slave::Result I2C_slave::receive_bytes_polling(void* a_p_data, uint32_t a_da
 
 void I2C_slave::register_transmit_callback(const Transmit_callback& a_callback, uint32_t a_data_size_in_bytes)
 {
-    assert(true == this->is_enabled());
-    assert(false == this->is_transmit_callback());
-    assert(true == is_slave());
-
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -840,10 +762,6 @@ void I2C_slave::register_transmit_callback(const Transmit_callback& a_callback, 
 
 void I2C_slave::register_receive_callback(const Receive_callback& a_callback, uint32_t a_data_size_in_bytes)
 {
-    assert(true == this->is_enabled());
-    assert(false == this->is_receive_callback());
-    assert(true == is_slave());
-
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -856,10 +774,6 @@ void I2C_slave::register_receive_callback(const Receive_callback& a_callback, ui
 
 void I2C_slave::register_bus_status_callback(const Bus_status_callback& a_callback)
 {
-    assert(true == this->is_enabled());
-    assert(false == this->is_bus_status_callback());
-    assert(true == is_slave());
-
     assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
@@ -870,10 +784,6 @@ void I2C_slave::register_bus_status_callback(const Bus_status_callback& a_callba
 
 void I2C_slave::register_address_match_callback(const Addres_match_callback& a_callback)
 {
-    assert(true == this->is_enabled());
-    assert(false == this->is_bus_status_callback());
-    assert(true == is_slave());
-
     assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
@@ -885,10 +795,6 @@ void I2C_slave::register_address_match_callback(const Addres_match_callback& a_c
 
 void I2C_slave::unregister_transmit_callback()
 {
-    assert(true == this->is_enabled());
-    assert(true == this->is_transmit_callback());
-    assert(true == is_slave());
-
     Interrupt_guard guard;
 
     clear_flag(&(I2C1->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
@@ -898,10 +804,6 @@ void I2C_slave::unregister_transmit_callback()
 
 void I2C_slave::unregister_receive_callback()
 {
-    assert(true == this->is_enabled());
-    assert(true == this->is_receive_callback());
-    assert(true == is_slave());
-
     Interrupt_guard guard;
 
     clear_flag(&(I2C1->CR1), I2C_CR1_RXIE | I2C_CR1_STOPIE);
@@ -911,10 +813,6 @@ void I2C_slave::unregister_receive_callback()
 
 void I2C_slave::unregister_bus_status_callback()
 {
-    assert(true == this->is_enabled());
-    assert(true == this->is_bus_status_callback());
-    assert(true == is_slave());
-
     Interrupt_guard guard;
 
     clear_flag(&(I2C1->CR1), I2C_CR1_NACKIE | I2C_CR1_ERRIE);
@@ -924,10 +822,6 @@ void I2C_slave::unregister_bus_status_callback()
 
 void I2C_slave::unregister_address_match_callback()
 {
-    assert(true == this->is_enabled());
-    assert(true == this->is_address_match_callback());
-    assert(true == is_slave());
-
     Interrupt_guard guard;
 
     clear_flag(&(I2C1->CR1), I2C_CR1_ADDRIE);

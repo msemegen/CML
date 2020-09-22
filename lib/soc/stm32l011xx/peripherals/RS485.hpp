@@ -7,13 +7,16 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+// std
+#include <cstdint>
+#include <type_traits>
+
 // soc
 #include <soc/stm32l011xx/peripherals/GPIO.hpp>
 #include <soc/stm32l011xx/peripherals/USART.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/type_traits.hpp>
 
 namespace soc {
 namespace stm32l011xx {
@@ -83,26 +86,26 @@ public:
 
     template<typename Data_t> Result transmit_polling(uint8_t a_address, const Data_t& a_data)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data));
     }
 
     template<typename Data_t>
     Result transmit_polling(uint8_t a_address, const Data_t& a_data, cml::time::tick a_timeout)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data), a_timeout);
     }
 
     template<typename Data_t> Result receive_polling(Data_t* a_p_data)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
     template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 

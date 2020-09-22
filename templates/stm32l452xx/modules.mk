@@ -14,7 +14,7 @@ CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(CML_ROOT)/lib/         \
 
 INCLUDE_PATH     := $(INCLUDE_PATH) $(CML_ROOT)/lib/
 
-#sample
+#template
 C_SOURCE_PATHS   := $(C_SOURCE_PATHS)   $(ROOT)/
 CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(ROOT)/
 INCLUDE_PATH     := $(INCLUDE_PATH)     $(ROOT)/

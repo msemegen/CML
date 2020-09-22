@@ -10,6 +10,9 @@
 // std
 #include <cstdint>
 
+// cml
+#include <cml/debug/assert.hpp>
+
 namespace cml {
 namespace common {
 
@@ -28,6 +31,9 @@ struct memory
 
     template<typename Type_t> static void swap(Type_t* a_p_first, Type_t* a_p_second)
     {
+        assert(nullptr != a_p_first);
+        assert(nullptr != a_p_second);
+
         Type_t tmp = *(a_p_first);
 
         (*a_p_first)  = *(a_p_second);

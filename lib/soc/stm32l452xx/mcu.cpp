@@ -20,8 +20,9 @@ namespace {
 using namespace cml;
 using namespace soc::stm32l452xx;
 
-constexpr frequency msi_frequency_lut[] { kHz(100u), kHz(200u), kHz(400u), kHz(800u), MHz(1u),  MHz(2u),
-                                          MHz(4u),   MHz(8u),   MHz(16u),  MHz(24u),  MHz(32u), MHz(48u) };
+constexpr frequency msi_frequency_lut[] { kHz_to_Hz(100u), kHz_to_Hz(200u), kHz_to_Hz(400u), kHz_to_Hz(800u),
+                                          MHz_to_Hz(1u),   MHz_to_Hz(2u),   MHz_to_Hz(4u),   MHz_to_Hz(8u),
+                                          MHz_to_Hz(16u),  MHz_to_Hz(24u),  MHz_to_Hz(32u),  MHz_to_Hz(48u) };
 
 mcu::Sysclk_frequency_change_callback pre_sysclk_frequency_change_callback;
 mcu::Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
@@ -156,7 +157,7 @@ void mcu::set_clk48_clock_mux_source(Clk48_mux_source a_source)
            ((a_source == Clk48_mux_source::pll_sai1_q && is_clock_enabled(Clock::pll)) &&
             true == get_pll_config().pllsai1.q.output_enabled));
 
-    assert(get_clk48_mux_freqency_hz() <= MHz(48));
+    assert(get_clk48_mux_freqency_hz() <= MHz_to_Hz(48));
 
     set_flag(&(RCC->CCIPR), RCC_CCIPR_CLK48SEL, static_cast<uint32_t>(a_source));
 }
@@ -296,7 +297,7 @@ uint32_t mcu::get_clk48_mux_freqency_hz()
     switch (source)
     {
         case Clk48_mux_source::hsi48: {
-            return MHz(48);
+            return MHz_to_Hz(48);
         }
         break;
 
@@ -325,27 +326,27 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
     switch (a_voltage_scaling)
     {
         case Voltage_scaling::_1: {
-            if (a_syclk_freq <= MHz(16))
+            if (a_syclk_freq <= MHz_to_Hz(16))
             {
                 return Flash_latency::_0;
             }
 
-            if (a_syclk_freq <= MHz(32))
+            if (a_syclk_freq <= MHz_to_Hz(32))
             {
                 return Flash_latency::_1;
             }
 
-            if (a_syclk_freq <= MHz(48))
+            if (a_syclk_freq <= MHz_to_Hz(48))
             {
                 return Flash_latency::_2;
             }
 
-            if (a_syclk_freq <= MHz(64))
+            if (a_syclk_freq <= MHz_to_Hz(64))
             {
                 return Flash_latency::_3;
             }
 
-            if (a_syclk_freq <= MHz(80))
+            if (a_syclk_freq <= MHz_to_Hz(80))
             {
                 return Flash_latency::_4;
             }
@@ -353,22 +354,22 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
         break;
 
         case Voltage_scaling::_2: {
-            if (a_syclk_freq <= MHz(6))
+            if (a_syclk_freq <= MHz_to_Hz(6))
             {
                 return Flash_latency::_0;
             }
 
-            if (a_syclk_freq <= MHz(12))
+            if (a_syclk_freq <= MHz_to_Hz(12))
             {
                 return Flash_latency::_1;
             }
 
-            if (a_syclk_freq <= MHz(18))
+            if (a_syclk_freq <= MHz_to_Hz(18))
             {
                 return Flash_latency::_2;
             }
 
-            if (a_syclk_freq <= MHz(26))
+            if (a_syclk_freq <= MHz_to_Hz(26))
             {
                 return Flash_latency::_3;
             }
@@ -386,14 +387,14 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
 
 mcu::Voltage_scaling mcu::select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq)
 {
-    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= MHz(24)) ||
-        (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz(26)))
+    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= MHz_to_Hz(24)) ||
+        (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz_to_Hz(26)))
     {
         return Voltage_scaling::_2;
     }
 
-    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= MHz(48)) ||
-        (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz(80)) || (Sysclk_source::hsi == a_source))
+    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= MHz_to_Hz(48)) ||
+        (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz_to_Hz(80)) || (Sysclk_source::hsi == a_source))
     {
         return Voltage_scaling::_1;
     }
@@ -514,7 +515,7 @@ uint32_t mcu::calculate_pll_r_output_frequency()
         break;
     }
 
-    assert(pllvco >= MHz(96) && pllvco <= MHz(344));
+    assert(pllvco >= MHz_to_Hz(96) && pllvco <= MHz_to_Hz(344));
 
     uint32_t pllr = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
     return pllvco / pllr;
@@ -526,28 +527,24 @@ uint32_t mcu::calculate_pll_q_output_frequency()
     const uint32_t n = get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN) >> RCC_PLLCFGR_PLLN_Pos;
     const uint32_t q = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ) >> RCC_PLLCFGR_PLLQ_Pos) * 2u) + 2u;
 
-    uint32_t ret = 0;
-
     switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
     {
         case Pll_config::Source::msi: {
             const uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
-            ret                      = ((msi_frequency_lut[msi_range] / m) * n) / q;
+            return ((msi_frequency_lut[msi_range] / m) * n) / q;
         }
-        break;
 
         case Pll_config::Source::hsi: {
-            ret = ((get_hsi_frequency_hz() / m) * n) / q;
+            return ((get_hsi_frequency_hz() / m) * n) / q;
         }
-        break;
 
         case Pll_config::Source::unknown: {
             assert(false);
+            return 0;
         }
-        break;
     }
 
-    return ret;
+    return 0;
 }
 
 uint32_t mcu::calculate_pllsai1_q_output_frequency()
@@ -556,28 +553,24 @@ uint32_t mcu::calculate_pllsai1_q_output_frequency()
     const uint32_t n = (get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N) >> RCC_PLLSAI1CFGR_PLLSAI1N_Pos) + 1u;
     const uint32_t q = ((get_flag(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1Q) >> RCC_PLLSAI1CFGR_PLLSAI1Q_Pos) * 2u) + 2u;
 
-    uint32_t ret = 0;
-
     switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
     {
         case Pll_config::Source::msi: {
             uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
-            ret                = ((msi_frequency_lut[msi_range] / m) * n) / q;
+            return ((msi_frequency_lut[msi_range] / m) * n) / q;
         }
-        break;
 
         case Pll_config::Source::hsi: {
-            ret = ((get_hsi_frequency_hz() / m) * n) / q;
+            return ((get_hsi_frequency_hz() / m) * n) / q;
         }
-        break;
 
         default: {
             assert(false);
+            return 0;
         }
-        break;
     }
 
-    return ret;
+    return 0;
 }
 
 } // namespace stm32l452xx

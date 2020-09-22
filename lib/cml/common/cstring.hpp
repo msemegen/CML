@@ -9,11 +9,11 @@
 
 // std
 #include <cstdint>
+#include <limits>
 
 // cml
 #include <cml/common/memory.hpp>
 #include <cml/debug/assert.hpp>
-#include <cml/numeric_traits.hpp>
 
 namespace cml {
 namespace common {
@@ -30,14 +30,15 @@ struct cstring
         hex = 16
     };
 
-    static uint32_t length(const char* a_p_string, uint32_t a_max_length = numeric_traits<uint32_t>::get_max());
+    static uint32_t length(const char* a_p_string, uint32_t a_max_length = std::numeric_limits<uint32_t>::max());
     static bool equals(const char* a_p_string_1, const char* a_p_string_2, uint32_t a_max_length);
 
     static void reverse(char* a_p_string, uint32_t a_length)
     {
+        assert(nullptr != a_p_string);
         assert(a_length > 0);
 
-        for (uint32_t i = 0; i < a_length - 1; i++)
+        for (uint32_t i = 0; i < a_length / 2; i++)
         {
             memory::swap(&(a_p_string[i]), &(a_p_string[a_length - i - 1]));
         }
@@ -82,12 +83,14 @@ struct cstring
     template<typename Type_t>
     static uint32_t from_unsigned_integer(Type_t a_value, char* a_p_buffer, uint32_t a_buffer_capacity, Radix a_base)
     {
-        static_assert(true == numeric_traits<Type_t>::is_unsigned);
+        static_assert(false == std::numeric_limits<Type_t>::is_signed);
+
+        assert(nullptr != a_p_buffer);
         assert(a_buffer_capacity > 1);
 
-        uint32_t ret = 0;
+        uint32_t ret = 0u;
 
-        if (0 == a_value)
+        if (0u == a_value)
         {
             a_p_buffer[0] = '0';
             a_p_buffer[1] = 0;
@@ -98,7 +101,8 @@ struct cstring
         while (0 != a_value)
         {
             Type_t remainder  = a_value % static_cast<Type_t>(a_base);
-            a_p_buffer[ret++] = (remainder > 9) ? (remainder - 10) + 'a' : remainder + '0';
+            auto tt           = (remainder > 9u) ? (remainder - 10u) + 'a' : remainder + '0';
+            a_p_buffer[ret++] = tt;
             a_value /= static_cast<Type_t>(a_base);
         }
 
@@ -111,7 +115,7 @@ struct cstring
     template<typename Type_t>
     static uint32_t from_signed_integer(Type_t a_value, char* a_p_buffer, uint32_t a_buffer_capacity, Radix a_base)
     {
-        static_assert(true == numeric_traits<Type_t>::is_signed);
+        static_assert(true == std::numeric_limits<Type_t>::is_signed);
         assert(a_buffer_capacity > 1);
 
         uint32_t ret  = 0;

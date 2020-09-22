@@ -59,7 +59,7 @@ using namespace soc::stm32l452xx;
 
 bool rng::enable(uint32_t a_irq_priority, time::tick a_timeout)
 {
-    assert(mcu::get_clk48_mux_freqency_hz() <= MHz(48));
+    assert(mcu::get_clk48_mux_freqency_hz() <= MHz_to_Hz(48));
     assert(a_timeout > 0);
 
     time::tick start = counter::get();

@@ -2,7 +2,7 @@ ifndef NOSILENT
 .SILENT:
 endif
 
-PROJECT_NAME := cml_blink_sample
+PROJECT_NAME := cml_exti_controller_sample
 ROOT         := $(CURDIR)
 CML_ROOT     := $(ROOT)/../../..
 LIBRARIES    := $(ROOT)/libraries

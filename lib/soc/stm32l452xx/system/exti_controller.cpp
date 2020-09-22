@@ -36,53 +36,47 @@ extern "C" {
 
 using namespace cml;
 
-static void interrupt_handler(uint32_t a_pr1, uint32_t a_index)
+static void interrupt_handler(uint32_t a_index)
 {
-    assert(nullptr != handlers[a_index].callback.function);
-
-    if (true == is_bit(a_pr1, a_index))
+    if (true == is_bit(EXTI->PR1, a_index))
     {
         handlers[a_index].callback.function(handlers[a_index].p_pin->get_level(),
                                             handlers[a_index].callback.p_user_data);
+
+        set_bit(&(EXTI->PR1), a_index);
     }
 }
 
 void EXTI0_IRQHandler()
 {
-    interrupt_handler(EXTI->PR1, 0);
-    set_bit(&(EXTI->PR1), 0);
+    interrupt_handler(0);
 }
 
 void EXTI1_IRQHandler()
 {
-    interrupt_handler(EXTI->PR1, 1);
-    set_bit(&(EXTI->PR1), 1);
+    interrupt_handler(1);
 }
 
 void EXTI2_IRQHandler()
 {
-    interrupt_handler(EXTI->PR1, 2);
-    set_bit(&(EXTI->PR1), 2);
+    interrupt_handler(2);
 }
 
 void EXTI3_IRQHandler()
 {
-    interrupt_handler(EXTI->PR1, 3);
-    set_bit(&(EXTI->PR1), 3);
+    interrupt_handler(3);
 }
 
 void EXTI4_IRQHandler()
 {
-    interrupt_handler(EXTI->PR1, 4);
-    set_bit(&(EXTI->PR1), 4);
+    interrupt_handler(4);
 }
 
 void EXTI9_5_IRQHandler()
 {
     for (uint32_t i = 5u; i <= 9u; i++)
     {
-        interrupt_handler(EXTI->PR1, i);
-        set_bit(&(EXTI->PR1), i);
+        interrupt_handler(i);
     }
 }
 
@@ -90,8 +84,7 @@ void EXTI15_10_IRQHandler()
 {
     for (uint32_t i = 10u; i <= 15u; i++)
     {
-        interrupt_handler(EXTI->PR1, i);
-        set_bit(&(EXTI->PR1), i);
+        interrupt_handler(i);
     }
 }
 
@@ -138,7 +131,6 @@ void exti_controller::register_callback(pin::In* a_p_pin, Interrupt_mode a_mode,
 {
     assert(nullptr != a_p_pin);
     assert(true == mcu::is_syscfg_enabled());
-    assert(nullptr == handlers[static_cast<uint32_t>(a_p_pin->get_id())].callback.function);
 
     set_flag(&(SYSCFG->EXTICR[a_p_pin->get_id() / 4u]),
              (static_cast<uint32_t>(a_p_pin->get_port()->get_id())

@@ -6,7 +6,7 @@
 */
 
 // cml
-#include <cml/bit.hpp>
+#include <cml/debug/assert.hpp>
 #include <cml/frequency.hpp>
 #include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
@@ -14,13 +14,68 @@
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/hal/systick.hpp>
-#include <cml/utils/Console.hpp>
+#include <cml/utils/Logger.hpp>
 #include <cml/utils/delay.hpp>
 
 namespace {
 
-using namespace cml;
+using namespace cml::hal;
 using namespace cml::hal::peripherals;
+using namespace cml::utils;
+
+void assert_mcu_halt(void*)
+{
+    mcu::halt();
+}
+
+void assert_print(const char* a_p_file, const char* a_p_line, const char* a_p_expression, void* a_p_user_data)
+{
+    USART* p_usart = reinterpret_cast<USART*>(a_p_user_data);
+
+    auto print = [&](const char* a_p_string) -> void {
+        while ('\0' != (*a_p_string))
+        {
+            p_usart->transmit_word(*a_p_string);
+            a_p_string++;
+        }
+    };
+
+    print("\e[01;31m[ASSERT]\e[0m ");
+    print(a_p_file);
+    print(" : ");
+    print(a_p_line);
+    print(" -> ");
+    print(a_p_expression);
+    print("\n");
+}
+
+uint32_t write_string(const char* a_p_string, uint32_t a_length, void* a_p_user_data)
+{
+    return reinterpret_cast<USART*>(a_p_user_data)->transmit_bytes_polling(a_p_string, a_length).data_length_in_words;
+}
+
+void pre_sysclk_freq_change(void*) {}
+void post_sysclk_freq_change(void*) {}
+
+const char* sysclk_source_to_cstring(mcu::Sysclk_source a_source)
+{
+    switch (a_source)
+    {
+        case mcu::Sysclk_source::msi:
+            return "MSI";
+
+        case mcu::Sysclk_source::hsi:
+            return "HSI";
+
+        case mcu::Sysclk_source::pll:
+            return "PLL";
+
+        default:
+            return "UNKNOWN";
+    }
+
+    return "";
+}
 
 int32_t compute_temperature(const ADC::Calibration_data& a_calibration_data, uint32_t measure)
 {
@@ -30,32 +85,17 @@ int32_t compute_temperature(const ADC::Calibration_data& a_calibration_data, uin
     return temperature + 30;
 }
 
-uint32_t write_character(char a_character, void* a_p_user_data)
-{
-    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
-    return p_console_usart->transmit_bytes_polling(&a_character, 1).data_length_in_words;
-}
-
-uint32_t write_string(const char* a_p_string, uint32_t a_length, void* a_p_user_data)
-{
-    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
-    return p_console_usart->transmit_bytes_polling(a_p_string, a_length).data_length_in_words;
-}
-
-uint32_t read_key(char* a_p_out, uint32_t a_length, void* a_p_user_data)
-{
-    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
-    return p_console_usart->receive_bytes_polling(a_p_out, a_length).data_length_in_words;
-}
-
 } // namespace
 
 int main()
 {
-    using namespace cml::common;
+    using namespace cml;
     using namespace cml::hal;
     using namespace cml::hal::peripherals;
-    using namespace cml::utils;
+    using namespace cml::debug;
+
+    mcu::register_pre_sysclk_frequency_change_callback({ pre_sysclk_freq_change, nullptr });
+    mcu::register_post_sysclk_frequency_change_callback({ post_sysclk_freq_change, nullptr });
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
     mcu::set_sysclk(mcu::Sysclk_source::hsi,
@@ -63,73 +103,72 @@ int main()
 
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
-        mcu::set_nvic({ mcu::NVIC_config::Grouping::_4, 16u << 4u });
+        mcu::set_nvic({ mcu::NVIC_config::Grouping::_4, 10u << 4u });
+        mcu::disable_msi_clock();
 
-        USART::Config usart_config = { 115200u,
-                                       USART::Oversampling::_16,
-                                       USART::Stop_bits::_1,
-                                       USART::Flow_control_flag::none,
-                                       USART::Sampling_method::three_sample_bit,
-                                       USART::Mode_flag::tx };
+        assert::register_halt({ assert_mcu_halt, nullptr });
 
-        USART::Frame_format usart_frame_format { USART::Word_length::_8_bit, USART::Parity::none };
-
-        USART::Clock usart_clock {
-            USART::Clock::Source::sysclk,
-            mcu::get_sysclk_frequency_hz(),
-        };
-
-        pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::low, 0x7u };
-
-        systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, 0x9u);
         systick::register_tick_callback({ counter::update, nullptr });
 
-        mcu::disable_msi_clock();
-        mcu::enable_dwt();
+        mcu::enable_dwt(); // uS delay for adc
 
-        ADC adc(ADC::Id::_1);
+        GPIO gpio_port_a(GPIO::Id::a);
+        gpio_port_a.enable();
 
-        GPIO gpio_c(GPIO::Id::c);
-        gpio_c.enable();
+        pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::high, 0x7u };
+        pin::af::enable(&gpio_port_a, 2, usart_pin_config);
+        pin::af::enable(&gpio_port_a, 3, usart_pin_config);
 
-        bool periph_ready = adc.enable(ADC::Resolution::_12_bit,
-                                       { ADC::Synchronous_clock::Source::pclk, ADC::Synchronous_clock::Divider::_1 },
-                                       20,
-                                       1);
+        USART iostream(USART::Id::_2);
+        bool iostream_ready = iostream.enable({ 115200,
+                                                USART::Oversampling::_16,
+                                                USART::Stop_bits::_1,
+                                                USART::Flow_control_flag::none,
+                                                USART::Sampling_method::three_sample_bit,
+                                                USART::Mode_flag::tx },
+                                              { USART::Word_length::_8_bit, USART::Parity::none },
+                                              { USART::Clock::Source::sysclk, mcu::get_sysclk_frequency_hz() },
+                                              0x1u,
+                                              10u);
 
-        if (true == periph_ready)
+        if (true == iostream_ready)
         {
-            GPIO gpio_port_a(GPIO::Id::a);
-            gpio_port_a.enable();
+            Logger logger({ write_string, &iostream }, true, true, true, true);
+            assert::register_print({ assert_print, &iostream });
+            logger.inf("CML. CPU speed: %u MHz, source: %s\n",
+                       Hz_to_MHz(mcu::get_sysclk_frequency_hz()),
+                       sysclk_source_to_cstring(mcu::get_sysclk_source()));
 
-            pin::af::enable(&gpio_port_a, 2, usart_pin_config);
-            pin::af::enable(&gpio_port_a, 3, usart_pin_config);
+            ADC adc(ADC::Id::_1);
+            const ADC::Channel enabled_channels[] = { ADC::Channel::Id::temperature_sensor,
+                                                      ADC::Channel::Sampling_time::_640_5_clock_cycles };
+            bool periph_ready =
+                adc.enable(ADC::Resolution::_12_bit,
+                           { ADC::Synchronous_clock::Source::pclk, ADC::Synchronous_clock::Divider::_1 },
+                           20,
+                           1);
 
-            USART console_usart(USART::Id::_2);
-            bool preiph_ready = console_usart.enable(usart_config, usart_frame_format, usart_clock, 0x1u, 10);
-
-            if (true == preiph_ready)
+            if (true == periph_ready)
             {
-                const ADC::Channel enabled_channels[] = { ADC::Channel::Id::temperature_sensor,
-                                                          ADC::Channel::Sampling_time::_640_5_clock_cycles };
-
                 adc.set_active_channels(enabled_channels, 1);
-
-                Console console({ write_character, &console_usart },
-                                { write_string, &console_usart },
-                                { read_key, &console_usart });
-
-                console.write_line("CML ADC sample. CPU speed: %u MHz", mcu::get_sysclk_frequency_hz() / MHz(1));
 
                 while (true)
                 {
                     uint16_t r = 0;
                     adc.read_polling(&r, 1);
 
-                    console.write_line("temp: %d, adc: %u\r", compute_temperature(adc.get_calibration_data(), r), r);
+                    logger.inf("temp: %d, adc: %u\r", compute_temperature(adc.get_calibration_data(), r), r);
                     delay::ms(1000);
                 }
             }
+            else
+            {
+                logger.err("Cannot intialize ADC\n");
+            }
+
+            while (true)
+                ;
         }
     }
 

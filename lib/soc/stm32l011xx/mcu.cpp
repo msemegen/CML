@@ -20,9 +20,8 @@ namespace {
 using namespace cml;
 using namespace soc::stm32l011xx;
 
-constexpr frequency msi_frequency_lut[] {
-    Hz(65536), Hz(131072), Hz(262144), Hz(524288), kHz(1048), kHz(2097), kHz(4194)
-};
+constexpr frequency msi_frequency_lut[] { 65536,           131072,          262144,         524288,
+                                          kHz_to_Hz(1048), kHz_to_Hz(2097), kHz_to_Hz(4194) };
 
 mcu::Sysclk_frequency_change_callback pre_sysclk_frequency_change_callback;
 mcu::Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
@@ -228,12 +227,12 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
     switch (a_voltage_scaling)
     {
         case Voltage_scaling::_1: {
-            if (a_syclk_freq <= MHz(16))
+            if (a_syclk_freq <= MHz_to_Hz(16))
             {
                 return Flash_latency::_0;
             }
 
-            if (a_syclk_freq <= MHz(32))
+            if (a_syclk_freq <= MHz_to_Hz(32))
             {
                 return Flash_latency::_1;
             }
@@ -241,12 +240,12 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
         break;
 
         case Voltage_scaling::_2: {
-            if (a_syclk_freq <= MHz(8))
+            if (a_syclk_freq <= MHz_to_Hz(8))
             {
                 return Flash_latency::_0;
             }
 
-            if (a_syclk_freq <= MHz(16))
+            if (a_syclk_freq <= MHz_to_Hz(16))
             {
                 return Flash_latency::_1;
             }
@@ -254,7 +253,7 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
         break;
 
         case Voltage_scaling::_3: {
-            if (a_syclk_freq <= kHz(4200))
+            if (a_syclk_freq <= kHz_to_Hz(4200))
             {
                 return Flash_latency::_0;
             }
@@ -272,17 +271,17 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
 
 mcu::Voltage_scaling mcu::select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq)
 {
-    if (Sysclk_source::msi == a_source || (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz(4)))
+    if (Sysclk_source::msi == a_source || (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz_to_Hz(4)))
     {
         return Voltage_scaling::_3;
     }
 
-    if (Sysclk_source::hsi == a_source || (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz(16)))
+    if (Sysclk_source::hsi == a_source || (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz_to_Hz(16)))
     {
         return Voltage_scaling::_2;
     }
 
-    if (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz(32))
+    if (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz_to_Hz(32))
     {
         return Voltage_scaling::_1;
     }
