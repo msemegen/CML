@@ -222,6 +222,28 @@ struct pin
     class in
     {
     public:
+        enum class Interrupt_mode : uint32_t
+        {
+            rising  = 0x1,
+            falling = 0x2,
+        };
+
+        enum class Interrupt_line : int32_t
+        {
+            exti_0_1  = EXTI0_1_IRQn,
+            exti_2_3  = EXTI2_3_IRQn,
+            exti_4_15 = EXTI4_15_IRQn,
+        };
+
+        struct Interrupt_callback
+        {
+            using Function = bool (*)(pin::Level a_level, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+
+    public:
         in()           = delete;
         in(in&&)       = delete;
         in(const in&&) = delete;
@@ -239,6 +261,17 @@ struct pin
             p_pin->p_port = nullptr;
             p_pin->id     = 0xFF;
         }
+
+        static void enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority);
+        static void disable_interrupt_line(Interrupt_line a_line);
+
+        static void enable_interrupt(GPIO* a_p_port,
+                                     uint32_t a_id,
+                                     Pull a_pull,
+                                     Interrupt_mode a_mode,
+                                     const Interrupt_callback& a_callback);
+
+        static void disable_interrupt(const In& a_pin);
     };
 
     class out
@@ -325,6 +358,22 @@ struct pin
         }
     };
 };
+
+constexpr pin::in::Interrupt_mode operator|(pin::in::Interrupt_mode a_f1, pin::in::Interrupt_mode a_f2)
+{
+    return static_cast<pin::in::Interrupt_mode>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+}
+
+constexpr pin::in::Interrupt_mode operator&(pin::in::Interrupt_mode a_f1, pin::in::Interrupt_mode a_f2)
+{
+    return static_cast<pin::in::Interrupt_mode>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+}
+
+constexpr pin::in::Interrupt_mode operator|=(pin::in::Interrupt_mode& a_f1, pin::in::Interrupt_mode a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
 
 class GPIO : private cml::Non_copyable
 {

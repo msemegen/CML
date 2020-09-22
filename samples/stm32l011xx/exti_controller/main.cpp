@@ -9,7 +9,6 @@
 #include <cml/frequency.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
-#include <cml/hal/system/exti_controller.hpp>
 
 namespace {
 
@@ -28,7 +27,6 @@ int main()
     using namespace cml;
     using namespace cml::hal;
     using namespace cml::hal::peripherals;
-    using namespace cml::hal::system;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
     mcu::enable_pll(
@@ -51,16 +49,12 @@ int main()
         pin::out::enable(&gpio_port_b, 3u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
         led_pin.set_level(pin::Level::low);
 
-        pin::In exti_in;
-        pin::in::enable(&gpio_port_a, 9u, pin::Pull::down, &exti_in);
-
-        exti_controller::enable(0x5u);
-        exti_controller::register_callback(
-            &exti_in, exti_controller::Interrupt_mode::rising, { exti_callback, &led_pin });
+        pin::in::enable_interrupt_line(pin::in::Interrupt_line::exti_4_15, 0x5u);
+        pin::in::enable_interrupt(
+            &gpio_port_a, 9u, pin::Pull::down, pin::in::Interrupt_mode::rising, { exti_callback, &led_pin });
 
         while (true)
-        {
-        }
+            ;
     }
 
     while (true)
