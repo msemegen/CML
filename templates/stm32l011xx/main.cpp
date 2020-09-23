@@ -1,14 +1,16 @@
-// cml
-#include <cml/debug/assert.hpp>
+//cml
 #include <cml/frequency.hpp>
+#include <cml/various.hpp>
+#include <cml/debug/assert.hpp>
 #include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
-#include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/systick.hpp>
+#include <cml/hal/peripherals/GPIO.hpp>
+#include <cml/hal/peripherals/USART.hpp>
 #include <cml/utils/Logger.hpp>
-#include <cml/various.hpp>
 
-namespace {
+namespace
+{
 
 using namespace cml;
 using namespace cml::common;
@@ -25,7 +27,8 @@ void assert_print(const char* a_p_file, const char* a_p_line, const char* a_p_ex
 {
     USART* p_usart = reinterpret_cast<USART*>(a_p_user_data);
 
-    auto print = [&](const char* a_p_string) -> void {
+    auto print = [&](const char* a_p_string) -> void
+    {
         while ('\0' != (*a_p_string))
         {
             p_usart->transmit_word(*a_p_string);
@@ -70,19 +73,14 @@ const char* sysclk_source_to_cstring(mcu::Sysclk_source a_source)
     return "";
 }
 
-void exti_callback(pin::Level, void* a_p_user_data)
-{
-    reinterpret_cast<pin::Out*>(a_p_user_data)->toggle_level();
-}
-
-} // namespace
+} // namespace ::
 
 int main()
 {
     using namespace cml;
-    using namespace cml::debug;
     using namespace cml::hal;
     using namespace cml::hal::peripherals;
+    using namespace cml::debug;
 
     mcu::register_pre_sysclk_frequency_change_callback({ pre_sysclk_freq_change, nullptr });
     mcu::register_post_sysclk_frequency_change_callback({ post_sysclk_freq_change, nullptr });
@@ -99,6 +97,8 @@ int main()
 
         systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, 0x9u);
         systick::register_tick_callback({ counter::update, nullptr });
+
+        // mcu::enable_syscfg(); // uncomment for I2C fast+ or exti_controller
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
@@ -126,16 +126,6 @@ int main()
             logger.inf("CML. CPU speed: %u MHz, source: %s\n",
                        Hz_to_MHz(mcu::get_sysclk_frequency_hz()),
                        sysclk_source_to_cstring(mcu::get_sysclk_source()));
-
-            GPIO gpio_port_b(GPIO::Id::b);
-
-            pin::Out led_pin;
-            pin::out::enable(&gpio_port_b, 3u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
-            led_pin.set_level(pin::Level::low);
-
-            pin::in::enable_interrupt_line(pin::in::Interrupt_line::exti_4_15, 0x5u);
-            pin::in::enable_interrupt(
-                &gpio_port_a, 9u, pin::Pull::down, pin::in::Interrupt_mode::rising, { exti_callback, &led_pin });
 
             while (true)
                 ;

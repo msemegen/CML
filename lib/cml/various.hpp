@@ -1,21 +1,20 @@
 #pragma once
 
 /*
-    Name: type_traits.hpp
+    Name: various.hpp
 
     Copyright(c) 2020 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
+// std
+#include <cstdint>
+
 namespace cml {
 
-#ifdef __GNUG__
-
-template<typename Type_t> bool is_pod()
+template<class Type, uint32_t n> uint32_t get_array_length(Type (&)[n])
 {
-    return __is_pod(Type_t);
+    return n;
 }
-
-#endif // GNUG
 
 } // namespace cml

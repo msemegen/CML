@@ -16,7 +16,6 @@
 namespace cml {
 namespace utils {
 
-using namespace cml::collection;
 using namespace cml::common;
 using namespace cml::hal;
 
@@ -35,10 +34,16 @@ void Command_line::update()
 
                     this->commands_carousel.push(this->line_buffer, this->line_length);
 
-                    this->callback_parameters_buffer_view =
-                        this->get_callback_parameters(this->line_buffer, this->line_length, " -", 2);
+                    this->get_callback_parameters(this->callback_parameters_buffer,
+                                                  config::command_line::callback_parameters_buffer_capacity,
+                                                  &(this->callback_parameters_buffer_length),
+                                                  this->line_buffer,
+                                                  this->line_length,
+                                                  " -",
+                                                  2);
 
-                    bool command_executed = this->execute_command(this->callback_parameters_buffer_view);
+                    bool command_executed = this->execute_command(this->callback_parameters_buffer,
+                                                                  this->callback_parameters_buffer_length);
                     if (false == command_executed)
                     {
                         this->write_new_line();
@@ -79,13 +84,18 @@ void Command_line::update()
     }
 }
 
-Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(char* a_p_line,
-                                                                                uint32_t a_length,
-                                                                                const char* a_p_separators,
-                                                                                uint32_t a_separators_count)
+void Command_line::get_callback_parameters(Callback::Parameter* a_p_out_buffer,
+                                           uint32_t a_out_buffor_capacity,
+                                           uint32_t* a_p_out_buffer_length,
+                                           char* a_p_line,
+                                           uint32_t a_line_length,
+                                           const char* a_p_separators,
+                                           uint32_t a_separators_count)
 {
-    Vector<Callback::Parameter> ret(this->callback_parameters_buffer,
-                                    config::command_line::callback_parameters_buffer_capacity);
+    assert(nullptr != a_p_out_buffer);
+    assert(nullptr != a_p_line);
+    assert(nullptr != a_p_out_buffer_length);
+    assert(nullptr != a_p_separators);
 
     auto contains = [](char a_character, const char* a_p_separators, uint32_t a_separators_count) {
         bool ret = false;
@@ -98,14 +108,17 @@ Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(
         return ret;
     };
 
-    const char* p_begin = &(a_p_line[0]);
+    const char* p_begin      = &(a_p_line[0]);
+    (*a_p_out_buffer_length) = 0;
 
-    for (decltype(a_length) i = 0; i < a_length && false == ret.is_full(); i++)
+    for (uint32_t i = 0;
+         i < a_line_length && (*a_p_out_buffer_length) < config::command_line::callback_parameters_buffer_capacity;
+         i++)
     {
         if (nullptr != p_begin && true == contains(a_p_line[i], a_p_separators, a_separators_count))
         {
             assert(&(a_p_line[i]) > p_begin);
-            ret.push_back({ p_begin, static_cast<uint32_t>(&(a_p_line[i]) - p_begin) });
+            a_p_out_buffer[(*a_p_out_buffer_length)++] = { p_begin, static_cast<uint32_t>(&(a_p_line[i]) - p_begin) };
 
             a_p_line[i] = 0;
             p_begin     = nullptr;
@@ -116,35 +129,34 @@ Vector<Command_line::Callback::Parameter> Command_line::get_callback_parameters(
         }
     }
 
-    if (nullptr != p_begin && false == ret.is_full())
+    if (nullptr != p_begin && (*a_p_out_buffer_length) < config::command_line::callback_parameters_buffer_capacity)
     {
-        assert(&(a_p_line[a_length]) > p_begin);
-        ret.push_back({ p_begin, static_cast<uint32_t>(&(a_p_line[a_length]) - p_begin) });
+        assert(&(a_p_line[a_line_length]) > p_begin);
+        a_p_out_buffer[(*a_p_out_buffer_length)++] = { p_begin,
+                                                       static_cast<uint32_t>(&(a_p_line[a_line_length]) - p_begin) };
     }
-
-    return ret;
 }
 
-bool Command_line::execute_command(const Vector<Callback::Parameter>& a_parameters)
+bool Command_line::execute_command(const Callback::Parameter* a_p_parameters, uint32_t a_count)
 {
-    uint32_t index = this->callbacks_buffer_view.get_capacity();
+    uint32_t index = config::command_line::callbacks_buffer_capacity;
 
     for (uint32_t i = 0;
-         i < this->callbacks_buffer_view.get_length() && this->callbacks_buffer_view.get_capacity() == index;
+         i < this->callback_buffer_length && config::command_line::callback_parameters_buffer_capacity != index;
          i++)
     {
         if (true ==
-            cstring::equals(a_parameters[0].a_p_value, this->callbacks_buffer_view[i].p_name, a_parameters[0].length))
+            cstring::equals(a_p_parameters[0].a_p_value, this->callbacks_buffer[i].p_name, a_p_parameters[0].length))
         {
             index = i;
         }
     }
 
-    bool ret = index != this->callbacks_buffer_view.get_capacity();
+    bool ret = index != config::command_line::callbacks_buffer_capacity;
 
     if (true == ret)
     {
-        this->callbacks_buffer_view[index].function(a_parameters, this->callbacks_buffer_view[index].p_user_data);
+        this->callbacks_buffer[index].function(a_p_parameters, a_count, this->callbacks_buffer[index].p_user_data);
     }
 
     return ret;

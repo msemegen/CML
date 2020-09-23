@@ -1,46 +1,86 @@
-/*
-    Name: main.cpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
-
-// cml
+// enable asserts pernamently
 #ifndef CML_ASSERT
 #define CML_ASSERT
-#endif
+#endif // ! CML_ASSERT
 
-#include <cml/collection/Array.hpp>
+// cml
 #include <cml/debug/assert.hpp>
+#include <cml/frequency.hpp>
 #include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/hal/systick.hpp>
 #include <cml/utils/Logger.hpp>
+#include <cml/various.hpp>
 
 namespace {
 
+using namespace cml;
+using namespace cml::common;
 using namespace cml::hal;
 using namespace cml::hal::peripherals;
 using namespace cml::utils;
 
-void print_assert(void* a_p_user_data, const char* a_p_file, uint32_t a_line, const char* a_p_expression)
-{
-    reinterpret_cast<Logger*>(a_p_user_data)->omg("%s : %u -> %s\n", a_p_file, a_line, a_p_expression);
-}
-
-void halt(void*)
+void assert_mcu_halt(void*)
 {
     mcu::halt();
-    while (true)
-        ;
+}
+
+void assert_print(const char* a_p_file, const char* a_p_line, const char* a_p_expression, void* a_p_user_data)
+{
+    USART* p_usart = reinterpret_cast<USART*>(a_p_user_data);
+
+    auto print = [&](const char* a_p_string) -> void {
+        while ('\0' != (*a_p_string))
+        {
+            p_usart->transmit_word(*a_p_string);
+            a_p_string++;
+        }
+    };
+
+    print("\e[01;31m[ASSERT]\e[0m ");
+    print(a_p_file);
+    print(" : ");
+    print(a_p_line);
+    print(" -> ");
+    print(a_p_expression);
+    print("\n");
 }
 
 uint32_t write_string(const char* a_p_string, uint32_t a_length, void* a_p_user_data)
 {
-    USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
-    return p_console_usart->transmit_bytes_polling(a_p_string, a_length).data_length_in_words;
+    return reinterpret_cast<USART*>(a_p_user_data)->transmit_bytes_polling(a_p_string, a_length).data_length_in_words;
+}
+
+void pre_sysclk_freq_change(void*) {}
+void post_sysclk_freq_change(void*) {}
+
+const char* sysclk_source_to_cstring(mcu::Sysclk_source a_source)
+{
+    switch (a_source)
+    {
+        case mcu::Sysclk_source::msi:
+            return "MSI";
+
+        case mcu::Sysclk_source::hsi:
+            return "HSI";
+
+        case mcu::Sysclk_source::pll:
+            return "PLL";
+
+        default:
+            return "UNKNOWN";
+    }
+
+    return "";
+}
+
+void foo_test(uint32_t* a_p_tr)
+{
+    assert(nullptr != a_p_tr);
+
+    (*a_p_tr) = 3u;
 }
 
 } // namespace
@@ -48,12 +88,12 @@ uint32_t write_string(const char* a_p_string, uint32_t a_length, void* a_p_user_
 int main()
 {
     using namespace cml;
-    using namespace cml::collection;
-    using namespace cml::common;
-    using namespace cml::debug;
     using namespace cml::hal;
     using namespace cml::hal::peripherals;
-    using namespace cml::utils;
+    using namespace cml::debug;
+
+    mcu::register_pre_sysclk_frequency_change_callback({ pre_sysclk_freq_change, nullptr });
+    mcu::register_post_sysclk_frequency_change_callback({ post_sysclk_freq_change, nullptr });
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
     mcu::set_sysclk(mcu::Sysclk_source::hsi,
@@ -61,43 +101,45 @@ int main()
 
     if (mcu::Sysclk_source::hsi == mcu::get_sysclk_source())
     {
-        USART::Config usart_config = { 115200u,
-                                       USART::Oversampling::_16,
-                                       USART::Stop_bits::_1,
-                                       USART::Flow_control_flag::none,
-                                       USART::Sampling_method::three_sample_bit,
-                                       USART::Mode_flag::tx };
-
-        USART::Frame_format usart_frame_format { USART::Word_length::_8_bit, USART::Parity::none };
-
-        USART::Clock usart_clock { USART::Clock::Source::sysclk, mcu::get_sysclk_frequency_hz() };
-
-        pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::ultra, 0x4u };
-
         mcu::disable_msi_clock();
 
-        systick::enable((mcu::get_sysclk_frequency_hz() / kHz(1)) - 1, 0x9u);
+        assert::register_halt({ assert_mcu_halt, nullptr });
+
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, 0x9u);
         systick::register_tick_callback({ counter::update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
+        pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::high, 0x4u };
         pin::af::enable(&gpio_port_a, 2u, usart_pin_config);
         pin::af::enable(&gpio_port_a, 15u, usart_pin_config);
 
-        USART console_usart(USART::Id::_2);
-        console_usart.enable(usart_config, usart_frame_format, usart_clock, 0x1u, 10);
+        USART iostream(USART::Id::_2);
+        bool iostream_ready = iostream.enable({ 115200,
+                                                USART::Oversampling::_16,
+                                                USART::Stop_bits::_1,
+                                                USART::Flow_control_flag::none,
+                                                USART::Sampling_method::three_sample_bit,
+                                                USART::Mode_flag::tx },
+                                              { USART::Word_length::_8_bit, USART::Parity::none },
+                                              { USART::Clock::Source::sysclk, mcu::get_sysclk_frequency_hz() },
+                                              0x1u,
+                                              10u);
 
-        Logger logger({ write_string, &console_usart }, true, true, true, true);
-        logger.inf("CML assert sample. CPU speed: %u MHz\n", mcu::get_sysclk_frequency_hz() / MHz(1));
+        if (true == iostream_ready)
+        {
+            Logger logger({ write_string, &iostream }, true, true, true, true);
+            assert::register_print({ assert_print, &iostream });
+            logger.inf("CML. CPU speed: %u MHz, source: %s\n",
+                       Hz_to_MHz(mcu::get_sysclk_frequency_hz()),
+                       sysclk_source_to_cstring(mcu::get_sysclk_source()));
 
-        assert::register_print({ print_assert, &logger });
-        assert::register_halt({ halt, nullptr });
+            foo_test(nullptr);
 
-        uint8_t array_buffer[3];
-        Array<uint8_t> array(array_buffer, sizeof(array_buffer));
-
-        array[3] = 3;
+            while (true)
+                ;
+        }
     }
 
     while (true)

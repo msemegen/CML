@@ -137,9 +137,7 @@ public:
     };
 
 public:
-    ADC(Id)
-    {
-    }
+    ADC(Id) {}
 
     ~ADC()
     {

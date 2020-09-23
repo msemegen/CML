@@ -11,8 +11,6 @@
 #include <cstdint>
 
 // cml
-#include <cml/collection/Ring.hpp>
-#include <cml/collection/Vector.hpp>
 #include <cml/common/cstring.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/utils/config.hpp>
@@ -56,7 +54,7 @@ public:
             uint32_t length       = 0;
         };
 
-        using Function = void (*)(const collection::Vector<Parameter>&, void*);
+        using Function = void (*)(const Parameter*, uint32_t, void*);
 
         const char* p_name = nullptr;
 
@@ -79,9 +77,8 @@ public:
         , command_not_found_message_length(
               common::cstring::length(a_p_command_not_found_message, config::command_line::line_buffer_capacity))
         , line_length(0)
-        , callback_parameters_buffer_view(this->callback_parameters_buffer,
-                                          config::command_line::callback_parameters_buffer_capacity)
-        , callbacks_buffer_view(this->callbacks_buffer, config::command_line::callbacks_buffer_capacity)
+        , callback_parameters_buffer_length(0)
+        , callback_buffer_length(0)
     {
         assert(nullptr != a_write_character_handler.function);
         assert(nullptr != a_write_string_handler.function);
@@ -100,9 +97,10 @@ public:
 
     void update();
 
-    bool register_callback(const Callback& a_callback)
+    void register_callback(const Callback& a_callback)
     {
-        return this->callbacks_buffer_view.push_back(a_callback);
+        assert(this->callback_buffer_length < config::command_line::callbacks_buffer_capacity);
+        this->callbacks_buffer[this->callback_buffer_length++] = a_callback;
     }
 
     void write_prompt()
@@ -154,10 +152,15 @@ private:
     };
 
 private:
-    collection::Vector<Callback::Parameter>
-    get_callback_parameters(char* a_p_line, uint32_t a_length, const char* a_p_separators, uint32_t a_separators_count);
+    void get_callback_parameters(Callback::Parameter* a_p_out_buffer,
+                                 uint32_t a_out_buffor_capacity,
+                                 uint32_t* a_p_out_buffer_length,
+                                 char* a_p_line,
+                                 uint32_t a_line_length,
+                                 const char* a_p_separators,
+                                 uint32_t a_separators_count);
 
-    bool execute_command(const collection::Vector<Callback::Parameter>& a_parameters);
+    bool execute_command(const Callback::Parameter* a_p_parameters, uint32_t a_count);
     void execute_escape_sequence(char a_first, char a_second);
 
     void write_new_line()
@@ -173,8 +176,8 @@ private:
     const char* p_prompt;
     const char* p_command_not_found_message;
 
-    uint32_t prompt_length;
-    uint32_t command_not_found_message_length;
+    const uint32_t prompt_length;
+    const uint32_t command_not_found_message_length;
     uint32_t line_length;
 
     char line_buffer[config::command_line::line_buffer_capacity];
@@ -182,8 +185,8 @@ private:
     Callback::Parameter callback_parameters_buffer[config::command_line::callback_parameters_buffer_capacity];
     Callback callbacks_buffer[config::command_line::callbacks_buffer_capacity];
 
-    collection::Vector<Callback::Parameter> callback_parameters_buffer_view;
-    collection::Vector<Callback> callbacks_buffer_view;
+    uint32_t callback_parameters_buffer_length;
+    uint32_t callback_buffer_length;
 
     Commands_carousel commands_carousel;
 };

@@ -237,7 +237,7 @@ struct pin
 
         struct Interrupt_callback
         {
-            using Function = bool (*)(pin::Level a_level, void* a_p_user_data);
+            using Function = void (*)(pin::Level a_level, void* a_p_user_data);
 
             Function function = nullptr;
             void* p_user_data = nullptr;

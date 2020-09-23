@@ -14,7 +14,6 @@ CML_CPP_FILES := lib/cml/common/*.cpp                  \
 				 lib/soc/stm32l452xx/system/*.cpp      \
 
 CML_HPP_FILES := lib/cml/*.hpp                         \
-				 lib/cml/collection/*.hpp              \
 				 lib/cml/common/*.hpp                  \
 				 lib/cml/debug/*.hpp                   \
 				 lib/cml/hal/*.hpp                     \

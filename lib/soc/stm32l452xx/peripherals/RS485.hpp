@@ -9,6 +9,7 @@
 
 // std
 #include <cstdint>
+#include <type_traits>
 
 // soc
 #include <soc/stm32l452xx/peripherals/GPIO.hpp>
@@ -16,7 +17,6 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/type_traits.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -31,9 +31,32 @@ public:
 
     using Result = USART::Result;
 
-    using TX_callback         = USART::TX_callback;
-    using RX_callback         = USART::RX_callback;
-    using Bus_status_callback = USART::Bus_status_callback;
+    struct Transmit_callback
+    {
+        using Function = void (*)(volatile uint16_t* a_p_data,
+                                  bool a_transfer_complete,
+                                  RS485* a_p_this,
+                                  void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    struct Receive_callback
+    {
+        using Function = void (*)(uint32_t a_data, bool a_idle, RS485* a_p_this, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
+
+    struct Bus_status_callback
+    {
+        using Function = void (*)(Bus_status_flag a_bus_status, RS485* a_p_this, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
+    };
 
     struct Config
     {
@@ -65,26 +88,26 @@ public:
 
     template<typename Data_t> Result transmit_polling(uint8_t a_address, const Data_t& a_data)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data));
     }
 
     template<typename Data_t>
     Result transmit_polling(uint8_t a_address, const Data_t& a_data, cml::time::tick a_timeout)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data), a_timeout);
     }
 
     template<typename Data_t> Result receive_polling(Data_t* a_p_data)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
     template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
     {
-        static_assert(true == cml::is_pod<Data_t>());
+        static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
@@ -97,8 +120,8 @@ public:
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words);
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
 
-    void register_transmit_callback(const TX_callback& a_callback);
-    void register_receive_callback(const RX_callback& a_callback);
+    void register_transmit_callback(const Transmit_callback& a_callback);
+    void register_receive_callback(const Receive_callback& a_callback);
     void register_bus_status_callback(const Bus_status_callback& a_callback);
 
     void unregister_transmit_callback();
@@ -124,13 +147,27 @@ public:
         return this->clock;
     }
 
+    bool is_transmit_callback() const
+    {
+        return nullptr != this->transmit_callback.function;
+    }
+
+    bool is_receive_callback() const
+    {
+        return nullptr != this->receive_callback.function;
+    }
+
+    bool is_bus_status_callback() const
+    {
+        return nullptr != this->bus_status_callback.function;
+    }
+
 private:
     USART::Id id;
-    USART_TypeDef* p_usart;
     pin::Out* p_flow_control_pin;
 
-    TX_callback tx_callback;
-    RX_callback rx_callback;
+    Transmit_callback transmit_callback;
+    Receive_callback receive_callback;
     Bus_status_callback bus_status_callback;
 
     uint32_t baud_rate;

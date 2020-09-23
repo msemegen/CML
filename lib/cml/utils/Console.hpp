@@ -99,7 +99,6 @@ public:
         uint32_t length =
             common::memory::copy(this->line_buffer,
                                  config::command_line::line_buffer_capacity,
-
                                  a_p_string,
                                  common::cstring::length(a_p_string, config::command_line::line_buffer_capacity));
 

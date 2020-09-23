@@ -124,12 +124,12 @@ using namespace soc;
 
 static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
 {
-    assert(nullptr != interrupt_handlers[a_index].callback.function);
-
     if (true == is_bit(a_pr1, a_index))
     {
-        return interrupt_handlers[a_index].callback.function(interrupt_handlers[a_index].in_pin.get_level(),
-                                                             interrupt_handlers[a_index].callback.p_user_data);
+        interrupt_handlers[a_index].callback.function(interrupt_handlers[a_index].in_pin.get_level(),
+                                                      interrupt_handlers[a_index].callback.p_user_data);
+
+        return true;
     }
 
     return false;
