@@ -9,6 +9,7 @@
 
 // std
 #include <cstdint>
+#include <cstdlib>
 #include <limits>
 
 // cml
@@ -101,7 +102,7 @@ struct cstring
         while (0 != a_value)
         {
             Type_t remainder  = a_value % static_cast<Type_t>(a_base);
-            auto tt           = (remainder > 9u) ? (remainder - 10u) + 'a' : remainder + '0';
+            auto tt           = (remainder > 9u) ? (remainder - 10u) + 'A' : remainder + '0';
             a_p_buffer[ret++] = tt;
             a_value /= static_cast<Type_t>(a_base);
         }
@@ -131,7 +132,7 @@ struct cstring
 
         while (0 != a_value)
         {
-            Type_t remainder  = a_value % static_cast<Type_t>(a_base);
+            Type_t remainder  = std::abs(a_value % static_cast<Type_t>(a_base));
             a_p_buffer[ret++] = (remainder > 9) ? (remainder - 10) + 'a' : remainder + '0';
             a_value /= static_cast<Type_t>(a_base);
         }
@@ -183,35 +184,20 @@ private:
         Argument& operator=(Argument&&) = delete;
         Argument& operator=(const Argument&) = delete;
 
-        Argument(Argument&& a_other)
-            : type(a_other.type)
-        {
-            memory::copy(this->data, sizeof(this->data), a_other.data, sizeof(a_other.data));
-        }
-
-        Argument(const Argument& a_other)
-            : type(a_other.type)
-        {
-            memory::copy(this->data, sizeof(this->data), a_other.data, sizeof(a_other.data));
-        }
+        Argument(Argument&& a_other)      = default;
+        Argument(const Argument& a_other) = default;
 
         static_assert(sizeof(unsigned int) == sizeof(uint32_t));
         explicit Argument(unsigned int a_value)
-            : data { static_cast<uint8_t>((a_value >> 24u) & 0xFF),
-                     static_cast<uint8_t>((a_value >> 16u) & 0xFF),
-                     static_cast<uint8_t>((a_value >> 8u) & 0xFF),
-                     static_cast<uint8_t>((a_value >> 0u) & 0xFF) }
-            , type(Type::unsigned_int)
+            : data(a_value)
+            , type(Type::unsigned_int_32)
         {
         }
 
         static_assert(sizeof(signed int) == sizeof(int32_t));
         explicit Argument(signed int a_value)
-            : data { static_cast<uint8_t>((a_value >> 24u) & 0xFF),
-                     static_cast<uint8_t>((a_value >> 16u) & 0xFF),
-                     static_cast<uint8_t>((a_value >> 8u) & 0xFF),
-                     static_cast<uint8_t>((a_value >> 0u) & 0xFF) }
-            , type(Type::signed_int)
+            : data(*(reinterpret_cast<uint32_t*>(&a_value)))
+            , type(Type::signed_int_32)
         {
         }
 
@@ -229,88 +215,99 @@ private:
 
         static_assert(sizeof(unsigned short int) == sizeof(uint16_t));
         explicit Argument(unsigned short int a_value)
-            : data { 0u,
-                     0u,
-                     static_cast<uint8_t>((a_value >> 8u) & 0xFF),
-                     static_cast<uint8_t>((a_value >> 0u) & 0xFF) }
-            , type(Type::unsigned_int)
+            : data(a_value)
+            , type(Type::unsigned_int_16)
         {
         }
 
         static_assert(sizeof(signed short int) == sizeof(int16_t));
         explicit Argument(signed short int a_value)
-            : data { 0u,
-                     0u,
-                     static_cast<uint8_t>((a_value >> 8u) & 0xFF),
-                     static_cast<uint8_t>((a_value >> 0u) & 0xFF) }
-            , type(Type::signed_int)
+            : data(*(reinterpret_cast<uint32_t*>(&a_value)))
+            , type(Type::signed_int_16)
         {
         }
 
         static_assert(sizeof(unsigned char) == sizeof(uint8_t));
         explicit Argument(unsigned char a_value)
-            : data { 0u, 0u, 0u, a_value }
-            , type(Argument::Type::unsigned_int)
+            : data(a_value)
+            , type(Argument::Type::unsigned_int_32)
         {
         }
 
         static_assert(sizeof(signed char) == sizeof(int8_t));
         explicit Argument(signed char a_value)
-            : data { 0u, 0u, 0u, static_cast<uint8_t>(a_value) }
+            : data(*(reinterpret_cast<uint32_t*>(&a_value)))
             , type(Argument::Type::character)
         {
         }
 
         explicit Argument(const char* a_p_value)
-            : data { static_cast<uint8_t>((reinterpret_cast<uint32_t>(a_p_value) >> 24u) & 0xFF),
-                     static_cast<uint8_t>((reinterpret_cast<uint32_t>(a_p_value) >> 16u) & 0xFF),
-                     static_cast<uint8_t>((reinterpret_cast<uint32_t>(a_p_value) >> 8u) & 0xFF),
-                     static_cast<uint8_t>((reinterpret_cast<uint32_t>(a_p_value) >> 0u) & 0xFF) }
+            : data(*(reinterpret_cast<uint32_t*>(&a_p_value)))
             , type(Type::cstring)
         {
         }
 
         uint32_t get_uint32() const
         {
-            assert(this->type == Type::unsigned_int);
-            return (this->data[0] << 24u) | (this->data[1] << 16u) | (this->data[2] << 8u) | (this->data[3] << 0u);
+            assert(this->type == Type::unsigned_int_32 || this->type == Type::unsigned_int_16 ||
+                   this->type == Type::unsigned_int_8);
+            return this->data;
         }
 
         int32_t get_int32() const
         {
-            assert(this->type == Type::signed_int);
-            return (this->data[0] << 24u) | (this->data[1] << 16u) | (this->data[2] << 8u) | (this->data[3] << 0u);
+            assert(this->type == Type::signed_int_32 || this->type == Type::signed_int_16 ||
+                   this->type == Type::signed_int_8);
+
+            switch (this->type)
+            {
+                case Type::signed_int_8: {
+                    return static_cast<int32_t>(static_cast<int8_t>(this->data));
+                }
+
+                case Type::signed_int_16: {
+                    return static_cast<int32_t>(static_cast<int16_t>(this->data));
+                }
+
+                default: {
+                    return static_cast<int32_t>(this->data);
+                }
+            }
         }
 
         char get_char() const
         {
             assert(this->type == Type::character);
-            return static_cast<char>(this->data[0]);
+            return static_cast<char>(this->data);
         }
 
         const char* get_cstring() const
         {
             assert(this->type == Type::cstring);
-            return reinterpret_cast<const char*>((this->data[0] << 24u) | (this->data[1] << 16u) |
-                                                 (this->data[2] << 8u) | (this->data[3] << 0));
+            return reinterpret_cast<const char*>(this->data);
         }
 
     private:
         enum class Type
         {
-            unsigned_int,
-            signed_int,
+            unsigned_int_8,
+            unsigned_int_16,
+            unsigned_int_32,
+            signed_int_8,
+            signed_int_16,
+            signed_int_32,
             character,
             cstring,
             unknown,
         };
 
     private:
-        uint8_t data[sizeof(uint32_t)] = { 0 };
-        Type type                      = Type::unknown;
+        uint32_t data = 0;
+        Type type     = Type::unknown;
     };
 
 private:
+
     static uint32_t format_raw(Buffer* a_p_destinaition_buffer,
                                Buffer* a_p_number_buffer,
                                const char* a_p_format,

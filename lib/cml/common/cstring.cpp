@@ -67,6 +67,7 @@ uint32_t cstring::format_raw(Buffer* a_p_destinaition_buffer,
     bool argument           = false;
     uint32_t argument_index = 0;
     uint32_t length         = 0;
+    uint32_t number_length  = 0;
 
     while (*a_p_format != '\0' && length + 1 < a_p_destinaition_buffer->capacity)
     {
@@ -90,12 +91,27 @@ uint32_t cstring::format_raw(Buffer* a_p_destinaition_buffer,
                 }
                 break;
 
-                case 'u': {
-                    uint32_t number_length = cstring::from_unsigned_integer(a_p_argv[argument_index++].get_uint32(),
-                                                                            a_p_number_buffer->p_data,
-                                                                            a_p_number_buffer->capacity,
-                                                                            cstring::Radix::dec);
+                case 'x': {
+                    number_length = cstring::from_unsigned_integer(a_p_argv[argument_index++].get_uint32(),
+                                                                   a_p_number_buffer->p_data,
+                                                                   a_p_number_buffer->capacity,
+                                                                   cstring::Radix::hex);
 
+                    length += cstring::join(a_p_destinaition_buffer->p_data + length,
+                                            a_p_destinaition_buffer->capacity - length,
+                                            a_p_number_buffer->p_data,
+                                            number_length);
+
+                    argument = false;
+                }
+                break;
+
+                case 'u': {
+                    number_length = cstring::from_unsigned_integer(a_p_argv[argument_index++].get_uint32(),
+                                                                   a_p_number_buffer->p_data,
+                                                                   a_p_number_buffer->capacity,
+                                                                   cstring::Radix::dec);
+ 
                     length += cstring::join(a_p_destinaition_buffer->p_data + length,
                                             a_p_destinaition_buffer->capacity - length,
                                             a_p_number_buffer->p_data,
