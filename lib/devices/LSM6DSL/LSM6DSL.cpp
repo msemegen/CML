@@ -5,13 +5,13 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//this
+// this
 #include <devices/LSM6DSL/LSM6DSL.hpp>
 
-//std
+// std
 #include <algorithm>
 
-//cml
+// cml
 #include <cml/bit.hpp>
 #include <cml/debug/assert.hpp>
 
@@ -108,7 +108,7 @@ uint32_t decimation_to_flag(uint32_t a_decimation)
     return 0;
 }
 
-} // namespace ::
+} // namespace
 
 namespace cml {
 namespace devices {
@@ -218,8 +218,8 @@ bool LSM6DSL::enable(const Accelerometer_config& a_acc_config,
             if (true == gyr_ret)
             {
                 uint8_t v = 0;
-                gyr_ret   = this->receive.function(Registers::ctrl7_g, &v, sizeof(v), this->  receive.p_user_data);
-            
+                gyr_ret   = this->receive.function(Registers::ctrl7_g, &v, sizeof(v), this->receive.p_user_data);
+
                 if (true == gyr_ret)
                 {
                     a_gyr_config.output_data_rate <= Gyroscope_config::Output_data_rate::_208_Hz ? set_bit(&v, 7) :
@@ -440,7 +440,6 @@ bool LSM6DSL::get_axis_raw(Axis<int16_t>* a_p_gyr_data,
                 ret = true == ret &&
                       this->get_axis(
                           Registers::outx_l_xl, &(a_p_acc_data[i].x), &(a_p_acc_data[i].y), &(a_p_acc_data[i].z));
-
             }
         }
 
@@ -601,8 +600,7 @@ bool LSM6DSL::set_fifo_context(const Fifo_context& a_context)
 
     if (true == ret)
     {
-        ret = this->transmit.function(
-            Registers::fifo_ctrl5, 0x1u | a_context.odr << 3u, this->transmit.p_user_data);
+        ret = this->transmit.function(Registers::fifo_ctrl5, 0x1u | a_context.odr << 3u, this->transmit.p_user_data);
 
         if (true == ret)
         {
@@ -700,5 +698,5 @@ bool LSM6DSL::is_alive() const
     return false;
 }
 
-} 
-}
+} // namespace devices
+} // namespace cml

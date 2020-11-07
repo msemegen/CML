@@ -813,7 +813,7 @@ I2C_slave::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_
 
     while ((false == is_flag(get_i2c_ptr(this->id)->ISR, I2C_ISR_STOPF) &&
             false == is_flag(get_i2c_ptr(this->id)->ISR, I2C_ISR_NACKF)) &&
-            false == error && a_timeout >= time::diff(counter::get(), start))
+           false == error && a_timeout >= time::diff(counter::get(), start))
     {
         if (true == is_flag(get_i2c_ptr(this->id)->ISR, I2C_ISR_ADDR))
         {

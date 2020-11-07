@@ -5,6 +5,7 @@ endif
 CML_CPP_FILES := lib/cml/common/*.cpp                  \
 				 lib/cml/debug/*.cpp                   \
 				 lib/cml/utils/*.cpp                   \
+				 lib/devices/LSM6DSL/*.cpp             \
 				 lib/soc/*.cpp                         \
 				 lib/soc/stm32l011xx/*.cpp             \
 				 lib/soc/stm32l011xx/peripherals/*.cpp \
@@ -20,6 +21,7 @@ CML_HPP_FILES := lib/cml/*.hpp                         \
 				 lib/cml/hal/peripherals/*.hpp         \
 				 lib/cml/hal/system/*.hpp              \
 				 lib/cml/utils/*.hpp                   \
+				 lib/devices/LSM6DSL/*.hpp             \
 				 lib/soc/*.hpp                         \
 				 lib/soc/stm32l011xx/*.hpp             \
 				 lib/soc/stm32l011xx/peripherals/*.hpp \

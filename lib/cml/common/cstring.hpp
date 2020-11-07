@@ -307,7 +307,6 @@ private:
     };
 
 private:
-
     static uint32_t format_raw(Buffer* a_p_destinaition_buffer,
                                Buffer* a_p_number_buffer,
                                const char* a_p_format,

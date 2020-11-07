@@ -7,7 +7,7 @@
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
-//std
+// std
 #include <cstdint>
 
 namespace cml {
@@ -16,7 +16,6 @@ namespace devices {
 class LSM6DSL
 {
 public:
-
     struct Fifo_config
     {
         bool enabled                     = false;
@@ -103,8 +102,7 @@ public:
         void* p_user_data = nullptr;
     };
 
-    template<typename Type_t>
-    struct Axis
+    template<typename Type_t> struct Axis
     {
         union
         {
@@ -120,7 +118,6 @@ public:
     };
 
 public:
-
     LSM6DSL(Transmit a_transmit, Receive a_receive)
         : transmit(a_transmit)
         , receive(a_receive)
@@ -163,7 +160,6 @@ public:
     }
 
 private:
-
     struct Registers
     {
         enum
@@ -197,7 +193,6 @@ private:
     };
 
 private:
-
     bool set_fifo_context(const Fifo_context& a_context);
     bool get_axis(uint8_t a_outx_register, int16_t* a_p_outx, int16_t* a_p_outy, int16_t* a_p_outz);
 

@@ -111,7 +111,7 @@ uint32_t cstring::format_raw(Buffer* a_p_destinaition_buffer,
                                                                    a_p_number_buffer->p_data,
                                                                    a_p_number_buffer->capacity,
                                                                    cstring::Radix::dec);
- 
+
                     length += cstring::join(a_p_destinaition_buffer->p_data + length,
                                             a_p_destinaition_buffer->capacity - length,
                                             a_p_number_buffer->p_data,
