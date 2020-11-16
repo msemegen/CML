@@ -50,8 +50,8 @@ void i2c_1_disable()
 
 bool is_I2C_ISR_error(uint32_t a_isr)
 {
-    return is_any_bit(a_isr,
-                      I2C_ISR_TIMEOUT | I2C_ISR_PECERR | I2C_ISR_OVR | I2C_ISR_ARLO | I2C_ISR_BERR | I2C_ISR_NACKF);
+    return is_any_bit_on(a_isr,
+                         I2C_ISR_TIMEOUT | I2C_ISR_PECERR | I2C_ISR_OVR | I2C_ISR_ARLO | I2C_ISR_BERR | I2C_ISR_NACKF);
 }
 
 void clear_I2C_ISR_errors(volatile uint32_t* a_p_icr)
@@ -608,7 +608,7 @@ I2C_slave::Result I2C_slave::transmit_bytes_polling(const void* a_p_data, uint32
             I2C1->TXDR = static_cast<const uint8_t*>(a_p_data)[bytes++];
         }
 
-        error = is_any_bit(I2C1->ISR, error_mask);
+        error = is_any_bit_on(I2C1->ISR, error_mask);
     }
 
     if (true == is_flag(I2C1->ISR, I2C_ISR_STOPF) && true == is_flag(I2C1->ISR, I2C_ISR_NACKF))
@@ -655,7 +655,7 @@ I2C_slave::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_
             I2C1->TXDR = static_cast<const uint8_t*>(a_p_data)[bytes++];
         }
 
-        error = is_any_bit(I2C1->ISR, error_mask);
+        error = is_any_bit_on(I2C1->ISR, error_mask);
     }
 
     if (true == is_flag(I2C1->ISR, I2C_ISR_STOPF) && true == is_flag(I2C1->ISR, I2C_ISR_NACKF))

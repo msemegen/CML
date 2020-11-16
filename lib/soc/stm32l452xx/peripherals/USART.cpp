@@ -97,7 +97,7 @@ Controller controllers[] = { { USART1, nullptr, nullptr, usart_1_enable, usart_1
 
 bool is_USART_ISR_error(uint32_t a_isr)
 {
-    return is_any_bit(a_isr, USART_ISR_PE | USART_ISR_FE | USART_ISR_ORE | USART_ISR_NE);
+    return is_any_bit_on(a_isr, USART_ISR_PE | USART_ISR_FE | USART_ISR_ORE | USART_ISR_NE);
 }
 
 USART::Bus_status_flag get_bus_status_flag_from_USART_ISR(uint32_t a_isr)

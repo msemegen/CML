@@ -352,14 +352,14 @@ void mcu::increase_sysclk_frequency(Sysclk_source a_source,
         (Voltage_scaling::_2 == current_voltage_scaling && Voltage_scaling::_1 == new_voltage_scaling))
     {
         set_voltage_scaling(new_voltage_scaling);
-        while (true == is_bit(PWR->CSR, PWR_CSR_VOSF_Pos))
+        while (true == is_bit_on(PWR->CSR, PWR_CSR_VOSF_Pos))
             ;
     }
 
     if (Flash_latency::_1 == current_flash_latency && Flash_latency::_0 == new_flash_latency)
     {
         set_flash_latency(new_flash_latency);
-        while (true == is_bit(FLASH->ACR, FLASH_ACR_LATENCY_Pos))
+        while (true == is_bit_on(FLASH->ACR, FLASH_ACR_LATENCY_Pos))
             ;
     }
 
@@ -388,14 +388,14 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source,
         (Voltage_scaling::_1 == current_voltage_scaling && Voltage_scaling::_2 == new_voltage_scaling))
     {
         set_voltage_scaling(new_voltage_scaling);
-        while (true == is_bit(PWR->CSR, PWR_CSR_VOSF_Pos))
+        while (true == is_bit_on(PWR->CSR, PWR_CSR_VOSF_Pos))
             ;
     }
 
     if (Flash_latency::_0 == current_flash_latency && Flash_latency::_1 == new_flash_latency)
     {
         set_flash_latency(new_flash_latency);
-        while (false == is_bit(FLASH->ACR, FLASH_ACR_LATENCY_Pos))
+        while (false == is_bit_on(FLASH->ACR, FLASH_ACR_LATENCY_Pos))
             ;
     }
 

@@ -6,10 +6,11 @@
 */
 
 // this
-#include <cml/common/cstring.hpp>
+#include <cml/cstring.hpp>
 
 namespace cml {
-namespace common {
+
+using namespace cml::debug;
 
 uint32_t cstring::length(const char* a_p_string, uint32_t a_max_length)
 {
@@ -140,6 +141,25 @@ uint32_t cstring::format_raw(Buffer* a_p_destinaition_buffer,
                 }
                 break;
 
+                case 'f': {
+#ifdef CML_USE_FLOATING_POINT
+                    number_length = cstring::from_float(a_p_argv[argument_index++].get_float(),
+                                                        a_p_number_buffer->p_data,
+                                                        a_p_number_buffer->capacity,
+                                                        6);
+
+                    length += cstring::join(a_p_destinaition_buffer->p_data + length,
+                                            a_p_destinaition_buffer->capacity - length,
+                                            a_p_number_buffer->p_data,
+                                            number_length);
+
+                    argument = false;
+#else
+                    assert(false);
+#endif // CML_USE_FLOATING_POINT
+                }
+                break;
+
                 case '%': {
                     a_p_destinaition_buffer->p_data[length++] = '%';
                     argument                                  = false;
@@ -165,5 +185,4 @@ uint32_t cstring::format_raw(Buffer* a_p_destinaition_buffer,
     return length;
 }
 
-} // namespace common
 } // namespace cml

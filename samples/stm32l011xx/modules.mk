@@ -1,9 +1,8 @@
 #lib
 C_SOURCE_PATHS   := $(C_SOURCE_PATHS)   $(CML_ROOT)/lib/
-CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(CML_ROOT)/lib/         \
+CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(CML_ROOT)/lib/cml      \
                     $(CML_ROOT)/lib/cml/hal/                     \
                     $(CML_ROOT)/lib/cml/utils/                   \
-                    $(CML_ROOT)/lib/cml/common/                  \
                     $(CML_ROOT)/lib/cml/debug/                   \
                     $(CML_ROOT)/lib/cml/hal/stm32l011xx/         \
                     $(CML_ROOT)/lib/cml/hal/core/                \

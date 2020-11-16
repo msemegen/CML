@@ -112,8 +112,8 @@ Controller controllers[] { { I2C1, nullptr, nullptr, i2c_1_enable, i2c_1_disable
 
 bool is_I2C_ISR_error(uint32_t a_isr)
 {
-    return is_any_bit(a_isr,
-                      I2C_ISR_TIMEOUT | I2C_ISR_PECERR | I2C_ISR_OVR | I2C_ISR_ARLO | I2C_ISR_BERR | I2C_ISR_NACKF);
+    return is_any_bit_on(a_isr,
+                         I2C_ISR_TIMEOUT | I2C_ISR_PECERR | I2C_ISR_OVR | I2C_ISR_ARLO | I2C_ISR_BERR | I2C_ISR_NACKF);
 }
 
 void clear_I2C_ISR_errors(volatile uint32_t* a_p_icr)
@@ -376,7 +376,7 @@ void i2c_slave_interrupt_handler(I2C_slave* a_p_this)
 
 bool I2C_base::is_analog_filter() const
 {
-    return false == cml::is_flag(get_i2c_ptr(this->id)->CR1, I2C_CR1_ANFOFF);
+    return false == is_flag(get_i2c_ptr(this->id)->CR1, I2C_CR1_ANFOFF);
 }
 
 uint32_t I2C_base::get_timing() const
@@ -386,7 +386,7 @@ uint32_t I2C_base::get_timing() const
 
 bool I2C_base::is_fast_plus() const
 {
-    return cml::is_bit(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<uint32_t>(this->id));
+    return is_bit_on(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<uint32_t>(this->id));
 }
 
 bool I2C_base::is_enabled() const
@@ -776,7 +776,7 @@ I2C_slave::Result I2C_slave::transmit_bytes_polling(const void* a_p_data, uint32
             get_i2c_ptr(this->id)->TXDR = static_cast<const uint8_t*>(a_p_data)[bytes++];
         }
 
-        error = is_any_bit(get_i2c_ptr(this->id)->ISR, error_mask);
+        error = is_any_bit_on(get_i2c_ptr(this->id)->ISR, error_mask);
     }
 
     if (true == is_flag(get_i2c_ptr(this->id)->ISR, I2C_ISR_STOPF) &&
@@ -825,7 +825,7 @@ I2C_slave::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_
             get_i2c_ptr(this->id)->TXDR = static_cast<const uint8_t*>(a_p_data)[bytes++];
         }
 
-        error = is_any_bit(get_i2c_ptr(this->id)->ISR, error_mask);
+        error = is_any_bit_on(get_i2c_ptr(this->id)->ISR, error_mask);
     }
 
     if (true == is_flag(get_i2c_ptr(this->id)->ISR, I2C_ISR_STOPF) &&

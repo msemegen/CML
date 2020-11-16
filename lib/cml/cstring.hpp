@@ -8,16 +8,18 @@
 */
 
 // std
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
+#include <string_view>
 
 // cml
-#include <cml/common/memory.hpp>
+#include <cml/bit.hpp>
 #include <cml/debug/assert.hpp>
 
 namespace cml {
-namespace common {
 
 struct cstring
 {
@@ -41,7 +43,7 @@ struct cstring
 
         for (uint32_t i = 0; i < a_length / 2; i++)
         {
-            memory::swap(&(a_p_string[i]), &(a_p_string[a_length - i - 1]));
+            std::swap((a_p_string[i]), (a_p_string[a_length - i - 1]));
         }
     }
 
@@ -55,12 +57,10 @@ struct cstring
 
         Type_t retval = 0;
 
-        const Type_t min = '-' == a_p_string[0] ? 0 : 1;
-
-        for (uint32_t i = a_length - 1, m = 1; i + a_length + min != a_length; i--, m *= 10)
+        for (uint32_t i = '-' == a_p_string[0] ? 1 : 0; i < a_length; i++)
         {
             assert(a_p_string[i] >= '0' && a_p_string[i] <= '9');
-            retval += (a_p_string[i] - '0') * m;
+            retval = retval * 10u + (a_p_string[i] - '0');
         }
 
         return retval * ('-' == a_p_string[0] ? -1 : 1);
@@ -73,13 +73,40 @@ struct cstring
 
         Type_t retval = 0;
 
-        for (uint32_t i = a_length - 1, m = 1; i + a_length + 1 != a_length; i--, m *= 10)
+        for (uint32_t i = 0; i < a_length; i++)
         {
-            retval += (a_p_string[i] - '0') * m;
+            assert(a_p_string[i] >= '0' && a_p_string[i] <= '9');
+            retval = retval * 10u + (a_p_string[i] - '0');
         }
 
         return retval;
     }
+
+#ifdef CML_USE_FLOATING_POINT
+    static float to_float(const char* a_p_string, uint32_t a_length)
+    {
+        assert(nullptr != a_p_string);
+        assert(a_length > 0);
+
+        float retval = 0.0f;
+        float p      = 10.0f;
+        uint32_t i   = '-' == a_p_string[0] ? 1 : 0;
+
+        for (; i < a_length && '.' != a_p_string[i]; i++)
+        {
+            assert((a_p_string[i] >= '0' && a_p_string[i] <= '9') || '.' == a_p_string[i]);
+            retval = retval * 10.0f + (a_p_string[i] - '0');
+        }
+
+        for (i = i + 1; i < a_length; i++, p *= 10.0f)
+        {
+            assert(a_p_string[i] >= '0' && a_p_string[i] <= '9');
+            retval = retval + (a_p_string[i] - '0') / p;
+        }
+
+        return retval * ('-' == a_p_string[0] ? -1.0f : 1.0f);
+    }
+#endif // CML_USE_FLOATING_POINT
 
     template<typename Type_t>
     static uint32_t from_unsigned_integer(Type_t a_value, char* a_p_buffer, uint32_t a_buffer_capacity, Radix a_base)
@@ -117,6 +144,8 @@ struct cstring
     static uint32_t from_signed_integer(Type_t a_value, char* a_p_buffer, uint32_t a_buffer_capacity, Radix a_base)
     {
         static_assert(true == std::numeric_limits<Type_t>::is_signed);
+
+        assert(nullptr != a_p_buffer);
         assert(a_buffer_capacity > 1);
 
         uint32_t ret  = 0;
@@ -147,6 +176,46 @@ struct cstring
 
         return ret;
     }
+
+#ifdef CML_USE_FLOATING_POINT
+    static uint32_t from_float(float a_value, char* a_p_buffer, uint32_t a_buffer_capacity, uint32_t a_afterpoint)
+    {
+        assert(nullptr != a_p_buffer);
+        assert(a_buffer_capacity > 0);
+
+        auto pow = [](int32_t x, uint32_t y) {
+            int32_t ret = 1;
+
+            while (y > 0)
+            {
+                if (true == is_bit_on(y, 0))
+                {
+                    ret = ret * x;
+                }
+
+                y = y >> 0x1u;
+                x = x * x;
+            }
+            return ret;
+        };
+
+        auto abs = [](int32_t a_v) { return a_v > 0 ? a_v : -1 * a_v; };
+
+        int32_t i  = static_cast<int32_t>(a_value);
+        uint32_t l = from_signed_integer(i, a_p_buffer, a_buffer_capacity, Radix::dec);
+
+        if (a_afterpoint > 0)
+        {
+            a_p_buffer[l++] = '.';
+            l += from_signed_integer(abs(static_cast<uint32_t>(a_value - i)) * pow(10, a_afterpoint),
+                                     a_p_buffer + l,
+                                     a_buffer_capacity - l,
+                                     Radix::dec);
+        }
+
+        return l;
+    }
+#endif // CML_USE_FLOATING_POINT
 
     template<typename... Types_t>
     static uint32_t format(char* a_p_buffer, uint32_t a_buffer_capacity, const char* a_p_format, Types_t... a_params)
@@ -196,9 +265,9 @@ private:
 
         static_assert(sizeof(signed int) == sizeof(int32_t));
         explicit Argument(signed int a_value)
-            : data(*(reinterpret_cast<uint32_t*>(&a_value)))
-            , type(Type::signed_int_32)
+            : type(Type::signed_int_32)
         {
+            memcpy(&(this->data), &(a_value), sizeof(a_value));
         }
 
         static_assert(sizeof(unsigned long int) == sizeof(uint32_t));
@@ -222,9 +291,9 @@ private:
 
         static_assert(sizeof(signed short int) == sizeof(int16_t));
         explicit Argument(signed short int a_value)
-            : data(*(reinterpret_cast<uint32_t*>(&a_value)))
-            , type(Type::signed_int_16)
+            : type(Type::signed_int_16)
         {
+            memcpy(&(this->data), &(a_value), sizeof(a_value));
         }
 
         static_assert(sizeof(unsigned char) == sizeof(uint8_t));
@@ -236,15 +305,21 @@ private:
 
         static_assert(sizeof(signed char) == sizeof(int8_t));
         explicit Argument(signed char a_value)
-            : data(*(reinterpret_cast<uint32_t*>(&a_value)))
-            , type(Argument::Type::character)
+            : type(Argument::Type::character)
         {
+            memcpy(&(this->data), &(a_value), sizeof(a_value));
         }
 
         explicit Argument(const char* a_p_value)
-            : data(*(reinterpret_cast<uint32_t*>(&a_p_value)))
-            , type(Type::cstring)
+            : type(Type::cstring)
         {
+            memcpy(&(this->data), &(a_p_value), sizeof(a_p_value));
+        }
+
+        explicit Argument(float a_value)
+            : type(Type::real)
+        {
+            memcpy(&(this->data), &(a_value), sizeof(a_value));
         }
 
         uint32_t get_uint32() const
@@ -262,17 +337,30 @@ private:
             switch (this->type)
             {
                 case Type::signed_int_8: {
-                    return static_cast<int32_t>(static_cast<int8_t>(this->data));
+                    int8_t v;
+                    memcpy(&v, &(this->data), sizeof(v));
+                    return v;
                 }
 
                 case Type::signed_int_16: {
-                    return static_cast<int32_t>(static_cast<int16_t>(this->data));
+                    int16_t v;
+                    memcpy(&v, &(this->data), sizeof(v));
+                    return v;
                 }
 
                 default: {
                     return static_cast<int32_t>(this->data);
                 }
             }
+        }
+
+        float get_float() const
+        {
+            assert(Type::real == this->type);
+
+            float v;
+            memcpy(&v, &(this->data), sizeof(v));
+            return v;
         }
 
         char get_char() const
@@ -284,7 +372,10 @@ private:
         const char* get_cstring() const
         {
             assert(this->type == Type::cstring);
-            return reinterpret_cast<const char*>(this->data);
+
+            const char* p_v;
+            memcpy(&p_v, &(this->data), sizeof(p_v));
+            return p_v;
         }
 
     private:
@@ -298,6 +389,7 @@ private:
             signed_int_32,
             character,
             cstring,
+            real,
             unknown,
         };
 
@@ -314,5 +406,4 @@ private:
                                uint32_t a_argc);
 };
 
-} // namespace common
 } // namespace cml

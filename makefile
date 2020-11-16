@@ -2,8 +2,7 @@ ifndef NOSILENT
 .SILENT:
 endif
 
-CML_CPP_FILES := lib/cml/common/*.cpp                  \
-				 lib/cml/debug/*.cpp                   \
+CML_CPP_FILES := lib/cml/debug/*.cpp                   \
 				 lib/cml/utils/*.cpp                   \
 				 lib/devices/LSM6DSL/*.cpp             \
 				 lib/soc/*.cpp                         \
@@ -15,7 +14,6 @@ CML_CPP_FILES := lib/cml/common/*.cpp                  \
 				 lib/soc/stm32l452xx/system/*.cpp      \
 
 CML_HPP_FILES := lib/cml/*.hpp                         \
-				 lib/cml/common/*.hpp                  \
 				 lib/cml/debug/*.hpp                   \
 				 lib/cml/hal/*.hpp                     \
 				 lib/cml/hal/peripherals/*.hpp         \
