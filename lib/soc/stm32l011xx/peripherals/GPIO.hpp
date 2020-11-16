@@ -228,13 +228,6 @@ struct pin
             falling = 0x2,
         };
 
-        enum class Interrupt_line : int32_t
-        {
-            exti_0_1  = EXTI0_1_IRQn,
-            exti_2_3  = EXTI2_3_IRQn,
-            exti_4_15 = EXTI4_15_IRQn,
-        };
-
         struct Interrupt_callback
         {
             using Function = void (*)(pin::Level a_level, void* a_p_user_data);
@@ -262,8 +255,6 @@ struct pin
             p_pin->id     = 0xFF;
         }
 
-        static void enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority);
-        static void disable_interrupt_line(Interrupt_line a_line);
 
         static void enable_interrupt(GPIO* a_p_port,
                                      uint32_t a_id,

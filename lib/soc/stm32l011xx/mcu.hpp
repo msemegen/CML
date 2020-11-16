@@ -84,6 +84,13 @@ struct mcu
         option_byte_loader          = RCC_CSR_OBLRSTF
     };
 
+    enum class Interrupt_line : int32_t
+    {
+        exti_0_1  = EXTI0_1_IRQn,
+        exti_2_3  = EXTI2_3_IRQn,
+        exti_4_15 = EXTI4_15_IRQn,
+    };
+
     struct Pll_config
     {
         enum class Source : uint32_t
@@ -188,11 +195,15 @@ public:
 
     static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
 
+    static void enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority);
+    static void disable_interrupt_line(Interrupt_line a_line);
+
     static void reset();
     static void halt();
 
     static void register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
     static void register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
+
 
     static Bus_prescalers get_bus_prescalers();
     static Pll_config get_pll_config();

@@ -113,7 +113,7 @@ public:
                 Type_t z = static_cast<Type_t>(0);
             };
 
-            Type_t xyz[3];
+            Type_t linear[3];
         };
     };
 

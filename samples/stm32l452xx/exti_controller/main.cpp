@@ -100,6 +100,7 @@ int main()
         systick::register_tick_callback({ counter::update, nullptr });
 
         mcu::enable_syscfg(); // for exti_controller
+        mcu::enable_interrupt_line(mcu::Interrupt_line::exti_10_15, 0x5u);
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
@@ -138,7 +139,6 @@ int main()
             pin::out::enable(&gpio_port_a, 5u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
             led_pin.set_level(pin::Level::low);
 
-            pin::in::enable_interrupt_line(pin::in::Interrupt_line::exti_10_15, 0x5u);
             pin::in::enable_interrupt(
                 &gpio_port_c, 13u, pin::Pull::none, pin::in::Interrupt_mode::rising, { exti_callback, &led_pin });
 

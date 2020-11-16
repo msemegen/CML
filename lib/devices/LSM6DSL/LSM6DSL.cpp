@@ -372,7 +372,7 @@ bool LSM6DSL::get_axis_raw(Axis<int16_t>* a_p_gyr_data,
 
                         if (gyr_samples_count < a_gyr_data_buffer_capacity)
                         {
-                            a_p_gyr_data[i + gyr_samples_count].xyz[si] = sample;
+                            a_p_gyr_data[i + gyr_samples_count].linear[si] = sample;
                         }
                     }
 
@@ -391,7 +391,7 @@ bool LSM6DSL::get_axis_raw(Axis<int16_t>* a_p_gyr_data,
 
                         if (acc_samples_count < a_acc_data_buffer_capacity)
                         {
-                            a_p_acc_data[i + acc_samples_count].xyz[si] = sample;
+                            a_p_acc_data[i + acc_samples_count].linear[si] = sample;
                         }
                     }
 
@@ -494,7 +494,8 @@ bool LSM6DSL::get_axis_scaled(Axis<float>* a_p_gyr_data,
 
                         if (gyr_samples_count < a_gyr_data_buffer_capacity)
                         {
-                            a_p_gyr_data[i + gyr_samples_count].xyz[si] = static_cast<float>(sample) * gyr_sensitivity;
+                            a_p_gyr_data[i + gyr_samples_count].linear[si] =
+                                static_cast<float>(sample) * gyr_sensitivity;
                         }
                     }
 
@@ -513,7 +514,8 @@ bool LSM6DSL::get_axis_scaled(Axis<float>* a_p_gyr_data,
 
                         if (acc_samples_count < a_acc_data_buffer_capacity)
                         {
-                            a_p_acc_data[i + acc_samples_count].xyz[si] = static_cast<float>(sample) * acc_sensitivity;
+                            a_p_acc_data[i + acc_samples_count].linear[si] =
+                                static_cast<float>(sample) * acc_sensitivity;
                         }
                     }
 

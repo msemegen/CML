@@ -114,6 +114,17 @@ public:
         enabled                = 0xFu << 20u,
     };
 
+    enum class Interrupt_line : int32_t
+    {
+        exti_0     = EXTI0_IRQn,
+        exti_1     = EXTI1_IRQn,
+        exti_2     = EXTI2_IRQn,
+        exti_3     = EXTI3_IRQn,
+        exti_4     = EXTI4_IRQn,
+        exti_5_9   = EXTI9_5_IRQn,
+        exti_10_15 = EXTI15_10_IRQn
+    };
+
     struct Pll_config
     {
         enum class Source : uint32_t
@@ -336,6 +347,9 @@ public:
 
     static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
     static void set_nvic(const NVIC_config& a_config);
+
+    static void enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority);
+    static void disable_interrupt_line(Interrupt_line a_line);
 
     static void set_fpu_mode(FPU_mode a_mode)
     {

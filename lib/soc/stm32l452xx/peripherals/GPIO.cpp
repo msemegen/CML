@@ -448,17 +448,6 @@ void pin::in::disable(GPIO* a_p_port, uint32_t a_id)
     a_p_port->give_pin(a_id);
 }
 
-void pin::in::enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority)
-{
-    NVIC_SetPriority(static_cast<IRQn_Type>(a_line), a_priority);
-    NVIC_EnableIRQ(static_cast<IRQn_Type>(a_line));
-}
-
-void pin::in::disable_interrupt_line(Interrupt_line a_line)
-{
-    NVIC_DisableIRQ(static_cast<IRQn_Type>(a_line));
-}
-
 void pin::in::enable_interrupt(GPIO* a_p_port,
                                uint32_t a_id,
                                Pull a_pull,

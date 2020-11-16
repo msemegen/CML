@@ -238,6 +238,17 @@ void mcu::set_nvic(const NVIC_config& a_config)
     __set_BASEPRI(a_config.base_priority);
 }
 
+void mcu::enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority)
+{
+    NVIC_SetPriority(static_cast<IRQn_Type>(a_line), a_priority);
+    NVIC_EnableIRQ(static_cast<IRQn_Type>(a_line));
+}
+
+void mcu::disable_interrupt_line(Interrupt_line a_line)
+{
+    NVIC_DisableIRQ(static_cast<IRQn_Type>(a_line));
+}
+
 void mcu::reset()
 {
     NVIC_SystemReset();
