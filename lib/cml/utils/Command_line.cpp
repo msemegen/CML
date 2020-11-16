@@ -8,15 +8,16 @@
 // this
 #include <cml/utils/Command_line.hpp>
 
+// std
+#include <cstring>
+
 // cml
-#include <cml/common/memory.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 
 namespace cml {
 namespace utils {
 
-using namespace cml::common;
 using namespace cml::hal;
 
 void Command_line::update()
@@ -174,7 +175,12 @@ void Command_line::execute_escape_sequence(char a_first, char a_second)
             case 'A': {
                 const Commands_carousel::Command& command = this->commands_carousel.read_next();
 
-                memory::copy(this->line_buffer, sizeof(this->line_buffer), command.buffer, command.length);
+                memcpy(this->line_buffer,
+                       command.buffer,
+                       config::command_line::line_buffer_capacity > command.length ?
+                           command.length :
+                           config::command_line::line_buffer_capacity);
+
                 this->line_length = command.length;
 
                 this->write_string.function(command.buffer, command.length, this->write_string.p_user_data);
@@ -184,7 +190,12 @@ void Command_line::execute_escape_sequence(char a_first, char a_second)
             case 'B': {
                 const Commands_carousel::Command& command = this->commands_carousel.read_prev();
 
-                memory::copy(this->line_buffer, sizeof(this->line_buffer), command.buffer, command.length);
+                memcpy(this->line_buffer,
+                       command.buffer,
+                       config::command_line::line_buffer_capacity > command.length ?
+                           command.length :
+                           config::command_line::line_buffer_capacity);
+
                 this->line_length = command.length;
 
                 this->write_string.function(command.buffer, command.length, this->write_string.p_user_data);
@@ -203,11 +214,10 @@ void Command_line::Commands_carousel::push(const char* a_p_line, uint32_t a_leng
 
     this->commands[this->write_index].length = a_length;
 
-    memory::copy(this->commands[this->write_index].buffer,
-                 sizeof(this->commands[this->write_index].buffer),
-
-                 a_p_line,
-                 a_length);
+    memcpy(this->commands[this->write_index].buffer,
+           a_p_line,
+           config::command_line::line_buffer_capacity > a_length ? a_length :
+                                                                   config::command_line::line_buffer_capacity);
 
     this->write_index++;
 

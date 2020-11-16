@@ -403,7 +403,7 @@ public:
 
     bool is_enabled() const
     {
-        return cml::is_bit(this->flags, 31);
+        return cml::is_bit_on(this->flags, 31);
     }
 
     Id get_id() const
@@ -413,7 +413,7 @@ public:
 
     bool is_pin_taken(uint8_t a_pin) const
     {
-        return cml::is_bit(this->flags, a_pin);
+        return cml::is_bit_on(this->flags, a_pin);
     }
 
     explicit operator GPIO_TypeDef*()

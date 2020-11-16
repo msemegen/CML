@@ -418,7 +418,7 @@ void mcu::set_voltage_scaling(Voltage_scaling a_scaling)
 
     set_flag(&(PWR->CR1), PWR_CR1_VOS, static_cast<uint32_t>(a_scaling));
 
-    while (false == is_bit(PWR->SR2, PWR_SR2_VOSF_Pos))
+    while (false == is_bit_on(PWR->SR2, PWR_SR2_VOSF_Pos))
         ;
 }
 

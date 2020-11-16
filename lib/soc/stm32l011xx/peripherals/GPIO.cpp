@@ -88,7 +88,7 @@ using namespace cml;
 
 static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
 {
-    if (true == is_bit(a_pr1, a_index))
+    if (true == is_bit_on(a_pr1, a_index))
     {
         interrupt_handlers[a_index].callback.function(interrupt_handlers[a_index].in_pin.get_level(),
                                                       interrupt_handlers[a_index].callback.p_user_data);
@@ -159,7 +159,7 @@ pin::Level pin::In::get_level() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    return static_cast<Level>(is_bit(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
+    return static_cast<Level>(is_bit_on(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
 }
 
 pin::Pull pin::In::get_pull() const
@@ -220,7 +220,7 @@ pin::Level pin::Out::get_level() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    return static_cast<Level>(is_bit(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
+    return static_cast<Level>(is_bit_on(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
 }
 
 pin::Mode pin::Out::get_mode() const

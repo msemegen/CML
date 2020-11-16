@@ -71,7 +71,7 @@ public:
 
     bool is_fast_plus() const
     {
-        return cml::is_bit(SYSCFG->CFGR2, SYSCFG_CFGR2_I2C1_FMP_Pos);
+        return cml::is_bit_on(SYSCFG->CFGR2, SYSCFG_CFGR2_I2C1_FMP_Pos);
     }
 
     bool is_enabled() const

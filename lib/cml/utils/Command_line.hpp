@@ -11,7 +11,7 @@
 #include <cstdint>
 
 // cml
-#include <cml/common/cstring.hpp>
+#include <cml/cstring.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/utils/config.hpp>
 
@@ -20,7 +20,6 @@ namespace utils {
 
 class Command_line
 {
-public:
 public:
     struct Write_character_handler
     {
@@ -73,9 +72,9 @@ public:
         , read_character(a_read_character_handler)
         , p_prompt(a_p_prompt)
         , p_command_not_found_message(a_p_command_not_found_message)
-        , prompt_length(common::cstring::length(a_p_prompt, config::command_line::line_buffer_capacity))
+        , prompt_length(cstring::length(a_p_prompt, config::command_line::line_buffer_capacity))
         , command_not_found_message_length(
-              common::cstring::length(a_p_command_not_found_message, config::command_line::line_buffer_capacity))
+              cstring::length(a_p_command_not_found_message, config::command_line::line_buffer_capacity))
         , line_length(0)
         , callback_parameters_buffer_length(0)
         , callback_buffer_length(0)

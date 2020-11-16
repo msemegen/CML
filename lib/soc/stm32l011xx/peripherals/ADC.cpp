@@ -280,7 +280,7 @@ uint32_t ADC::get_active_channels_count() const
 
     for (uint32_t i = 0; i <= 18; i++)
     {
-        ret += true == is_bit(ADC1->CHSELR, i) ? 1 : 0;
+        ret += true == is_bit_on(ADC1->CHSELR, i) ? 1 : 0;
     }
 
     return ret;

@@ -30,7 +30,7 @@ RS485* p_rs485   = nullptr;
 
 bool is_USART_ISR_error()
 {
-    return is_any_bit(USART2->ISR, USART_ISR_PE | USART_ISR_FE | USART_ISR_ORE | USART_ISR_NE);
+    return is_any_bit_on(USART2->ISR, USART_ISR_PE | USART_ISR_FE | USART_ISR_ORE | USART_ISR_NE);
 }
 
 USART::Bus_status_flag get_bus_status_flag_from_USART_ISR()

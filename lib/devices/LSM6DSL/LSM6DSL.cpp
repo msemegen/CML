@@ -467,9 +467,6 @@ bool LSM6DSL::get_axis_scaled(Axis<float>* a_p_gyr_data,
             ret = this->is_fifo_full(&fifo_full);
         } while (true == ret && false == fifo_full);
 
-        uint32_t acc_samples_count = 0;
-        uint32_t gyr_samples_count = 0;
-
         float gyr_sensitivity =
             gyroscope_sensitivity_lut[static_cast<uint8_t>(this->gyroscope_config.fullscale_range) >> 1u];
 
@@ -637,7 +634,7 @@ bool LSM6DSL::is_fifo_full(bool* a_p_status) const
 
     if (true == ret)
     {
-        (*a_p_status) = is_bit(v, 7);
+        (*a_p_status) = is_bit_on(v, 7);
     }
 
     return ret;
@@ -652,7 +649,7 @@ bool LSM6DSL::is_accelerometer_data_avaliable(bool* a_p_status) const
 
     if (true == ret)
     {
-        *(a_p_status) = is_bit(v, 0);
+        *(a_p_status) = is_bit_on(v, 0);
     }
 
     return ret;
@@ -667,7 +664,7 @@ bool LSM6DSL::is_gyroscope_data_avaliable(bool* a_p_status) const
 
     if (true == ret)
     {
-        *(a_p_status) = is_bit(v, 1);
+        *(a_p_status) = is_bit_on(v, 1);
     }
 
     return ret;

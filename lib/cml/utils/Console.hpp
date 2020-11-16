@@ -9,9 +9,10 @@
 
 // std
 #include <cstdint>
+#include <cstring>
 
 // cml
-#include <cml/common/cstring.hpp>
+#include <cml/cstring.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/utils/config.hpp>
 
@@ -76,14 +77,14 @@ public:
         assert(nullptr != a_p_string);
 
         return this->write_string.function(a_p_string,
-                                           common::cstring::length(a_p_string, config::console::line_buffer_capacity),
+                                           cstring::length(a_p_string, config::console::line_buffer_capacity),
                                            this->write_string.p_user_data);
     }
 
     template<typename... Params_t> uint32_t write(const char* a_p_format, Params_t... a_params)
     {
         uint32_t length =
-            common::cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params...);
+            cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params...);
 
         return this->write_string.function(this->line_buffer, length, this->write_string.p_user_data);
     }
@@ -96,28 +97,22 @@ public:
 
     uint32_t write_line(const char* a_p_string)
     {
-        uint32_t length =
-            common::memory::copy(this->line_buffer,
-                                 config::command_line::line_buffer_capacity,
-                                 a_p_string,
-                                 common::cstring::length(a_p_string, config::command_line::line_buffer_capacity));
+        uint32_t string_length  = cstring::length(a_p_string, config::command_line::line_buffer_capacity);
+        uint32_t length_to_copy = config::command_line::line_buffer_capacity - 1 < string_length ?
+                                      config::command_line::line_buffer_capacity - 1 :
+                                      string_length;
 
-        if (length < config::command_line::line_buffer_capacity)
-        {
-            this->line_buffer[length++] = config::new_line_character;
-        }
-        else
-        {
-            this->line_buffer[length - 1] = config::new_line_character;
-        }
+        memcpy(this->line_buffer, a_p_string, length_to_copy);
 
-        return this->write_string.function(this->line_buffer, length, this->write_string.p_user_data);
+        this->line_buffer[length_to_copy++] = config::new_line_character;
+
+        return this->write_string.function(this->line_buffer, length_to_copy, this->write_string.p_user_data);
     }
 
     template<typename... Params_t> uint32_t write_line(const char* a_p_format, Params_t... a_params)
     {
         uint32_t length =
-            common::cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params...);
+            cstring::format(this->line_buffer, config::console::line_buffer_capacity, a_p_format, a_params...);
 
         if (length < config::command_line::line_buffer_capacity)
         {

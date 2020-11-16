@@ -121,7 +121,7 @@ int main()
 
         if (true == iostream_ready)
         {
-            Logger logger({ write_string, &iostream }, true, true, true, true);
+            Logger logger({ write_string, &iostream }, true, true, true, true, true);
             assert::register_print({ assert_print, &iostream });
             logger.inf("CML. CPU speed: %u MHz, source: %s\n",
                        Hz_to_MHz(mcu::get_sysclk_frequency_hz()),
