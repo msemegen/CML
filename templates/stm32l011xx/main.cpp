@@ -13,7 +13,6 @@ namespace
 {
 
 using namespace cml;
-using namespace cml::common;
 using namespace cml::hal;
 using namespace cml::hal::peripherals;
 using namespace cml::utils;

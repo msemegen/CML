@@ -19,8 +19,8 @@ namespace {
 
 using namespace cml::devices;
 
-float accelerometer_sensitivity_lut[] = { 0.061f, 0.488f, 0.122f, 0.244f };
-float gyroscope_sensitivity_lut[]     = { 8.75f, 4.375f, 17.5f, 0.0f, 35.0f, 0.0f, 70.0f };
+constexpr float accelerometer_sensitivity_lut[] = { 0.000061f, 0.000488f, 0.000122f, 0.000244f };
+constexpr float gyroscope_sensitivity_lut[]     = { 0.00875, 0.004375f, 0.0175f, 0.0f, 0.035f, 0.0f, 0.07f };
 
 uint32_t odr_to_freq(LSM6DSL::Accelerometer_config::Output_data_rate a_odr)
 {

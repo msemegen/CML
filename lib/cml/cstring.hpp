@@ -199,18 +199,38 @@ struct cstring
             return ret;
         };
 
-        auto abs = [](int32_t a_v) { return a_v > 0 ? a_v : -1 * a_v; };
+        auto absf = [](float a_v) { return a_v > 0 ? a_v : -1 * a_v; };
 
-        int32_t i  = static_cast<int32_t>(a_value);
-        uint32_t l = from_signed_integer(i, a_p_buffer, a_buffer_capacity, Radix::dec);
+        uint32_t offset = 0;
+        int32_t i       = static_cast<int32_t>(a_value);
+
+        if (i == 0 && a_value < 0.0f)
+        {
+            a_p_buffer[0] = '-';
+            offset        = 1;
+        }
+
+        uint32_t l = from_signed_integer(i, a_p_buffer + offset, a_buffer_capacity - offset, Radix::dec) + offset;
 
         if (a_afterpoint > 0)
         {
             a_p_buffer[l++] = '.';
-            l += from_signed_integer(abs(static_cast<uint32_t>(a_value - i)) * pow(10, a_afterpoint),
-                                     a_p_buffer + l,
-                                     a_buffer_capacity - l,
-                                     Radix::dec);
+            uint32_t d      = from_unsigned_integer(static_cast<uint32_t>(absf(a_value - i) * pow(10, a_afterpoint)),
+                                               a_p_buffer + l,
+                                               a_buffer_capacity - l,
+                                               Radix::dec);
+
+            if (d < a_afterpoint)
+            {
+                for (;d < a_afterpoint && l + d < a_buffer_capacity; d++)
+                {
+                    a_p_buffer[l + d] = '0';
+                }
+
+                a_p_buffer[l + d] = 0;
+            }
+
+            l += d;
         }
 
         return l;
