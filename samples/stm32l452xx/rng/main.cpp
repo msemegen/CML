@@ -94,7 +94,7 @@ int main()
 
         assert::register_halt({ assert_mcu_halt, nullptr });
 
-        systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, 0x9u);
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, systick::Prescaler::_1, 0x9u);
         systick::register_tick_callback({ counter::update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);

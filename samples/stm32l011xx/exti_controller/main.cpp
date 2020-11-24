@@ -96,9 +96,10 @@ int main()
 
         assert::register_halt({ assert_mcu_halt, nullptr });
 
-        systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, 0x9u);
+        systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, systick::Prescaler::_1, 0x9u);
         systick::register_tick_callback({ counter::update, nullptr });
 
+        mcu::enable_syscfg();
         mcu::enable_interrupt_line(mcu::Interrupt_line::exti_4_15, 0x5u);
 
         GPIO gpio_port_a(GPIO::Id::a);
@@ -129,6 +130,7 @@ int main()
                        sysclk_source_to_cstring(mcu::get_sysclk_source()));
 
             GPIO gpio_port_b(GPIO::Id::b);
+            gpio_port_b.enable();
 
             pin::Out led_pin;
             pin::out::enable(&gpio_port_b, 3u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);

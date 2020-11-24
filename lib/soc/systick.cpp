@@ -8,16 +8,6 @@
 // this
 #include <soc/systick.hpp>
 
-// externals
-
-#ifdef STM32L452xx
-#include <stm32l4xx.h>
-#endif
-
-#ifdef STM32L011xx
-#include <stm32l0xx.h>
-#endif
-
 // cml
 #include <cml/bit.hpp>
 
@@ -48,7 +38,7 @@ namespace soc {
 
 using namespace cml;
 
-void systick::enable(uint32_t a_start_value, uint32_t a_priority)
+void systick::enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_priority)
 {
     assert(a_start_value > 0);
 
@@ -57,7 +47,7 @@ void systick::enable(uint32_t a_start_value, uint32_t a_priority)
     SysTick->CTRL = 0;
     SysTick->LOAD = a_start_value;
     SysTick->VAL  = 0;
-    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
+    SysTick->CTRL = static_cast<uint32_t>(a_prescaler) | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 }
 
 void systick::disable()
