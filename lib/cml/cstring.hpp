@@ -83,29 +83,7 @@ struct cstring
     }
 
 #ifdef CML_USE_FLOATING_POINT
-    static float to_float(const char* a_p_string, uint32_t a_length)
-    {
-        assert(nullptr != a_p_string);
-        assert(a_length > 0);
-
-        float retval = 0.0f;
-        float p      = 10.0f;
-        uint32_t i   = '-' == a_p_string[0] ? 1 : 0;
-
-        for (; i < a_length && '.' != a_p_string[i]; i++)
-        {
-            assert((a_p_string[i] >= '0' && a_p_string[i] <= '9') || '.' == a_p_string[i]);
-            retval = retval * 10.0f + (a_p_string[i] - '0');
-        }
-
-        for (i = i + 1; i < a_length; i++, p *= 10.0f)
-        {
-            assert(a_p_string[i] >= '0' && a_p_string[i] <= '9');
-            retval = retval + (a_p_string[i] - '0') / p;
-        }
-
-        return retval * ('-' == a_p_string[0] ? -1.0f : 1.0f);
-    }
+    static float to_float(const char* a_p_string, uint32_t a_length);
 #endif // CML_USE_FLOATING_POINT
 
     template<typename Type_t>
@@ -178,63 +156,7 @@ struct cstring
     }
 
 #ifdef CML_USE_FLOATING_POINT
-    static uint32_t from_float(float a_value, char* a_p_buffer, uint32_t a_buffer_capacity, uint32_t a_afterpoint)
-    {
-        assert(nullptr != a_p_buffer);
-        assert(a_buffer_capacity > 0);
-
-        auto pow = [](int32_t x, uint32_t y) {
-            int32_t ret = 1;
-
-            while (y > 0)
-            {
-                if (true == is_bit_on(y, 0))
-                {
-                    ret = ret * x;
-                }
-
-                y = y >> 0x1u;
-                x = x * x;
-            }
-            return ret;
-        };
-
-        auto absf = [](float a_v) { return a_v > 0 ? a_v : -1 * a_v; };
-
-        uint32_t offset = 0;
-        int32_t i       = static_cast<int32_t>(a_value);
-
-        if (i == 0 && a_value < 0.0f)
-        {
-            a_p_buffer[0] = '-';
-            offset        = 1;
-        }
-
-        uint32_t l = from_signed_integer(i, a_p_buffer + offset, a_buffer_capacity - offset, Radix::dec) + offset;
-
-        if (a_afterpoint > 0)
-        {
-            a_p_buffer[l++] = '.';
-            uint32_t d      = from_unsigned_integer(static_cast<uint32_t>(absf(a_value - i) * pow(10, a_afterpoint)),
-                                               a_p_buffer + l,
-                                               a_buffer_capacity - l,
-                                               Radix::dec);
-
-            if (d < a_afterpoint)
-            {
-                for (;d < a_afterpoint && l + d < a_buffer_capacity; d++)
-                {
-                    a_p_buffer[l + d] = '0';
-                }
-
-                a_p_buffer[l + d] = 0;
-            }
-
-            l += d;
-        }
-
-        return l;
-    }
+    static uint32_t from_float(float a_value, char* a_p_buffer, uint32_t a_buffer_capacity, uint32_t a_afterpoint);
 #endif // CML_USE_FLOATING_POINT
 
     template<typename... Types_t>
