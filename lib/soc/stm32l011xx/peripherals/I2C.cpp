@@ -276,8 +276,9 @@ void I2C_master::diasble()
 }
 
 I2C_master::Result
-I2C_master::transmit_bytes_polling(uint16_t a_slave_address, const void* a_p_data, uint32_t a_data_size_in_bytes)
+I2C_master::transmit_bytes_polling(uint8_t a_slave_address, const void* a_p_data, uint32_t a_data_size_in_bytes)
 {
+    assert(a_slave_address <= 0xFE);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -313,11 +314,12 @@ I2C_master::transmit_bytes_polling(uint16_t a_slave_address, const void* a_p_dat
     return { bus_status, bytes };
 }
 
-I2C_master::Result I2C_master::transmit_bytes_polling(uint16_t a_slave_address,
+I2C_master::Result I2C_master::transmit_bytes_polling(uint8_t a_slave_address,
                                                       const void* a_p_data,
                                                       uint32_t a_data_size_in_bytes,
                                                       time::tick a_timeout)
 {
+    assert(a_slave_address <= 0xFE);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
     assert(a_timeout > 0);
@@ -357,8 +359,9 @@ I2C_master::Result I2C_master::transmit_bytes_polling(uint16_t a_slave_address,
 }
 
 I2C_master::Result
-I2C_master::receive_bytes_polling(uint16_t a_slave_address, void* a_p_data, uint32_t a_data_size_in_bytes)
+I2C_master::receive_bytes_polling(uint8_t a_slave_address, void* a_p_data, uint32_t a_data_size_in_bytes)
 {
+    assert(a_slave_address <= 0xFE);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -400,11 +403,12 @@ I2C_master::receive_bytes_polling(uint16_t a_slave_address, void* a_p_data, uint
     return { bus_status, bytes };
 }
 
-I2C_master::Result I2C_master::receive_bytes_polling(uint16_t a_slave_address,
+I2C_master::Result I2C_master::receive_bytes_polling(uint8_t a_slave_address,
                                                      void* a_p_data,
                                                      uint32_t a_data_size_in_bytes,
                                                      time::tick a_timeout)
 {
+    assert(a_slave_address <= 0xFE);
     assert(nullptr != a_p_data);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
     assert(a_timeout > 0);
@@ -450,10 +454,11 @@ I2C_master::Result I2C_master::receive_bytes_polling(uint16_t a_slave_address,
     return { bus_status, bytes };
 }
 
-void I2C_master::register_transmit_callback(uint16_t a_slave_address,
+void I2C_master::register_transmit_callback(uint8_t a_slave_address,
                                             const Transmit_callback& a_callback,
                                             uint32_t a_data_size_in_bytes)
 {
+    assert(a_slave_address <= 0xFE);
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -468,10 +473,11 @@ void I2C_master::register_transmit_callback(uint16_t a_slave_address,
     set_flag(&(I2C1->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
 }
 
-void I2C_master::register_receive_callback(uint16_t a_slave_address,
+void I2C_master::register_receive_callback(uint8_t a_slave_address,
                                            const Receive_callback& a_callback,
                                            uint32_t a_data_size_in_bytes)
 {
+    assert(a_slave_address <= 0xFE);
     assert(nullptr != a_callback.function);
     assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255);
 
@@ -524,8 +530,9 @@ void I2C_master::unregister_bus_status_callback()
     this->bus_status_callback = { nullptr, nullptr };
 }
 
-bool I2C_master::is_slave_connected(uint16_t a_slave_address, time::tick a_timeout) const
+bool I2C_master::is_slave_connected(uint8_t a_slave_address, time::tick a_timeout) const
 {
+    assert(a_slave_address <= 0xFE);
     assert(a_timeout > 0);
 
     time::tick start = counter::get();

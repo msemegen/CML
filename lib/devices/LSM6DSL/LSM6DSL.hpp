@@ -10,80 +10,39 @@
 // std
 #include <cstdint>
 
+// cml
+#include <cml/Non_copyable.hpp>
+#include <cml/time.hpp>
+#include <cml/debug/assert.hpp>
+
+//std
+#include <algorithm>
+
 namespace cml {
 namespace devices {
 
-class LSM6DSL
+class LSM6DSL : private Non_copyable
 {
 public:
-    struct Fifo_config
+    template<typename Type_t> struct Axis
     {
-        bool enabled                     = false;
-        uint8_t pattern_repetition_count = 0;
-    };
+        Type_t x = static_cast<Type_t>(0);
+        Type_t y = static_cast<Type_t>(0);
+        Type_t z = static_cast<Type_t>(0);
 
-    struct Accelerometer_config
-    {
-        enum class Fullscale_range : uint8_t
+        Type_t operator[](uint32_t a_index) const
         {
-            _2g     = 0x0u << 2u,
-            _16g    = 0x1u << 2u,
-            _4g     = 0x2u << 2u,
-            _8g     = 0x3u << 2u,
-            unknown = 0xFFu
-        };
+            assert(a_index < 3);
+            static_assert(sizeof(*this) == sizeof(Type_t) * 3);
+            return (reinterpret_cast<const Type_t*>(this))[a_index];
+        }
 
-        enum class Output_data_rate : uint8_t
+        Type_t& operator[](uint32_t a_index)
         {
-            _12_5_Hz = 0x1u,
-            _26_Hz   = 0x2u,
-            _52_Hz   = 0x3u,
-            _104_Hz  = 0x4u,
-            _208_Hz  = 0x5u,
-            _416_Hz  = 0x6u,
-            _833_Hz  = 0x7u,
-            _1660_Hz = 0x8u,
-            _3330_Hz = 0x9u,
-            _6660_Hz = 0xAu,
-            _1_6_Hz  = 0xBu,
-            unknown  = 0xFFu
-        };
-
-        bool enabled                      = false;
-        Fullscale_range fullscale_range   = Fullscale_range::unknown;
-        Output_data_rate output_data_rate = Output_data_rate::unknown;
-    };
-
-    struct Gyroscope_config
-    {
-        enum class Fullscale_range : uint8_t
-        {
-            _125_dps  = 0x1u << 1u,
-            _250_dps  = 0x0u << 1u,
-            _500_dps  = 0x2u << 1u,
-            _1000_dps = 0x4u << 1u,
-            _2000_dps = 0x6u << 1u,
-            unknown   = 0xFFu
-        };
-
-        enum class Output_data_rate : uint8_t
-        {
-            _12_5_Hz = 0x1u,
-            _26_Hz   = 0x2u,
-            _52_Hz   = 0x3u,
-            _104_Hz  = 0x4u,
-            _208_Hz  = 0x5u,
-            _416_Hz  = 0x6u,
-            _833_Hz  = 0x7u,
-            _1660_Hz = 0x8u,
-            _3330_Hz = 0x9u,
-            _6660_Hz = 0xAu,
-            unknown  = 0xFFu
-        };
-
-        bool enabled                      = false;
-        Fullscale_range fullscale_range   = Fullscale_range::unknown;
-        Output_data_rate output_data_rate = Output_data_rate::unknown;
+            assert(a_index < 3);
+            static_assert(sizeof(*this) == sizeof(Type_t) * 3);
+            return (reinterpret_cast<Type_t*>(this))[a_index];
+        }
     };
 
     struct Transmit
@@ -92,6 +51,12 @@ public:
 
         Function function = nullptr;
         void* p_user_data = nullptr;
+
+        bool operator()(uint8_t a_register, uint8_t a_value) const
+        {
+            assert(nullptr != this->function);
+            return this->function(a_register, a_value, this->p_user_data);
+        }
     };
 
     struct Receive
@@ -100,116 +65,359 @@ public:
 
         Function function = nullptr;
         void* p_user_data = nullptr;
+
+        bool operator()(uint8_t a_register, uint8_t* a_p_data, uint32_t a_size_in_bytes) const
+        {
+            assert(nullptr != this->function);
+            return this->function(a_register, a_p_data, a_size_in_bytes, this->p_user_data);
+        }
     };
 
-    template<typename Type_t> struct Axis
+    class Accelerometer : private Non_copyable
     {
-        union
+    public:
+        enum class Fullscale_range : uint8_t
         {
-            struct
-            {
-                Type_t x = static_cast<Type_t>(0);
-                Type_t y = static_cast<Type_t>(0);
-                Type_t z = static_cast<Type_t>(0);
-            };
-
-            Type_t linear[3];
+            _2g     = 0x0u,
+            _16g    = 0x4u,
+            _4g     = 0x8u,
+            _8g     = 0xCu,
+            unknown = 0xFFu
         };
+
+        enum class Output_data_rate : uint8_t
+        {
+            _12_5_Hz = 0x10u,
+            _26_Hz   = 0x20u,
+            _52_Hz   = 0x30u,
+            _104_Hz  = 0x40u,
+            _208_Hz  = 0x50u,
+            _416_Hz  = 0x60u,
+            _833_Hz  = 0x70u,
+            _1660_Hz = 0x80u,
+            _3330_Hz = 0x90u,
+            _6660_Hz = 0xA0u,
+            _1_6_Hz  = 0xB0u,
+            unknown  = 0xFFu
+        };
+
+        enum class Power_mode
+        {
+            normal,
+            high_performance,
+            unknown
+        };
+
+    public:
+        bool enable(Fullscale_range a_fullscale_range, Output_data_rate a_output_data_rate, Power_mode a_power_mode);
+        bool disable();
+
+        bool set_fullscale_range(Fullscale_range a_fullscale_range);
+        bool set_output_data_rate(Output_data_rate a_output_data_rate);
+        bool set_power_mode(Power_mode a_power_mode);
+
+        bool get_axis_raw_polling(Axis<int16_t>* a_p_axis) const;
+        bool get_axis_scaled_polling(Axis<float>* a_p_axis) const;
+
+        bool get_axis_raw_polling(Axis<int16_t>* a_p_axis, time::tick a_timeout) const;
+        bool get_axis_scaled_polling(Axis<float>* a_p_axis, time::tick a_timeout) const;
+
+        bool is_enabled(bool* a_p_flag) const;
+
+        Fullscale_range get_fullscale_range() const
+        {
+            return this->fullscale_range;
+        }
+
+        Output_data_rate get_output_data_rate() const
+        {
+            return this->output_data_rate;
+        }
+
+        Power_mode get_power_mode() const
+        {
+            return this->power_mode;
+        }
+
+    private:
+        Accelerometer(LSM6DSL* a_p_owner)
+            : p_owner(a_p_owner)
+            , fullscale_range(Fullscale_range::unknown)
+            , output_data_rate(Output_data_rate::unknown)
+            , power_mode(Power_mode::unknown)
+        {
+        }
+
+        ~Accelerometer()
+        {
+            this->disable();
+        }
+
+    private:
+        LSM6DSL* p_owner;
+
+        Fullscale_range fullscale_range;
+        Output_data_rate output_data_rate;
+        Power_mode power_mode;
+
+        friend LSM6DSL;
+    };
+
+    class Gyroscope : private Non_copyable
+    {
+    public:
+        enum class Fullscale_range : uint8_t
+        {
+            _250_dps  = 0x0u,
+            _500_dps  = 0x4u,
+            _1000_dps = 0x8u,
+            _2000_dps = 0xCu,
+            _125_dps  = 0xDu,
+            unknown   = 0xFFu
+        };
+
+        enum class Output_data_rate : uint8_t
+        {
+            _12_5_Hz = 0x10u,
+            _26_Hz   = 0x20u,
+            _52_Hz   = 0x30u,
+            _104_Hz  = 0x40u,
+            _208_Hz  = 0x50u,
+            _416_Hz  = 0x60u,
+            _833_Hz  = 0x70u,
+            _1660_Hz = 0x80u,
+            _3330_Hz = 0x90u,
+            _6660_Hz = 0xA0u,
+            unknown  = 0xFFu
+        };
+
+        enum class Power_mode : uint8_t
+        {
+            normal,
+            high_performance,
+            unknown
+        };
+
+    public:
+        bool enable(Fullscale_range a_fullscale_range, Output_data_rate a_output_data_rate, Power_mode a_power_mode);
+        bool disable();
+
+        bool set_fullscale_range(Fullscale_range a_fullscale_range);
+        bool set_output_data_rate(Output_data_rate a_output_data_rate);
+        bool set_power_mode(Power_mode a_power_mode);
+
+        bool get_axis_raw_polling(Axis<int16_t>* a_p_axis);
+        bool get_axis_scaled_polling(Axis<float>* a_p_axis);
+
+        bool get_axis_raw_polling(Axis<int16_t>* a_p_axis, time::tick a_timeout);
+        bool get_axis_scaled_polling(Axis<float>* a_p_axis, time::tick a_timeout);
+
+        bool is_enabled(bool* a_p_flag) const;
+
+        Fullscale_range get_fullscale_range() const
+        {
+            return this->fullscale_range;
+        }
+
+        Output_data_rate get_output_data_rate() const
+        {
+            return this->output_data_rate;
+        }
+
+        Power_mode get_power_mode() const
+        {
+            return this->power_mode;
+        }
+
+    private:
+        Gyroscope(LSM6DSL* a_p_owner)
+            : p_owner(a_p_owner)
+            , fullscale_range(Fullscale_range::unknown)
+            , output_data_rate(Output_data_rate::unknown)
+            , power_mode(Power_mode::unknown)
+        {
+        }
+
+        ~Gyroscope()
+        {
+            this->disable();
+        }
+
+    private:
+        LSM6DSL* p_owner;
+
+        Fullscale_range fullscale_range;
+        Output_data_rate output_data_rate;
+        Power_mode power_mode;
+
+        friend LSM6DSL;
+    };
+
+    class Temperature : private Non_copyable
+    {
+    public:
+        bool get_data_raw_polling(int16_t* a_p_temperature) const;
+        bool get_data_scaled_polling(float* a_p_temperature) const;
+
+        bool get_data_raw_polling(int16_t* a_p_temperature, time::tick a_timeout) const;
+        bool get_data_scaled_polling(float* a_p_temperature, time::tick a_timeout) const;
+
+    private:
+        Temperature(LSM6DSL* a_p_owner)
+            : p_owner(a_p_owner)
+        {
+        }
+
+        ~Temperature() = default;
+
+    private:
+        LSM6DSL* p_owner;
+
+        friend LSM6DSL;
+    };
+
+    class Fifo : private Non_copyable
+    {
+    public:
+        enum class Output_data_rate
+        {
+            _12_5_Hz = 0x8u,
+            _26_Hz   = 0x10u,
+            _52_Hz   = 0x18u,
+            _104_Hz  = 0x20u,
+            _208_Hz  = 0x28u,
+            _416_Hz  = 0x30u,
+            _833_Hz  = 0x38u,
+            _1666_Hz = 0x40u,
+            _3333_Hz = 0x48u,
+            _6666_Hz = 0x50u,
+            unknown  = 0xFFu
+        };
+
+    public:
+        bool enable(Output_data_rate a_output_data_rate, uint32_t a_pattern_count);
+        bool disable();
+
+        bool set_output_data_rate(Output_data_rate a_output_data_rate);
+
+        bool get_data_raw_polling(Axis<int16_t>* a_p_gyroscope_data,
+                                  uint32_t a_gyroscope_data_buffer_capacity,
+                                  Axis<int16_t>* a_p_accelerometer_data,
+                                  uint32_t a_accelerometer_data_buffer_capacity);
+
+        bool get_data_scaled_polling(Axis<float>* a_p_gyroscope_data,
+                                     uint32_t a_gyroscope_data_buffer_capacity,
+                                     Axis<float>* a_p_accelerometer_data,
+                                     uint32_t a_accelerometer_data_buffer_capacity);
+
+        bool get_data_raw_polling(Axis<int16_t>* a_p_gyroscope_data,
+                                  uint32_t a_gyroscope_data_buffer_capacity,
+                                  Axis<int16_t>* a_p_accelerometer_data,
+                                  uint32_t a_accelerometer_data_buffer_capacity,
+                                  time::tick a_timeout);
+
+        bool get_data_scaled_polling(Axis<float>* a_p_gyroscope_data,
+                                     uint32_t a_gyroscope_data_buffer_capacity,
+                                     Axis<float>* a_p_accelerometer_data,
+                                     uint32_t a_accelerometer_data_buffer_capacity,
+                                     time::tick a_timeout);
+
+        bool is_enabled(bool* a_p_flag) const;
+
+        Output_data_rate get_output_data_rate() const
+        {
+            return this->output_data_rate;
+        }
+
+    private:
+        Fifo(LSM6DSL* a_p_owner)
+            : p_owner(a_p_owner)
+            , pattern_count(0)
+            , output_data_rate(Output_data_rate::unknown)
+        {
+        }
+
+        ~Fifo()
+        {
+            this->disable();
+        }
+
+    private:
+
+        struct Pattern
+        {
+            uint32_t gyroscope     = 0;
+            uint32_t accelerometer = 0;
+        };
+
+    private:
+        bool is_full(bool* a_p_flag) const;
+
+        uint32_t output_data_rate_to_Hz(Accelerometer::Output_data_rate a_output_data_rate) const;
+        uint32_t output_data_rate_to_Hz(Gyroscope::Output_data_rate a_output_data_rate) const;
+
+        uint8_t decimation_to_ctrl3_register(uint32_t a_accelerometer_decimation,
+                                             uint32_t a_gyroscope_decimation) const;
+
+    private:
+        LSM6DSL* p_owner;
+
+        Pattern pattern;
+        uint32_t pattern_count;
+        Output_data_rate output_data_rate;
+
+        friend LSM6DSL;
     };
 
 public:
-    LSM6DSL(Transmit a_transmit, Receive a_receive)
+    LSM6DSL(const Transmit& a_transmit, const Receive& a_receive)
         : transmit(a_transmit)
         , receive(a_receive)
+        , accelerometer(this)
+        , gyroscope(this)
+        , temperature(this)
+        , fifo(this)
     {
     }
-    ~LSM6DSL() = default;
 
-    bool enable(const Accelerometer_config& a_acc_config,
-                const Gyroscope_config& a_gyr_config,
-                const Fifo_config& a_fifo_config);
-
-    bool disable(bool a_accelerometer, bool a_groscope);
-
-    bool is_alive() const;
-    bool reset();
-
-    bool get_axis_raw(Axis<int16_t>* a_p_gyr_data,
-                      uint32_t a_gyr_data_buffer_capacity,
-                      Axis<int16_t>* a_p_acc_data,
-                      uint32_t a_acc_data_buffer_capacity);
-
-    bool get_axis_scaled(Axis<float>* a_p_gyr_data,
-                         uint32_t a_gyr_data_buffer_capacity,
-                         Axis<float>* a_p_acc_data,
-                         uint32_t a_acc_data_buffer_capacity);
-
-    const Accelerometer_config& get_accelerometer_config() const
+    ~LSM6DSL()
     {
-        return this->accelerometer_config;
+        this->disable();
     }
 
-    const Gyroscope_config& get_gyroscope_config() const
-    {
-        return this->gyroscope_config;
-    }
+    bool enable();
+    bool disable();
 
-    const Fifo_config& get_fifo_config() const
-    {
-        return this->fifo_config;
-    }
+    bool reboot(bool* a_p_flag);
+    bool get_id(uint8_t* a_p_id) const;
+
+public:
+    Accelerometer* const p_accelerometer = &(this->accelerometer);
+    Gyroscope* const p_gyroscope         = &(this->gyroscope);
+    Temperature* const p_temperature     = &(this->temperature);
+    Fifo* const p_fifo                   = &(this->fifo);
 
 private:
-    struct Registers
-    {
-        enum
-        {
-            fifo_ctrl1      = 0x6u,
-            fifo_ctrl2      = 0x7u,
-            fifo_ctrl3      = 0x8u,
-            fifo_ctrl5      = 0xAu,
-            int1_ctrl       = 0xDu,
-            int2_ctrl       = 0xEu,
-            ctrl1_xl        = 0x10u,
-            ctrl2_g         = 0x11u,
-            ctrl3_c         = 0x12u,
-            ctrl6_c         = 0x15u,
-            ctrl7_g         = 0x16u,
-            outx_l_g        = 0x22u,
-            outx_l_xl       = 0x28u,
-            status_reg      = 0x1Eu,
-            fifo_status2    = 0x3Bu,
-            fifo_data_out_l = 0x3Eu,
-        };
-    };
 
-    struct Fifo_context
+    enum class Sensor
     {
-        uint8_t gyr_decimation    = 0;
-        uint8_t acc_decimation    = 0;
-        uint8_t gyr_samples_count = 0;
-        uint8_t acc_samples_count = 0;
-        uint8_t odr               = 0;
+        accelerometer = 0,
+        gyroscope     = 1,
+        temperature   = 2
     };
 
 private:
-    bool set_fifo_context(const Fifo_context& a_context);
-    bool get_axis(uint8_t a_outx_register, int16_t* a_p_outx, int16_t* a_p_outy, int16_t* a_p_outz);
-
-    bool is_fifo_full(bool* a_p_status) const;
-
-    bool is_accelerometer_data_avaliable(bool* a_p_status) const;
-    bool is_gyroscope_data_avaliable(bool* a_p_status) const;
+    bool get_data(uint8_t a_register, void* a_p_buffer, uint32_t a_buffer_capacity) const;
+    bool is_data_avaliable(Sensor a_data, bool* a_p_flag) const;
 
 private:
     Transmit transmit;
     Receive receive;
 
-    Accelerometer_config accelerometer_config;
-    Gyroscope_config gyroscope_config;
-    Fifo_config fifo_config;
-
-    Fifo_context fifo_context;
+    Accelerometer accelerometer;
+    Gyroscope gyroscope;
+    Temperature temperature;
+    Fifo fifo;
 };
 
 } // namespace devices

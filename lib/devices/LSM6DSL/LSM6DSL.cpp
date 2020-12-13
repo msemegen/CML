@@ -11,137 +11,54 @@
 // std
 #include <algorithm>
 
+//soc
+#include <soc/counter.hpp>
+
 // cml
 #include <cml/bit.hpp>
-#include <cml/debug/assert.hpp>
 
 namespace {
 
-using namespace cml::devices;
+constexpr float asl[]                                  = { 0.000061f, 0.000488f, 0.000122f, 0.000244f };
+constexpr float gsl[]                                  = { 0.00875, 0.0175f, 0.035f, 0.07f, 0.004375f };
+constexpr static uint32_t output_data_rate_to_Hz_lut[] = { 0u,   13u,  26u,   52u,   104u,  208u,
+                                                           416u, 833u, 1660u, 3330u, 6660u, 2u };
 
-constexpr float accelerometer_sensitivity_lut[] = { 0.000061f, 0.000488f, 0.000122f, 0.000244f };
-constexpr float gyroscope_sensitivity_lut[]     = { 0.00875, 0.004375f, 0.0175f, 0.0f, 0.035f, 0.0f, 0.07f };
-
-uint32_t odr_to_freq(LSM6DSL::Accelerometer_config::Output_data_rate a_odr)
+struct Registers
 {
-    if (LSM6DSL::Accelerometer_config::Output_data_rate::unknown != a_odr)
+    enum
     {
-        return 0xDu << (static_cast<uint8_t>(a_odr) - 1);
-    }
-    return 0;
-}
-
-uint32_t odr_to_freq(LSM6DSL::Gyroscope_config::Output_data_rate a_odr)
-{
-    if (LSM6DSL::Gyroscope_config::Output_data_rate::unknown != a_odr)
-    {
-        return 0xDu << (static_cast<uint8_t>(a_odr) - 1);
-    }
-    return 0;
-}
-
-uint32_t freq_to_odr(uint32_t a_freq_Hz)
-{
-    switch (a_freq_Hz)
-    {
-        case 13u:
-            return 0x1u;
-
-        case 26u:
-            return 0x2u;
-
-        case 52u:
-            return 0x3u;
-
-        case 104u:
-            return 0x4u;
-
-        case 208u:
-            return 0x5u;
-
-        case 416u:
-            return 0x6u;
-
-        case 832u:
-            return 0x7u;
-
-        case 1664u:
-            return 0x8u;
-
-        case 3328u:
-            return 0x9u;
-
-        case 6656u:
-            return 0xAu;
-    }
-
-    return 0x0u;
-}
-
-uint32_t decimation_to_flag(uint32_t a_decimation)
-{
-    if (a_decimation <= 4)
-    {
-        return a_decimation;
-    }
-    else
-    {
-        switch (a_decimation)
-        {
-            case 8: {
-                return 0x5u;
-            }
-            break;
-
-            case 16: {
-                return 0x6u;
-            }
-            break;
-
-            case 32: {
-                return 0x7u;
-            }
-            break;
-        }
-    }
-
-    return 0;
-}
+        fifo_ctrl1      = 0x6u,
+        fifo_ctrl2      = 0x7u,
+        fifo_ctrl3      = 0x8u,
+        fifo_ctrl4      = 0x9u,
+        fifo_ctrl5      = 0xAu,
+        int1_ctrl       = 0xDu,
+        int2_ctrl       = 0xEu,
+        ctrl1_xl        = 0x10u,
+        ctrl2_g         = 0x11u,
+        ctrl3_c         = 0x12u,
+        ctrl6_c         = 0x15u,
+        ctrl7_g         = 0x16u,
+        out_temp_l      = 0x20u,
+        outx_l_g        = 0x22u,
+        outx_l_xl       = 0x28u,
+        status_reg      = 0x1Eu,
+        fifo_status1    = 0x3Au,
+        fifo_status2    = 0x3Bu,
+        fifo_data_out_l = 0x3Eu,
+    };
+};
 
 } // namespace
 
 namespace cml {
 namespace devices {
 
-using namespace std;
+using namespace soc;
 
-bool LSM6DSL::enable(const Accelerometer_config& a_acc_config,
-                     const Gyroscope_config& a_gyr_config,
-                     const Fifo_config& a_fifo_config)
+bool LSM6DSL::enable()
 {
-    assert(true == a_acc_config.enabled ?
-               Accelerometer_config::Fullscale_range::unknown != a_acc_config.fullscale_range &&
-                   Accelerometer_config::Output_data_rate::unknown != a_acc_config.output_data_rate :
-               true);
-
-    assert(true == a_gyr_config.enabled ?
-               Gyroscope_config::Fullscale_range::unknown != a_gyr_config.fullscale_range &&
-                   Gyroscope_config::Output_data_rate::unknown != a_gyr_config.output_data_rate :
-               true);
-
-    assert(true == a_fifo_config.enabled ? 0 != a_fifo_config.pattern_repetition_count : true);
-
-    bool acc_ret  = false;
-    bool gyr_ret  = false;
-    bool fifo_ret = false;
-
-    uint8_t min_odr_Hz        = 0;
-    uint8_t max_odr_Hz        = 0;
-    uint8_t gyr_samples_count = 0;
-    uint8_t acc_samples_count = 0;
-    uint8_t gyr_decimation    = 0;
-    uint8_t acc_decimation    = 0;
-
     bool ret = this->transmit.function(Registers::ctrl3_c, 0x44u, this->transmit.p_user_data);
 
     if (true == ret)
@@ -150,551 +67,1170 @@ bool LSM6DSL::enable(const Accelerometer_config& a_acc_config,
               this->transmit.function(Registers::ctrl2_g, 0x0u, this->transmit.p_user_data);
     }
 
+    return ret;
+}
+
+bool LSM6DSL::disable()
+{
+    bool ret = this->transmit.function(Registers::ctrl1_xl, 0x0u, this->transmit.p_user_data) &&
+               this->transmit.function(Registers::ctrl2_g, 0x0u, this->transmit.p_user_data);
+
     if (true == ret)
     {
-        if (true == a_fifo_config.enabled)
+        ret = this->transmit.function(Registers::ctrl3_c, 0x0u, this->transmit.p_user_data);
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::reboot(bool* a_p_flag)
+{
+    *a_p_flag = false;
+    bool ret = this->transmit(Registers::ctrl3_c, 0x80u);
+
+    if (true == ret)
+    {
+        uint8_t v = 0;
+        while (true == ret && false == *a_p_flag)
         {
-            uint8_t gyr_odr_Hz =
-                odr_to_freq(true == a_gyr_config.enabled ? a_gyr_config.output_data_rate :
-                                                           Gyroscope_config::Output_data_rate::unknown);
-            uint8_t acc_odr_Hz =
-                odr_to_freq(true == a_acc_config.enabled ? a_acc_config.output_data_rate :
-                                                           Accelerometer_config::Output_data_rate::unknown);
+            ret  = this->receive(Registers::ctrl3_c, &v, sizeof(v));
+            (*a_p_flag) = false == is_bit_on(v, 7);
+        };
+    }
 
-            max_odr_Hz = max(acc_odr_Hz > 0 ? acc_odr_Hz : 0x00u, gyr_odr_Hz > 0 ? gyr_odr_Hz : 0x00u);
-            min_odr_Hz = min(acc_odr_Hz > 0 ? acc_odr_Hz : 0xFFu, gyr_odr_Hz > 0 ? gyr_odr_Hz : 0xFFu);
+    return ret;
+}
 
-            gyr_decimation = gyr_odr_Hz > 0 ? max_odr_Hz / gyr_odr_Hz : 0;
-            acc_decimation = acc_odr_Hz > 0 ? max_odr_Hz / acc_odr_Hz : 0;
+bool LSM6DSL::get_id(uint8_t* a_p_id) const
+{
+    assert(nullptr != a_p_id);
 
-            gyr_samples_count = gyr_odr_Hz / min_odr_Hz;
-            acc_samples_count = acc_odr_Hz / min_odr_Hz;
+    uint8_t v = 0;
+    bool ret  = this->receive(0xFu, &v, sizeof(v));
+    if (true == ret)
+    {
+        (*a_p_id) = v;
+    }
 
-            uint8_t wtm = a_fifo_config.pattern_repetition_count * (gyr_samples_count + acc_samples_count) * 3;
+    return ret;
+}
 
-            fifo_ret = this->transmit.function(Registers::fifo_ctrl1, wtm & 0xFFu, this->transmit.p_user_data) &&
-                       this->transmit.function(Registers::fifo_ctrl2, (wtm & 0x700u) >> 8u, this->transmit.p_user_data);
+bool LSM6DSL::get_data(uint8_t a_register, void* a_p_buffer, uint32_t a_buffer_capacity) const
+{
+    assert(nullptr != a_p_buffer);
+    assert(a_buffer_capacity > 0);
+
+    return this->receive(a_register, reinterpret_cast<uint8_t*>(a_p_buffer), a_buffer_capacity);
+}
+
+bool LSM6DSL::is_data_avaliable(Sensor a_sensor, bool* a_p_flag) const
+{
+    assert(nullptr != a_p_flag);
+
+    uint8_t v = 0;
+    bool ret  = this->receive(Registers::status_reg, &v, sizeof(v));
+
+    if (true == ret)
+    {
+        *(a_p_flag) = is_bit_on(v, static_cast<uint8_t>(a_sensor));
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Accelerometer::enable(Fullscale_range a_fullscale_range,
+                                    Output_data_rate a_output_data_rate,
+                                    Power_mode a_power_mode)
+{
+    assert(Fullscale_range::unknown != a_fullscale_range);
+    assert(Output_data_rate::unknown != a_output_data_rate);
+
+    bool ret = false;
+    
+    switch (a_power_mode)
+    {
+        case Power_mode::high_performance: {
+            ret = this->p_owner->transmit(Registers::ctrl6_c, 0x0u);
+        }
+        break;
+
+        case Power_mode::normal: {
+            assert(
+                (a_output_data_rate == Output_data_rate::_1_6_Hz || a_output_data_rate <= Output_data_rate::_208_Hz));
+
+            ret = this->p_owner->transmit(Registers::ctrl6_c, 0x8u);
+        }
+        break;
+
+        case Power_mode::unknown: {
+            assert(Power_mode::unknown != a_power_mode);
+        }
+        break;
+    }
+
+    if (true == ret)
+    {
+        ret = this->p_owner->transmit(
+            Registers::ctrl1_xl, static_cast<uint8_t>(a_fullscale_range) | static_cast<uint8_t>(a_output_data_rate));
+    }
+
+    if (true == ret)
+    {
+        this->fullscale_range  = a_fullscale_range;
+        this->output_data_rate = a_output_data_rate;
+        this->power_mode       = a_power_mode;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Accelerometer::disable()
+{
+    bool ret = this->p_owner->transmit.function(Registers::ctrl1_xl, 0, this->p_owner->transmit.p_user_data);
+
+    if (true == ret)
+    {
+        this->fullscale_range  = Fullscale_range::unknown;
+        this->output_data_rate = Output_data_rate::unknown;
+        this->power_mode       = Power_mode::unknown;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Accelerometer::set_fullscale_range(Fullscale_range a_fullscale_range)
+{
+    assert(Fullscale_range::unknown != a_fullscale_range);
+
+    bool ret = this->p_owner->transmit(Registers::ctrl1_xl,
+                                       static_cast<uint8_t>(a_fullscale_range) |
+                                           static_cast<uint8_t>(this->output_data_rate));
+
+    if (true == ret)
+    {
+        this->fullscale_range = a_fullscale_range;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Accelerometer::set_output_data_rate(Output_data_rate a_output_data_rate)
+{
+    assert(Output_data_rate::unknown != a_output_data_rate);
+    assert((Power_mode::normal == this->power_mode && a_output_data_rate <= Output_data_rate::_208_Hz) ||
+           Power_mode::high_performance == this->power_mode);
+
+    bool ret = this->p_owner->transmit(
+        Registers::ctrl1_xl, static_cast<uint8_t>(this->fullscale_range) | static_cast<uint8_t>(a_output_data_rate));
+
+    if (true == ret)
+    {
+        this->output_data_rate = a_output_data_rate;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Accelerometer::set_power_mode(Power_mode a_power_mode)
+{
+    bool ret = this->p_owner->transmit(Registers::ctrl1_xl, 0x0u);
+
+    if (true == ret)
+    {
+        switch (a_power_mode)
+        {
+            case Power_mode::high_performance: {
+                ret = this->p_owner->transmit(Registers::ctrl6_c, 0x0u);
+            }
+            break;
+
+            case Power_mode::normal: {
+                assert((this->output_data_rate == Output_data_rate::_1_6_Hz ||
+                        this->output_data_rate <= Output_data_rate::_208_Hz));
+
+                ret = this->p_owner->transmit(Registers::ctrl6_c, 0x16u);
+            }
+            break;
+
+            case Power_mode::unknown: {
+                assert(Power_mode::unknown != a_power_mode);
+            }
+            break;
+        }
+    }
+
+    if (true == ret)
+    {
+        ret = this->p_owner->transmit(Registers::ctrl1_xl,
+                                      static_cast<uint8_t>(this->fullscale_range) |
+                                          static_cast<uint8_t>(this->output_data_rate));
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Accelerometer::get_axis_raw_polling(Axis<int16_t>* a_p_axis) const
+{
+    assert(nullptr != a_p_axis);
+
+    bool ret        = true;
+    bool data_ready = false;
+
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::accelerometer, &data_ready);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->get_data(Registers::outx_l_xl, a_p_axis, sizeof(*a_p_axis));
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Accelerometer::get_axis_scaled_polling(Axis<float>* a_p_axis) const
+{
+    assert(nullptr != a_p_axis);
+
+    bool ret                = true;
+    const float sensitivity = asl[static_cast<uint32_t>(this->fullscale_range) >> 0x1u];
+    int16_t axis[3]         = { 0, 0, 0 };
+
+    bool data_ready = false;
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::accelerometer, &data_ready);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->get_data(Registers::outx_l_xl, axis, sizeof(axis));
+
+        if (true == ret)
+        {
+            a_p_axis->x = sensitivity * static_cast<float>(axis[0]);
+            a_p_axis->y = sensitivity * static_cast<float>(axis[1]);
+            a_p_axis->z = sensitivity * static_cast<float>(axis[2]);
+        }
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Accelerometer::get_axis_raw_polling(Axis<int16_t>* a_p_axis, time::tick a_timeout) const
+{
+    assert(nullptr != a_p_axis);
+    assert(a_timeout > 0);
+
+    time::tick start = counter::get();
+
+    bool ret        = true;
+    bool data_ready = false;
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::accelerometer, &data_ready) &&
+              a_timeout >= time::diff(counter::get(), start);
+    }
+
+    if (true == ret)
+    {
+        ret = this->p_owner->get_data(Registers::outx_l_xl, a_p_axis, sizeof(*a_p_axis));
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Accelerometer::get_axis_scaled_polling(Axis<float>* a_p_axis, time::tick a_timeout) const
+{
+    assert(nullptr != a_p_axis);
+    assert(a_timeout > 0);
+
+    assert(Fullscale_range::unknown != this->fullscale_range);
+
+    time::tick start = counter::get();
+
+    bool ret                = true;
+    const float sensitivity = asl[static_cast<uint32_t>(this->fullscale_range)];
+    int16_t axis[3]         = { 0, 0, 0 };
+
+    bool data_ready = false;
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::accelerometer, &data_ready) &&
+              a_timeout >= time::diff(counter::get(), start);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->get_data(Registers::outx_l_xl, axis, sizeof(axis));
+
+        if (true == ret)
+        {
+            a_p_axis->x = sensitivity * static_cast<float>(axis[0]);
+            a_p_axis->y = sensitivity * static_cast<float>(axis[1]);
+            a_p_axis->z = sensitivity * static_cast<float>(axis[2]);
+        }
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Accelerometer::is_enabled(bool* a_p_flag) const
+{
+    assert(nullptr != a_p_flag);
+
+    uint8_t v = 0;
+    bool ret = this->p_owner->receive(Registers::ctrl1_xl, &v, sizeof(v));
+
+    if (true == ret)
+    {
+        *a_p_flag = 0 != get_flag(v, 0xF0u);
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Gyroscope::enable(Fullscale_range a_fullscale_range,
+                                Output_data_rate a_output_data_rate,
+                                Power_mode a_power_mode)
+{
+    assert(Fullscale_range::unknown != a_fullscale_range);
+    assert(Output_data_rate::unknown != a_output_data_rate);
+
+    bool ret = false;
+
+    switch (a_power_mode)
+    {
+        case Power_mode::high_performance: {
+            ret = this->p_owner->transmit(Registers::ctrl7_g, 0x0u);
+        }
+        break;
+
+        case Power_mode::normal: {
+            assert(a_output_data_rate <= Output_data_rate::_208_Hz);
+            ret = this->p_owner->transmit(Registers::ctrl7_g, 0x80u);
+        }
+        break;
+
+        case Power_mode::unknown: {
+            assert(Power_mode::unknown != a_power_mode);
+        }
+        break;
+    }
+
+    if (true == ret)
+    {
+        ret = this->p_owner->transmit(
+            Registers::ctrl2_g, static_cast<uint8_t>(a_fullscale_range) | static_cast<uint8_t>(a_output_data_rate));
+    }
+
+    if (true == ret)
+    {
+        this->fullscale_range  = a_fullscale_range;
+        this->output_data_rate = a_output_data_rate;
+        this->power_mode       = a_power_mode;
+    }
+
+    return ret;
+}
+
+
+bool LSM6DSL::Gyroscope::disable()
+{
+    bool ret = this->p_owner->transmit(Registers::ctrl2_g, 0);
+
+    if (true == ret)
+    {
+        this->fullscale_range  = Fullscale_range::unknown;
+        this->output_data_rate = Output_data_rate::unknown;
+        this->power_mode       = Power_mode::unknown;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Gyroscope::set_fullscale_range(Fullscale_range a_fullscale_range)
+{
+    assert(Fullscale_range::unknown != a_fullscale_range);
+
+    bool ret = false;
+
+    if (Fullscale_range::_125_dps != a_fullscale_range)
+    {
+        ret = this->p_owner->transmit(
+            Registers::ctrl2_g, static_cast<uint8_t>(a_fullscale_range) | static_cast<uint8_t>(this->output_data_rate));
+    }
+    else
+    {
+        ret = this->p_owner->transmit(Registers::ctrl2_g, 0x1u | static_cast<uint8_t>(this->output_data_rate));
+    }
+
+    if (true == ret)
+    {
+        this->fullscale_range = a_fullscale_range;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Gyroscope::set_output_data_rate(Output_data_rate a_output_data_rate)
+{
+    assert(Output_data_rate::unknown != a_output_data_rate);
+    assert((Power_mode::normal == this->power_mode && a_output_data_rate <= Output_data_rate::_208_Hz) ||
+           Power_mode::high_performance == this->power_mode);
+
+    bool ret = this->p_owner->transmit(
+        Registers::ctrl2_g, static_cast<uint8_t>(this->fullscale_range) | static_cast<uint8_t>(a_output_data_rate));
+
+    if (true == ret)
+    {
+        this->output_data_rate = a_output_data_rate;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Gyroscope::set_power_mode(Power_mode a_power_mode)
+{
+    bool ret = this->p_owner->transmit(Registers::ctrl2_g, 0);
+
+    if (true == ret)
+    {
+        switch (a_power_mode)
+        {
+            case Power_mode::high_performance: {
+                ret = this->p_owner->transmit(Registers::ctrl7_g, 0x0u);
+            }
+            break;
+
+            case Power_mode::normal: {
+                assert(this->output_data_rate <= Output_data_rate::_208_Hz);
+                ret = this->p_owner->transmit(Registers::ctrl7_g, 0x80u);
+            }
+            break;
+
+            case Power_mode::unknown: {
+                assert(Power_mode::unknown != a_power_mode);
+            }
+            break;
+        }
+    }
+
+    if (true == ret)
+    {
+        ret = this->p_owner->transmit(Registers::ctrl2_g,
+                                      static_cast<uint8_t>(this->fullscale_range) |
+                                          static_cast<uint8_t>(this->output_data_rate));
+    }
+
+    if (true == ret)
+    {
+        this->power_mode = a_power_mode;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Gyroscope::get_axis_raw_polling(Axis<int16_t>* a_p_axis)
+{
+    assert(nullptr != a_p_axis);
+
+    bool ret        = true;
+    bool data_ready = false;
+
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::gyroscope, &data_ready);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->get_data(Registers::outx_l_g, a_p_axis, sizeof(*a_p_axis));
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Gyroscope::get_axis_scaled_polling(Axis<float>* a_p_axis)
+{
+    assert(nullptr != a_p_axis);
+
+    assert(Fullscale_range::unknown != this->fullscale_range);
+
+    bool ret          = false;
+    float sensitivity = gsl[static_cast<uint32_t>(this->fullscale_range) >> 0x2u];
+    int16_t axis[3]   = { 0, 0, 0 };
+
+    bool data_ready = false;
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::gyroscope, &data_ready);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->get_data(Registers::outx_l_g, a_p_axis, sizeof(*a_p_axis));
+
+        if (true == ret)
+        {
+            a_p_axis->x = sensitivity * static_cast<float>(axis[0]);
+            a_p_axis->y = sensitivity * static_cast<float>(axis[1]);
+            a_p_axis->z = sensitivity * static_cast<float>(axis[2]);
+        }
+
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Gyroscope::get_axis_raw_polling(Axis<int16_t>* a_p_axis, time::tick a_timeout)
+{
+    assert(nullptr != a_p_axis);
+    assert(a_timeout > 0);
+
+    time::tick start = counter::get();
+
+    bool ret        = true;
+    bool data_ready = false;
+
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::gyroscope, &data_ready) &&
+              a_timeout >= time::diff(counter::get(), start);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->get_data(Registers::outx_l_g, a_p_axis, sizeof(*a_p_axis));
+    }
+
+    return ret && data_ready;
+}
+bool LSM6DSL::Gyroscope::get_axis_scaled_polling(Axis<float>* a_p_axis, time::tick a_timeout)
+{
+    assert(nullptr != a_p_axis);
+
+    assert(Fullscale_range::unknown != this->fullscale_range);
+
+    time::tick start = counter::get();
+
+    bool ret          = false;
+    float sensitivity = gsl[static_cast<uint32_t>(this->fullscale_range) >> 0x2u];
+    int16_t axis[3]   = { 0, 0, 0 };
+
+    bool data_ready = false;
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::gyroscope, &data_ready) &&
+              a_timeout >= time::diff(counter::get(), start);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->get_data(Registers::outx_l_g, a_p_axis, sizeof(*a_p_axis));
+
+        if (true == ret)
+        {
+            a_p_axis->x = sensitivity * static_cast<float>(axis[0]);
+            a_p_axis->y = sensitivity * static_cast<float>(axis[1]);
+            a_p_axis->z = sensitivity * static_cast<float>(axis[2]);
+        }
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Gyroscope::is_enabled(bool* a_p_flag) const
+{
+    uint8_t v = 0;
+    bool ret  = this->p_owner->receive(Registers::ctrl2_g, &v, sizeof(v));
+
+    if (true == ret)
+    {
+        *a_p_flag = 0 != get_flag(v, 0xF0u);
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Temperature::get_data_raw_polling(int16_t* a_p_temperature) const
+{
+    assert(nullptr != a_p_temperature);
+
+    bool ret        = true;
+    bool data_ready = false;
+
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::temperature, &data_ready);
+    }
+    
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->get_data(Registers::out_temp_l, a_p_temperature, sizeof(*a_p_temperature));
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Temperature::get_data_scaled_polling(float* a_p_temperature) const
+{
+    assert(nullptr != a_p_temperature);
+
+    bool ret        = true;
+    bool data_ready = false;
+    int16_t sample  = 0;
+
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::temperature, &data_ready);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->receive(Registers::out_temp_l, reinterpret_cast<uint8_t*>(&(sample)), sizeof(sample));
+
+        if (true == sample)
+        {
+            (*a_p_temperature) = (static_cast<float>(sample) / 256.0f) + 25.0f;
+        }
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Temperature::get_data_raw_polling(int16_t* a_p_temperature, time::tick a_timeout) const
+{
+    assert(nullptr != a_p_temperature);
+
+    time::tick start = counter::get();
+
+    bool ret        = true;
+    bool data_ready = false;
+
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::temperature, &data_ready) &&
+              a_timeout >= time::diff(counter::get(), start);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->get_data(Registers::out_temp_l, a_p_temperature, sizeof(*a_p_temperature));
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Temperature::get_data_scaled_polling(float* a_p_temperature, time::tick a_timeout) const
+{
+    assert(nullptr != a_p_temperature);
+
+    time::tick start = counter::get();
+
+    bool ret        = true;
+    bool data_ready = false;
+    int16_t sample  = 0;
+
+    while (true == ret && false == data_ready)
+    {
+        ret = this->p_owner->is_data_avaliable(Sensor::temperature, &data_ready) &&
+              a_timeout >= time::diff(counter::get(), start);
+    }
+
+    if (true == ret && true == data_ready)
+    {
+        ret = this->p_owner->receive(Registers::out_temp_l, reinterpret_cast<uint8_t*>(&(sample)), sizeof(sample));
+
+        if (true == sample)
+        {
+            (*a_p_temperature) = (static_cast<float>(sample) / 256.0f) + 25.0f;
+        }
+    }
+
+    return ret && data_ready;
+}
+
+bool LSM6DSL::Fifo::enable(Output_data_rate a_output_data_rate, uint32_t a_pattern_count)
+{
+    assert(Output_data_rate::unknown != a_output_data_rate);
+    assert(0 != a_pattern_count);
+
+    uint32_t gyr_odr_Hz = this->output_data_rate_to_Hz(this->p_owner->p_gyroscope->get_output_data_rate());
+    uint32_t acc_odr_Hz = this->output_data_rate_to_Hz(this->p_owner->p_accelerometer->get_output_data_rate());
+
+    uint32_t max_odr_Hz = std::max(acc_odr_Hz, gyr_odr_Hz);
+    uint32_t min_odr_Hz = std::min(acc_odr_Hz > 0 ? acc_odr_Hz : 0xFFu, gyr_odr_Hz > 0 ? gyr_odr_Hz : 0xFFu);
+
+    this->pattern.accelerometer = acc_odr_Hz / min_odr_Hz;
+    this->pattern.gyroscope     = gyr_odr_Hz / min_odr_Hz;
+    this->pattern_count         = a_pattern_count;
+
+    uint32_t watermark = (this->pattern.accelerometer + this->pattern.gyroscope) * 3 * this->pattern_count;
+
+    bool ret = this->p_owner->transmit(Registers::fifo_ctrl1, watermark & 0xFFu) &&
+               this->p_owner->transmit(Registers::fifo_ctrl2, (watermark & 0x700u) >> 8u);
+
+    if (true == ret)
+    {
+        ret = this->p_owner->transmit(Registers::fifo_ctrl5, 0x80u);
+    }
+
+    if (true == ret)
+    {
+        ret = this->p_owner->transmit(Registers::fifo_ctrl3,
+                                      this->decimation_to_ctrl3_register(acc_odr_Hz > 0 ? max_odr_Hz / acc_odr_Hz : 0,
+                                                                         gyr_odr_Hz > 0 ? max_odr_Hz / gyr_odr_Hz : 0));
+    }
+
+    if (true == ret)
+    {
+        ret = this->p_owner->transmit(Registers::fifo_ctrl5, static_cast<uint8_t>(a_output_data_rate) | 0x1u);
+    }
+
+    if (true == ret)
+    {
+        this->output_data_rate = a_output_data_rate;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Fifo::disable()
+{
+    bool ret = this->p_owner->transmit.function(Registers::fifo_ctrl5, 0x0u, this->p_owner->transmit.p_user_data);
+
+    if (true == ret)
+    {
+        this->pattern.accelerometer = 0;
+        this->pattern.gyroscope     = 0;
+        this->pattern_count         = 0;
+
+        this->output_data_rate = Output_data_rate::unknown;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Fifo::set_output_data_rate(Output_data_rate a_output_data_rate)
+{
+    assert(Output_data_rate::unknown != a_output_data_rate);
+
+    bool ret = this->p_owner->transmit(Registers::fifo_ctrl5, static_cast<uint8_t>(a_output_data_rate) | 0x1u);
+
+    if (true == ret)
+    {
+        this->output_data_rate = a_output_data_rate;
+    }
+
+    return ret;
+}
+bool LSM6DSL::Fifo::get_data_raw_polling(Axis<int16_t>* a_p_gyroscope_data,
+                                         uint32_t a_gyroscope_data_buffer_capacity,
+                                         Axis<int16_t>* a_p_accelerometer_data,
+                                         uint32_t a_accelerometer_data_buffer_capacity)
+{
+    assert((nullptr != a_p_gyroscope_data && a_gyroscope_data_buffer_capacity > 0) || nullptr == a_p_gyroscope_data);
+
+    assert((nullptr != a_p_accelerometer_data && a_accelerometer_data_buffer_capacity > 0) ||
+           nullptr == a_p_accelerometer_data);
+
+    bool ret  = true;
+    bool full = false;
+
+    while (true == ret && false == full)
+    {
+        ret = this->is_full(&full);
+    }
+
+    if (true == ret && true == full)
+    {
+        int16_t sample[3] = { 0, 0, 0 };
+
+        for (uint32_t i = 0; i < this->pattern_count && true == ret; i++)
+        {
+            uint32_t accelerometer_samples_count = 0;
+            uint32_t gyroscope_samples_count     = 0;
+
+            for (uint32_t j = 0; j < this->pattern.accelerometer + this->pattern.gyroscope; j++)
+            {
+                ret = this->p_owner->get_data(Registers::fifo_data_out_l, sample, sizeof(sample));
+
+                if (gyroscope_samples_count < this->pattern.gyroscope &&
+                    i + gyroscope_samples_count < a_gyroscope_data_buffer_capacity && true == ret)
+                {
+                    a_p_gyroscope_data[i + gyroscope_samples_count].x = sample[0];
+                    a_p_gyroscope_data[i + gyroscope_samples_count].y = sample[1];
+                    a_p_gyroscope_data[i + gyroscope_samples_count].z = sample[2];
+
+                    gyroscope_samples_count++;
+                    continue;
+                }
+
+                if (accelerometer_samples_count < this->pattern.accelerometer &&
+                    i + accelerometer_samples_count < a_accelerometer_data_buffer_capacity && true == ret)
+                {
+                    a_p_accelerometer_data[i + accelerometer_samples_count].x = sample[0];
+                    a_p_accelerometer_data[i + accelerometer_samples_count].y = sample[1];
+                    a_p_accelerometer_data[i + accelerometer_samples_count].z = sample[2];
+
+                    accelerometer_samples_count++;
+                    continue;
+                }
+            }
+        }
+
+        if (true == ret)
+        {
+            ret = this->p_owner->transmit(Registers::fifo_ctrl5, 0x0u);
 
             if (true == ret)
             {
-                fifo_ret = this->transmit.function(Registers::fifo_ctrl3,
-                                                   decimation_to_flag(acc_decimation) |
-                                                       (decimation_to_flag(gyr_decimation) << 3u),
-                                                   this->transmit.p_user_data);
+                ret =
+                    this->p_owner->transmit(Registers::fifo_ctrl5, static_cast<uint8_t>(this->output_data_rate) | 0x1u);
             }
-        }
-
-        if (true == a_acc_config.enabled)
-        {
-            acc_ret = this->transmit.function(Registers::ctrl1_xl,
-                                              static_cast<uint8_t>(a_acc_config.fullscale_range) |
-                                                  static_cast<uint8_t>(a_acc_config.output_data_rate) << 4u,
-                                              this->transmit.p_user_data);
-
-            if (true == acc_ret)
-            {
-                uint8_t v = 0;
-                acc_ret   = this->receive.function(Registers::ctrl6_c, &v, sizeof(v), this->receive.p_user_data);
-
-                if (true == acc_ret)
-                {
-                    (a_acc_config.output_data_rate == Accelerometer_config::Output_data_rate::_1_6_Hz ||
-                     a_acc_config.output_data_rate <= Accelerometer_config::Output_data_rate::_208_Hz) ?
-                        set_bit(&v, 4) :
-                        clear_flag(&v, 4);
-
-                    acc_ret = this->transmit.function(Registers::ctrl6_c, v, this->transmit.p_user_data);
-                }
-            }
-        }
-
-        if (true == a_gyr_config.enabled)
-        {
-            gyr_ret = this->transmit.function(Registers::ctrl2_g,
-                                              static_cast<uint8_t>(a_gyr_config.fullscale_range) |
-                                                  static_cast<uint8_t>(a_gyr_config.output_data_rate) << 4u,
-                                              this->transmit.p_user_data);
-
-            if (true == gyr_ret)
-            {
-                uint8_t v = 0;
-                gyr_ret   = this->receive.function(Registers::ctrl7_g, &v, sizeof(v), this->receive.p_user_data);
-
-                if (true == gyr_ret)
-                {
-                    a_gyr_config.output_data_rate <= Gyroscope_config::Output_data_rate::_208_Hz ? set_bit(&v, 7) :
-                                                                                                   clear_flag(&v, 7);
-                    gyr_ret = this->transmit.function(Registers::ctrl7_g, v, this->transmit.p_user_data);
-                }
-            }
-        }
-
-        if (true == fifo_ret)
-        {
-            fifo_ret = this->transmit.function(
-                Registers::fifo_ctrl5, 0x1u | (freq_to_odr(min_odr_Hz) << 3u), this->transmit.p_user_data);
-
-            if (true == fifo_ret)
-            {
-                this->fifo_config = a_fifo_config;
-
-                this->fifo_context.acc_samples_count = acc_samples_count;
-                this->fifo_context.gyr_samples_count = gyr_samples_count;
-                this->fifo_context.gyr_decimation    = gyr_decimation;
-                this->fifo_context.acc_decimation    = acc_decimation;
-                this->fifo_context.odr               = freq_to_odr(min_odr_Hz);
-            }
-        }
-
-        if (true == acc_ret)
-        {
-            this->accelerometer_config = a_acc_config;
-        }
-
-        if (true == gyr_ret)
-        {
-            this->gyroscope_config = a_gyr_config;
         }
     }
 
-    return true == ret ?
-               (true == a_acc_config.enabled ? acc_ret : true) && (true == a_gyr_config.enabled ? gyr_ret : true) &&
-                   (true == a_fifo_config.enabled ? fifo_ret : true) :
-               false;
+    return ret && full;
 }
-
-bool LSM6DSL::disable(bool a_accelerometer, bool a_groscope)
+bool LSM6DSL::Fifo::get_data_scaled_polling(Axis<float>* a_p_gyroscope_data,
+                                            uint32_t a_gyroscope_data_buffer_capacity,
+                                            Axis<float>* a_p_accelerometer_data,
+                                            uint32_t a_accelerometer_data_buffer_capacity)
 {
-    bool acc_ret  = false;
-    bool gyr_ret  = false;
-    bool fifo_ret = false;
+    assert((nullptr != a_p_gyroscope_data && a_gyroscope_data_buffer_capacity > 0) || nullptr == a_p_gyroscope_data);
 
-    if (true == a_accelerometer && true == this->accelerometer_config.enabled)
+    assert((nullptr != a_p_accelerometer_data && a_accelerometer_data_buffer_capacity > 0) ||
+           nullptr == a_p_accelerometer_data);
+
+    bool ret  = true;
+    bool full = false;
+
+    while (true == ret && false == full)
     {
-        acc_ret = this->transmit.function(Registers::ctrl1_xl, 0, this->transmit.p_user_data);
-
-        if (true == acc_ret && true == this->fifo_config.enabled)
-        {
-            if (true == this->gyroscope_config.enabled)
-            {
-                acc_ret = this->transmit.function(Registers::fifo_ctrl3, 0x8u, this->transmit.p_user_data);
-            }
-            else
-            {
-                acc_ret = this->transmit.function(Registers::fifo_ctrl3, 0x0u, this->transmit.p_user_data);
-            }
-        }
-
-        if (true == acc_ret)
-        {
-            this->accelerometer_config.enabled          = false;
-            this->accelerometer_config.fullscale_range  = Accelerometer_config::Fullscale_range::unknown;
-            this->accelerometer_config.output_data_rate = Accelerometer_config::Output_data_rate::unknown;
-        }
+        ret = this->is_full(&full);
     }
 
-    if (true == a_groscope && true == this->gyroscope_config.enabled)
+    if (true == ret && true == full)
     {
-        gyr_ret = this->transmit.function(Registers::ctrl2_g, 0x0u, this->transmit.p_user_data);
+        const float gs = Gyroscope::Fullscale_range::unknown != this->p_owner->p_gyroscope->get_fullscale_range() ?
+                             gsl[static_cast<uint32_t>(this->p_owner->p_gyroscope->get_fullscale_range()) >> 0x1u] :
+                             0.0f;
+        const float as =
+            Accelerometer::Fullscale_range::unknown != this->p_owner->p_accelerometer->get_fullscale_range() ?
+                asl[static_cast<uint32_t>(this->p_owner->p_accelerometer->get_fullscale_range()) >> 0x2u] :
+                0.0f;
 
-        if (true == gyr_ret && true == this->fifo_config.enabled)
+        int16_t sample[3] = { 0, 0, 0 };
+
+        for (uint32_t i = 0; i < this->pattern_count && true == ret; i++)
         {
-            if (true == this->accelerometer_config.enabled)
+            uint32_t accelerometer_samples_count = 0;
+            uint32_t gyroscope_samples_count     = 0;
+
+            for (uint32_t j = 0; j < this->pattern.accelerometer + this->pattern.gyroscope; j++)
             {
-                gyr_ret = this->transmit.function(Registers::fifo_ctrl3, 0x1u, this->transmit.p_user_data);
-            }
-            else
-            {
-                gyr_ret = this->transmit.function(Registers::fifo_ctrl3, 0x0u, this->transmit.p_user_data);
-            }
-        }
+                ret = this->p_owner->get_data(Registers::fifo_data_out_l, sample, sizeof(sample));
 
-        if (true == gyr_ret)
-        {
-            this->gyroscope_config.enabled          = false;
-            this->gyroscope_config.fullscale_range  = Gyroscope_config::Fullscale_range::unknown;
-            this->gyroscope_config.output_data_rate = Gyroscope_config::Output_data_rate::unknown;
-        }
-    }
-
-    if (false == this->accelerometer_config.enabled && false == this->gyroscope_config.enabled &&
-        true == this->fifo_config.enabled)
-    {
-        fifo_ret = this->transmit.function(Registers::fifo_ctrl5, 0x0u, this->transmit.p_user_data);
-
-        if (true == fifo_ret)
-        {
-            this->fifo_config.enabled                  = false;
-            this->fifo_config.pattern_repetition_count = 0;
-        }
-    }
-
-    return (true == a_accelerometer ? acc_ret : true) && (true == a_groscope ? gyr_ret : true) &&
-           (true == a_accelerometer && true == a_groscope ? fifo_ret : true);
-}
-
-bool LSM6DSL::get_axis_raw(Axis<int16_t>* a_p_gyr_data,
-                           uint32_t a_gyr_data_buffer_capacity,
-                           Axis<int16_t>* a_p_acc_data,
-                           uint32_t a_acc_data_buffer_capacity)
-{
-    bool acc = this->accelerometer_config.enabled && nullptr != a_p_acc_data && 0 != a_acc_data_buffer_capacity;
-    bool gyr = this->gyroscope_config.enabled && nullptr != a_p_gyr_data && 0 != a_gyr_data_buffer_capacity;
-
-    if (true == this->fifo_config.enabled)
-    {
-        bool fifo_full = false;
-        bool ret       = true;
-
-        while (true == ret && false == fifo_full)
-        {
-            ret = this->is_fifo_full(&fifo_full);
-        }
-
-        for (uint32_t i = 0; i < this->fifo_config.pattern_repetition_count; i++)
-        {
-            uint32_t acc_samples_count = 0;
-            uint32_t gyr_samples_count = 0;
-
-            for (uint32_t j = 0;
-                 j < (this->fifo_context.acc_samples_count + this->fifo_context.gyr_samples_count) && true == ret;
-                 j++)
-            {
-                if (gyr_samples_count < this->fifo_context.gyr_samples_count)
+                if (gyroscope_samples_count < this->pattern.gyroscope &&
+                    i + gyroscope_samples_count < a_gyroscope_data_buffer_capacity && true == ret)
                 {
-                    for (uint32_t si = 0; si < 3 && true == ret; si++)
-                    {
-                        int16_t sample = 0;
-                        ret            = this->receive.function(Registers::fifo_data_out_l,
-                                                     reinterpret_cast<uint8_t*>(&sample),
-                                                     sizeof(sample),
-                                                     this->receive.p_user_data);
+                    a_p_gyroscope_data[i + gyroscope_samples_count].x = gs * static_cast<float>(sample[0]);
+                    a_p_gyroscope_data[i + gyroscope_samples_count].y = gs * static_cast<float>(sample[1]);
+                    a_p_gyroscope_data[i + gyroscope_samples_count].z = gs * static_cast<float>(sample[2]);
 
-                        if (gyr_samples_count < a_gyr_data_buffer_capacity)
-                        {
-                            a_p_gyr_data[i + gyr_samples_count].linear[si] = sample;
-                        }
-                    }
-
-                    gyr_samples_count++;
+                    gyroscope_samples_count++;
+                    continue;
                 }
 
-                if (acc_samples_count < this->fifo_context.acc_samples_count)
+                if (accelerometer_samples_count < this->pattern.accelerometer &&
+                    i + accelerometer_samples_count < a_accelerometer_data_buffer_capacity && true == ret)
                 {
-                    for (uint32_t si = 0; si < 3 && true == ret; si++)
-                    {
-                        int16_t sample = 0;
-                        ret            = this->receive.function(Registers::fifo_data_out_l,
-                                                     reinterpret_cast<uint8_t*>(&(sample)),
-                                                     sizeof(sample),
-                                                     this->receive.p_user_data);
+                    a_p_accelerometer_data[i + accelerometer_samples_count].x = as * static_cast<float>(sample[0]);
+                    a_p_accelerometer_data[i + accelerometer_samples_count].y = as * static_cast<float>(sample[1]);
+                    a_p_accelerometer_data[i + accelerometer_samples_count].z = as * static_cast<float>(sample[2]);
 
-                        if (acc_samples_count < a_acc_data_buffer_capacity)
-                        {
-                            a_p_acc_data[i + acc_samples_count].linear[si] = sample;
-                        }
-                    }
-
-                    acc_samples_count++;
+                    accelerometer_samples_count++;
+                    continue;
                 }
             }
         }
 
         if (true == ret)
         {
-            ret = this->set_fifo_context(this->fifo_context);
-        }
+            ret = this->p_owner->transmit(Registers::fifo_ctrl5, 0x0u);
 
-        return ret;
-    }
-    else
-    {
-        bool ret = true;
-
-        if (true == gyr)
-        {
-            for (uint32_t i = 0; i < a_gyr_data_buffer_capacity && true == ret; i++)
+            if (true == ret)
             {
-                bool data_avaliable = false;
-                while (true == ret && false == data_avaliable)
-                {
-                    ret = this->is_gyroscope_data_avaliable(&data_avaliable);
-                }
-
-                ret = true == ret &&
-                      this->get_axis(
-                          Registers::outx_l_g, &(a_p_gyr_data[i].x), &(a_p_gyr_data[i].y), &(a_p_gyr_data[i].z));
+                ret =
+                    this->p_owner->transmit(Registers::fifo_ctrl5, static_cast<uint8_t>(this->output_data_rate) | 0x1u);
             }
         }
-
-        if (true == acc)
-        {
-            for (uint32_t i = 0; i < a_acc_data_buffer_capacity && true == ret; i++)
-            {
-                bool data_avaliable = false;
-                while (true == ret && false == data_avaliable)
-                {
-                    ret = this->is_accelerometer_data_avaliable(&data_avaliable);
-                }
-
-                ret = true == ret &&
-                      this->get_axis(
-                          Registers::outx_l_xl, &(a_p_acc_data[i].x), &(a_p_acc_data[i].y), &(a_p_acc_data[i].z));
-            }
-        }
-
-        return ret;
     }
 
-    return false;
+    return ret && full;
 }
 
-bool LSM6DSL::get_axis_scaled(Axis<float>* a_p_gyr_data,
-                              uint32_t a_gyr_data_buffer_capacity,
-                              Axis<float>* a_p_acc_data,
-                              uint32_t a_acc_data_buffer_capacity)
+bool LSM6DSL::Fifo::get_data_raw_polling(Axis<int16_t>* a_p_gyroscope_data,
+                                         uint32_t a_gyroscope_data_buffer_capacity,
+                                         Axis<int16_t>* a_p_accelerometer_data,
+                                         uint32_t a_accelerometer_data_buffer_capacity,
+                                         time::tick a_timeout)
 {
-    bool ret = false;
-    bool acc = this->accelerometer_config.enabled && nullptr != a_p_acc_data && 0 != a_acc_data_buffer_capacity;
-    bool gyr = this->gyroscope_config.enabled && nullptr != a_p_gyr_data && 0 != a_gyr_data_buffer_capacity;
+    assert((nullptr != a_p_gyroscope_data && a_gyroscope_data_buffer_capacity > 0) || nullptr == a_p_gyroscope_data);
 
-    if (true == this->fifo_config.enabled)
+    assert((nullptr != a_p_accelerometer_data && a_accelerometer_data_buffer_capacity > 0) ||
+           nullptr == a_p_accelerometer_data);
+
+    time::tick start = counter::get();
+
+    bool ret  = true;
+    bool full = false;
+
+    while (true == ret && false == full)
     {
-        bool fifo_full = false;
+        ret = this->is_full(&full) && a_timeout >= time::diff(counter::get(), start);
+    }
 
-        do
+    if (true == ret && true == full)
+    {
+        int16_t sample[3] = { 0, 0, 0 };
+
+        for (uint32_t i = 0; i < this->pattern_count && true == ret; i++)
         {
-            ret = this->is_fifo_full(&fifo_full);
-        } while (true == ret && false == fifo_full);
+            uint32_t accelerometer_samples_count = 0;
+            uint32_t gyroscope_samples_count     = 0;
 
-        float gyr_sensitivity =
-            gyroscope_sensitivity_lut[static_cast<uint8_t>(this->gyroscope_config.fullscale_range) >> 1u];
-
-        float acc_sensitivity =
-            accelerometer_sensitivity_lut[static_cast<uint8_t>(this->accelerometer_config.fullscale_range) >> 2u];
-
-        for (uint32_t i = 0; i < this->fifo_config.pattern_repetition_count; i++)
-        {
-            uint32_t acc_samples_count = 0;
-            uint32_t gyr_samples_count = 0;
-
-            for (uint32_t j = 0;
-                 j < (this->fifo_context.acc_samples_count + this->fifo_context.gyr_samples_count) && true == ret;
-                 j++)
+            for (uint32_t j = 0; j < this->pattern.accelerometer + this->pattern.gyroscope; j++)
             {
-                if (gyr_samples_count < this->fifo_context.gyr_samples_count)
+                ret = this->p_owner->get_data(Registers::fifo_data_out_l, sample, sizeof(sample));
+
+                if (gyroscope_samples_count < this->pattern.gyroscope &&
+                    i + gyroscope_samples_count < a_gyroscope_data_buffer_capacity && true == ret)
                 {
-                    for (uint32_t si = 0; si < 3 && true == ret; si++)
-                    {
-                        int16_t sample = 0;
-                        ret            = this->receive.function(Registers::fifo_data_out_l,
-                                                     reinterpret_cast<uint8_t*>(&sample),
-                                                     sizeof(sample),
-                                                     this->receive.p_user_data);
+                    a_p_gyroscope_data[i + gyroscope_samples_count].x = sample[0];
+                    a_p_gyroscope_data[i + gyroscope_samples_count].y = sample[1];
+                    a_p_gyroscope_data[i + gyroscope_samples_count].z = sample[2];
 
-                        if (gyr_samples_count < a_gyr_data_buffer_capacity)
-                        {
-                            a_p_gyr_data[i + gyr_samples_count].linear[si] =
-                                static_cast<float>(sample) * gyr_sensitivity;
-                        }
-                    }
-
-                    gyr_samples_count++;
+                    gyroscope_samples_count++;
+                    continue;
                 }
 
-                if (acc_samples_count < this->fifo_context.acc_samples_count)
+                if (accelerometer_samples_count < this->pattern.accelerometer &&
+                    i + accelerometer_samples_count < a_accelerometer_data_buffer_capacity && true == ret)
                 {
-                    for (uint32_t si = 0; si < 3 && true == ret; si++)
-                    {
-                        int16_t sample = 0;
-                        ret            = this->receive.function(Registers::fifo_data_out_l,
-                                                     reinterpret_cast<uint8_t*>(&(sample)),
-                                                     sizeof(sample),
-                                                     this->receive.p_user_data);
+                    a_p_accelerometer_data[i + accelerometer_samples_count].x = sample[0];
+                    a_p_accelerometer_data[i + accelerometer_samples_count].y = sample[1];
+                    a_p_accelerometer_data[i + accelerometer_samples_count].z = sample[2];
 
-                        if (acc_samples_count < a_acc_data_buffer_capacity)
-                        {
-                            a_p_acc_data[i + acc_samples_count].linear[si] =
-                                static_cast<float>(sample) * acc_sensitivity;
-                        }
-                    }
-
-                    acc_samples_count++;
+                    accelerometer_samples_count++;
+                    continue;
                 }
             }
         }
 
         if (true == ret)
         {
-            ret = this->set_fifo_context(this->fifo_context);
-        }
-    }
-    else
-    {
-        if (true == gyr)
-        {
-            int16_t sample[3] = { 0 };
-            float sensitivity =
-                gyroscope_sensitivity_lut[static_cast<uint8_t>(this->gyroscope_config.fullscale_range) >> 1u];
+            ret = this->p_owner->transmit(Registers::fifo_ctrl5, 0x0u);
 
-            for (uint32_t i = 0; i < a_gyr_data_buffer_capacity; i++)
+            if (true == ret)
             {
-                bool data_avaliable = false;
-
-                do
-                {
-                    ret = this->is_gyroscope_data_avaliable(&data_avaliable);
-                } while (true == ret && false == data_avaliable);
-
-                if (true == ret)
-                {
-                    ret = this->get_axis(Registers::outx_l_g, &(sample[0]), &(sample[1]), &(sample[2]));
-
-                    if (true == ret)
-                    {
-                        a_p_gyr_data[i].x = static_cast<float>(sample[0]) * sensitivity;
-                        a_p_gyr_data[i].y = static_cast<float>(sample[1]) * sensitivity;
-                        a_p_gyr_data[i].z = static_cast<float>(sample[2]) * sensitivity;
-                    }
-                }
-            }
-        }
-
-        if (true == acc)
-        {
-            int16_t sample[3] = { 0 };
-            float sensitivity =
-                accelerometer_sensitivity_lut[static_cast<uint8_t>(this->accelerometer_config.fullscale_range) >> 2u];
-
-            for (uint32_t i = 0; i < a_acc_data_buffer_capacity; i++)
-            {
-                bool data_avaliable = false;
-
-                do
-                {
-                    ret = this->is_accelerometer_data_avaliable(&data_avaliable);
-                } while (true == ret && false == data_avaliable);
-
-                if (true == ret)
-                {
-                    ret = this->get_axis(Registers::outx_l_xl, &(sample[0]), &(sample[1]), &(sample[2]));
-
-                    if (true == ret)
-                    {
-                        a_p_acc_data[i].x = static_cast<float>(sample[0]) * sensitivity;
-                        a_p_acc_data[i].y = static_cast<float>(sample[1]) * sensitivity;
-                        a_p_acc_data[i].z = static_cast<float>(sample[2]) * sensitivity;
-                    }
-                }
+                ret =
+                    this->p_owner->transmit(Registers::fifo_ctrl5, static_cast<uint8_t>(this->output_data_rate) | 0x1u);
             }
         }
     }
 
-    return ret;
+    return ret && full;
 }
 
-bool LSM6DSL::set_fifo_context(const Fifo_context& a_context)
+bool LSM6DSL::Fifo::get_data_scaled_polling(Axis<float>* a_p_gyroscope_data,
+                                            uint32_t a_gyroscope_data_buffer_capacity,
+                                            Axis<float>* a_p_accelerometer_data,
+                                            uint32_t a_accelerometer_data_buffer_capacity,
+                                            time::tick a_timeout)
 {
-    bool ret = this->transmit.function(Registers::fifo_ctrl5, 0, this->transmit.p_user_data);
+    assert((nullptr != a_p_gyroscope_data && a_gyroscope_data_buffer_capacity > 0) || nullptr == a_p_gyroscope_data);
 
-    if (true == ret)
+    assert((nullptr != a_p_accelerometer_data && a_accelerometer_data_buffer_capacity > 0) ||
+           nullptr == a_p_accelerometer_data);
+
+    time::tick start = counter::get();
+
+    bool ret  = true;
+    bool full = false;
+
+    while (true == ret && false == full)
     {
-        ret = this->transmit.function(Registers::fifo_ctrl5, 0x1u | a_context.odr << 3u, this->transmit.p_user_data);
+        ret = this->is_full(&full) && a_timeout >= time::diff(counter::get(), start);
+    }
+
+    if (true == ret && true == full)
+    {
+        const float gs = Gyroscope::Fullscale_range::unknown != this->p_owner->p_gyroscope->get_fullscale_range() ?
+                             gsl[static_cast<uint32_t>(this->p_owner->p_gyroscope->get_fullscale_range()) >> 0x1u] :
+                             0.0f;
+        const float as =
+            Accelerometer::Fullscale_range::unknown != this->p_owner->p_accelerometer->get_fullscale_range() ?
+                asl[static_cast<uint32_t>(this->p_owner->p_accelerometer->get_fullscale_range()) >> 0x2u] :
+                0.0f;
+
+        int16_t sample[3] = { 0, 0, 0 };
+
+        for (uint32_t i = 0; i < this->pattern_count && true == ret; i++)
+        {
+            uint32_t accelerometer_samples_count = 0;
+            uint32_t gyroscope_samples_count     = 0;
+
+            for (uint32_t j = 0; j < this->pattern.accelerometer + this->pattern.gyroscope; j++)
+            {
+                ret = this->p_owner->get_data(Registers::fifo_data_out_l, sample, sizeof(sample));
+
+                if (gyroscope_samples_count < this->pattern.gyroscope &&
+                    i + gyroscope_samples_count < a_gyroscope_data_buffer_capacity && true == ret)
+                {
+                    a_p_gyroscope_data[i + gyroscope_samples_count].x = gs * static_cast<float>(sample[0]);
+                    a_p_gyroscope_data[i + gyroscope_samples_count].y = gs * static_cast<float>(sample[1]);
+                    a_p_gyroscope_data[i + gyroscope_samples_count].z = gs * static_cast<float>(sample[2]);
+
+                    gyroscope_samples_count++;
+                    continue;
+                }
+
+                if (accelerometer_samples_count < this->pattern.accelerometer &&
+                    i + accelerometer_samples_count < a_accelerometer_data_buffer_capacity && true == ret)
+                {
+                    a_p_accelerometer_data[i + accelerometer_samples_count].x = as * static_cast<float>(sample[0]);
+                    a_p_accelerometer_data[i + accelerometer_samples_count].y = as * static_cast<float>(sample[1]);
+                    a_p_accelerometer_data[i + accelerometer_samples_count].z = as * static_cast<float>(sample[2]);
+
+                    accelerometer_samples_count++;
+                    continue;
+                }
+            }
+        }
 
         if (true == ret)
         {
-            ret = this->transmit.function(Registers::fifo_ctrl3,
-                                          decimation_to_flag(a_context.acc_decimation) |
-                                              (decimation_to_flag(a_context.gyr_decimation) << 3u),
-                                          this->transmit.p_user_data);
+            ret = this->p_owner->transmit(Registers::fifo_ctrl5, 0x0u);
+
+            if (true == ret)
+            {
+                ret =
+                    this->p_owner->transmit(Registers::fifo_ctrl5, static_cast<uint8_t>(this->output_data_rate) | 0x1u);
+            }
+        }
+    }
+
+    return ret && full;
+}
+
+bool LSM6DSL::Fifo::is_enabled(bool* a_p_flag) const
+{
+    uint8_t v = 0;
+    bool ret =
+        this->p_owner->receive.function(Registers::fifo_ctrl5, &v, sizeof(v), this->p_owner->receive.p_user_data);
+
+    if (true == ret)
+    {
+        uint8_t mode = get_flag(v, 0x7u);
+        uint8_t odr  = get_flag(v, 0x78u);
+
+        (*a_p_flag) = 0x1u == mode && 0x0u != odr;
+    }
+
+    return ret;
+}
+
+bool LSM6DSL::Fifo::is_full(bool* a_p_flag) const
+{
+    assert(nullptr != a_p_flag);
+
+    uint8_t v = 0;
+    bool ret  = this->p_owner->receive(Registers::fifo_status2, &v, sizeof(v));
+
+    if (true == ret)
+    {
+        (*a_p_flag) = is_bit_on(v, 7);
+    }
+
+    return ret;
+}
+
+uint32_t LSM6DSL::Fifo::output_data_rate_to_Hz(Accelerometer::Output_data_rate a_output_data_rate) const
+{
+    return output_data_rate_to_Hz_lut[static_cast<uint8_t>(a_output_data_rate) >> 4u];
+}
+
+uint32_t LSM6DSL::Fifo::output_data_rate_to_Hz(Gyroscope::Output_data_rate a_output_data_rate) const
+{
+    return output_data_rate_to_Hz_lut[static_cast<uint8_t>(a_output_data_rate) >> 4u];
+}
+
+uint8_t LSM6DSL::Fifo::decimation_to_ctrl3_register(uint32_t a_accelerometer_decimation,
+                                                    uint32_t a_gyroscope_decimation) const
+{
+    uint8_t ret = 0;
+
+    if (a_accelerometer_decimation > 0)
+    {
+        if (a_accelerometer_decimation <= 4)
+        {
+            ret |= (a_accelerometer_decimation & 0x7u);
+        }
+        else
+        {
+            switch (a_accelerometer_decimation)
+            {
+                case 8: {
+                    ret |= 0x5u;
+                }
+                break;
+
+                case 16: {
+                    ret |= 0x6u;
+                }
+                break;
+
+                case 32: {
+                    ret |= 0x7u;
+                }
+                break;
+            }
+        }
+    }
+
+    if (a_gyroscope_decimation > 0)
+    {
+        if (a_accelerometer_decimation <= 4)
+        {
+            ret |= ((a_accelerometer_decimation << 0x3u) & 0x38u);
+        }
+        else
+        {
+            switch (a_accelerometer_decimation)
+            {
+                case 8: {
+                    ret |= 0x28u;
+                }
+                break;
+
+                case 16: {
+                    ret |= 0x30u;
+                }
+                break;
+
+                case 32: {
+                    ret |= 0x38u;
+                }
+                break;
+            }
         }
     }
 
     return ret;
-}
-
-bool LSM6DSL::get_axis(uint8_t a_outx_register, int16_t* a_p_outx, int16_t* a_p_outy, int16_t* a_p_outz)
-{
-    return this->receive.function(a_outx_register + 0,
-                                  reinterpret_cast<uint8_t*>(a_p_outx),
-                                  sizeof(*a_p_outx),
-                                  this->receive.p_user_data) &&
-           this->receive.function(a_outx_register + 2,
-                                  reinterpret_cast<uint8_t*>(a_p_outy),
-                                  sizeof(*a_p_outy),
-                                  this->receive.p_user_data) &&
-           this->receive.function(
-               a_outx_register + 4, reinterpret_cast<uint8_t*>(a_p_outz), sizeof(*a_p_outz), this->receive.p_user_data);
-}
-
-bool LSM6DSL::is_fifo_full(bool* a_p_status) const
-{
-    assert(nullptr != a_p_status);
-
-    uint8_t v = 0;
-    bool ret  = this->receive.function(Registers::fifo_status2, &v, sizeof(v), this->receive.p_user_data);
-
-    if (true == ret)
-    {
-        (*a_p_status) = is_bit_on(v, 7);
-    }
-
-    return ret;
-}
-
-bool LSM6DSL::is_accelerometer_data_avaliable(bool* a_p_status) const
-{
-    assert(nullptr != a_p_status);
-
-    uint8_t v = 0;
-    bool ret  = this->receive.function(Registers::status_reg, &v, sizeof(v), this->transmit.p_user_data);
-
-    if (true == ret)
-    {
-        *(a_p_status) = is_bit_on(v, 0);
-    }
-
-    return ret;
-}
-
-bool LSM6DSL::is_gyroscope_data_avaliable(bool* a_p_status) const
-{
-    assert(nullptr != a_p_status);
-
-    uint8_t v = 0;
-    bool ret  = this->receive.function(Registers::status_reg, &v, sizeof(v), this->transmit.p_user_data);
-
-    if (true == ret)
-    {
-        *(a_p_status) = is_bit_on(v, 1);
-    }
-
-    return ret;
-}
-
-bool LSM6DSL::reset()
-{
-    uint8_t v = 0;
-    bool ret  = this->receive.function(Registers::ctrl3_c, &v, sizeof(v), this->receive.p_user_data);
-
-    if (true == ret)
-    {
-        set_bit(&v, 0);
-        ret = this->transmit.function(Registers::ctrl3_c, v, this->transmit.p_user_data);
-    }
-
-    return ret;
-}
-
-bool LSM6DSL::is_alive() const
-{
-    uint8_t v = 0;
-    if (true == this->receive.function(0xFu, &v, sizeof(v), this->receive.p_user_data))
-    {
-        return 0x6Au == v;
-    }
-
-    return false;
 }
 
 } // namespace devices
