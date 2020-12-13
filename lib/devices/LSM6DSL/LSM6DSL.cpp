@@ -11,7 +11,7 @@
 // std
 #include <algorithm>
 
-//soc
+// soc
 #include <soc/counter.hpp>
 
 // cml
@@ -86,14 +86,14 @@ bool LSM6DSL::disable()
 bool LSM6DSL::reboot(bool* a_p_flag)
 {
     *a_p_flag = false;
-    bool ret = this->transmit(Registers::ctrl3_c, 0x80u);
+    bool ret  = this->transmit(Registers::ctrl3_c, 0x80u);
 
     if (true == ret)
     {
         uint8_t v = 0;
         while (true == ret && false == *a_p_flag)
         {
-            ret  = this->receive(Registers::ctrl3_c, &v, sizeof(v));
+            ret         = this->receive(Registers::ctrl3_c, &v, sizeof(v));
             (*a_p_flag) = false == is_bit_on(v, 7);
         };
     }
@@ -146,7 +146,7 @@ bool LSM6DSL::Accelerometer::enable(Fullscale_range a_fullscale_range,
     assert(Output_data_rate::unknown != a_output_data_rate);
 
     bool ret = false;
-    
+
     switch (a_power_mode)
     {
         case Power_mode::high_performance: {
@@ -202,9 +202,8 @@ bool LSM6DSL::Accelerometer::set_fullscale_range(Fullscale_range a_fullscale_ran
 {
     assert(Fullscale_range::unknown != a_fullscale_range);
 
-    bool ret = this->p_owner->transmit(Registers::ctrl1_xl,
-                                       static_cast<uint8_t>(a_fullscale_range) |
-                                           static_cast<uint8_t>(this->output_data_rate));
+    bool ret = this->p_owner->transmit(
+        Registers::ctrl1_xl, static_cast<uint8_t>(a_fullscale_range) | static_cast<uint8_t>(this->output_data_rate));
 
     if (true == ret)
     {
@@ -381,7 +380,7 @@ bool LSM6DSL::Accelerometer::is_enabled(bool* a_p_flag) const
     assert(nullptr != a_p_flag);
 
     uint8_t v = 0;
-    bool ret = this->p_owner->receive(Registers::ctrl1_xl, &v, sizeof(v));
+    bool ret  = this->p_owner->receive(Registers::ctrl1_xl, &v, sizeof(v));
 
     if (true == ret)
     {
@@ -434,7 +433,6 @@ bool LSM6DSL::Gyroscope::enable(Fullscale_range a_fullscale_range,
 
     return ret;
 }
-
 
 bool LSM6DSL::Gyroscope::disable()
 {
@@ -578,7 +576,6 @@ bool LSM6DSL::Gyroscope::get_axis_scaled_polling(Axis<float>* a_p_axis)
             a_p_axis->y = sensitivity * static_cast<float>(axis[1]);
             a_p_axis->z = sensitivity * static_cast<float>(axis[2]);
         }
-
     }
 
     return ret && data_ready;
@@ -665,7 +662,7 @@ bool LSM6DSL::Temperature::get_data_raw_polling(int16_t* a_p_temperature) const
     {
         ret = this->p_owner->is_data_avaliable(Sensor::temperature, &data_ready);
     }
-    
+
     if (true == ret && true == data_ready)
     {
         ret = this->p_owner->get_data(Registers::out_temp_l, a_p_temperature, sizeof(*a_p_temperature));

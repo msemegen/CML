@@ -12,11 +12,8 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/time.hpp>
 #include <cml/debug/assert.hpp>
-
-//std
-#include <algorithm>
+#include <cml/time.hpp>
 
 namespace cml {
 namespace devices {
@@ -101,7 +98,7 @@ public:
             unknown  = 0xFFu
         };
 
-        enum class Power_mode
+        enum class Power_mode : uint8_t
         {
             normal,
             high_performance,
@@ -279,7 +276,7 @@ public:
     class Fifo : private Non_copyable
     {
     public:
-        enum class Output_data_rate
+        enum class Output_data_rate : uint8_t
         {
             _12_5_Hz = 0x8u,
             _26_Hz   = 0x10u,
@@ -343,7 +340,6 @@ public:
         }
 
     private:
-
         struct Pattern
         {
             uint32_t gyroscope     = 0;
@@ -398,7 +394,6 @@ public:
     Fifo* const p_fifo                   = &(this->fifo);
 
 private:
-
     enum class Sensor
     {
         accelerometer = 0,
