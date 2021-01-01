@@ -14,7 +14,7 @@
 #include <stm32l452xx.h>
 
 // cml
-#include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -62,7 +62,7 @@ public:
 
     static void reset()
     {
-        cml::set_flag(&(CRC->CR), CRC_CR_RESET);
+        cml::bit_flag::set(&(CRC->CR), CRC_CR_RESET);
     }
 
 private:

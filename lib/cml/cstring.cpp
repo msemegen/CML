@@ -94,7 +94,7 @@ uint32_t cstring::from_float(float a_value, char* a_p_buffer, uint32_t a_buffer_
 
         while (y > 0)
         {
-            if (true == is_bit_on(y, 0))
+            if (true == bit::is(y, 0))
             {
                 ret = ret * x;
             }

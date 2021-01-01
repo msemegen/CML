@@ -1,10 +1,10 @@
 // cml
 #include <cml/debug/assert.hpp>
 #include <cml/frequency.hpp>
-#include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
+#include <cml/hal/system_timer.hpp>
 #include <cml/hal/systick.hpp>
 #include <cml/utils/Command_line.hpp>
 #include <cml/utils/Logger.hpp>
@@ -50,6 +50,9 @@ uint32_t write_string(const char* a_p_string, uint32_t a_length, void* a_p_user_
 
 uint32_t write_character(char a_character, void* a_p_user_data)
 {
+    assert(nullptr != a_p_user_data);
+    assert(0 != a_character);
+
     USART* p_console_usart = reinterpret_cast<USART*>(a_p_user_data);
     return p_console_usart->transmit_bytes_polling(&a_character, 1).data_length_in_words;
 }
@@ -62,7 +65,7 @@ uint32_t read_key(char* a_p_out, uint32_t a_length, void* a_p_user_data)
 
 void led_cli_callback(const Command_line::Callback::Parameter* a_p_params, uint32_t a_count, void* a_p_user_data)
 {
-    pin::Out* p_led_pin = reinterpret_cast<pin::Out*>(a_p_user_data);
+    GPIO::Out::Pin* p_led_pin = reinterpret_cast<GPIO::Out::Pin*>(a_p_user_data);
 
     if (2 == a_count)
     {
@@ -70,7 +73,7 @@ void led_cli_callback(const Command_line::Callback::Parameter* a_p_params, uint3
 
         if (true == is_on)
         {
-            p_led_pin->set_level(pin::Level::high);
+            p_led_pin->set_level(GPIO::Level::high);
         }
         else
         {
@@ -78,7 +81,7 @@ void led_cli_callback(const Command_line::Callback::Parameter* a_p_params, uint3
 
             if (true == is_off)
             {
-                p_led_pin->set_level(pin::Level::low);
+                p_led_pin->set_level(GPIO::Level::low);
             }
         }
     }
@@ -112,6 +115,11 @@ const char* sysclk_source_to_cstring(mcu::Sysclk_source a_source)
     return "";
 }
 
+void system_timer_update(void*)
+{
+    system_timer::update();
+}
+
 } // namespace
 
 int main()
@@ -135,14 +143,17 @@ int main()
         assert::register_halt({ assert_mcu_halt, nullptr });
 
         systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, systick::Prescaler::_1, 0x9u);
-        systick::register_tick_callback({ counter::update, nullptr });
+        systick::register_tick_callback({ system_timer_update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::high, 0x4u };
-        pin::af::enable(&gpio_port_a, 2u, usart_pin_config);
-        pin::af::enable(&gpio_port_a, 15u, usart_pin_config);
+        GPIO::Alternate_function::Config usart_pin_config = {
+            GPIO::Mode::push_pull, GPIO::Pull::up, GPIO::Speed::high, 0x4u
+        };
+
+        gpio_port_a.p_alternate_function->enable(2u, usart_pin_config);
+        gpio_port_a.p_alternate_function->enable(15u, usart_pin_config);
 
         USART iostream(USART::Id::_2);
         bool iostream_ready = iostream.enable({ 115200,
@@ -169,8 +180,8 @@ int main()
             GPIO gpio_port_b(GPIO::Id::b);
             gpio_port_b.enable();
 
-            pin::Out led_pin;
-            pin::out::enable(&gpio_port_b, 3u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
+            GPIO::Out::Pin led_pin;
+            gpio_port_b.p_out->enable(3u, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
 
             Command_line command_line({ write_character, &iostream },
                                       { write_string, &iostream },

@@ -9,7 +9,7 @@
 #include <soc/stm32l452xx/system/wwdg.hpp>
 
 // cml
-#include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 
 namespace {
 
@@ -38,6 +38,8 @@ namespace soc {
 namespace stm32l452xx {
 namespace system {
 
+using namespace cml;
+
 void wwdg::enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window, uint16_t a_irq_priority)
 {
     WWDG->CR  = (WWDG_CR_WDGA | a_reload);
@@ -50,12 +52,12 @@ void wwdg::enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window, u
 void wwdg::register_early_wakeup_callback(const Early_wakeup_callback& a_callback)
 {
     callback = a_callback;
-    set_flag(&(WWDG->CFR), WWDG_CFR_EWI);
+    bit_flag::set(&(WWDG->CFR), WWDG_CFR_EWI);
 }
 
 void wwdg::unregister_early_wakeup_callback()
 {
-    clear_flag(&(WWDG->CFR), WWDG_CFR_EWI);
+    bit_flag::clear(&(WWDG->CFR), WWDG_CFR_EWI);
     callback = { nullptr, nullptr };
 }
 

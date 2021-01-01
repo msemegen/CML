@@ -11,8 +11,8 @@
 #include <cstdint>
 
 // cml
-#include <cml/bit.hpp>
-#include <cml/hal/counter.hpp>
+#include <cml/bit_flag.hpp>
+#include <cml/hal/system_timer.hpp>
 #include <cml/time.hpp>
 
 namespace cml {
@@ -31,7 +31,7 @@ public:
 
     template<typename Register_t> static void until(const Register_t* a_p_register, uint32_t a_flag, bool a_status)
     {
-        while (a_status == is_flag(*a_p_register, a_flag))
+        while (a_status == cml::bit_flag::is(*a_p_register, a_flag))
             ;
     }
 
@@ -43,8 +43,8 @@ public:
 
         while (true == status && false == timeout)
         {
-            timeout = a_timeout <= time::diff(hal::counter::get(), a_start);
-            status  = is_flag(*a_p_register, a_flag) == a_status;
+            timeout = a_timeout <= time::diff(hal::system_timer::get(), a_start);
+            status  = cml::bit_flag::is(*a_p_register, a_flag) == a_status;
         }
 
         return ((false == status) && (false == timeout));

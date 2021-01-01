@@ -10,9 +10,11 @@
 // std
 #include <cstdint>
 
+#define unused(x) ((void)(x))
+
 namespace cml {
 
-template<class Type, uint32_t n> uint32_t get_array_length(Type (&)[n])
+template<class Type, uint32_t n> constexpr uint32_t get_array_length(Type (&)[n])
 {
     return n;
 }

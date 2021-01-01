@@ -13,6 +13,8 @@
 // soc
 #include <soc/Interrupt_guard.hpp>
 
+// cml
+#include <cml/bit.hpp>
 #ifdef CML_ASSERT
 #include <cml/debug/assert.hpp>
 #include <soc/stm32l452xx/mcu.hpp>
@@ -25,62 +27,62 @@ using namespace soc::stm32l452xx::peripherals;
 
 void gpio_a_enable()
 {
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
 }
 
 void gpio_a_disable()
 {
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
 }
 
 void gpio_b_enable()
 {
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
 }
 
 void gpio_b_disable()
 {
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
 }
 
 void gpio_c_enable()
 {
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
 }
 
 void gpio_c_disable()
 {
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
 }
 
 void gpio_d_enable()
 {
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
 }
 
 void gpio_d_disable()
 {
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
 }
 
 void gpio_e_enable()
 {
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
 }
 
 void gpio_e_disable()
 {
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
 }
 
 void gpio_h_enable()
 {
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
 }
 
 void gpio_h_disable()
 {
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
 }
 
 uint32_t get_index_from_Id(GPIO::Id a_id)
@@ -92,8 +94,8 @@ struct Controller
 {
     GPIO_TypeDef* p_registers = nullptr;
 
-    void (*p_enable)()  = nullptr;
-    void (*p_disable)() = nullptr;
+    void (*enable)()  = nullptr;
+    void (*disable)() = nullptr;
 };
 
 Controller controllers[] = {
@@ -109,8 +111,8 @@ Controller controllers[] = {
 
 struct Interrupt_handler
 {
-    pin::in::Interrupt_callback callback;
-    pin::In in_pin;
+    GPIO::In::Pin::Interrupt_callback callback;
+    GPIO::In::Pin pin;
 };
 
 Interrupt_handler interrupt_handlers[16];
@@ -124,10 +126,9 @@ using namespace soc;
 
 static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
 {
-    if (true == is_bit_on(a_pr1, a_index))
+    if (true == bit::is(a_pr1, a_index))
     {
-        interrupt_handlers[a_index].callback.function(interrupt_handlers[a_index].in_pin.get_level(),
-                                                      interrupt_handlers[a_index].callback.p_user_data);
+        interrupt_handlers[a_index].callback(interrupt_handlers[a_index].pin.get_level());
 
         return true;
     }
@@ -139,7 +140,7 @@ void EXTI0_IRQHandler()
 {
     if (true == interrupt_handler(EXTI->PR1, 0))
     {
-        set_bit(&(EXTI->PR1), 0);
+        bit::set(&(EXTI->PR1), 0);
     }
 }
 
@@ -147,7 +148,7 @@ void EXTI1_IRQHandler()
 {
     if (true == interrupt_handler(EXTI->PR1, 1))
     {
-        set_bit(&(EXTI->PR1), 1);
+        bit::set(&(EXTI->PR1), 1);
     }
 }
 
@@ -155,7 +156,7 @@ void EXTI2_IRQHandler()
 {
     if (true == interrupt_handler(EXTI->PR1, 2))
     {
-        set_bit(&(EXTI->PR1), 2);
+        bit::set(&(EXTI->PR1), 2);
     }
 }
 
@@ -163,7 +164,7 @@ void EXTI3_IRQHandler()
 {
     if (true == interrupt_handler(EXTI->PR1, 3))
     {
-        set_bit(&(EXTI->PR1), 3);
+        bit::set(&(EXTI->PR1), 3);
     }
 }
 
@@ -171,7 +172,7 @@ void EXTI4_IRQHandler()
 {
     if (true == interrupt_handler(EXTI->PR1, 4))
     {
-        set_bit(&(EXTI->PR1), 4);
+        bit::set(&(EXTI->PR1), 4);
     }
 }
 
@@ -181,7 +182,7 @@ void EXTI9_5_IRQHandler()
     {
         if (true == interrupt_handler(EXTI->PR1, i))
         {
-            set_bit(&(EXTI->PR1), i);
+            bit::set(&(EXTI->PR1), i);
         }
     }
 }
@@ -192,7 +193,7 @@ void EXTI15_10_IRQHandler()
     {
         if (true == interrupt_handler(EXTI->PR1, i))
         {
-            set_bit(&(EXTI->PR1), i);
+            bit::set(&(EXTI->PR1), i);
         }
     }
 }
@@ -208,45 +209,107 @@ using namespace cml;
 void GPIO::enable()
 {
     this->p_gpio = controllers[get_index_from_Id(this->id)].p_registers;
-    controllers[get_index_from_Id(this->id)].p_enable();
+    controllers[get_index_from_Id(this->id)].enable();
 
-    set_bit(&(this->flags), 31u);
+    bit::set(&(this->flags), 31u);
 }
 
 void GPIO::disable()
 {
-    controllers[get_index_from_Id(this->id)].p_disable();
+    controllers[get_index_from_Id(this->id)].disable();
 
-    clear_bit(&(this->flags), 31);
+    bit::clear(&(this->flags), 31);
 }
 
-void pin::In::set_pull(Pull a_pull)
+void GPIO::In::Pin::set_pull(Pull a_pull)
 {
     assert(Pull::unknown != a_pull);
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_pull) << (this->id * 2));
+    bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_pull) << (this->id * 2));
 }
 
-pin::Level pin::In::get_level() const
+GPIO::Level GPIO::In::Pin::get_level() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    return static_cast<Level>(is_bit_on(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
+    return static_cast<Level>(bit::is(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
 }
 
-pin::Pull pin::In::get_pull() const
+void GPIO::In::Pin::register_interrupt_callback(Interrupt_mode_flag a_mode, const Interrupt_callback& a_callback) 
+{
+    assert(true == mcu::is_syscfg_enabled());
+
+    volatile uint32_t* p_register = &(SYSCFG->EXTICR[this->id / 4u]);
+    uint32_t pos = ((static_cast<uint32_t>(this->id) % 4u) * 4u);
+
+#ifdef CML_ASSERT
+    const bool f = bit_flag::is(*p_register, static_cast<uint32_t>(this->p_port->get_id()) << pos);
+    assert((GPIO::Id::a == this->p_port->get_id() && true == f) ||
+           (GPIO::Id::a != this->p_port->get_id() && false == f));
+#endif
+
+    Interrupt_guard guard;
+
+    bit_flag::set(p_register, 0x3u << pos, static_cast<uint32_t>(this->p_port->get_id()) << pos);
+
+    bit::clear(&(EXTI->RTSR1), this->id);
+    bit::clear(&(EXTI->FTSR1), this->id);
+    bit::set(&(EXTI->IMR1), this->id);
+
+    switch (a_mode)
+    {
+        case Interrupt_mode_flag::rising: {
+            bit::set(&(EXTI->RTSR1), this->id);
+        }
+        break;
+
+        case Interrupt_mode_flag::falling: {
+            bit::set(&(EXTI->FTSR1), this->id);
+        }
+        break;
+
+        default: {
+            if ((Interrupt_mode_flag::rising | Interrupt_mode_flag::falling) == a_mode)
+            {
+                bit::set(&(EXTI->RTSR1), this->id);
+                bit::set(&(EXTI->FTSR1), this->id);
+            }
+        }
+    }
+
+    interrupt_handlers[this->id].callback   = a_callback;
+    interrupt_handlers[this->id].pin.p_port = this->p_port;
+    interrupt_handlers[this->id].pin.id     = this->id;
+}
+
+void GPIO::In::Pin::unregister_interrupt_callback() 
+{
+    Interrupt_guard guard;
+
+    bit::clear(&(EXTI->RTSR1), this->id);
+    bit::clear(&(EXTI->FTSR1), this->id);
+
+    bit_flag::clear(
+        &(SYSCFG->EXTICR[this->id / 4u]),
+        (static_cast<uint32_t>(this->p_port->get_id()) << ((static_cast<uint32_t>(this->id) % 4u) * 4u)));
+
+    interrupt_handlers[this->id].callback.function    = nullptr;
+    interrupt_handlers[this->id].callback.p_user_data = nullptr;
+}
+
+GPIO::Pull GPIO::In::Pin::get_pull() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Pull>(
-        (get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR, static_cast<uint32_t>(0x3u << this->id))
+        (bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR, static_cast<uint32_t>(0x3u << this->id))
          << this->id));
 }
 
-void pin::Out::set_level(Level a_level)
+void GPIO::Out::Pin::set_level(Level a_level)
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
@@ -254,122 +317,123 @@ void pin::Out::set_level(Level a_level)
     static_cast<GPIO_TypeDef*>(*(this->p_port))->BSRR = 0x1u << (this->id + mul[static_cast<uint32_t>(a_level)]);
 }
 
-void pin::Out::toggle_level()
+void GPIO::Out::Pin::toggle_level()
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    toggle_bit(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->ODR), this->id);
+    bit::toggle(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->ODR), this->id);
 }
 
-void pin::Out::set_mode(Mode a_mode)
-{
-    assert(Mode::unknown != a_mode);
-    assert(nullptr != this->p_port && 0xFF != this->id);
-
-    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
-             0x1u << this->id,
-             static_cast<uint32_t>(a_mode) << this->id);
-}
-
-void pin::Out::set_pull(Pull a_pull)
-{
-    assert(Pull::unknown != a_pull);
-    assert(nullptr != this->p_port && 0xFF != this->id);
-
-    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_pull) << (this->id * 2));
-}
-
-void pin::Out::set_speed(Speed a_speed)
-{
-    assert(Speed::unknown != a_speed);
-    assert(nullptr != this->p_port && 0xFF != this->id);
-
-    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_speed) << (this->id * 2));
-}
-
-pin::Level pin::Out::get_level() const
-{
-    assert(nullptr != this->p_port && 0xFF != this->id);
-
-    return static_cast<Level>(is_bit_on(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
-}
-
-pin::Mode pin::Out::get_mode() const
-{
-    assert(nullptr != this->p_port && 0xFF != this->id);
-
-    return static_cast<Mode>(get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
-}
-
-pin::Pull pin::Out::get_pull() const
-{
-    assert(nullptr != this->p_port && 0xFF != this->id);
-
-    return static_cast<Pull>(get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
-}
-
-pin::Speed pin::Out::get_speed() const
-{
-    assert(nullptr != this->p_port && 0xFF != this->id);
-
-    return static_cast<Speed>((get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR,
-                                        static_cast<uint32_t>(0x1u << this->id) << this->id)));
-}
-
-void pin::Analog::set_pull(Pull a_pull)
-{
-    assert(nullptr != this->p_port && 0xFF != this->id);
-
-    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_pull) << (this->id * 2));
-}
-
-pin::Pull pin::Analog::get_pull() const
-{
-    assert(nullptr != this->p_port && 0xFF != this->id);
-
-    return static_cast<Pull>(get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
-}
-
-void pin::Af::set_mode(Mode a_mode)
+void GPIO::Out::Pin::set_mode(Mode a_mode)
 {
     assert(Mode::unknown != a_mode);
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
-             0x1u << this->id,
-             static_cast<uint32_t>(a_mode) << this->id);
+    bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
+                  0x1u << this->id,
+                  static_cast<uint32_t>(a_mode) << this->id);
 }
 
-void pin::Af::set_pull(Pull a_pull)
+void GPIO::Out::Pin::set_pull(Pull a_pull)
 {
     assert(Pull::unknown != a_pull);
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_pull) << (this->id * 2));
+    bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_pull) << (this->id * 2));
 }
 
-void pin::Af::set_speed(Speed a_speed)
+void GPIO::Out::Pin::set_speed(Speed a_speed)
 {
     assert(Speed::unknown != a_speed);
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    set_flag(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_speed) << (this->id * 2));
+    bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_speed) << (this->id * 2));
 }
 
-void pin::Af::set_function(uint32_t a_function)
+GPIO::Level GPIO::Out::Pin::get_level() const
+{
+    assert(nullptr != this->p_port && 0xFF != this->id);
+
+    return static_cast<Level>(bit::is(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
+}
+
+GPIO::Mode GPIO::Out::Pin::get_mode() const
+{
+    assert(nullptr != this->p_port && 0xFF != this->id);
+
+    return static_cast<Mode>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER,
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
+}
+
+GPIO::Pull GPIO::Out::Pin::get_pull() const
+{
+    assert(nullptr != this->p_port && 0xFF != this->id);
+
+    return static_cast<Pull>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR,
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
+}
+
+GPIO::Speed GPIO::Out::Pin::get_speed() const
+{
+    assert(nullptr != this->p_port && 0xFF != this->id);
+
+    return static_cast<Speed>((bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR,
+                                             static_cast<uint32_t>(0x1u << this->id) << this->id)));
+}
+
+void GPIO::Analog::Pin::set_pull(Pull a_pull)
+{
+    assert(Pull::unknown != a_pull);
+    assert(nullptr != this->p_port && 0xFF != this->id);
+
+    bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_pull) << (this->id * 2));
+}
+
+GPIO::Pull GPIO::Analog::Pin::get_pull() const
+{
+    assert(nullptr != this->p_port && 0xFF != this->id);
+
+    return static_cast<Pull>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR,
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
+}
+
+void GPIO::Alternate_function::Pin::set_mode(Mode a_mode)
+{
+    assert(Mode::unknown != a_mode);
+    assert(nullptr != this->p_port && 0xFF != this->id);
+
+    bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
+                  0x1u << this->id,
+                  static_cast<uint32_t>(a_mode) << this->id);
+}
+
+void GPIO::Alternate_function::Pin::set_pull(Pull a_pull)
+{
+    assert(Pull::unknown != a_pull);
+    assert(nullptr != this->p_port && 0xFF != this->id);
+
+    bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_pull) << (this->id * 2));
+}
+
+void GPIO::Alternate_function::Pin::set_speed(Speed a_speed)
+{
+    assert(Speed::unknown != a_speed);
+    assert(nullptr != this->p_port && 0xFF != this->id);
+
+    bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_speed) << (this->id * 2));
+}
+
+void GPIO::Alternate_function::Pin::set_function(uint32_t a_function)
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
@@ -385,216 +449,153 @@ void pin::Af::set_function(uint32_t a_function)
     this->function                 = a_function;
 }
 
-pin::Mode pin::Af::get_mode() const
+GPIO::Mode GPIO::Alternate_function::Pin::get_mode() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    return static_cast<Mode>(get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
+    return static_cast<Mode>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER,
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
-pin::Pull pin::Af::get_pull() const
+GPIO::Pull GPIO::Alternate_function::Pin::get_pull() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    return static_cast<Pull>(get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
+    return static_cast<Pull>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR,
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
-pin::Speed pin::Af::get_speed() const
+GPIO::Speed GPIO::Alternate_function::Pin::get_speed() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
 
-    return static_cast<Speed>(get_flag(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR,
-                                       static_cast<uint32_t>(0x1u << this->id) << this->id));
+    return static_cast<Speed>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR,
+                                            static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
-void pin::in::enable(GPIO* a_p_port, uint32_t a_id, Pull a_pull, In* a_p_out_pin)
+void GPIO::In::enable(uint32_t a_id, Pull a_pull, Pin* a_p_pin)
 {
-    assert(nullptr != a_p_port);
     assert(a_id < 16);
-    assert(true == a_p_port->is_enabled());
-    assert(false == a_p_port->is_pin_taken(a_id));
-
     assert(Pull::unknown != a_pull);
 
-    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*a_p_port));
+    assert(true == this->p_port->is_enabled());
+    assert(false == this->p_port->is_pin_taken(a_id));
 
-    set_flag(&(p_port->PUPDR), 0x3u << (a_id * 2), static_cast<uint32_t>(a_pull) << (a_id * 2));
-    clear_flag(&(static_cast<GPIO_TypeDef*>(*(a_p_port))->MODER), 0x3u << (a_id * 2));
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>((*(this->p_port)));
 
-    a_p_port->take_pin(a_id);
+    bit_flag::set(&(p_port->PUPDR), 0x3u << (a_id * 2), static_cast<uint32_t>(a_pull) << (a_id * 2));
+    bit_flag::clear(&(p_port->MODER), 0x3u << (a_id * 2));
 
-    if (nullptr != a_p_out_pin)
+    this->p_port->take_pin(a_id);
+
+    if (nullptr != a_p_pin)
     {
-        a_p_out_pin->id     = a_id;
-        a_p_out_pin->p_port = a_p_port;
+        a_p_pin->id     = a_id;
+        a_p_pin->p_port = this->p_port;
     }
 }
 
-void pin::in::disable(GPIO* a_p_port, uint32_t a_id)
+void GPIO::In::disable(uint32_t a_id)
 {
-    assert(nullptr != a_p_port);
     assert(a_id < 16);
-    assert(true == a_p_port->is_enabled());
 
-    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(a_p_port));
+    assert(true == this->p_port->is_enabled());
+    assert(false == this->p_port->is_pin_taken(a_id));
+
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(this->p_port));
 
     const uint32_t flag = (0x3u << (a_id * 2));
 
-    set_flag(&(p_port->MODER), flag);
-    clear_flag(&(p_port->PUPDR), flag);
+    bit_flag::set(&(p_port->MODER), flag);
+    bit_flag::clear(&(p_port->PUPDR), flag);
 
-    a_p_port->give_pin(a_id);
+    this->p_port->give_pin(a_id);
 }
 
-void pin::in::enable_interrupt(GPIO* a_p_port,
-                               uint32_t a_id,
-                               Pull a_pull,
-                               Interrupt_mode a_mode,
-                               const Interrupt_callback& a_callback)
+void GPIO::Out::enable(uint32_t a_id, const Config& a_config, Pin* a_p_pin)
 {
-    assert(true == mcu::is_syscfg_enabled());
-
-    Interrupt_guard guard;
-
-    enable(a_p_port, a_id, a_pull);
-
-    set_flag(&(SYSCFG->EXTICR[a_id / 4u]),
-             (static_cast<uint32_t>(a_p_port->get_id()) << ((static_cast<uint32_t>(a_id) % 4u) * 4u)));
-
-    clear_bit(&(EXTI->RTSR1), a_id);
-    clear_bit(&(EXTI->FTSR1), a_id);
-    set_bit(&(EXTI->IMR1), a_id);
-
-    switch (a_mode)
-    {
-        case Interrupt_mode::rising: {
-            set_bit(&(EXTI->RTSR1), a_id);
-        }
-        break;
-
-        case Interrupt_mode::falling: {
-            set_bit(&(EXTI->FTSR1), a_id);
-        }
-        break;
-
-        default: {
-            if ((Interrupt_mode::rising | Interrupt_mode::falling) == a_mode)
-            {
-                set_bit(&(EXTI->RTSR1), a_id);
-                set_bit(&(EXTI->FTSR1), a_id);
-            }
-        }
-    }
-
-    interrupt_handlers[a_id].callback      = a_callback;
-    interrupt_handlers[a_id].in_pin.p_port = a_p_port;
-    interrupt_handlers[a_id].in_pin.id     = a_id;
-}
-
-void pin::in::disable_interrupt(const In& a_pin)
-{
-    Interrupt_guard guard;
-
-    clear_bit(&(EXTI->RTSR1), a_pin.get_id());
-    clear_bit(&(EXTI->FTSR1), a_pin.get_id());
-
-    clear_flag(
-        &(SYSCFG->EXTICR[a_pin.get_id() / 4u]),
-        (static_cast<uint32_t>(a_pin.get_port()->get_id()) << ((static_cast<uint32_t>(a_pin.get_id()) % 4u) * 4u)));
-
-    interrupt_handlers[a_pin.get_id()].callback.function    = nullptr;
-    interrupt_handlers[a_pin.get_id()].callback.p_user_data = nullptr;
-
-    disable(&(interrupt_handlers[a_pin.get_id()].in_pin));
-}
-
-void pin::out::enable(GPIO* a_p_port, uint32_t a_id, const Config& a_config, Out* a_p_out_pin)
-{
-    assert(nullptr != a_p_port);
     assert(a_id < 16);
-    assert(true == a_p_port->is_enabled());
-    assert(false == a_p_port->is_pin_taken(a_id));
 
     assert(Pull::unknown != a_config.pull);
     assert(Speed::unknown != a_config.speed);
     assert(Mode::unknown != a_config.mode);
 
+    assert(true == this->p_port->is_enabled());
+    assert(false == this->p_port->is_pin_taken(a_id));
+
     const uint32_t clear_flag_2bit = 0x3u << (a_id * 2);
-    GPIO_TypeDef* p_port           = static_cast<GPIO_TypeDef*>(*(a_p_port));
+    GPIO_TypeDef* p_port           = static_cast<GPIO_TypeDef*>(*(this->p_port));
 
-    set_flag(&(p_port->OSPEEDR), clear_flag_2bit, static_cast<uint32_t>(a_config.speed) << (a_id * 2));
-    set_flag(&(p_port->PUPDR), clear_flag_2bit, static_cast<uint32_t>(a_config.pull) << (a_id * 2));
-    set_flag(&(p_port->MODER), clear_flag_2bit, 0x1u << (a_id * 2));
-    set_flag(&(p_port->OTYPER), 0x1u << a_id, static_cast<uint32_t>(a_config.mode) << a_id);
+    bit_flag::set(&(p_port->OSPEEDR), clear_flag_2bit, static_cast<uint32_t>(a_config.speed) << (a_id * 2));
+    bit_flag::set(&(p_port->PUPDR), clear_flag_2bit, static_cast<uint32_t>(a_config.pull) << (a_id * 2));
+    bit_flag::set(&(p_port->MODER), clear_flag_2bit, 0x1u << (a_id * 2));
+    bit_flag::set(&(p_port->OTYPER), 0x1u << a_id, static_cast<uint32_t>(a_config.mode) << a_id);
 
-    a_p_port->take_pin(a_id);
+    this->p_port->take_pin(a_id);
 
-    if (nullptr != a_p_out_pin)
+    if (nullptr != a_p_pin)
     {
-        a_p_out_pin->id     = a_id;
-        a_p_out_pin->p_port = a_p_port;
+        a_p_pin->id     = a_id;
+        a_p_pin->p_port = this->p_port;
     }
 }
 
-void pin::out::disable(GPIO* a_p_port, uint32_t a_id)
+void GPIO::Out::disable(uint32_t a_id)
 {
-    assert(nullptr != a_p_port);
     assert(a_id < 16);
-    assert(true == a_p_port->is_enabled());
 
-    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(a_p_port));
+    assert(true == this->p_port->is_enabled());
+    assert(false == this->p_port->is_pin_taken(a_id));
+
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(this->p_port));
 
     const uint32_t flag = (0x3u << (a_id * 2));
 
-    set_flag(&(p_port->MODER), flag);
-    clear_flag(&(p_port->OSPEEDR), flag);
-    clear_flag(&(p_port->PUPDR), flag);
+    bit_flag::set(&(p_port->MODER), flag);
+    bit_flag::clear(&(p_port->OSPEEDR), flag);
+    bit_flag::clear(&(p_port->PUPDR), flag);
 
-    a_p_port->give_pin(a_id);
+    this->p_port->give_pin(a_id);
 }
 
-void pin::analog::enable(GPIO* a_p_port, uint32_t a_id, Pull a_pull, Analog* a_p_out_pin)
+void GPIO::Analog::enable(uint32_t a_id, Pull a_pull, Pin* a_p_out_pin)
 {
-    assert(nullptr != a_p_port);
     assert(a_id < 16);
-    assert(true == a_p_port->is_enabled());
-    assert(false == a_p_port->is_pin_taken(a_id));
+    assert(true == this->p_port->is_enabled());
+    assert(false == this->p_port->is_pin_taken(a_id));
 
     assert(Pull::unknown != a_pull);
 
-    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(a_p_port));
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(this->p_port));
 
-    set_flag(&(p_port->PUPDR), 0x3u << (a_id * 2), static_cast<uint32_t>(a_pull) << (a_id * 2));
-    set_flag(&(p_port->MODER), 0x3u << (a_id * 2), 0x3u << (a_id * 2));
+    bit_flag::set(&(p_port->PUPDR), 0x3u << (a_id * 2), static_cast<uint32_t>(a_pull) << (a_id * 2));
+    bit_flag::set(&(p_port->MODER), 0x3u << (a_id * 2), 0x3u << (a_id * 2));
 
-    a_p_port->take_pin(a_id);
+    this->p_port->take_pin(a_id);
 
     if (nullptr != a_p_out_pin)
     {
         a_p_out_pin->id     = a_id;
-        a_p_out_pin->p_port = a_p_port;
+        a_p_out_pin->p_port = this->p_port;
     }
 }
 
-void pin::analog::disable(GPIO* a_p_port, uint32_t a_id)
+void GPIO::Analog::disable(uint32_t a_id)
 {
-    assert(nullptr != a_p_port);
     assert(a_id < 16);
-    assert(true == a_p_port->is_enabled());
+    assert(true == this->p_port->is_enabled());
 
-    clear_flag(&(static_cast<GPIO_TypeDef*>(*(a_p_port))->PUPDR), (0x3u << (a_id * 2)));
+    bit_flag::clear(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR), (0x3u << (a_id * 2)));
 
-    a_p_port->give_pin(a_id);
+    this->p_port->give_pin(a_id);
 }
 
-void pin::af::enable(GPIO* a_p_port, uint32_t a_id, const Config& a_config, Af* a_p_out_pin)
+void GPIO::Alternate_function::enable(uint32_t a_id, const Config& a_config, Pin* a_p_pin)
 {
-    assert(nullptr != a_p_port);
     assert(a_id < 16);
-    assert(true == a_p_port->is_enabled());
-    assert(false == a_p_port->is_pin_taken(a_id));
+
+    assert(true == this->p_port->is_enabled());
+    assert(false == this->p_port->is_pin_taken(a_id));
 
     assert(Pull::unknown != a_config.pull);
     assert(Speed::unknown != a_config.speed);
@@ -602,12 +603,12 @@ void pin::af::enable(GPIO* a_p_port, uint32_t a_id, const Config& a_config, Af* 
 
     const uint32_t clear_flag_2bit = 0x3u << (a_id * 2);
 
-    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(a_p_port));
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(this->p_port));
 
-    set_flag(&(p_port->OSPEEDR), clear_flag_2bit, static_cast<uint32_t>(a_config.speed) << (a_id * 2));
-    set_flag(&(p_port->PUPDR), clear_flag_2bit, static_cast<uint32_t>(a_config.pull) << (a_id * 2));
-    set_flag(&(p_port->MODER), clear_flag_2bit, 0x2u << (a_id * 2));
-    set_flag(&(p_port->OTYPER), 0x1u << a_id, static_cast<uint32_t>(a_config.mode) << a_id);
+    bit_flag::set(&(p_port->OSPEEDR), clear_flag_2bit, static_cast<uint32_t>(a_config.speed) << (a_id * 2));
+    bit_flag::set(&(p_port->PUPDR), clear_flag_2bit, static_cast<uint32_t>(a_config.pull) << (a_id * 2));
+    bit_flag::set(&(p_port->MODER), clear_flag_2bit, 0x2u << (a_id * 2));
+    bit_flag::set(&(p_port->OTYPER), 0x1u << a_id, static_cast<uint32_t>(a_config.mode) << a_id);
 
     uint32_t af_register_index = a_id >> 3u;
     uint32_t af_register       = p_port->AFR[af_register_index];
@@ -617,31 +618,30 @@ void pin::af::enable(GPIO* a_p_port, uint32_t a_id, const Config& a_config, Af* 
 
     p_port->AFR[af_register_index] = af_register;
 
-    a_p_port->take_pin(a_id);
+    this->p_port->take_pin(a_id);
 
-    if (nullptr != a_p_out_pin)
+    if (nullptr != a_p_pin)
     {
-        a_p_out_pin->id       = a_id;
-        a_p_out_pin->p_port   = a_p_port;
-        a_p_out_pin->function = a_config.function;
+        a_p_pin->id       = a_id;
+        a_p_pin->p_port   = this->p_port;
+        a_p_pin->function = a_config.function;
     }
 }
 
-void pin::af::disable(GPIO* a_p_port, uint32_t a_id)
+void GPIO::Alternate_function::disable(uint32_t a_id)
 {
-    assert(nullptr != a_p_port);
     assert(a_id < 16);
-    assert(true == a_p_port->is_enabled());
+    assert(true == this->p_port->is_enabled());
 
-    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(a_p_port));
+    GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(this->p_port));
 
     const uint32_t flag = (0x3u << (a_id * 2));
 
-    set_flag(&(p_port->MODER), flag);
-    clear_flag(&(p_port->OSPEEDR), flag);
-    clear_flag(&(p_port->PUPDR), flag);
+    bit_flag::set(&(p_port->MODER), flag);
+    bit_flag::clear(&(p_port->OSPEEDR), flag);
+    bit_flag::clear(&(p_port->PUPDR), flag);
 
-    a_p_port->give_pin(a_id);
+    this->p_port->give_pin(a_id);
 }
 
 } // namespace peripherals

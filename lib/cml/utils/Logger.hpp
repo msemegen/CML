@@ -14,6 +14,7 @@
 
 // cml
 #include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 #include <cml/cstring.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/utils/config.hpp>
@@ -69,12 +70,12 @@ public:
 
     void set_calm_down()
     {
-        clear_flag(&(this->settings), 0xFu);
+        bit_flag::clear(&(this->settings), 0xFu);
     }
 
     void set_verbose()
     {
-        set_flag(&(this->settings), static_cast<uint8_t>(0xFu));
+        bit_flag::set(&(this->settings), static_cast<uint8_t>(0xFu));
     }
 
     uint32_t inf(const char* a_p_message)
@@ -126,22 +127,22 @@ public:
     {
         if (true == a_flag)
         {
-            set_bit(&(this->settings), 4u);
+            bit::set(&(this->settings), 4u);
         }
         else
         {
-            clear_bit(&(this->settings), 4u);
+            bit::clear(&(this->settings), 4u);
         }
     }
 
     bool is_stream_enabled(Stream_type a_type) const
     {
-        return is_bit_on(this->settings, static_cast<uint32_t>(a_type));
+        return bit::is(this->settings, static_cast<uint32_t>(a_type));
     }
 
     bool is_label() const
     {
-        return is_bit_on(this->settings, 4u);
+        return bit::is(this->settings, 4u);
     }
 
 private:
@@ -199,10 +200,10 @@ private:
 
     void set_settings(bool a_inf, bool a_wrn, bool a_err, bool a_omg, bool a_label)
     {
-        set_flag(&(this->settings),
-                 0xFu,
-                 (true == a_inf ? 0x1u : 0x0u) | (true == a_wrn ? 0x2u : 0x0u) | (true == a_err ? 0x4u : 0x0u) |
-                     (true == a_omg ? 0x8u : 0x0u) | (true == a_label ? 0x10u : 0x0u));
+        bit_flag::set(&(this->settings),
+                      0xFu,
+                      (true == a_inf ? 0x1u : 0x0u) | (true == a_wrn ? 0x2u : 0x0u) | (true == a_err ? 0x4u : 0x0u) |
+                          (true == a_omg ? 0x8u : 0x0u) | (true == a_label ? 0x10u : 0x0u));
     }
 
 private:

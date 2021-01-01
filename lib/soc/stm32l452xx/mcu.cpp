@@ -11,6 +11,7 @@
 #include <soc/stm32l452xx/mcu.hpp>
 
 // cml
+#include <cml/bit.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/frequency.hpp>
 #include <cml/utils/wait.hpp>
@@ -45,65 +46,65 @@ using namespace cml::utils;
 
 void mcu::enable_msi_clock(Msi_frequency a_freq)
 {
-    clear_flag(&(RCC->CR), RCC_CR_MSION);
+    bit_flag::clear(&(RCC->CR), RCC_CR_MSION);
 
-    set_flag(&(RCC->CR), RCC_CR_MSIRANGE, static_cast<uint32_t>(a_freq) << RCC_CR_MSIRANGE_Pos);
+    bit_flag::set(&(RCC->CR), RCC_CR_MSIRANGE, static_cast<uint32_t>(a_freq) << RCC_CR_MSIRANGE_Pos);
 
-    set_flag(&(RCC->CR), RCC_CR_MSION);
+    bit_flag::set(&(RCC->CR), RCC_CR_MSION);
 
     wait::until(&(RCC->CR), RCC_CR_MSIRDY, false);
 
-    clear_flag(&(RCC->ICSCR), RCC_ICSCR_MSITRIM);
-    set_flag(&(RCC->CR), RCC_CR_MSIRGSEL);
+    bit_flag::clear(&(RCC->ICSCR), RCC_ICSCR_MSITRIM);
+    bit_flag::set(&(RCC->CR), RCC_CR_MSIRGSEL);
 
     wait::until(&(RCC->CR), RCC_CR_MSIRDY, false);
 }
 
 void mcu::enable_hsi_clock(Hsi_frequency)
 {
-    set_flag(&(RCC->CR), RCC_CR_HSION, RCC_CR_HSION);
+    bit_flag::set(&(RCC->CR), RCC_CR_HSION, RCC_CR_HSION);
 
     wait::until(&(RCC->CR), RCC_CR_HSIRDY, false);
 }
 
 void mcu::enable_lsi_clock(Lsi_frequency)
 {
-    set_flag(&(RCC->CSR), RCC_CSR_LSION, RCC_CSR_LSION);
+    bit_flag::set(&(RCC->CSR), RCC_CSR_LSION, RCC_CSR_LSION);
 
     wait::until(&(RCC->CSR), RCC_CSR_LSIRDY, false);
 }
 
 void mcu::enable_hsi48_clock(Hsi48_frequency)
 {
-    set_flag(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
+    bit_flag::set(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
 
     wait::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, false);
 }
 
 void mcu::disable_msi_clock()
 {
-    clear_flag(&(RCC->CR), RCC_CR_MSION);
+    bit_flag::clear(&(RCC->CR), RCC_CR_MSION);
 
     wait::until(&(RCC->CR), RCC_CR_MSIRDY, true);
 }
 
 void mcu::disable_hsi_clock()
 {
-    clear_flag(&(RCC->CR), RCC_CR_HSION);
+    bit_flag::clear(&(RCC->CR), RCC_CR_HSION);
 
     wait::until(&(RCC->CR), RCC_CR_HSIRDY, true);
 }
 
 void mcu::disable_lsi_clock()
 {
-    clear_flag(&(RCC->CSR), RCC_CSR_LSION);
+    bit_flag::clear(&(RCC->CSR), RCC_CSR_LSION);
 
     wait::until(&(RCC->CSR), RCC_CSR_LSIRDY, true);
 }
 
 void mcu::disable_hsi48_clock()
 {
-    clear_flag(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
+    bit_flag::clear(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
 
     wait::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, true);
 }
@@ -122,8 +123,8 @@ void mcu::enable_pll(const Pll_config& a_config)
                    get_pll_register_config_from_factor(a_config.pll.q, RCC_PLLCFGR_PLLQEN) |
                    get_pll_register_config_from_factor(a_config.pll.r, RCC_PLLCFGR_PLLREN);
 
-    set_flag(&(RCC->CR), RCC_CR_PLLON);
-    while (false == get_flag(RCC->CR, RCC_CR_PLLRDY))
+    bit_flag::set(&(RCC->CR), RCC_CR_PLLON);
+    while (false == bit_flag::get(RCC->CR, RCC_CR_PLLRDY))
         ;
 
     RCC->PLLSAI1CFGR = (a_config.pllsai1.n << RCC_PLLSAI1CFGR_PLLSAI1N_Pos) |
@@ -131,19 +132,19 @@ void mcu::enable_pll(const Pll_config& a_config)
                        get_pll_register_config_from_factor(a_config.pllsai1.q, RCC_PLLSAI1CFGR_PLLSAI1QEN) |
                        get_pll_register_config_from_factor(a_config.pllsai1.r, RCC_PLLSAI1CFGR_PLLSAI1REN);
 
-    set_flag(&(RCC->CR), RCC_CR_PLLSAI1ON);
-    while (false == get_flag(RCC->CR, RCC_CR_PLLSAI1RDY))
+    bit_flag::set(&(RCC->CR), RCC_CR_PLLSAI1ON);
+    while (false == bit_flag::get(RCC->CR, RCC_CR_PLLSAI1RDY))
         ;
 }
 
 void mcu::disable_pll()
 {
-    clear_flag(&(RCC->CR), RCC_CR_PLLON);
-    while (true == is_flag(RCC->CR, RCC_CR_PLLRDY))
+    bit_flag::clear(&(RCC->CR), RCC_CR_PLLON);
+    while (true == bit_flag::is(RCC->CR, RCC_CR_PLLRDY))
         ;
 
-    clear_flag(&(RCC->CR), RCC_CR_PLLSAI1ON);
-    while (true == is_flag(RCC->CR, RCC_CR_PLLSAI1RDY))
+    bit_flag::clear(&(RCC->CR), RCC_CR_PLLSAI1ON);
+    while (true == bit_flag::is(RCC->CR, RCC_CR_PLLSAI1RDY))
         ;
 }
 
@@ -159,7 +160,7 @@ void mcu::set_clk48_clock_mux_source(Clk48_mux_source a_source)
 
     assert(get_clk48_mux_freqency_hz() <= MHz_to_Hz(48));
 
-    set_flag(&(RCC->CCIPR), RCC_CCIPR_CLK48SEL, static_cast<uint32_t>(a_source));
+    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_CLK48SEL, static_cast<uint32_t>(a_source));
 }
 
 void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
@@ -169,14 +170,14 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         pre_sysclk_frequency_change_callback.function(pre_sysclk_frequency_change_callback.p_user_data);
     }
 
-    if (false == is_flag(RCC->APB1ENR1, RCC_APB1ENR1_PWREN))
+    if (false == bit_flag::is(RCC->APB1ENR1, RCC_APB1ENR1_PWREN))
     {
-        set_flag(&(RCC->APB1ENR1), RCC_APB1ENR1_PWREN);
+        bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_PWREN);
     }
 
-    if (false == is_flag(RCC->AHB1ENR, RCC_AHB1ENR_FLASHEN))
+    if (false == bit_flag::is(RCC->AHB1ENR, RCC_AHB1ENR_FLASHEN))
     {
-        set_flag(&(RCC->AHB1ENR), RCC_AHB1ENR_FLASHEN);
+        bit_flag::set(&(RCC->AHB1ENR), RCC_AHB1ENR_FLASHEN);
     }
 
     uint32_t frequency_hz = 0;
@@ -193,7 +194,7 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
         case Sysclk_source::msi: {
             assert(true == is_clock_enabled(Clock::msi));
 
-            frequency_hz = msi_frequency_lut[get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos];
+            frequency_hz = msi_frequency_lut[bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos];
         }
         break;
 
@@ -216,14 +217,14 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
 
     if (Sysclk_source::pll == a_source)
     {
-        set_flag(&(RCC->CFGR), RCC_CFGR_SW_PLL);
-        while (false == is_flag(RCC->CFGR, RCC_CFGR_SW_PLL))
+        bit_flag::set(&(RCC->CFGR), RCC_CFGR_SW_PLL);
+        while (false == bit_flag::is(RCC->CFGR, RCC_CFGR_SW_PLL))
             ;
     }
 
     if (Flash_latency::_0 != get_flash_latency())
     {
-        set_flag(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
+        bit_flag::set(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
     }
 
     if (nullptr != post_sysclk_frequency_change_callback.function)
@@ -273,32 +274,32 @@ void mcu::register_post_sysclk_frequency_change_callback(const Sysclk_frequency_
 
 mcu::Bus_prescalers mcu::get_bus_prescalers()
 {
-    return { static_cast<Bus_prescalers::AHB>(get_flag(RCC->CFGR, RCC_CFGR_HPRE)),
-             static_cast<Bus_prescalers::APB1>(get_flag(RCC->CFGR, RCC_CFGR_PPRE1)),
-             static_cast<Bus_prescalers::APB2>(get_flag(RCC->CFGR, RCC_CFGR_PPRE2)) };
+    return { static_cast<Bus_prescalers::AHB>(bit_flag::get(RCC->CFGR, RCC_CFGR_HPRE)),
+             static_cast<Bus_prescalers::APB1>(bit_flag::get(RCC->CFGR, RCC_CFGR_PPRE1)),
+             static_cast<Bus_prescalers::APB2>(bit_flag::get(RCC->CFGR, RCC_CFGR_PPRE2)) };
 }
 
 mcu::Pll_config mcu::get_pll_config()
 {
     return
 
-        { static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)),
-          static_cast<Pll_config::M>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)),
-          { get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN),
-            { static_cast<Pll_config::PLL::R::Divider>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR)),
-              is_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLREN) },
-            { static_cast<Pll_config::PLL::Q::Divider>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ)),
-              is_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQEN) },
-            { static_cast<Pll_config::PLL::P::Divider>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLP)),
-              is_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLPEN) } },
+        { static_cast<Pll_config::Source>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)),
+          static_cast<Pll_config::M>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)),
+          { bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLN),
+            { static_cast<Pll_config::PLL::R::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLR)),
+              bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLREN) },
+            { static_cast<Pll_config::PLL::Q::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ)),
+              bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLQEN) },
+            { static_cast<Pll_config::PLL::P::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLP)),
+              bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLPEN) } },
 
-          { get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N),
-            { static_cast<Pll_config::PLLSAI1::R::Divider>(get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1R)),
-              is_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1REN) },
-            { static_cast<Pll_config::PLLSAI1::Q::Divider>(get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1Q)),
-              is_flag(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1QEN) },
-            { static_cast<Pll_config::PLLSAI1::P::Divider>(get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1P)),
-              is_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1PEN) } } };
+          { bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N),
+            { static_cast<Pll_config::PLLSAI1::R::Divider>(bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1R)),
+              bit_flag::is(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1REN) },
+            { static_cast<Pll_config::PLLSAI1::Q::Divider>(bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1Q)),
+              bit_flag::is(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1QEN) },
+            { static_cast<Pll_config::PLLSAI1::P::Divider>(bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1P)),
+              bit_flag::is(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1PEN) } } };
 }
 
 uint32_t mcu::get_clk48_mux_freqency_hz()
@@ -323,7 +324,7 @@ uint32_t mcu::get_clk48_mux_freqency_hz()
         break;
 
         case mcu::Clk48_mux_source::msi: {
-            uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            uint32_t msi_range = bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             return msi_frequency_lut[msi_range];
         }
         break;
@@ -417,9 +418,9 @@ void mcu::set_flash_latency(Flash_latency a_latency)
 {
     assert(a_latency != Flash_latency::unknown);
 
-    set_flag(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<uint32_t>(a_latency));
+    bit_flag::set(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<uint32_t>(a_latency));
 
-    while (false == is_flag(FLASH->ACR, static_cast<uint32_t>(a_latency)))
+    while (false == bit_flag::is(FLASH->ACR, static_cast<uint32_t>(a_latency)))
         ;
 }
 
@@ -427,16 +428,16 @@ void mcu::set_voltage_scaling(Voltage_scaling a_scaling)
 {
     assert(a_scaling != Voltage_scaling::unkown);
 
-    set_flag(&(PWR->CR1), PWR_CR1_VOS, static_cast<uint32_t>(a_scaling));
+    bit_flag::set(&(PWR->CR1), PWR_CR1_VOS, static_cast<uint32_t>(a_scaling));
 
-    while (false == is_bit_on(PWR->SR2, PWR_SR2_VOSF_Pos))
+    while (false == bit::is(PWR->SR2, PWR_SR2_VOSF_Pos))
         ;
 }
 
 void mcu::set_sysclk_source(Sysclk_source a_sysclk_source)
 {
-    set_flag(&(RCC->CFGR), RCC_CFGR_SW, static_cast<uint32_t>(a_sysclk_source));
-    while (false == is_flag(RCC->CFGR, static_cast<uint32_t>(a_sysclk_source) << RCC_CFGR_SWS_Pos))
+    bit_flag::set(&(RCC->CFGR), RCC_CFGR_SW, static_cast<uint32_t>(a_sysclk_source));
+    while (false == bit_flag::is(RCC->CFGR, static_cast<uint32_t>(a_sysclk_source) << RCC_CFGR_SWS_Pos))
         ;
 }
 
@@ -446,9 +447,9 @@ void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
     assert(Bus_prescalers::APB1::unknown != a_prescalers.apb1);
     assert(Bus_prescalers::APB2::unknown != a_prescalers.apb2);
 
-    set_flag(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32_t>(a_prescalers.ahb));
-    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32_t>(a_prescalers.apb1));
-    set_flag(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<uint32_t>(a_prescalers.apb2));
+    bit_flag::set(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32_t>(a_prescalers.ahb));
+    bit_flag::set(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32_t>(a_prescalers.apb1));
+    bit_flag::set(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<uint32_t>(a_prescalers.apb2));
 }
 
 void mcu::increase_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers)
@@ -502,15 +503,16 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency
 
 uint32_t mcu::calculate_pll_r_output_frequency()
 {
-    const uint32_t m = (static_cast<uint32_t>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
-    const uint32_t n = (static_cast<uint32_t>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN)) >> RCC_PLLCFGR_PLLN_Pos);
+    const uint32_t m =
+        (static_cast<uint32_t>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
+    const uint32_t n = (static_cast<uint32_t>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLN)) >> RCC_PLLCFGR_PLLN_Pos);
 
     uint32_t pllvco = 0;
 
-    switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
+    switch (static_cast<Pll_config::Source>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
     {
         case Pll_config::Source::msi: {
-            uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            uint32_t msi_range = bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             pllvco             = (msi_frequency_lut[msi_range] / m) * n;
         }
         break;
@@ -528,20 +530,20 @@ uint32_t mcu::calculate_pll_r_output_frequency()
 
     assert(pllvco >= MHz_to_Hz(96) && pllvco <= MHz_to_Hz(344));
 
-    uint32_t pllr = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
+    uint32_t pllr = ((bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
     return pllvco / pllr;
 }
 
 uint32_t mcu::calculate_pll_q_output_frequency()
 {
-    const uint32_t m = (get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
-    const uint32_t n = get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLN) >> RCC_PLLCFGR_PLLN_Pos;
-    const uint32_t q = ((get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ) >> RCC_PLLCFGR_PLLQ_Pos) * 2u) + 2u;
+    const uint32_t m = (bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
+    const uint32_t n = bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLN) >> RCC_PLLCFGR_PLLN_Pos;
+    const uint32_t q = ((bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ) >> RCC_PLLCFGR_PLLQ_Pos) * 2u) + 2u;
 
-    switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
+    switch (static_cast<Pll_config::Source>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
     {
         case Pll_config::Source::msi: {
-            const uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            const uint32_t msi_range = bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             return ((msi_frequency_lut[msi_range] / m) * n) / q;
         }
 
@@ -560,14 +562,15 @@ uint32_t mcu::calculate_pll_q_output_frequency()
 
 uint32_t mcu::calculate_pllsai1_q_output_frequency()
 {
-    const uint32_t m = (get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
-    const uint32_t n = (get_flag(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N) >> RCC_PLLSAI1CFGR_PLLSAI1N_Pos) + 1u;
-    const uint32_t q = ((get_flag(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1Q) >> RCC_PLLSAI1CFGR_PLLSAI1Q_Pos) * 2u) + 2u;
+    const uint32_t m = (bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;
+    const uint32_t n = (bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N) >> RCC_PLLSAI1CFGR_PLLSAI1N_Pos) + 1u;
+    const uint32_t q =
+        ((bit_flag::get(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1Q) >> RCC_PLLSAI1CFGR_PLLSAI1Q_Pos) * 2u) + 2u;
 
-    switch (static_cast<Pll_config::Source>(get_flag(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
+    switch (static_cast<Pll_config::Source>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)))
     {
         case Pll_config::Source::msi: {
-            uint32_t msi_range = get_flag(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
+            uint32_t msi_range = bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
             return ((msi_frequency_lut[msi_range] / m) * n) / q;
         }
 

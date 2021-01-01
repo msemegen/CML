@@ -80,7 +80,7 @@ public:
 
     bool enable(const Config& a_config,
                 const USART::Clock& a_clock,
-                pin::Out* a_p_flow_control_pin,
+                GPIO::Out::Pin* a_p_flow_control_pin,
                 uint32_t a_irq_priority,
                 cml::time::tick a_timeout);
 
@@ -164,7 +164,7 @@ public:
 
 private:
     USART::Id id;
-    pin::Out* p_flow_control_pin;
+    GPIO::Out::Pin* p_flow_control_pin;
 
     Transmit_callback transmit_callback;
     Receive_callback receive_callback;

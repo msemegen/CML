@@ -21,12 +21,10 @@ namespace peripherals {
 
 #ifdef STM32L452xx
 using GPIO = soc::stm32l452xx::peripherals::GPIO;
-using pin  = soc::stm32l452xx::peripherals::pin;
 #endif // STM32L452xx
 
 #ifdef STM32L011xx
 using GPIO = soc::stm32l011xx::peripherals::GPIO;
-using pin  = soc::stm32l011xx::peripherals::pin;
 #endif // STM32L011xx
 
 } // namespace peripherals

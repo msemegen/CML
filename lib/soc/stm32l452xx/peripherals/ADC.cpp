@@ -12,9 +12,10 @@
 
 // soc
 #include <soc/Interrupt_guard.hpp>
-#include <soc/counter.hpp>
+#include <soc/system_timer.hpp>
 
 // cml
+#include <cml/bit_flag.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/utils/delay.hpp>
 #include <cml/utils/wait.hpp>
@@ -65,15 +66,15 @@ void adc_interrupt_handler(ADC* a_p_this)
 {
     const uint32_t isr = ADC1->ISR;
 
-    if (true == is_flag(isr, ADC_ISR_EOC))
+    if (true == bit_flag::is(isr, ADC_ISR_EOC))
     {
-        const bool series_end = is_flag(isr, ADC_ISR_EOS);
+        const bool series_end = bit_flag::is(isr, ADC_ISR_EOS);
 
         a_p_this->callaback.function(ADC1->DR, series_end, a_p_this, a_p_this->callaback.p_user_data);
 
         if (true == series_end)
         {
-            set_flag(&(ADC1->ISR), ADC_ISR_EOS);
+            bit_flag::set(&(ADC1->ISR), ADC_ISR_EOS);
         }
     }
 }
@@ -87,11 +88,11 @@ bool ADC::enable(Resolution a_resolution,
     assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
            true == mcu::get_pll_config().pllsai1.r.output_enabled);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
-    clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
-    set_flag(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<uint32_t>(a_clock.divider));
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+    bit_flag::clear(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
+    bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<uint32_t>(a_clock.divider));
 
     return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
@@ -107,10 +108,10 @@ bool ADC::enable(Resolution a_resolution,
                mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
                true);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
-    set_flag(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<uint32_t>(a_clock.divider));
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+    bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<uint32_t>(a_clock.divider));
 
     return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
@@ -120,8 +121,8 @@ void ADC::disable()
     ADC1->CR         = 0;
     ADC1_COMMON->CCR = 0;
 
-    set_flag(&(ADC1->CR), ADC_CR_DEEPPWD);
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+    bit_flag::set(&(ADC1->CR), ADC_CR_DEEPPWD);
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
 
     NVIC_DisableIRQ(ADC1_IRQn);
 
@@ -140,25 +141,25 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_c
     for (uint32_t i = 0; i < a_channels_count && i < 4; i++)
     {
         assert(Channel::Id::unknown != a_p_channels[i].id);
-        set_flag(&(ADC1->SQR1), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
+        bit_flag::set(&(ADC1->SQR1), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 4; i < a_channels_count && i < 9; i++)
     {
         assert(Channel::Id::unknown != a_p_channels[i].id);
-        set_flag(&(ADC1->SQR2), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
+        bit_flag::set(&(ADC1->SQR2), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 9; i < a_channels_count && i < 14; i++)
     {
         assert(Channel::Id::unknown != a_p_channels[i].id);
-        set_flag(&(ADC1->SQR3), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
+        bit_flag::set(&(ADC1->SQR3), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 14; i < a_channels_count && i < 16; i++)
     {
         assert(Channel::Id::unknown != a_p_channels[i].id);
-        set_flag(&(ADC1->SQR4), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
+        bit_flag::set(&(ADC1->SQR4), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     volatile uint32_t* p_SMPRs = reinterpret_cast<volatile uint32_t*>(&(ADC1->SMPR1));
@@ -169,7 +170,7 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_c
         const uint32_t sampling_time_val = static_cast<uint32_t>(a_p_channels[i].sampling_time);
         const uint32_t register_index    = channel_id / 10;
 
-        set_flag(&(p_SMPRs[register_index]), sampling_time_val << ((channel_id - (register_index * 10)) * 3));
+        bit_flag::set(&(p_SMPRs[register_index]), sampling_time_val << ((channel_id - (register_index * 10)) * 3));
     }
 
     bool enable_temperature_sensor = is_channel(Channel::Id::temperature_sensor, a_p_channels, a_channels_count);
@@ -178,18 +179,18 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_c
 
     if (true == enable_temperature_sensor)
     {
-        set_flag(&(ADC1_COMMON->CCR), ADC_CCR_TSEN);
+        bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_TSEN);
         delay::us(120);
     }
 
     if (true == enable_voltage_reference)
     {
-        set_flag(&(ADC1_COMMON->CCR), ADC_CCR_VREFEN);
+        bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_VREFEN);
     }
 
     if (true == enable_battery_voltage)
     {
-        set_flag(&(ADC1_COMMON->CCR), ADC_CCR_VBATEN);
+        bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_VBATEN);
     }
 }
 
@@ -204,7 +205,7 @@ void ADC::clear_active_channels()
     ADC1->SMPR1 = 0;
     ADC1->SMPR2 = 0;
 
-    clear_flag(&(ADC1_COMMON->CCR), ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN);
+    bit_flag::clear(&(ADC1_COMMON->CCR), ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN);
 }
 
 void ADC::read_polling(uint16_t* a_p_data, uint32_t a_count)
@@ -214,7 +215,7 @@ void ADC::read_polling(uint16_t* a_p_data, uint32_t a_count)
 
     assert(this->get_active_channels_count() == a_count);
 
-    set_flag(&(ADC1->CR), ADC_CR_ADSTART);
+    bit_flag::set(&(ADC1->CR), ADC_CR_ADSTART);
 
     for (uint32_t i = 0; i < a_count; i++)
     {
@@ -223,10 +224,10 @@ void ADC::read_polling(uint16_t* a_p_data, uint32_t a_count)
     }
 
     wait::until(&(ADC1->ISR), ADC_ISR_EOS, false);
-    set_flag(&(ADC1->ISR), ADC_ISR_EOS);
+    bit_flag::set(&(ADC1->ISR), ADC_ISR_EOS);
 
-    set_flag(&(ADC1->CR), ADC_CR_ADSTP);
-    clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
+    bit_flag::set(&(ADC1->CR), ADC_CR_ADSTP);
+    bit_flag::clear(&(ADC1->CR), ADC_CR_ADSTART);
 }
 
 bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeout)
@@ -237,10 +238,10 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
     assert(this->get_active_channels_count() == a_count);
 
-    set_flag(&(ADC1->CR), ADC_CR_ADSTART);
+    bit_flag::set(&(ADC1->CR), ADC_CR_ADSTART);
 
     bool ret         = true;
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     for (uint32_t i = 0; i < a_count && true == ret; i++)
     {
@@ -258,12 +259,12 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
         if (true == ret)
         {
-            set_flag(&(ADC1->ISR), ADC_ISR_EOS);
+            bit_flag::set(&(ADC1->ISR), ADC_ISR_EOS);
         }
     }
 
-    set_flag(&(ADC1->CR), ADC_CR_ADSTP);
-    clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
+    bit_flag::set(&(ADC1->CR), ADC_CR_ADSTP);
+    bit_flag::clear(&(ADC1->CR), ADC_CR_ADSTART);
 
     return ret;
 }
@@ -276,36 +277,36 @@ void ADC::register_conversion_callback(const Conversion_callback& a_callback)
 
     this->callaback = a_callback;
 
-    set_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
-    set_flag(&(ADC1->CR), ADC_CR_ADSTART);
+    bit_flag::set(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
+    bit_flag::set(&(ADC1->CR), ADC_CR_ADSTART);
 }
 
 void ADC::unregister_conversion_callback()
 {
     Interrupt_guard guard;
 
-    set_flag(&(ADC1->CR), ADC_CR_ADSTP);
+    bit_flag::set(&(ADC1->CR), ADC_CR_ADSTP);
 
-    clear_flag(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
-    clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
+    bit_flag::clear(&(ADC1->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
+    bit_flag::clear(&(ADC1->CR), ADC_CR_ADSTART);
 
     this->callaback = { nullptr, nullptr };
 }
 
 void ADC::set_resolution(Resolution a_resolution)
 {
-    bool is_started = is_flag(ADC1->CR, ADC_CR_ADSTART);
+    bool is_started = bit_flag::is(ADC1->CR, ADC_CR_ADSTART);
 
     if (true == is_started)
     {
-        clear_flag(&(ADC1->CR), ADC_CR_ADSTART);
+        bit_flag::clear(&(ADC1->CR), ADC_CR_ADSTART);
     }
 
-    set_flag(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
+    bit_flag::set(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
 
     if (true == is_started)
     {
-        set_flag(&(ADC1->CR), ADC_CR_ADSTART);
+        bit_flag::set(&(ADC1->CR), ADC_CR_ADSTART);
     }
 }
 
@@ -316,26 +317,26 @@ bool ADC::enable(Resolution a_resolution, time::tick a_start, uint32_t a_irq_pri
     NVIC_SetPriority(ADC1_IRQn, a_irq_priority);
     NVIC_EnableIRQ(ADC1_IRQn);
 
-    clear_flag(&(ADC1->CR), ADC_CR_DEEPPWD);
-    set_flag(&(ADC1->CR), ADC_CR_ADVREGEN);
+    bit_flag::clear(&(ADC1->CR), ADC_CR_DEEPPWD);
+    bit_flag::set(&(ADC1->CR), ADC_CR_ADVREGEN);
     delay::us(21u);
 
-    clear_flag(&(ADC1->CR), ADC_CR_ADCALDIF);
-    set_flag(&(ADC1->CR), ADC_CR_ADCAL);
+    bit_flag::clear(&(ADC1->CR), ADC_CR_ADCALDIF);
+    bit_flag::set(&(ADC1->CR), ADC_CR_ADCAL);
 
     bool ret = wait::until(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
 
     if (true == ret)
     {
-        set_flag(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
-        set_flag(&(ADC1->CR), ADC_CR_ADEN);
+        bit_flag::set(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
+        bit_flag::set(&(ADC1->CR), ADC_CR_ADEN);
 
         ret = wait::until(&(ADC1->ISR), ADC_ISR_ADRDY, false, a_start, a_timeout);
     }
 
     if (true == ret)
     {
-        set_flag(&(ADC1->ISR), ADC_ISR_ADRDY);
+        bit_flag::set(&(ADC1->ISR), ADC_ISR_ADRDY);
     }
 
     if (false == ret)

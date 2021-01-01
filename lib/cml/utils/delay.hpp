@@ -9,7 +9,7 @@
 
 // cml
 #include <cml/debug/assert.hpp>
-#include <cml/hal/counter.hpp>
+#include <cml/hal/system_timer.hpp>
 #include <cml/time.hpp>
 
 #ifdef STM32L452xx
@@ -36,8 +36,8 @@ public:
 
     static void ms(time::tick a_time)
     {
-        time::tick start = hal::counter::get();
-        while (time::diff(hal::counter::get(), start) <= a_time)
+        time::tick start = hal::system_timer::get();
+        while (time::diff(hal::system_timer::get(), start) <= a_time)
             ;
     }
 

@@ -1,9 +1,9 @@
 // cml
 #include <cml/debug/assert.hpp>
 #include <cml/frequency.hpp>
-#include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
+#include <cml/hal/system_timer.hpp>
 #include <cml/hal/systick.hpp>
 #include <cml/utils/Logger.hpp>
 #include <cml/various.hpp>
@@ -68,9 +68,14 @@ const char* sysclk_source_to_cstring(mcu::Sysclk_source a_source)
     return "";
 }
 
-void exti_callback(pin::Level, void* a_p_user_data)
+void system_timer_update(void*)
 {
-    reinterpret_cast<pin::Out*>(a_p_user_data)->toggle_level();
+    system_timer::update();
+}
+
+void exti_callback(GPIO::Level, void* a_p_user_data)
+{
+    reinterpret_cast<GPIO::Out::Pin*>(a_p_user_data)->toggle_level();
 }
 
 } // namespace
@@ -97,7 +102,7 @@ int main()
         assert::register_halt({ assert_mcu_halt, nullptr });
 
         systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, systick::Prescaler::_1, 0x9u);
-        systick::register_tick_callback({ counter::update, nullptr });
+        systick::register_tick_callback({ system_timer_update, nullptr });
 
         mcu::enable_syscfg(); // for exti_controller
         mcu::enable_interrupt_line(mcu::Interrupt_line::exti_10_15, 0x5u);
@@ -105,9 +110,12 @@ int main()
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::high, 0x7u };
-        pin::af::enable(&gpio_port_a, 2, usart_pin_config);
-        pin::af::enable(&gpio_port_a, 3, usart_pin_config);
+        GPIO::Alternate_function::Config usart_pin_config = {
+            GPIO::Mode::push_pull, GPIO::Pull::up, GPIO::Speed::high, 0x7u
+        };
+
+        gpio_port_a.p_alternate_function->enable(2u, usart_pin_config);
+        gpio_port_a.p_alternate_function->enable(3u, usart_pin_config);
 
         USART iostream(USART::Id::_2);
         bool iostream_ready = iostream.enable({ 115200,
@@ -135,12 +143,15 @@ int main()
             gpio_port_a.enable();
             gpio_port_c.enable();
 
-            pin::Out led_pin;
-            pin::out::enable(&gpio_port_a, 5u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
-            led_pin.set_level(pin::Level::low);
+            GPIO::Out::Pin led_pin;
+            gpio_port_a.p_out->enable(5, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
+            led_pin.set_level(GPIO::Level::low);
 
-            pin::in::enable_interrupt(
-                &gpio_port_c, 13u, pin::Pull::none, pin::in::Interrupt_mode::rising, { exti_callback, &led_pin });
+            GPIO::In::Pin button_pin;
+            gpio_port_c.p_in->enable(13u, GPIO::Pull::none, &button_pin);
+
+            button_pin.register_interrupt_callback(GPIO::In::Pin::Interrupt_mode_flag::rising,
+                                                   { exti_callback, &led_pin });
 
             while (true)
                 ;

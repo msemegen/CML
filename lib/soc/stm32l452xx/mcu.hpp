@@ -14,7 +14,7 @@
 #include <stm32l452xx.h>
 
 // cml
-#include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 #include <cml/frequency.hpp>
 
 namespace soc {
@@ -353,29 +353,29 @@ public:
 
     static void set_fpu_mode(FPU_mode a_mode)
     {
-        cml::set_flag(&(SCB->CPACR), ((3u << 10u * 2u) | (3u << 11u * 2u)), static_cast<uint32_t>(a_mode));
+        cml::bit_flag::set(&(SCB->CPACR), ((3u << 10u * 2u) | (3u << 11u * 2u)), static_cast<uint32_t>(a_mode));
     }
 
     static void enable_dwt()
     {
-        cml::set_flag(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
-        cml::set_flag(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
+        cml::bit_flag::set(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
+        cml::bit_flag::set(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
     }
 
     static void disable_dwt()
     {
-        cml::clear_flag(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
-        cml::clear_flag(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
+        cml::bit_flag::clear(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
+        cml::bit_flag::clear(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
     }
 
     static void enable_syscfg()
     {
-        cml::set_flag(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
+        cml::bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
     }
 
     static void disable_syscfg()
     {
-        cml::clear_flag(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
+        cml::bit_flag::clear(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
     }
 
     static void reset();
@@ -391,13 +391,13 @@ public:
 
     static bool is_dwt_enabled()
     {
-        return true == cml::is_flag(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
-               cml::is_flag(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
+        return true == cml::bit_flag::is(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
+               cml::bit_flag::is(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
     }
 
     static bool is_syscfg_enabled()
     {
-        return cml::is_flag(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
+        return cml::bit_flag::is(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
     }
 
     static Bus_prescalers get_bus_prescalers();
@@ -405,7 +405,7 @@ public:
 
     static Clk48_mux_source get_clk48_mux_source()
     {
-        return static_cast<Clk48_mux_source>(cml::get_flag(RCC->CCIPR, RCC_CCIPR_CLK48SEL));
+        return static_cast<Clk48_mux_source>(cml::bit_flag::get(RCC->CCIPR, RCC_CCIPR_CLK48SEL));
     }
 
     static uint32_t get_clk48_mux_freqency_hz();
@@ -432,7 +432,7 @@ public:
 
     static Sysclk_source get_sysclk_source()
     {
-        return static_cast<Sysclk_source>(cml::get_flag(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
+        return static_cast<Sysclk_source>(cml::bit_flag::get(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
     static cml::frequency get_sysclk_frequency_hz()
@@ -457,17 +457,17 @@ public:
             case Clock::msi:
             case Clock::hsi:
             case Clock::pll: {
-                return cml::is_flag(RCC->CR, static_cast<uint32_t>(a_clock));
+                return cml::bit_flag::is(RCC->CR, static_cast<uint32_t>(a_clock));
             }
             break;
 
             case Clock::lsi: {
-                return cml::is_flag(RCC->CSR, RCC_CSR_LSION);
+                return cml::bit_flag::is(RCC->CSR, RCC_CSR_LSION);
             }
             break;
 
             case Clock::hsi48: {
-                return cml::is_flag(RCC->CRRCR, RCC_CRRCR_HSI48ON);
+                return cml::bit_flag::is(RCC->CRRCR, RCC_CRRCR_HSI48ON);
             }
             break;
         }
@@ -477,24 +477,24 @@ public:
 
     static Voltage_scaling get_voltage_scaling()
     {
-        return static_cast<Voltage_scaling>(cml::get_flag(PWR->CR1, PWR_CR1_VOS));
+        return static_cast<Voltage_scaling>(cml::bit_flag::get(PWR->CR1, PWR_CR1_VOS));
     }
 
     static Flash_latency get_flash_latency()
     {
-        return static_cast<Flash_latency>(cml::get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
+        return static_cast<Flash_latency>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_LATENCY));
     }
 
     static Reset_source get_reset_source()
     {
-        uint32_t flag = cml::get_flag(RCC->CSR, 0xFB000000u);
+        uint32_t flag = cml::bit_flag::get(RCC->CSR, 0xFB000000u);
 
         if (flag == 0x0u)
         {
             flag = RCC_CSR_PINRSTF;
         }
 
-        cml::set_flag(&(RCC->CSR), RCC_CSR_RMVF);
+        cml::bit_flag::set(&(RCC->CSR), RCC_CSR_RMVF);
 
         return static_cast<Reset_source>(flag);
     }
