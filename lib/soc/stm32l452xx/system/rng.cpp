@@ -10,10 +10,11 @@
 
 // soc
 #include <soc/Interrupt_guard.hpp>
-#include <soc/counter.hpp>
 #include <soc/stm32l452xx/mcu.hpp>
+#include <soc/system_timer.hpp>
 
 // cml
+#include <cml/bit_flag.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/utils/wait.hpp>
 
@@ -37,13 +38,13 @@ void RNG_IRQHandler()
     const uint32_t isr = RNG->SR;
     uint32_t value     = 0;
 
-    if (true == is_flag(isr, RNG_SR_DRDY))
+    if (true == bit_flag::is(isr, RNG_SR_DRDY))
     {
         value = RNG->DR;
     }
 
     new_value_callback.function(
-        value, is_flag(isr, RNG_SR_CECS), is_flag(isr, RNG_SR_SECS), new_value_callback.p_user_data);
+        value, bit_flag::is(isr, RNG_SR_CECS), bit_flag::is(isr, RNG_SR_SECS), new_value_callback.p_user_data);
 
     NVIC_ClearPendingIRQ(RNG_IRQn);
 }
@@ -62,12 +63,12 @@ bool rng::enable(uint32_t a_irq_priority, time::tick a_timeout)
     assert(mcu::get_clk48_mux_freqency_hz() <= MHz_to_Hz(48));
     assert(a_timeout > 0);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
-    set_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
-    set_flag(&(RNG->CR), RNG_CR_RNGEN);
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
+    bit_flag::set(&(RNG->CR), RNG_CR_RNGEN);
 
-    bool ret = false == is_flag(RNG->SR, RNG_SR_SEIS);
+    bool ret = false == bit_flag::is(RNG->SR, RNG_SR_SEIS);
 
     if (true == ret)
     {
@@ -86,8 +87,8 @@ bool rng::enable(uint32_t a_irq_priority, time::tick a_timeout)
 
 void rng::disable()
 {
-    clear_flag(&(RNG->CR), RNG_CR_RNGEN);
-    clear_flag(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
+    bit_flag::clear(&(RNG->CR), RNG_CR_RNGEN);
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
 
     NVIC_DisableIRQ(RNG_IRQn);
 }
@@ -96,7 +97,7 @@ bool rng::get_value_polling(uint32_t* a_p_value, time::tick a_timeout)
 {
     assert(a_timeout > 0);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     bool ret = wait::until(&(RNG->SR), RNG_SR_DRDY, false, start, a_timeout);
 
@@ -115,7 +116,7 @@ void rng::register_new_value_callback(const New_value_callback& a_callback)
     Interrupt_guard guard;
 
     new_value_callback = a_callback;
-    set_flag(&(RNG->CR), RNG_CR_IE);
+    bit_flag::set(&(RNG->CR), RNG_CR_IE);
 }
 
 void rng::unregister_new_value_callback()
@@ -124,7 +125,7 @@ void rng::unregister_new_value_callback()
 
     Interrupt_guard guard;
 
-    clear_flag(&(RNG->CR), RNG_CR_IE);
+    bit_flag::clear(&(RNG->CR), RNG_CR_IE);
     new_value_callback = { nullptr, nullptr };
 }
 

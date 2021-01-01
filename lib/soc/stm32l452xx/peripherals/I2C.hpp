@@ -16,7 +16,6 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/bit.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/time.hpp>
 
@@ -42,21 +41,21 @@ public:
         hsi    = 2
     };
 
-    enum class Bus_status_flag : uint32_t
-    {
-        ok               = 0x0,
-        crc_error        = 0x1,
-        buffer_error     = 0x2,
-        arbitration_lost = 0x4,
-        misplaced        = 0x8,
-        nack             = 0x10,
-        unknown          = 0x20
-    };
-
     struct Result
     {
-        Bus_status_flag bus_status = Bus_status_flag::unknown;
-        uint32_t data_length       = 0;
+        enum class Bus_flag : uint32_t
+        {
+            ok               = 0x0,
+            crc_error        = 0x1,
+            buffer_error     = 0x2,
+            arbitration_lost = 0x4,
+            misplaced        = 0x8,
+            nack             = 0x10,
+            unknown          = 0x20
+        };
+
+        Bus_flag bus_flag    = Bus_flag::unknown;
+        uint32_t data_length_in_bytes = 0;
     };
 
 public:
@@ -82,17 +81,17 @@ protected:
     Id id;
 };
 
-constexpr I2C_base::Bus_status_flag operator|(I2C_base::Bus_status_flag a_f1, I2C_base::Bus_status_flag a_f2)
+constexpr I2C_base::Result::Bus_flag operator|(I2C_base::Result::Bus_flag a_f1, I2C_base::Result::Bus_flag a_f2)
 {
-    return static_cast<I2C_base::Bus_status_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+    return static_cast<I2C_base::Result::Bus_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
-constexpr I2C_base::Bus_status_flag operator&(I2C_base::Bus_status_flag a_f1, I2C_base::Bus_status_flag a_f2)
+constexpr I2C_base::Result::Bus_flag operator&(I2C_base::Result::Bus_flag a_f1, I2C_base::Result::Bus_flag a_f2)
 {
-    return static_cast<I2C_base::Bus_status_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+    return static_cast<I2C_base::Result::Bus_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
-constexpr I2C_base::Bus_status_flag operator|=(I2C_base::Bus_status_flag& a_f1, I2C_base::Bus_status_flag a_f2)
+constexpr I2C_base::Result::Bus_flag operator|=(I2C_base::Result::Bus_flag& a_f1, I2C_base::Result::Bus_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;
@@ -101,10 +100,9 @@ constexpr I2C_base::Bus_status_flag operator|=(I2C_base::Bus_status_flag& a_f1, 
 class I2C_master : public I2C_base
 {
 public:
-    using Id              = I2C_base::Id;
-    using Clock_source    = I2C_base::Clock_source;
-    using Bus_status_flag = I2C_base::Bus_status_flag;
-    using Result          = I2C_base::Result;
+    using Id           = I2C_base::Id;
+    using Clock_source = I2C_base::Clock_source;
+    using Result       = I2C_base::Result;
 
     struct Transmit_callback
     {
@@ -124,7 +122,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = void (*)(Bus_status_flag a_bus_status, I2C_master* a_p_this, void* a_p_user_data);
+        using Function = void (*)(Result::Bus_flag a_bus_flag, I2C_master* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -231,10 +229,9 @@ private:
 class I2C_slave : public I2C_base
 {
 public:
-    using Id              = I2C_base::Id;
-    using Clock_source    = I2C_base::Clock_source;
-    using Bus_status_flag = I2C_base::Bus_status_flag;
-    using Result          = I2C_base::Result;
+    using Id           = I2C_base::Id;
+    using Clock_source = I2C_base::Clock_source;
+    using Result       = I2C_base::Result;
 
     struct Transmit_callback
     {
@@ -254,7 +251,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = void (*)(Bus_status_flag a_bus_status, I2C_slave* a_p_this, void* a_p_user_data);
+        using Function = void (*)(Result::Bus_flag a_bus_flag, I2C_slave* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;

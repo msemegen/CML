@@ -14,7 +14,7 @@
 #include <stm32l0xx.h>
 
 // cml
-#include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 #include <cml/frequency.hpp>
 
 namespace soc {
@@ -204,23 +204,22 @@ public:
     static void register_pre_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
     static void register_post_sysclk_frequency_change_callback(const Sysclk_frequency_change_callback& a_callback);
 
-
     static Bus_prescalers get_bus_prescalers();
     static Pll_config get_pll_config();
 
     static void enable_syscfg()
     {
-        cml::set_flag(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
+        cml::bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
     }
 
     static void disable_syscfg()
     {
-        cml::clear_flag(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
+        cml::bit_flag::clear(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
     }
 
     static bool is_syscfg_enabled()
     {
-        return cml::is_flag(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
+        return cml::bit_flag::is(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN);
     }
 
     static Device_id get_device_id()
@@ -245,7 +244,7 @@ public:
 
     static Sysclk_source get_sysclk_source()
     {
-        return static_cast<Sysclk_source>(cml::get_flag(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
+        return static_cast<Sysclk_source>(cml::bit_flag::get(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
     static uint32_t get_sysclk_frequency_hz()
@@ -270,12 +269,12 @@ public:
             case Clock::msi:
             case Clock::hsi:
             case Clock::pll: {
-                return cml::is_flag(RCC->CR, static_cast<uint32_t>(a_clock));
+                return cml::bit_flag::is(RCC->CR, static_cast<uint32_t>(a_clock));
             }
             break;
 
             case Clock::lsi: {
-                return cml::is_flag(RCC->CSR, RCC_CSR_LSION);
+                return cml::bit_flag::is(RCC->CSR, RCC_CSR_LSION);
             }
             break;
         }
@@ -285,24 +284,24 @@ public:
 
     static Voltage_scaling get_voltage_scaling()
     {
-        return static_cast<Voltage_scaling>(cml::get_flag(PWR->CR, PWR_CR_VOS));
+        return static_cast<Voltage_scaling>(cml::bit_flag::get(PWR->CR, PWR_CR_VOS));
     }
 
     static Flash_latency get_flash_latency()
     {
-        return static_cast<Flash_latency>(cml::get_flag(FLASH->ACR, FLASH_ACR_LATENCY));
+        return static_cast<Flash_latency>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_LATENCY));
     }
 
     static Reset_source get_reset_source()
     {
-        uint32_t flag = cml::get_flag(RCC->CSR, 0xFB000000u);
+        uint32_t flag = cml::bit_flag::get(RCC->CSR, 0xFB000000u);
 
         if (flag == 0x0u)
         {
             flag = RCC_CSR_PINRSTF;
         }
 
-        cml::set_flag(&(RCC->CSR), RCC_CSR_RMVF);
+        cml::bit_flag::set(&(RCC->CSR), RCC_CSR_RMVF);
 
         return static_cast<Reset_source>(flag);
     }

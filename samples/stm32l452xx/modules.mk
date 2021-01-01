@@ -11,7 +11,7 @@ CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(CML_ROOT)/lib/cml      \
                     $(CML_ROOT)/lib/soc/stm32l452xx/system/      \
                     $(CML_ROOT)/lib/soc/stm32l452xx/peripherals/
 
-INCLUDE_PATH     := $(INCLUDE_PATH) $(CML_ROOT)/lib/
+INCLUDE_PATH     := $(INCLUDE_PATH) $(CML_ROOT) $(CML_ROOT)/lib/
 
 #sample
 C_SOURCE_PATHS   := $(C_SOURCE_PATHS)   $(ROOT)/

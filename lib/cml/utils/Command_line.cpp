@@ -32,9 +32,9 @@ void Command_line::update()
                 if (this->line_length > 0)
                 {
                     this->line_buffer[this->line_length] = 0;
-
+    
                     this->commands_carousel.push(this->line_buffer, this->line_length);
-
+                    
                     this->get_callback_parameters(this->callback_parameters_buffer,
                                                   config::command_line::callback_parameters_buffer_capacity,
                                                   &(this->callback_parameters_buffer_length),
@@ -42,7 +42,7 @@ void Command_line::update()
                                                   this->line_length,
                                                   " -",
                                                   2);
-
+    
                     bool command_executed = this->execute_command(this->callback_parameters_buffer,
                                                                   this->callback_parameters_buffer_length);
                     if (false == command_executed)
@@ -52,15 +52,15 @@ void Command_line::update()
                                                     this->command_not_found_message_length,
                                                     this->write_string.p_user_data);
                     }
-
+    
                     this->line_length = 0;
                 }
-
+    
                 this->write_new_line();
                 this->write_prompt();
             }
             break;
-
+    
             case '\b': {
                 if (this->line_length > 0)
                 {
@@ -69,7 +69,7 @@ void Command_line::update()
                 }
             }
             break;
-
+    
             default: {
                 if (this->line_length + 1 < config::command_line::line_buffer_capacity)
                 {

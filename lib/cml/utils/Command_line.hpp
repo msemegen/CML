@@ -83,7 +83,7 @@ public:
         assert(nullptr != a_write_string_handler.function);
         assert(nullptr != a_read_character_handler.function);
         assert(nullptr != a_p_prompt);
-        assert(nullptr != p_command_not_found_message);
+        assert(nullptr != a_p_command_not_found_message);
     }
 
     Command_line()                    = delete;

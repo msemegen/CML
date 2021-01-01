@@ -16,7 +16,6 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/bit.hpp>
 #include <cml/frequency.hpp>
 #include <cml/time.hpp>
 

@@ -18,16 +18,16 @@ using namespace cml;
 
 void crc32::enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse)
 {
-    set_flag(&(RCC->AHBENR), RCC_AHBENR_CRCEN);
+    bit_flag::set(&(RCC->AHBENR), RCC_AHBENR_CRCEN);
 
-    clear_flag(&(CRC->CR), CRC_CR_POLYSIZE);
-    set_flag(&(CRC->CR), static_cast<uint32_t>(a_in_reverse));
-    set_flag(&(CRC->CR), static_cast<uint32_t>(a_out_reverse));
+    bit_flag::clear(&(CRC->CR), CRC_CR_POLYSIZE);
+    bit_flag::set(&(CRC->CR), static_cast<uint32_t>(a_in_reverse));
+    bit_flag::set(&(CRC->CR), static_cast<uint32_t>(a_out_reverse));
 }
 
 void crc32::disable()
 {
-    set_flag(&(RCC->AHBENR), RCC_AHBENR_CRCEN);
+    bit_flag::set(&(RCC->AHBENR), RCC_AHBENR_CRCEN);
 }
 
 } // namespace system

@@ -373,6 +373,10 @@ public:
         , gyroscope(this)
         , temperature(this)
         , fifo(this)
+        , p_accelerometer(&(this->accelerometer))
+        , p_gyroscope(&(this->gyroscope))
+        , p_temperature(&(this->temperature))
+        , p_fifo(&(this->fifo))
     {
     }
 
@@ -386,12 +390,6 @@ public:
 
     bool reboot(bool* a_p_flag);
     bool get_id(uint8_t* a_p_id) const;
-
-public:
-    Accelerometer* const p_accelerometer = &(this->accelerometer);
-    Gyroscope* const p_gyroscope         = &(this->gyroscope);
-    Temperature* const p_temperature     = &(this->temperature);
-    Fifo* const p_fifo                   = &(this->fifo);
 
 private:
     enum class Sensor
@@ -413,6 +411,12 @@ private:
     Gyroscope gyroscope;
     Temperature temperature;
     Fifo fifo;
+
+public:
+    Accelerometer* const p_accelerometer;
+    Gyroscope* const p_gyroscope;
+    Temperature* const p_temperature;
+    Fifo* const p_fifo;
 };
 
 } // namespace devices

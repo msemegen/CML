@@ -12,10 +12,11 @@
 #include <algorithm>
 
 // soc
-#include <soc/counter.hpp>
+#include <soc/system_timer.hpp>
 
 // cml
 #include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 
 namespace {
 
@@ -94,7 +95,7 @@ bool LSM6DSL::reboot(bool* a_p_flag)
         while (true == ret && false == *a_p_flag)
         {
             ret         = this->receive(Registers::ctrl3_c, &v, sizeof(v));
-            (*a_p_flag) = false == is_bit_on(v, 7);
+            (*a_p_flag) = false == bit::is(v, 7);
         };
     }
 
@@ -132,7 +133,7 @@ bool LSM6DSL::is_data_avaliable(Sensor a_sensor, bool* a_p_flag) const
 
     if (true == ret)
     {
-        *(a_p_flag) = is_bit_on(v, static_cast<uint8_t>(a_sensor));
+        *(a_p_flag) = bit::is(v, static_cast<uint8_t>(a_sensor));
     }
 
     return ret;
@@ -322,14 +323,14 @@ bool LSM6DSL::Accelerometer::get_axis_raw_polling(Axis<int16_t>* a_p_axis, time:
     assert(nullptr != a_p_axis);
     assert(a_timeout > 0);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     bool ret        = true;
     bool data_ready = false;
     while (true == ret && false == data_ready)
     {
         ret = this->p_owner->is_data_avaliable(Sensor::accelerometer, &data_ready) &&
-              a_timeout >= time::diff(counter::get(), start);
+              a_timeout >= time::diff(system_timer::get(), start);
     }
 
     if (true == ret)
@@ -347,7 +348,7 @@ bool LSM6DSL::Accelerometer::get_axis_scaled_polling(Axis<float>* a_p_axis, time
 
     assert(Fullscale_range::unknown != this->fullscale_range);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     bool ret                = true;
     const float sensitivity = asl[static_cast<uint32_t>(this->fullscale_range)];
@@ -357,7 +358,7 @@ bool LSM6DSL::Accelerometer::get_axis_scaled_polling(Axis<float>* a_p_axis, time
     while (true == ret && false == data_ready)
     {
         ret = this->p_owner->is_data_avaliable(Sensor::accelerometer, &data_ready) &&
-              a_timeout >= time::diff(counter::get(), start);
+              a_timeout >= time::diff(system_timer::get(), start);
     }
 
     if (true == ret && true == data_ready)
@@ -384,7 +385,7 @@ bool LSM6DSL::Accelerometer::is_enabled(bool* a_p_flag) const
 
     if (true == ret)
     {
-        *a_p_flag = 0 != get_flag(v, 0xF0u);
+        *a_p_flag = 0 != bit_flag::get(v, 0xF0u);
     }
 
     return ret;
@@ -586,7 +587,7 @@ bool LSM6DSL::Gyroscope::get_axis_raw_polling(Axis<int16_t>* a_p_axis, time::tic
     assert(nullptr != a_p_axis);
     assert(a_timeout > 0);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     bool ret        = true;
     bool data_ready = false;
@@ -594,7 +595,7 @@ bool LSM6DSL::Gyroscope::get_axis_raw_polling(Axis<int16_t>* a_p_axis, time::tic
     while (true == ret && false == data_ready)
     {
         ret = this->p_owner->is_data_avaliable(Sensor::gyroscope, &data_ready) &&
-              a_timeout >= time::diff(counter::get(), start);
+              a_timeout >= time::diff(system_timer::get(), start);
     }
 
     if (true == ret && true == data_ready)
@@ -610,7 +611,7 @@ bool LSM6DSL::Gyroscope::get_axis_scaled_polling(Axis<float>* a_p_axis, time::ti
 
     assert(Fullscale_range::unknown != this->fullscale_range);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     bool ret          = false;
     float sensitivity = gsl[static_cast<uint32_t>(this->fullscale_range) >> 0x2u];
@@ -620,7 +621,7 @@ bool LSM6DSL::Gyroscope::get_axis_scaled_polling(Axis<float>* a_p_axis, time::ti
     while (true == ret && false == data_ready)
     {
         ret = this->p_owner->is_data_avaliable(Sensor::gyroscope, &data_ready) &&
-              a_timeout >= time::diff(counter::get(), start);
+              a_timeout >= time::diff(system_timer::get(), start);
     }
 
     if (true == ret && true == data_ready)
@@ -645,7 +646,7 @@ bool LSM6DSL::Gyroscope::is_enabled(bool* a_p_flag) const
 
     if (true == ret)
     {
-        *a_p_flag = 0 != get_flag(v, 0xF0u);
+        *a_p_flag = 0 != bit_flag::get(v, 0xF0u);
     }
 
     return ret;
@@ -701,7 +702,7 @@ bool LSM6DSL::Temperature::get_data_raw_polling(int16_t* a_p_temperature, time::
 {
     assert(nullptr != a_p_temperature);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     bool ret        = true;
     bool data_ready = false;
@@ -709,7 +710,7 @@ bool LSM6DSL::Temperature::get_data_raw_polling(int16_t* a_p_temperature, time::
     while (true == ret && false == data_ready)
     {
         ret = this->p_owner->is_data_avaliable(Sensor::temperature, &data_ready) &&
-              a_timeout >= time::diff(counter::get(), start);
+              a_timeout >= time::diff(system_timer::get(), start);
     }
 
     if (true == ret && true == data_ready)
@@ -724,7 +725,7 @@ bool LSM6DSL::Temperature::get_data_scaled_polling(float* a_p_temperature, time:
 {
     assert(nullptr != a_p_temperature);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     bool ret        = true;
     bool data_ready = false;
@@ -733,7 +734,7 @@ bool LSM6DSL::Temperature::get_data_scaled_polling(float* a_p_temperature, time:
     while (true == ret && false == data_ready)
     {
         ret = this->p_owner->is_data_avaliable(Sensor::temperature, &data_ready) &&
-              a_timeout >= time::diff(counter::get(), start);
+              a_timeout >= time::diff(system_timer::get(), start);
     }
 
     if (true == ret && true == data_ready)
@@ -981,14 +982,14 @@ bool LSM6DSL::Fifo::get_data_raw_polling(Axis<int16_t>* a_p_gyroscope_data,
     assert((nullptr != a_p_accelerometer_data && a_accelerometer_data_buffer_capacity > 0) ||
            nullptr == a_p_accelerometer_data);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     bool ret  = true;
     bool full = false;
 
     while (true == ret && false == full)
     {
-        ret = this->is_full(&full) && a_timeout >= time::diff(counter::get(), start);
+        ret = this->is_full(&full) && a_timeout >= time::diff(system_timer::get(), start);
     }
 
     if (true == ret && true == full)
@@ -1054,14 +1055,14 @@ bool LSM6DSL::Fifo::get_data_scaled_polling(Axis<float>* a_p_gyroscope_data,
     assert((nullptr != a_p_accelerometer_data && a_accelerometer_data_buffer_capacity > 0) ||
            nullptr == a_p_accelerometer_data);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     bool ret  = true;
     bool full = false;
 
     while (true == ret && false == full)
     {
-        ret = this->is_full(&full) && a_timeout >= time::diff(counter::get(), start);
+        ret = this->is_full(&full) && a_timeout >= time::diff(system_timer::get(), start);
     }
 
     if (true == ret && true == full)
@@ -1132,8 +1133,8 @@ bool LSM6DSL::Fifo::is_enabled(bool* a_p_flag) const
 
     if (true == ret)
     {
-        uint8_t mode = get_flag(v, 0x7u);
-        uint8_t odr  = get_flag(v, 0x78u);
+        uint8_t mode = bit_flag::get(v, 0x7u);
+        uint8_t odr  = bit_flag::get(v, 0x78u);
 
         (*a_p_flag) = 0x1u == mode && 0x0u != odr;
     }
@@ -1150,7 +1151,7 @@ bool LSM6DSL::Fifo::is_full(bool* a_p_flag) const
 
     if (true == ret)
     {
-        (*a_p_flag) = is_bit_on(v, 7);
+        (*a_p_flag) = bit::is(v, 7);
     }
 
     return ret;

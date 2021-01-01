@@ -1,18 +1,18 @@
 /*
-    Name: system_counter.cpp
+    Name: system_timer.cpp
 
     Copyright(c) 2020 Mateusz Semegen
     This code is licensed under MIT license (see LICENSE file for details)
 */
 
 // this
-#include <soc/counter.hpp>
+#include <soc/system_timer.hpp>
 
 namespace {
 
 using namespace cml;
 
-time::tick cnt = 0;
+volatile time::tick cnt = 0;
 
 } // namespace
 
@@ -20,22 +20,12 @@ namespace soc {
 
 using namespace cml;
 
-time::tick counter::get()
+time::tick system_timer::get()
 {
     return cnt;
 }
 
-void counter::set(time::tick a_value)
-{
-    cnt = a_value;
-}
-
-void counter::reset()
-{
-    cnt = 0;
-}
-
-void counter::update(void*)
+void system_timer::update()
 {
     cnt++;
 }

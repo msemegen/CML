@@ -14,7 +14,6 @@
 #include <stm32l452xx.h>
 
 // cml
-#include <cml/bit.hpp>
 #include <cml/time.hpp>
 
 namespace soc {

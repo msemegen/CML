@@ -27,7 +27,6 @@ class RS485 : public cml::Non_copyable
 public:
     using Oversampling    = USART::Oversampling;
     using Stop_bits       = USART::Stop_bits;
-    using Bus_status_flag = USART::Bus_status_flag;
     using Result          = USART::Result;
 
     struct Config
@@ -59,7 +58,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = void (*)(Bus_status_flag a_bus_status, RS485* a_p_this, void* a_p_user_data);
+        using Function = void (*)(Result::Bus_flag a_bus_status, RS485* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -78,7 +77,7 @@ public:
 
     bool enable(const Config& a_config,
                 const USART::Clock& a_clock,
-                pin::Out* a_p_flow_control_pin,
+                GPIO::Out::Pin* a_p_flow_control_pin,
                 uint32_t a_irq_priority,
                 cml::time::tick a_timeout);
 
@@ -161,7 +160,7 @@ public:
     }
 
 private:
-    pin::Out* p_flow_control_pin;
+    GPIO::Out::Pin* p_flow_control_pin;
 
     Transmit_callback transmit_callback;
     Receive_callback receive_callback;

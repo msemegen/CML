@@ -16,7 +16,6 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/bit.hpp>
 #include <cml/frequency.hpp>
 #include <cml/time.hpp>
 
@@ -86,16 +85,6 @@ public:
         unknown
     };
 
-    enum class Bus_status_flag : uint32_t
-    {
-        ok             = 0x0,
-        framing_error  = 0x1,
-        parity_error   = 0x2,
-        overrun        = 0x4,
-        noise_detected = 0x8,
-        unknown        = 0x10
-    };
-
     struct Frame_format
     {
         Word_length word_length = Word_length::unknown;
@@ -128,7 +117,17 @@ public:
 
     struct Result
     {
-        Bus_status_flag bus_status    = Bus_status_flag::unknown;
+        enum class Bus_flag : uint32_t
+        {
+            ok             = 0x0,
+            framing_error  = 0x1,
+            parity_error   = 0x2,
+            overrun        = 0x4,
+            noise_detected = 0x8,
+            unknown        = 0x10
+        };
+
+        Bus_flag bus_flag             = Bus_flag::unknown;
         uint32_t data_length_in_words = 0;
     };
 
@@ -153,7 +152,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = void (*)(Bus_status_flag a_bus_status, USART* a_p_this, void* a_p_user_data);
+        using Function = void (*)(Result::Bus_flag a_bus_status, USART* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -290,17 +289,17 @@ private:
     friend void usart_interrupt_handler(USART* a_p_this);
 };
 
-constexpr USART::Bus_status_flag operator|(USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
+constexpr USART::Result::Bus_flag operator|(USART::Result::Bus_flag a_f1, USART::Result::Bus_flag a_f2)
 {
-    return static_cast<USART::Bus_status_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+    return static_cast<USART::Result::Bus_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Bus_status_flag operator&(USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
+constexpr USART::Result::Bus_flag operator&(USART::Result::Bus_flag a_f1, USART::Result::Bus_flag a_f2)
 {
-    return static_cast<USART::Bus_status_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+    return static_cast<USART::Result::Bus_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Bus_status_flag operator|=(USART::Bus_status_flag& a_f1, USART::Bus_status_flag a_f2)
+constexpr USART::Result::Bus_flag operator|=(USART::Result::Bus_flag& a_f1, USART::Result::Bus_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;

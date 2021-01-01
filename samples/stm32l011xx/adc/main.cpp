@@ -1,11 +1,11 @@
 // cml
 #include <cml/debug/assert.hpp>
 #include <cml/frequency.hpp>
-#include <cml/hal/counter.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/ADC.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
+#include <cml/hal/system_timer.hpp>
 #include <cml/hal/systick.hpp>
 #include <cml/utils/Logger.hpp>
 #include <cml/utils/delay.hpp>
@@ -80,6 +80,11 @@ int32_t compute_temperature(const ADC::Calibration_data& a_calibration_data, uin
     return temperature + 30;
 }
 
+void system_timer_update(void*)
+{
+    system_timer::update();
+}
+
 } // namespace
 
 int main()
@@ -103,14 +108,17 @@ int main()
         assert::register_halt({ assert_mcu_halt, nullptr });
 
         systick::enable((mcu::get_sysclk_frequency_hz() / kHz_to_Hz(1)) - 1, systick::Prescaler::_1, 0x9u);
-        systick::register_tick_callback({ counter::update, nullptr });
+        systick::register_tick_callback({ system_timer_update, nullptr });
 
         GPIO gpio_port_a(GPIO::Id::a);
         gpio_port_a.enable();
 
-        pin::af::Config usart_pin_config = { pin::Mode::push_pull, pin::Pull::up, pin::Speed::high, 0x4u };
-        pin::af::enable(&gpio_port_a, 2u, usart_pin_config);
-        pin::af::enable(&gpio_port_a, 15u, usart_pin_config);
+        GPIO::Alternate_function::Config usart_pin_config = {
+            GPIO::Mode::push_pull, GPIO::Pull::up, GPIO::Speed::high, 0x4u
+        };
+
+        gpio_port_a.p_alternate_function->enable(2u, usart_pin_config);
+        gpio_port_a.p_alternate_function->enable(15u, usart_pin_config);
 
         USART iostream(USART::Id::_2);
         bool iostream_ready = iostream.enable({ 115200,

@@ -9,7 +9,7 @@
 #include <soc/systick.hpp>
 
 // cml
-#include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 
 // soc
 #include <soc/Interrupt_guard.hpp>
@@ -18,7 +18,7 @@ namespace {
 
 using namespace soc;
 
-systick::Tick_callback callback;
+static  systick::Tick_callback callback;
 
 } // namespace
 
@@ -70,7 +70,7 @@ void systick::unregister_tick_callback()
 
 bool systick::is_enabled()
 {
-    return is_flag(SysTick->CTRL, SysTick_CTRL_ENABLE_Msk);
+    return bit_flag::is(SysTick->CTRL, SysTick_CTRL_ENABLE_Msk);
 }
 
 } // namespace soc

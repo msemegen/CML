@@ -17,6 +17,7 @@
 // cml
 #include <cml/Non_copyable.hpp>
 #include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/time.hpp>
 
@@ -39,21 +40,21 @@ public:
         hsi    = 2
     };
 
-    enum class Bus_status_flag : uint32_t
-    {
-        ok               = 0x0,
-        crc_error        = 0x1,
-        buffer_error     = 0x2,
-        arbitration_lost = 0x4,
-        misplaced        = 0x8,
-        nack             = 0x10,
-        unknown          = 0x20
-    };
-
     struct Result
     {
-        Bus_status_flag bus_status = Bus_status_flag::unknown;
-        uint32_t data_length       = 0;
+        enum class Bus_flag : uint32_t
+        {
+            ok               = 0x0,
+            crc_error        = 0x1,
+            buffer_error     = 0x2,
+            arbitration_lost = 0x4,
+            misplaced        = 0x8,
+            nack             = 0x10,
+            unknown          = 0x20
+        };
+
+        Bus_flag bus_flag    = Bus_flag::unknown;
+        uint32_t data_length_in_bytes = 0;
     };
 
 public:
@@ -61,7 +62,7 @@ public:
 
     bool is_analog_filter() const
     {
-        return false == cml::is_flag(I2C1->CR1, I2C_CR1_ANFOFF);
+        return false == cml::bit_flag::is(I2C1->CR1, I2C_CR1_ANFOFF);
     }
 
     uint32_t get_timing() const
@@ -71,12 +72,12 @@ public:
 
     bool is_fast_plus() const
     {
-        return cml::is_bit_on(SYSCFG->CFGR2, SYSCFG_CFGR2_I2C1_FMP_Pos);
+        return cml::bit::is(SYSCFG->CFGR2, SYSCFG_CFGR2_I2C1_FMP_Pos);
     }
 
     bool is_enabled() const
     {
-        return cml::is_flag(I2C1->CR1, I2C_CR1_PE);
+        return cml::bit_flag::is(I2C1->CR1, I2C_CR1_PE);
     }
 
     Id get_id() const
@@ -94,17 +95,17 @@ protected:
     Id id;
 };
 
-constexpr I2C_base::Bus_status_flag operator|(I2C_base::Bus_status_flag a_f1, I2C_base::Bus_status_flag a_f2)
+constexpr I2C_base::Result::Bus_flag operator|(I2C_base::Result::Bus_flag a_f1, I2C_base::Result::Bus_flag a_f2)
 {
-    return static_cast<I2C_base::Bus_status_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+    return static_cast<I2C_base::Result::Bus_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
-constexpr I2C_base::Bus_status_flag operator&(I2C_base::Bus_status_flag a_f1, I2C_base::Bus_status_flag a_f2)
+constexpr I2C_base::Result::Bus_flag operator&(I2C_base::Result::Bus_flag a_f1, I2C_base::Result::Bus_flag a_f2)
 {
-    return static_cast<I2C_base::Bus_status_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+    return static_cast<I2C_base::Result::Bus_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
-constexpr I2C_base::Bus_status_flag operator|=(I2C_base::Bus_status_flag& a_f1, I2C_base::Bus_status_flag a_f2)
+constexpr I2C_base::Result::Bus_flag operator|=(I2C_base::Result::Bus_flag& a_f1, I2C_base::Result::Bus_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;
@@ -115,7 +116,6 @@ class I2C_master : public I2C_base
 public:
     using Id              = I2C_base::Id;
     using Clock_source    = I2C_base::Clock_source;
-    using Bus_status_flag = I2C_base::Bus_status_flag;
     using Result          = I2C_base::Result;
 
     struct Transmit_callback
@@ -136,7 +136,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = void (*)(Bus_status_flag a_bus_status, I2C_master* a_p_this, void* a_p_user_data);
+        using Function = void (*)(Result::Bus_flag a_bus_status, I2C_master* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -249,7 +249,6 @@ class I2C_slave : public I2C_base
 public:
     using Id              = I2C_base::Id;
     using Clock_source    = I2C_base::Clock_source;
-    using Bus_status_flag = I2C_base::Bus_status_flag;
     using Result          = I2C_base::Result;
 
     struct Config
@@ -279,7 +278,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = void (*)(Bus_status_flag a_bus_status, I2C_slave* a_p_this, void* a_p_user_data);
+        using Function = void (*)(Result::Bus_flag a_bus_status, I2C_slave* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;

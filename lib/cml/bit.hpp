@@ -12,56 +12,42 @@
 
 namespace cml {
 
-template<typename Register_t> constexpr bool is_bit_on(Register_t a_register, uint8_t a_index)
+class bit
 {
-    const Register_t flag = static_cast<Register_t>(0x1u) << a_index;
-    return flag == (a_register & flag);
-}
+public:
+    bit()           = delete;
+    bit(bit&&)      = delete;
+    bit(const bit&) = delete;
+    ~bit()          = delete;
 
-template<typename Register_t, typename Mask_t> constexpr bool is_any_bit_on(Register_t a_register, Mask_t a_mask)
-{
-    return 0 != (a_register & a_mask);
-}
+    bit& operator=(bit&&) = delete;
+    bit& operator=(const bit&) = delete;
 
-template<typename Register_t, typename Flag_t> constexpr bool is_flag(Register_t a_register, Flag_t a_flag)
-{
-    return a_flag == (a_register & a_flag);
-}
+    template<typename Register_t> constexpr static bool is(Register_t a_register, uint8_t a_index)
+    {
+        const Register_t flag = static_cast<Register_t>(0x1u) << a_index;
+        return flag == (a_register & flag);
+    }
 
-template<typename Register_t, typename Mask_t> constexpr Mask_t get_flag(Register_t a_register, Mask_t a_mask)
-{
-    return (a_register & a_mask);
-}
+    template<typename Register_t, typename Mask_t> constexpr static bool is_any(Register_t a_register, Mask_t a_mask)
+    {
+        return 0 != (a_register & a_mask);
+    }
 
-template<typename Register_t> constexpr void set_bit(Register_t* a_p_register, uint8_t a_index)
-{
-    (*a_p_register) |= (static_cast<Register_t>(0x1u) << a_index);
-}
+    template<typename Register_t> constexpr static void set(Register_t* a_p_register, uint8_t a_index)
+    {
+        (*a_p_register) |= (static_cast<Register_t>(0x1u) << a_index);
+    }
 
-template<typename Register_t, typename Flag_t> constexpr void set_flag(Register_t* a_p_register, Flag_t a_flag)
-{
-    (*a_p_register) |= a_flag;
-}
+    template<typename Register_t> constexpr static void clear(Register_t* a_p_register, uint8_t a_index)
+    {
+        (*a_p_register) &= ~(static_cast<Register_t>(0x1u) << a_index);
+    }
 
-template<typename Register_t, typename Clear_mask_t, typename Flag_t>
-constexpr void set_flag(Register_t* a_p_register, Clear_mask_t a_clear_mask, Flag_t a_set_flag)
-{
-    (*a_p_register) = (((*a_p_register) & (~a_clear_mask)) | a_set_flag);
-}
-
-template<typename Register_t> constexpr void clear_bit(Register_t* a_p_register, uint8_t a_index)
-{
-    (*a_p_register) &= ~(static_cast<Register_t>(0x1u) << a_index);
-}
-
-template<typename Register_t, typename Flag_t> constexpr void clear_flag(Register_t* a_p_register, Flag_t a_flag)
-{
-    (*a_p_register) &= ~a_flag;
-}
-
-template<typename Register_t> constexpr void toggle_bit(Register_t* a_p_register, uint8_t a_index)
-{
-    (*a_p_register) ^= (static_cast<Register_t>(0x1u) << a_index);
-}
+    template<typename Register_t> constexpr static void toggle(Register_t* a_p_register, uint8_t a_index)
+    {
+        (*a_p_register) ^= (static_cast<Register_t>(0x1u) << a_index);
+    }
+};
 
 } // namespace cml

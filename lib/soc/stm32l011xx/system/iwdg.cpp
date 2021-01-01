@@ -11,7 +11,7 @@
 #include <soc/stm32l011xx/system/iwdg.hpp>
 
 // soc
-#include <soc/counter.hpp>
+#include <soc/system_timer.hpp>
 #include <soc/stm32l011xx/mcu.hpp>
 
 // cml
@@ -46,7 +46,7 @@ bool iwdg::enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_wind
     assert(a_reload <= 0xFFFu);
     assert(a_timeout > 0);
 
-    time::tick start = counter::get();
+    time::tick start = system_timer::get();
 
     IWDG->KR = control_flags::enable;
     IWDG->KR = control_flags::write_access_enable;
