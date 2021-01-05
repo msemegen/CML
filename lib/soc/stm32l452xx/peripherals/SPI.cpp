@@ -184,23 +184,16 @@ void SPI_master::enable(const Config& a_config,
 
 void SPI_master::disable()
 {
-    /*
-     * The correct disable procedure is (except when receive only mode is used):
-     * 1. Wait until FTLVL[1:0] = 00 (no more data to transmit).
-     * 2. Wait until BSY=0 (the last data frame is processed).
-     * 3. Disable the SPI (SPE=0).
-     * 4. Read data until FRLVL[1:0] = 00 (read all the received data).
-     * The correct disable procedure for certain receive only modes is:
-     * 1. Interrupt the receive flow by disabling SPI (SPE=0) in the specific time window while
-     * the last data frame is ongoing.
-     * 2. Wait until BSY=0 (the last data frame is processed).
-     * 3. Read data until FRLVL[1:0] = 00 (read all the received data).
-     */
-
     wait_until::any_bit(&(get_spi_ptr(this->id)->SR), SPI_SR_FRLVL, true);
     wait_until::flag(&(get_spi_ptr(this->id)->SR), SPI_SR_BSY, true);
 
     bit_flag::clear(&(get_spi_ptr(this->id)->CR1), SPI_CR1_SPE);
+
+    while (true == bit::is_any(get_spi_ptr(this->id)->SR, SPI_SR_FRLVL))
+    {
+        volatile uint32_t dr = get_spi_ptr(this->id)->DR;
+        unused(dr);
+    }
 
     get_spi_ptr(this->id)->CR2 = 0;
     get_spi_ptr(this->id)->CR1 = 0;
@@ -381,14 +374,12 @@ SPI_master::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words,
     {
     }
 
-    words++;
-
     if (nullptr != a_p_nss)
     {
         a_p_nss->set_level(GPIO::Level::high);
     }
 
-    return { bus_flag, error };
+    return { bus_flag, words };
 }
 
 SPI_master::Result SPI_master::receive_bytes_polling(void* a_p_data,
