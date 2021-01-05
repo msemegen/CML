@@ -107,9 +107,9 @@ public:
             unknown
         };
 
-        Mode mode                     = Mode::unknown;
-        Wiring wiring                 = Wiring::unknown;
-        bool crc_enable               = false;
+        Mode mode       = Mode::unknown;
+        Wiring wiring   = Wiring::unknown;
+        bool crc_enable = false;
     };
 
     struct Result
@@ -124,7 +124,7 @@ public:
             unknown     = 0x10u
         };
 
-        Bus_flag bus_flag    = Bus_flag::unknown;
+        Bus_flag bus_flag             = Bus_flag::unknown;
         uint32_t data_length_in_words = 0;
     };
 
@@ -182,11 +182,11 @@ constexpr SPI_base::Result::Bus_flag operator|=(SPI_base::Result::Bus_flag& a_f1
 class SPI_master : public SPI_base
 {
 public:
-    using Id             = SPI_base::Id;
-    using Frame_format   = SPI_base::Frame_format;
-    using Clock_source   = SPI_base::Clock_source;
-    using Config         = SPI_base::Config;
-    using Result         = SPI_base::Result;
+    using Id           = SPI_base::Id;
+    using Frame_format = SPI_base::Frame_format;
+    using Clock_source = SPI_base::Clock_source;
+    using Config       = SPI_base::Config;
+    using Result       = SPI_base::Result;
 
 public:
     SPI_master(Id a_id)
@@ -230,10 +230,10 @@ public:
 class SPI_slave : public SPI_base
 {
 public:
-    using Id             = SPI_base::Id;
-    using Frame_format   = SPI_base::Frame_format;
-    using Clock_source   = SPI_base::Clock_source;
-    using Config         = SPI_base::Config;
+    using Id           = SPI_base::Id;
+    using Frame_format = SPI_base::Frame_format;
+    using Clock_source = SPI_base::Clock_source;
+    using Config       = SPI_base::Config;
 
 public:
     SPI_slave(Id a_id)

@@ -238,12 +238,12 @@ GPIO::Level GPIO::In::Pin::get_level() const
     return static_cast<Level>(bit::is(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
 }
 
-void GPIO::In::Pin::register_interrupt_callback(Interrupt_mode_flag a_mode, const Interrupt_callback& a_callback) 
+void GPIO::In::Pin::register_interrupt_callback(Interrupt_mode_flag a_mode, const Interrupt_callback& a_callback)
 {
     assert(true == mcu::is_syscfg_enabled());
 
     volatile uint32_t* p_register = &(SYSCFG->EXTICR[this->id / 4u]);
-    uint32_t pos = ((static_cast<uint32_t>(this->id) % 4u) * 4u);
+    uint32_t pos                  = ((static_cast<uint32_t>(this->id) % 4u) * 4u);
 
 #ifdef CML_ASSERT
     const bool f = bit_flag::is(*p_register, static_cast<uint32_t>(this->p_port->get_id()) << pos);
@@ -285,16 +285,15 @@ void GPIO::In::Pin::register_interrupt_callback(Interrupt_mode_flag a_mode, cons
     interrupt_handlers[this->id].pin.id     = this->id;
 }
 
-void GPIO::In::Pin::unregister_interrupt_callback() 
+void GPIO::In::Pin::unregister_interrupt_callback()
 {
     Interrupt_guard guard;
 
     bit::clear(&(EXTI->RTSR1), this->id);
     bit::clear(&(EXTI->FTSR1), this->id);
 
-    bit_flag::clear(
-        &(SYSCFG->EXTICR[this->id / 4u]),
-        (static_cast<uint32_t>(this->p_port->get_id()) << ((static_cast<uint32_t>(this->id) % 4u) * 4u)));
+    bit_flag::clear(&(SYSCFG->EXTICR[this->id / 4u]),
+                    (static_cast<uint32_t>(this->p_port->get_id()) << ((static_cast<uint32_t>(this->id) % 4u) * 4u)));
 
     interrupt_handlers[this->id].callback.function    = nullptr;
     interrupt_handlers[this->id].callback.p_user_data = nullptr;

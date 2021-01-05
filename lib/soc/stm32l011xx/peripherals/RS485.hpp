@@ -25,9 +25,9 @@ namespace peripherals {
 class RS485 : public cml::Non_copyable
 {
 public:
-    using Oversampling    = USART::Oversampling;
-    using Stop_bits       = USART::Stop_bits;
-    using Result          = USART::Result;
+    using Oversampling = USART::Oversampling;
+    using Stop_bits    = USART::Stop_bits;
+    using Result       = USART::Result;
 
     struct Config
     {

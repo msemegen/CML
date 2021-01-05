@@ -53,7 +53,7 @@ public:
             unknown          = 0x20
         };
 
-        Bus_flag bus_flag    = Bus_flag::unknown;
+        Bus_flag bus_flag             = Bus_flag::unknown;
         uint32_t data_length_in_bytes = 0;
     };
 
@@ -114,9 +114,9 @@ constexpr I2C_base::Result::Bus_flag operator|=(I2C_base::Result::Bus_flag& a_f1
 class I2C_master : public I2C_base
 {
 public:
-    using Id              = I2C_base::Id;
-    using Clock_source    = I2C_base::Clock_source;
-    using Result          = I2C_base::Result;
+    using Id           = I2C_base::Id;
+    using Clock_source = I2C_base::Clock_source;
+    using Result       = I2C_base::Result;
 
     struct Transmit_callback
     {
@@ -247,9 +247,9 @@ private:
 class I2C_slave : public I2C_base
 {
 public:
-    using Id              = I2C_base::Id;
-    using Clock_source    = I2C_base::Clock_source;
-    using Result          = I2C_base::Result;
+    using Id           = I2C_base::Id;
+    using Clock_source = I2C_base::Clock_source;
+    using Result       = I2C_base::Result;
 
     struct Config
     {

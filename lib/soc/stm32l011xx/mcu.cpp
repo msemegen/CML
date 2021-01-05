@@ -110,9 +110,9 @@ void mcu::enable_pll(const Pll_config& a_config)
         ;
 
     bit_flag::set(&(RCC->CFGR),
-             RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL | RCC_CFGR_PLLDIV,
-             static_cast<uint32_t>(a_config.source) | static_cast<uint32_t>(a_config.divider) |
-                 static_cast<uint32_t>(a_config.multiplier));
+                  RCC_CFGR_PLLSRC | RCC_CFGR_PLLMUL | RCC_CFGR_PLLDIV,
+                  static_cast<uint32_t>(a_config.source) | static_cast<uint32_t>(a_config.divider) |
+                      static_cast<uint32_t>(a_config.multiplier));
 
     bit_flag::set(&(RCC->CR), RCC_CR_PLLON);
 

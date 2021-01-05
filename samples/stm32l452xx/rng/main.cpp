@@ -4,8 +4,8 @@
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
-#include <cml/hal/system_timer.hpp>
 #include <cml/hal/system/rng.hpp>
+#include <cml/hal/system_timer.hpp>
 #include <cml/hal/systick.hpp>
 #include <cml/utils/Logger.hpp>
 #include <cml/utils/delay.hpp>

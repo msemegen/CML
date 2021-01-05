@@ -54,7 +54,7 @@ public:
             unknown          = 0x20
         };
 
-        Bus_flag bus_flag    = Bus_flag::unknown;
+        Bus_flag bus_flag             = Bus_flag::unknown;
         uint32_t data_length_in_bytes = 0;
     };
 

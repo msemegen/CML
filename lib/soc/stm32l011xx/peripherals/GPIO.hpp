@@ -134,7 +134,6 @@ public:
 
     private:
         friend GPIO;
-
     };
 
     class In : private cml::Non_copyable

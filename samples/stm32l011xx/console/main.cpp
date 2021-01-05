@@ -145,12 +145,6 @@ int main()
                        Hz_to_MHz(mcu::get_sysclk_frequency_hz()),
                        sysclk_source_to_cstring(mcu::get_sysclk_source()));
 
-            //GPIO gpio_port_b(GPIO::Id::b);
-            //gpio_port_b.enable();
-            //
-            //pin::Out led_pin;
-            //pin::out::enable(&gpio_port_b, 3u, { pin::Mode::push_pull, pin::Pull::down, pin::Speed::low }, &led_pin);
-
             Console console({ write_character, &iostream }, { write_string, &iostream }, { read_key, &iostream });
 
             while (true)

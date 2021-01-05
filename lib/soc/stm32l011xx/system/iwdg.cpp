@@ -11,8 +11,8 @@
 #include <soc/stm32l011xx/system/iwdg.hpp>
 
 // soc
-#include <soc/system_timer.hpp>
 #include <soc/stm32l011xx/mcu.hpp>
+#include <soc/system_timer.hpp>
 
 // cml
 #include <cml/debug/assert.hpp>

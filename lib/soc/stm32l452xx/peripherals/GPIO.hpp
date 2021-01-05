@@ -442,7 +442,7 @@ public:
 };
 
 constexpr GPIO::In::Pin::Interrupt_mode_flag operator|(GPIO::In::Pin::Interrupt_mode_flag a_f1,
-                                                  GPIO::In::Pin::Interrupt_mode_flag a_f2)
+                                                       GPIO::In::Pin::Interrupt_mode_flag a_f2)
 {
     return static_cast<GPIO::In::Pin::Interrupt_mode_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }

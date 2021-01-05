@@ -7,17 +7,17 @@
 
 #ifdef STM32L452xx
 
-//this
+// this
 #include <soc/stm32l452xx/peripherals/SPI.hpp>
 
-//soc
+// soc
 #include <soc/system_timer.hpp>
 
-//cml
+// cml
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
-#include <cml/various.hpp>
 #include <cml/utils/wait_until.hpp>
+#include <cml/various.hpp>
 
 namespace {
 
@@ -93,7 +93,7 @@ bool is_SPI_SR_error(SPI_base::Id a_id)
     return bit::is_any(get_spi_ptr(a_id)->SR, SPI_SR_FRE | SPI_SR_OVR | SPI_SR_MODF | SPI_SR_CRCERR);
 }
 
-SPI_base::Result::Bus_flag get_bus_flag_from_SPI_SR(SPI_base::Id a_id) 
+SPI_base::Result::Bus_flag get_bus_flag_from_SPI_SR(SPI_base::Id a_id)
 {
     SPI_base::Result::Bus_flag ret = SPI_base::Result::Bus_flag::ok;
     uint32_t sr                    = get_spi_ptr(a_id)->SR;
@@ -172,11 +172,10 @@ void SPI_master::enable(const Config& a_config,
     controllers[static_cast<uint32_t>(this->id)].p_spi_slave_handle  = nullptr;
     controllers[static_cast<uint32_t>(this->id)].p_spi_master_handle = this;
 
-    get_spi_ptr(this->id)->CR1 =
-        static_cast<uint32_t>(a_config.mode) | static_cast<uint32_t>(a_config.wiring) |
-        static_cast<uint32_t>(a_frame_format.bit_significance) |
-        static_cast<uint32_t>(a_clock_source.prescaler) | (true == a_config.crc_enable ? SPI_CR1_CRCEN : 0x0u) |
-        SPI_CR1_SSM | SPI_CR1_MSTR;
+    get_spi_ptr(this->id)->CR1 = static_cast<uint32_t>(a_config.mode) | static_cast<uint32_t>(a_config.wiring) |
+                                 static_cast<uint32_t>(a_frame_format.bit_significance) |
+                                 static_cast<uint32_t>(a_clock_source.prescaler) |
+                                 (true == a_config.crc_enable ? SPI_CR1_CRCEN : 0x0u) | SPI_CR1_SSM | SPI_CR1_MSTR;
 
     get_spi_ptr(this->id)->CR2 = static_cast<uint32_t>(a_frame_format.word_length) | SPI_CR2_SSOE |
                                  (a_frame_format.word_length <= Frame_format::Word_length::_8 ? SPI_CR2_FRXTH : 0x0u);
@@ -186,17 +185,17 @@ void SPI_master::enable(const Config& a_config,
 void SPI_master::disable()
 {
     /*
-    * The correct disable procedure is (except when receive only mode is used):
-    * 1. Wait until FTLVL[1:0] = 00 (no more data to transmit).
-    * 2. Wait until BSY=0 (the last data frame is processed).
-    * 3. Disable the SPI (SPE=0).
-    * 4. Read data until FRLVL[1:0] = 00 (read all the received data).
-    * The correct disable procedure for certain receive only modes is:
-    * 1. Interrupt the receive flow by disabling SPI (SPE=0) in the specific time window while
-    * the last data frame is ongoing.
-    * 2. Wait until BSY=0 (the last data frame is processed).
-    * 3. Read data until FRLVL[1:0] = 00 (read all the received data).
-    */
+     * The correct disable procedure is (except when receive only mode is used):
+     * 1. Wait until FTLVL[1:0] = 00 (no more data to transmit).
+     * 2. Wait until BSY=0 (the last data frame is processed).
+     * 3. Disable the SPI (SPE=0).
+     * 4. Read data until FRLVL[1:0] = 00 (read all the received data).
+     * The correct disable procedure for certain receive only modes is:
+     * 1. Interrupt the receive flow by disabling SPI (SPE=0) in the specific time window while
+     * the last data frame is ongoing.
+     * 2. Wait until BSY=0 (the last data frame is processed).
+     * 3. Read data until FRLVL[1:0] = 00 (read all the received data).
+     */
 
     wait_until::any_bit(&(get_spi_ptr(this->id)->SR), SPI_SR_FRLVL, true);
     wait_until::flag(&(get_spi_ptr(this->id)->SR), SPI_SR_BSY, true);
@@ -356,7 +355,7 @@ SPI_master::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words,
                 }
                 else
                 {
-                   *(reinterpret_cast<volatile uint8_t*>(&(get_spi_ptr(this->id)->DR))) = static_cast<uint8_t>(0xFFu);
+                    *(reinterpret_cast<volatile uint8_t*>(&(get_spi_ptr(this->id)->DR))) = static_cast<uint8_t>(0xFFu);
                 }
 
                 transmit_enable = false;
@@ -399,7 +398,6 @@ SPI_master::Result SPI_master::receive_bytes_polling(void* a_p_data,
 {
     if (nullptr != a_p_nss)
     {
-
     }
 
     if (nullptr != a_p_nss)

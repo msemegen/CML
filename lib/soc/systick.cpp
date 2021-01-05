@@ -18,7 +18,7 @@ namespace {
 
 using namespace soc;
 
-static  systick::Tick_callback callback;
+static systick::Tick_callback callback;
 
 } // namespace
 

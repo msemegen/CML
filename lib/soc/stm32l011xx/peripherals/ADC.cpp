@@ -12,8 +12,8 @@
 
 // soc
 #include <soc/Interrupt_guard.hpp>
-#include <soc/system_timer.hpp>
 #include <soc/stm32l011xx/mcu.hpp>
+#include <soc/system_timer.hpp>
 
 // cml
 #include <cml/bit.hpp>

@@ -284,8 +284,8 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
 
     bit_flag::set(&(USART2->ICR), USART_ICR_TCCF);
 
-    uint32_t words         = 0;
-    bool error             = false;
+    uint32_t words          = 0;
+    bool error              = false;
     Result::Bus_flag status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(USART2->ISR, USART_ISR_TC) && false == error)
@@ -325,8 +325,8 @@ USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_word
 
     bit_flag::set(&(USART2->ICR), USART_ICR_TCCF);
 
-    uint32_t words         = 0;
-    bool error             = false;
+    uint32_t words          = 0;
+    bool error              = false;
     Result::Bus_flag status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(USART2->ISR, USART_ISR_TC) && false == error &&
@@ -360,8 +360,8 @@ USART::Result USART::transmit_word(uint16_t a_word)
 {
     bit_flag::set(&(USART2->ICR), USART_ICR_TCCF);
 
-    uint32_t words         = 0;
-    bool error             = false;
+    uint32_t words          = 0;
+    bool error              = false;
     Result::Bus_flag status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(USART2->ISR, USART_ISR_TC) && false == error)
@@ -398,8 +398,8 @@ USART::Result USART::transmit_word(uint16_t a_word, time::tick a_timeout_ms)
 
     bit_flag::set(&(USART2->ICR), USART_ICR_TCCF);
 
-    uint32_t words         = 0;
-    bool error             = false;
+    uint32_t words          = 0;
+    bool error              = false;
     Result::Bus_flag status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(USART2->ISR, USART_ISR_TC) && false == error &&
@@ -438,8 +438,8 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
     bit_flag::set(&(USART2->ICR), USART_ICR_IDLECF);
 
-    uint32_t words         = 0;
-    bool error             = false;
+    uint32_t words          = 0;
+    bool error              = false;
     Result::Bus_flag status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(USART2->ISR, USART_ISR_IDLE) && false == error)
@@ -486,8 +486,8 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
     bit_flag::set(&(USART2->ICR), USART_ICR_IDLECF);
 
-    uint32_t words         = 0;
-    bool error             = false;
+    uint32_t words          = 0;
+    bool error              = false;
     Result::Bus_flag status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(USART2->ISR, USART_ISR_IDLE) && false == error &&
@@ -658,9 +658,9 @@ void USART::set_frame_format(const Frame_format& a_frame_format)
 
     bit_flag::clear(&(USART2->CR1), USART_CR1_UE);
     bit_flag::set(&(USART2->CR1),
-             USART_CR1_PCE | USART_CR1_M,
-             static_cast<uint32_t>(a_frame_format.parity) | static_cast<uint32_t>(a_frame_format.word_length) |
-                 USART_CR1_UE);
+                  USART_CR1_PCE | USART_CR1_M,
+                  static_cast<uint32_t>(a_frame_format.parity) | static_cast<uint32_t>(a_frame_format.word_length) |
+                      USART_CR1_UE);
 
     this->frame_format = a_frame_format;
 }
@@ -802,8 +802,8 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address, const void* a_p_d
 
     bit_flag::set(&(USART2->ICR), USART_ICR_TCCF);
 
-    uint32_t words             = 0;
-    bool error                 = false;
+    uint32_t words              = 0;
+    bool error                  = false;
     Result::Bus_flag bus_status = Result::Bus_flag::ok;
 
     this->p_flow_control_pin->set_level(GPIO::Level::high);
@@ -852,8 +852,8 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address,
 
     bit_flag::set(&(USART2->ICR), USART_ICR_TCCF);
 
-    uint32_t words             = 0;
-    bool error                 = false;
+    uint32_t words              = 0;
+    bool error                  = false;
     Result::Bus_flag bus_status = Result::Bus_flag::ok;
 
     this->p_flow_control_pin->set_level(GPIO::Level::high);
@@ -896,8 +896,8 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
     bit_flag::set(&(USART2->ICR), USART_ICR_IDLECF);
 
-    uint32_t words             = 0;
-    bool error                 = false;
+    uint32_t words              = 0;
+    bool error                  = false;
     Result::Bus_flag bus_status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(USART2->ISR, USART_ISR_IDLE) && false == error)
@@ -945,8 +945,8 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
 
     bit_flag::set(&(USART2->ICR), USART_ICR_IDLECF);
 
-    uint32_t words             = 0;
-    bool error                 = false;
+    uint32_t words              = 0;
+    bool error                  = false;
     Result::Bus_flag bus_status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(USART2->ISR, USART_ISR_IDLE) && false == error &&

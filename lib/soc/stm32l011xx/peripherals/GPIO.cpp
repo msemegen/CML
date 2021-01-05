@@ -13,7 +13,7 @@
 // soc
 #include <soc/Interrupt_guard.hpp>
 
-//cml
+// cml
 #include <cml/bit_flag.hpp>
 
 #ifdef CML_ASSERT
@@ -225,7 +225,6 @@ void GPIO::In::Pin::unregister_interrupt_callback()
     interrupt_handlers[this->id].callback.p_user_data = nullptr;
 }
 
-
 GPIO::Pull GPIO::In::Pin::get_pull() const
 {
     assert(nullptr != this->p_port && 0xFF != this->id);
@@ -256,8 +255,8 @@ void GPIO::Out::Pin::set_mode(Mode a_mode)
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
-             0x1u << this->id,
-             static_cast<uint32_t>(a_mode) << this->id);
+                  0x1u << this->id,
+                  static_cast<uint32_t>(a_mode) << this->id);
 }
 
 void GPIO::Out::Pin::set_pull(Pull a_pull)
@@ -266,8 +265,8 @@ void GPIO::Out::Pin::set_pull(Pull a_pull)
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_pull) << (this->id * 2));
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_pull) << (this->id * 2));
 }
 
 void GPIO::Out::Pin::set_speed(Speed a_speed)
@@ -276,8 +275,8 @@ void GPIO::Out::Pin::set_speed(Speed a_speed)
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_speed) << (this->id * 2));
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_speed) << (this->id * 2));
 }
 
 GPIO::Level GPIO::Out::Pin::get_level() const
@@ -292,7 +291,7 @@ GPIO::Mode GPIO::Out::Pin::get_mode() const
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Mode>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
 GPIO::Pull GPIO::Out::Pin::get_pull() const
@@ -300,7 +299,7 @@ GPIO::Pull GPIO::Out::Pin::get_pull() const
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Pull>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
 GPIO::Speed GPIO::Out::Pin::get_speed() const
@@ -308,7 +307,7 @@ GPIO::Speed GPIO::Out::Pin::get_speed() const
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Speed>((bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR,
-                                        static_cast<uint32_t>(0x1u << this->id) << this->id)));
+                                             static_cast<uint32_t>(0x1u << this->id) << this->id)));
 }
 
 void GPIO::Analog::Pin::set_pull(Pull a_pull)
@@ -316,8 +315,8 @@ void GPIO::Analog::Pin::set_pull(Pull a_pull)
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_pull) << (this->id * 2));
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_pull) << (this->id * 2));
 }
 
 GPIO::Pull GPIO::Analog::Pin::get_pull() const
@@ -325,7 +324,7 @@ GPIO::Pull GPIO::Analog::Pin::get_pull() const
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Pull>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
 void GPIO::Alternate_function::Pin::set_mode(Mode a_mode)
@@ -334,8 +333,8 @@ void GPIO::Alternate_function::Pin::set_mode(Mode a_mode)
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
-             0x1u << this->id,
-             static_cast<uint32_t>(a_mode) << this->id);
+                  0x1u << this->id,
+                  static_cast<uint32_t>(a_mode) << this->id);
 }
 
 void GPIO::Alternate_function::Pin::set_pull(Pull a_pull)
@@ -344,8 +343,8 @@ void GPIO::Alternate_function::Pin::set_pull(Pull a_pull)
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_pull) << (this->id * 2));
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_pull) << (this->id * 2));
 }
 
 void GPIO::Alternate_function::Pin::set_speed(Speed a_speed)
@@ -354,8 +353,8 @@ void GPIO::Alternate_function::Pin::set_speed(Speed a_speed)
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
-             0x3u << (this->id * 2),
-             static_cast<uint32_t>(a_speed) << (this->id * 2));
+                  0x3u << (this->id * 2),
+                  static_cast<uint32_t>(a_speed) << (this->id * 2));
 }
 
 void GPIO::Alternate_function::Pin::set_function(uint32_t a_function)
@@ -379,7 +378,7 @@ GPIO::Mode GPIO::Alternate_function::Pin::get_mode() const
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Mode>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
 GPIO::Pull GPIO::Alternate_function::Pin::get_pull() const
@@ -387,7 +386,7 @@ GPIO::Pull GPIO::Alternate_function::Pin::get_pull() const
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Pull>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR,
-                                      static_cast<uint32_t>(0x1u << this->id) << this->id));
+                                           static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
 GPIO::Speed GPIO::Alternate_function::Pin::get_speed() const
@@ -395,7 +394,7 @@ GPIO::Speed GPIO::Alternate_function::Pin::get_speed() const
     assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Speed>(bit_flag::get(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR,
-                                       static_cast<uint32_t>(0x1u << this->id) << this->id));
+                                            static_cast<uint32_t>(0x1u << this->id) << this->id));
 }
 
 void GPIO::In::enable(uint32_t a_id, Pull a_pull, Pin* a_p_pin)
