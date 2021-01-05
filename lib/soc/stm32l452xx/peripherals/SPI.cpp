@@ -17,7 +17,7 @@
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/various.hpp>
-#include <cml/utils/wait.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace {
 
@@ -198,7 +198,10 @@ void SPI_master::disable()
     * 3. Read data until FRLVL[1:0] = 00 (read all the received data).
     */
 
-    wait::until(&(get_spi_ptr(this->id)->SR), SPI_SR_FRLVL, false);
+    wait_until::any_bit(&(get_spi_ptr(this->id)->SR), SPI_SR_FRLVL, true);
+    wait_until::flag(&(get_spi_ptr(this->id)->SR), SPI_SR_BSY, true);
+
+    bit_flag::clear(&(get_spi_ptr(this->id)->CR1), SPI_CR1_SPE);
 
     get_spi_ptr(this->id)->CR2 = 0;
     get_spi_ptr(this->id)->CR1 = 0;

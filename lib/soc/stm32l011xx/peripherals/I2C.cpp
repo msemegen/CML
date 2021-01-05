@@ -16,7 +16,7 @@
 #include <soc/stm32l011xx/mcu.hpp>
 
 // cml
-#include <cml/utils/wait.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace {
 
@@ -541,7 +541,7 @@ bool I2C_master::is_slave_connected(uint8_t a_slave_address, time::tick a_timeou
 
     I2C1->CR2 = address_mask | I2C_CR2_AUTOEND | I2C_CR2_START;
 
-    bool ret = wait::until(&(I2C1->ISR), I2C_ISR_STOPF, false, start, a_timeout);
+    bool ret = wait_until::flag(&(I2C1->ISR), I2C_ISR_STOPF, false, start, a_timeout);
 
     if (true == ret)
     {

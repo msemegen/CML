@@ -16,7 +16,7 @@
 // cml
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assert.hpp>
-#include <cml/utils/wait.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace {
 
@@ -72,8 +72,8 @@ bool rng::enable(uint32_t a_irq_priority, time::tick a_timeout)
 
     if (true == ret)
     {
-        ret = wait::until(&(RNG->SR), RNG_SR_SECS, true, start, a_timeout) &&
-              wait::until(&(RNG->SR), RNG_SR_CECS, true, start, a_timeout);
+        ret = wait_until::flag(&(RNG->SR), RNG_SR_SECS, true, start, a_timeout) &&
+              wait_until::flag(&(RNG->SR), RNG_SR_CECS, true, start, a_timeout);
     }
 
     if (true == ret)
@@ -99,7 +99,7 @@ bool rng::get_value_polling(uint32_t* a_p_value, time::tick a_timeout)
 
     time::tick start = system_timer::get();
 
-    bool ret = wait::until(&(RNG->SR), RNG_SR_DRDY, false, start, a_timeout);
+    bool ret = wait_until::flag(&(RNG->SR), RNG_SR_DRDY, false, start, a_timeout);
 
     if (true == ret)
     {

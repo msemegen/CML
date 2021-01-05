@@ -14,7 +14,7 @@
 #include <cml/bit.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/frequency.hpp>
-#include <cml/utils/wait.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace {
 
@@ -52,61 +52,61 @@ void mcu::enable_msi_clock(Msi_frequency a_freq)
 
     bit_flag::set(&(RCC->CR), RCC_CR_MSION);
 
-    wait::until(&(RCC->CR), RCC_CR_MSIRDY, false);
+    wait_until::flag(&(RCC->CR), RCC_CR_MSIRDY, false);
 
     bit_flag::clear(&(RCC->ICSCR), RCC_ICSCR_MSITRIM);
     bit_flag::set(&(RCC->CR), RCC_CR_MSIRGSEL);
 
-    wait::until(&(RCC->CR), RCC_CR_MSIRDY, false);
+    wait_until::flag(&(RCC->CR), RCC_CR_MSIRDY, false);
 }
 
 void mcu::enable_hsi_clock(Hsi_frequency)
 {
     bit_flag::set(&(RCC->CR), RCC_CR_HSION, RCC_CR_HSION);
 
-    wait::until(&(RCC->CR), RCC_CR_HSIRDY, false);
+    wait_until::flag(&(RCC->CR), RCC_CR_HSIRDY, false);
 }
 
 void mcu::enable_lsi_clock(Lsi_frequency)
 {
     bit_flag::set(&(RCC->CSR), RCC_CSR_LSION, RCC_CSR_LSION);
 
-    wait::until(&(RCC->CSR), RCC_CSR_LSIRDY, false);
+    wait_until::flag(&(RCC->CSR), RCC_CSR_LSIRDY, false);
 }
 
 void mcu::enable_hsi48_clock(Hsi48_frequency)
 {
     bit_flag::set(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
 
-    wait::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, false);
+    wait_until::flag(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, false);
 }
 
 void mcu::disable_msi_clock()
 {
     bit_flag::clear(&(RCC->CR), RCC_CR_MSION);
 
-    wait::until(&(RCC->CR), RCC_CR_MSIRDY, true);
+    wait_until::flag(&(RCC->CR), RCC_CR_MSIRDY, true);
 }
 
 void mcu::disable_hsi_clock()
 {
     bit_flag::clear(&(RCC->CR), RCC_CR_HSION);
 
-    wait::until(&(RCC->CR), RCC_CR_HSIRDY, true);
+    wait_until::flag(&(RCC->CR), RCC_CR_HSIRDY, true);
 }
 
 void mcu::disable_lsi_clock()
 {
     bit_flag::clear(&(RCC->CSR), RCC_CSR_LSION);
 
-    wait::until(&(RCC->CSR), RCC_CSR_LSIRDY, true);
+    wait_until::flag(&(RCC->CSR), RCC_CSR_LSIRDY, true);
 }
 
 void mcu::disable_hsi48_clock()
 {
     bit_flag::clear(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
 
-    wait::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, true);
+    wait_until::flag(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, true);
 }
 
 void mcu::enable_pll(const Pll_config& a_config)

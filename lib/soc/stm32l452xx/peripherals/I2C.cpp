@@ -23,7 +23,7 @@
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assert.hpp>
-#include <cml/utils/wait.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace {
 
@@ -728,7 +728,7 @@ bool I2C_master::is_slave_connected(uint8_t a_slave_address, time::tick a_timeou
 
     get_i2c_ptr(this->id)->CR2 = address_mask | I2C_CR2_AUTOEND | I2C_CR2_START;
 
-    bool ret = wait::until(&(get_i2c_ptr(this->id)->ISR), I2C_ISR_STOPF, false, start, a_timeout);
+    bool ret = wait_until::flag(&(get_i2c_ptr(this->id)->ISR), I2C_ISR_STOPF, false, start, a_timeout);
 
     if (true == ret)
     {
@@ -745,7 +745,7 @@ bool I2C_master::is_slave_connected(uint8_t a_slave_address, time::tick a_timeou
     }
 
     bit_flag::set(&(get_i2c_ptr(this->id)->ICR), I2C_ICR_STOPCF);
-    wait::until(&(get_i2c_ptr(this->id)->ISR), I2C_ISR_STOPF, true);
+    wait_until::flag(&(get_i2c_ptr(this->id)->ISR), I2C_ISR_STOPF, true);
     get_i2c_ptr(this->id)->CR2 = 0;
 
     return ret;

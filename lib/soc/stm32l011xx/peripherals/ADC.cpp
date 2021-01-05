@@ -20,7 +20,7 @@
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assert.hpp>
 #include <cml/utils/delay.hpp>
-#include <cml/utils/wait.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace {
 
@@ -179,11 +179,11 @@ void ADC::read_polling(uint16_t* a_p_data, uint32_t a_count)
 
     for (uint32_t i = 0; i < a_count; i++)
     {
-        wait::until(&(ADC1->ISR), ADC_ISR_EOC, false);
+        wait_until::flag(&(ADC1->ISR), ADC_ISR_EOC, false);
         a_p_data[i] = static_cast<uint16_t>(ADC1->DR);
     }
 
-    wait::until(&(ADC1->ISR), ADC_ISR_EOS, false);
+    wait_until::flag(&(ADC1->ISR), ADC_ISR_EOS, false);
     bit_flag::set(&(ADC1->ISR), ADC_ISR_EOS);
 
     bit_flag::set(&(ADC1->CR), ADC_CR_ADSTP);
@@ -205,7 +205,7 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
     for (uint32_t i = 0; i < a_count && true == ret; i++)
     {
-        ret = wait::until(&(ADC1->ISR), ADC_ISR_EOC, false, start, a_timeout);
+        ret = wait_until::flag(&(ADC1->ISR), ADC_ISR_EOC, false, start, a_timeout);
 
         if (true == ret)
         {
@@ -215,7 +215,7 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
     if (true == ret)
     {
-        ret = wait::until(&(ADC1->ISR), ADC_ISR_EOS, false, start, a_timeout);
+        ret = wait_until::flag(&(ADC1->ISR), ADC_ISR_EOS, false, start, a_timeout);
 
         if (true == ret)
         {
@@ -304,14 +304,14 @@ bool ADC::enable(Resolution a_resolution, time::tick a_start, uint32_t a_irq_pri
 
     bit_flag::set(&(ADC1->CR), ADC_CR_ADCAL);
 
-    bool ret = wait::until(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
+    bool ret = wait_until::flag(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
 
     if (true == ret)
     {
         bit_flag::set(&(ADC1->CFGR1), static_cast<uint32_t>(a_resolution));
         bit_flag::set(&(ADC1->CR), ADC_CR_ADEN);
 
-        ret = wait::until(&(ADC1->CR), ADC_CR_ADEN, false, a_start, a_timeout);
+        ret = wait_until::flag(&(ADC1->CR), ADC_CR_ADEN, false, a_start, a_timeout);
 
         if (true == ret)
         {

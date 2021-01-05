@@ -16,7 +16,7 @@
 
 // cml
 #include <cml/debug/assert.hpp>
-#include <cml/utils/wait.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace {
 
@@ -52,12 +52,12 @@ bool iwdg::enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_wind
     IWDG->KR = control_flags::write_access_enable;
 
     IWDG->PR = static_cast<uint32_t>(a_prescaler);
-    bool ret = wait::until(&(IWDG->SR), IWDG_SR_PVU, true, start, a_timeout);
+    bool ret = wait_until::flag(&(IWDG->SR), IWDG_SR_PVU, true, start, a_timeout);
 
     if (true == ret)
     {
         IWDG->RLR = a_reload;
-        ret       = wait::until(&(IWDG->SR), IWDG_SR_RVU, true, start, a_timeout);
+        ret       = wait_until::flag(&(IWDG->SR), IWDG_SR_RVU, true, start, a_timeout);
     }
 
     if (true == ret)
@@ -65,7 +65,7 @@ bool iwdg::enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_wind
         if (true == a_window.enable)
         {
             IWDG->WINR = a_window.value;
-            ret        = wait::until(&(IWDG->SR), IWDG_SR_WVU, true, start, a_timeout);
+            ret        = wait_until::flag(&(IWDG->SR), IWDG_SR_WVU, true, start, a_timeout);
         }
         else
         {
