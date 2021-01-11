@@ -97,31 +97,37 @@ Controller controllers[] = { { USART1, nullptr, nullptr, usart_1_enable, usart_1
                              { USART2, nullptr, nullptr, usart_2_enable, usart_2_disable },
                              { USART3, nullptr, nullptr, usart_3_enable, usart_3_disable } };
 
-bool is_USART_ISR_error(uint32_t a_isr)
+USART_TypeDef* get_usart_ptr(USART::Id a_id)
 {
-    return bit::is_any(a_isr, USART_ISR_PE | USART_ISR_FE | USART_ISR_ORE | USART_ISR_NE);
+    return controllers[static_cast<uint32_t>(a_id)].p_registers;
 }
 
-USART::Bus_status_flag get_bus_status_flag_from_USART_ISR(uint32_t a_isr)
+bool is_USART_ISR_error(USART::Id a_id)
+{
+    return bit::is_any(get_usart_ptr(a_id)->ISR, USART_ISR_PE | USART_ISR_FE | USART_ISR_ORE | USART_ISR_NE);
+}
+
+USART::Bus_status_flag get_bus_status_flag_from_USART_ISR(USART::Id a_id)
 {
     USART::Bus_status_flag ret = USART::Bus_status_flag::ok;
+    const uint32_t isr         = get_usart_ptr(a_id)->ISR;
 
-    if (true == bit_flag::is(a_isr, USART_ISR_PE))
+    if (true == bit_flag::is(isr, USART_ISR_PE))
     {
         ret |= USART::Bus_status_flag::parity_error;
     }
 
-    if (true == bit_flag::is(a_isr, USART_ISR_FE))
+    if (true == bit_flag::is(isr, USART_ISR_FE))
     {
         ret |= USART::Bus_status_flag::framing_error;
     }
 
-    if (true == bit_flag::is(a_isr, USART_ISR_ORE))
+    if (true == bit_flag::is(isr, USART_ISR_ORE))
     {
         ret |= USART::Bus_status_flag::overrun;
     }
 
-    if (true == bit_flag::is(a_isr, USART_ISR_NE))
+    if (true == bit_flag::is(isr, USART_ISR_NE))
     {
         ret |= USART::Bus_status_flag::noise_detected;
     }
@@ -129,14 +135,9 @@ USART::Bus_status_flag get_bus_status_flag_from_USART_ISR(uint32_t a_isr)
     return ret;
 }
 
-void clear_USART_ISR_errors(volatile uint32_t* a_p_icr)
+void clear_USART_ISR_errors(USART::Id a_id)
 {
-    bit_flag::set(a_p_icr, USART_ICR_PECF | USART_ICR_FECF | USART_ICR_ORECF | USART_ICR_NECF);
-}
-
-USART_TypeDef* get_usart_ptr(USART::Id a_id)
-{
-    return controllers[static_cast<uint32_t>(a_id)].p_registers;
+    bit_flag::set(&(get_usart_ptr(a_id)->ICR), USART_ICR_PECF | USART_ICR_FECF | USART_ICR_ORECF | USART_ICR_NECF);
 }
 
 } // namespace
@@ -220,7 +221,7 @@ void usart_interrupt_handler(USART* a_p_this)
 
     if (true == bit_flag::is(cr3, USART_CR3_EIE) && true == bit_flag::is(cr1, USART_CR1_PEIE))
     {
-        USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR(isr);
+        USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR(a_p_this->id);
 
         if (status != USART::Bus_status_flag::ok)
         {
@@ -229,7 +230,7 @@ void usart_interrupt_handler(USART* a_p_this)
                 a_p_this->bus_status_callback.function(status, a_p_this, a_p_this->bus_status_callback.p_user_data);
             }
 
-            clear_USART_ISR_errors(&(get_usart_ptr(a_p_this->id)->ICR));
+            clear_USART_ISR_errors(a_p_this->id);
         }
     }
 }
@@ -276,7 +277,7 @@ void rs485_interrupt_handler(RS485* a_p_this)
 
     if (true == bit_flag::is(cr3, USART_CR3_EIE) && true == bit_flag::is(cr1, USART_CR1_PEIE))
     {
-        USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR(isr);
+        USART::Bus_status_flag status = get_bus_status_flag_from_USART_ISR(a_p_this->id);
 
         if (status != USART::Bus_status_flag::ok)
         {
@@ -285,7 +286,7 @@ void rs485_interrupt_handler(RS485* a_p_this)
                 a_p_this->bus_status_callback.function(status, a_p_this, a_p_this->bus_status_callback.p_user_data);
             }
 
-            clear_USART_ISR_errors(&(get_usart_ptr(a_p_this->id)->ICR));
+            clear_USART_ISR_errors(a_p_this->id);
         }
     }
 }
@@ -385,16 +386,16 @@ USART::Result USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_dat
             }
         }
 
-        error = is_USART_ISR_error(get_usart_ptr(this->id)->ISR);
+        error = is_USART_ISR_error(this->id);
     }
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 
@@ -431,16 +432,16 @@ USART::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_word
             }
         }
 
-        error = is_USART_ISR_error(get_usart_ptr(this->id)->ISR);
+        error = is_USART_ISR_error(this->id);
     }
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 
@@ -471,16 +472,16 @@ USART::Result USART::transmit_word(uint16_t a_word)
             words++;
         }
 
-        error = is_USART_ISR_error(get_usart_ptr(this->id)->ISR);
+        error = is_USART_ISR_error(this->id);
     }
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 
@@ -517,11 +518,11 @@ USART::Result USART::transmit_word(uint16_t a_word, time::tick a_timeout_ms)
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 
@@ -561,16 +562,16 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
             }
         }
 
-        error = is_USART_ISR_error(get_usart_ptr(this->id)->ISR);
+        error = is_USART_ISR_error(this->id);
     }
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 
@@ -614,16 +615,16 @@ USART::Result USART::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
             }
         }
 
-        error = is_USART_ISR_error(get_usart_ptr(this->id)->ISR);
+        error = is_USART_ISR_error(this->id);
     }
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 
@@ -921,18 +922,18 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address, const void* a_p_d
             }
         }
 
-        error = is_USART_ISR_error(get_usart_ptr(this->id)->ISR);
+        error = is_USART_ISR_error(this->id);
     }
 
     this->p_flow_control_pin->set_level(GPIO::Level::low);
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 
@@ -976,18 +977,18 @@ RS485::Result RS485::transmit_bytes_polling(uint8_t a_address,
             }
         }
 
-        error = is_USART_ISR_error(get_usart_ptr(this->id)->ISR);
+        error = is_USART_ISR_error(this->id);
     }
 
     this->p_flow_control_pin->set_level(GPIO::Level::low);
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 
@@ -1026,18 +1027,18 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
             }
         }
 
-        error = is_USART_ISR_error(get_usart_ptr(this->id)->ISR);
+        error = is_USART_ISR_error(this->id);
     }
 
     bit_flag::set(&(get_usart_ptr(this->id)->ICR), USART_ICR_CMCF);
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 
@@ -1080,18 +1081,18 @@ RS485::Result RS485::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_
             }
         }
 
-        error = is_USART_ISR_error(get_usart_ptr(this->id)->ISR);
+        error = is_USART_ISR_error(this->id);
     }
 
     bit_flag::set(&(get_usart_ptr(this->id)->ICR), USART_ICR_CMCF);
 
     if (true == error)
     {
-        bus_status = get_bus_status_flag_from_USART_ISR(get_usart_ptr(this->id)->ISR);
+        bus_status = get_bus_status_flag_from_USART_ISR(this->id);
 
         if (Bus_status_flag::ok != bus_status)
         {
-            clear_USART_ISR_errors(&(get_usart_ptr(this->id)->ICR));
+            clear_USART_ISR_errors(this->id);
         }
     }
 

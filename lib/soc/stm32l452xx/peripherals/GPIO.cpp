@@ -15,6 +15,7 @@
 
 // cml
 #include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 #ifdef CML_ASSERT
 #include <cml/debug/assert.hpp>
 #include <soc/stm32l452xx/mcu.hpp>

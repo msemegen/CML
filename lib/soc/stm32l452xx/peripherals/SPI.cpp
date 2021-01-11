@@ -24,6 +24,12 @@ namespace {
 using namespace cml;
 using namespace soc::stm32l452xx::peripherals;
 
+enum class Direction : uint32_t
+{
+    transmit,
+    receive
+};
+
 struct Controller
 {
     using Enable_function  = void (*)(uint32_t a_irq_priority);
@@ -88,9 +94,10 @@ SPI_TypeDef* get_spi_ptr(SPI_base::Id a_id)
     return controllers[static_cast<uint32_t>(a_id)].p_registers;
 }
 
-bool is_SPI_SR_error(SPI_base::Id a_id)
+bool is_SPI_SR_error(SPI_base::Id a_id, Direction a_direction)
 {
-    return bit::is_any(get_spi_ptr(a_id)->SR, SPI_SR_FRE | SPI_SR_OVR | SPI_SR_MODF | SPI_SR_CRCERR);
+    return bit::is_any(get_spi_ptr(a_id)->SR,
+                       SPI_SR_FRE | (Direction::receive == a_direction ? SPI_SR_OVR : 0) | SPI_SR_MODF | SPI_SR_CRCERR);
 }
 
 SPI_base::Result::Bus_flag get_bus_flag_from_SPI_SR(SPI_base::Id a_id)
@@ -121,9 +128,18 @@ SPI_base::Result::Bus_flag get_bus_flag_from_SPI_SR(SPI_base::Id a_id)
     return ret;
 }
 
+void clear_SPI_SR_overrun(SPI_base::Id a_id)
+{
+    volatile uint32_t t1 = get_spi_ptr(a_id)->DR;
+    volatile uint32_t t2 = get_spi_ptr(a_id)->SR;
+
+    unused(t1);
+    unused(t2);
+}
+
 void clear_SPI_SR_errors(SPI_base::Id a_id)
 {
-    uint32_t sr = get_spi_ptr(a_id)->SR;
+    const uint32_t sr = get_spi_ptr(a_id)->SR;
 
     if (true == bit_flag::is(sr, SPI_SR_OVR))
     {
@@ -180,6 +196,10 @@ void SPI_master::enable(const Config& a_config,
     get_spi_ptr(this->id)->CR2 = static_cast<uint32_t>(a_frame_format.word_length) | SPI_CR2_SSOE |
                                  (a_frame_format.word_length <= Frame_format::Word_length::_8 ? SPI_CR2_FRXTH : 0x0u);
     get_spi_ptr(this->id)->CR1 |= SPI_CR1_SPE;
+
+    this->confg        = a_config;
+    this->frame_format = a_frame_format;
+    this->clock_source = a_clock_source;
 }
 
 void SPI_master::disable()
@@ -214,31 +234,35 @@ SPI_master::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in
     }
 
     bool error                = false;
+    bool busy                 = true;
     uint32_t words            = 0;
     Result::Bus_flag bus_flag = Result::Bus_flag::ok;
 
-    while (true == bit::is_any(get_spi_ptr(this->id)->SR, SPI_SR_FRLVL) && false == error)
+    while (true == busy && false == error)
     {
         if (true == bit_flag::is(get_spi_ptr(this->id)->SR, SPI_SR_TXE) && words < a_data_size_in_words)
         {
-            if (this->frame_format.word_length <= Frame_format::Word_length::_8)
+            if (this->frame_format.word_length > Frame_format::Word_length::_8 || a_data_size_in_words - words > 1)
             {
-                get_spi_ptr(this->id)->DR = static_cast<const uint8_t*>(a_p_data)[words++];
+                *(reinterpret_cast<volatile uint16_t*>(&(get_spi_ptr(this->id)->DR))) =
+                    static_cast<const uint16_t*>(a_p_data)[words / 2];
+                words += 2;
             }
             else
             {
-                get_spi_ptr(this->id)->DR = static_cast<const uint16_t*>(a_p_data)[words++];
+                *(reinterpret_cast<volatile uint8_t*>(&(get_spi_ptr(this->id)->DR))) =
+                    static_cast<const uint8_t*>(a_p_data)[words++];
             }
         }
 
-        if (true == bit_flag::is(get_spi_ptr(this->id)->SR, SPI_SR_RXNE))
-        {
-            volatile uint32_t tmp = get_spi_ptr(this->id)->DR;
-            unused(tmp);
-        }
-
-        error = is_SPI_SR_error(this->id);
+        error = is_SPI_SR_error(this->id, Direction::transmit);
+        busy  = bit_flag::is(get_spi_ptr(this->id)->SR, SPI_SR_BSY);
     }
+
+    wait_until::flag(&(get_spi_ptr(this->id)->SR), SPI_SR_BSY, true);
+    wait_until::any_bit(&(get_spi_ptr(this->id)->SR), SPI_SR_FTLVL, true);
+
+    clear_SPI_SR_overrun(this->id);
 
     if (true == error)
     {
@@ -258,6 +282,7 @@ SPI_master::transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in
     return { bus_flag, words };
 }
 
+/*
 SPI_master::Result SPI_master::transmit_bytes_polling(const void* a_p_data,
                                                       uint32_t a_data_size_in_words,
                                                       time::tick a_timeout,
@@ -318,6 +343,7 @@ SPI_master::Result SPI_master::transmit_bytes_polling(const void* a_p_data,
 
     return { bus_flag, words };
 }
+*/
 
 SPI_master::Result
 SPI_master::receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, GPIO::Out::Pin* a_p_nss)
@@ -387,15 +413,66 @@ SPI_master::Result SPI_master::receive_bytes_polling(void* a_p_data,
                                                      time::tick a_timeout,
                                                      GPIO::Out::Pin* a_p_nss)
 {
+    assert(nullptr != a_p_data);
+    assert(a_data_size_in_words > 0);
+
+    time::tick start = system_timer::get();
+
     if (nullptr != a_p_nss)
+    {
+        a_p_nss->set_level(GPIO::Level::low);
+    }
+
+    bool error                = false;
+    bool transmit_enable      = true;
+    uint32_t words            = 0;
+    Result::Bus_flag bus_flag = Result::Bus_flag::ok;
+
+    if (Config::Wiring::full_duplex == this->confg.wiring)
+    {
+        while (false == error && words < a_data_size_in_words && a_timeout < time::diff(system_timer::get(), start))
+        {
+            if (true == transmit_enable && true == bit_flag::is(get_spi_ptr(this->id)->SR, SPI_SR_TXE))
+            {
+                if (a_data_size_in_words - words > 1)
+                {
+                    *(reinterpret_cast<volatile uint16_t*>(&(get_spi_ptr(this->id)->DR))) =
+                        static_cast<uint16_t>(0xFFFFu);
+                }
+                else
+                {
+                    *(reinterpret_cast<volatile uint8_t*>(&(get_spi_ptr(this->id)->DR))) = static_cast<uint8_t>(0xFFu);
+                }
+
+                transmit_enable = false;
+            }
+
+            if (true == bit_flag::is(get_spi_ptr(this->id)->SR, SPI_SR_RXNE))
+            {
+                if (a_data_size_in_words - words > 1)
+                {
+                    static_cast<uint16_t*>(a_p_data)[words] = static_cast<uint16_t>(get_spi_ptr(this->id)->DR);
+                    words += 2;
+                }
+                else
+                {
+                    static_cast<uint8_t*>(a_p_data)[words++] = static_cast<uint8_t>(get_spi_ptr(this->id)->DR);
+                }
+
+                transmit_enable = true;
+            }
+        }
+    }
+    else
     {
     }
 
     if (nullptr != a_p_nss)
     {
+        a_p_nss->set_level(GPIO::Level::high);
     }
 
-    return Result();
+    return { bus_flag, words };
 }
 
 } // namespace peripherals
