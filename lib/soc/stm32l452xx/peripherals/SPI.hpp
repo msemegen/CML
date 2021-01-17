@@ -59,6 +59,22 @@ public:
             unknown
         };
 
+        enum class Polarity : uint32_t
+        {
+            high    = SPI_CR1_CPOL,
+            low     = 0x0u,
+            unknown = 0xFF
+        };
+
+        enum class Phase : uint32_t
+        {
+            first_edge  = 0x0u,
+            second_edge = SPI_CR1_CPHA,
+            unknown     = 0xFF
+        };
+
+        Polarity polarity                 = Polarity::unknown;
+        Phase phase                       = Phase::unknown;
         Word_length word_length           = Word_length::unknown;
         Bit_significance bit_significance = Bit_significance::unknown;
     };
@@ -98,18 +114,8 @@ public:
             unknown
         };
 
-        enum class Mode : uint32_t
-        {
-            _0 = 0x0u,
-            _1 = SPI_CR1_CPHA,
-            _2 = SPI_CR1_CPOL,
-            _3 = SPI_CR1_CPOL | SPI_CR1_CPHA,
-            unknown
-        };
-
-        Mode mode       = Mode::unknown;
-        Wiring wiring   = Wiring::unknown;
-        bool crc_enable = false;
+        Wiring wiring = Wiring::unknown;
+        bool crc_enable     = false;
     };
 
     struct Result
