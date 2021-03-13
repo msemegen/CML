@@ -1,15 +1,16 @@
 /*
-    Name: systick.cpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: systick.cpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // this
 #include <soc/systick.hpp>
 
 // cml
 #include <cml/bit_flag.hpp>
+#include <cml/debug/assertion.hpp>
 
 // soc
 #include <soc/Interrupt_guard.hpp>
@@ -40,7 +41,7 @@ using namespace cml;
 
 void systick::enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_priority)
 {
-    assert(a_start_value > 0);
+    cml_assert(a_start_value > 0);
 
     NVIC_SetPriority(SysTick_IRQn, a_priority);
 

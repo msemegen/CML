@@ -1,9 +1,9 @@
 /*
-    Name: system.c
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: system.c
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 //std
 #include <stdint.h>
@@ -22,7 +22,7 @@ void SystemInit(void)
     RCC->CR &= (uint32_t)0xFFFBFFFFU;
     RCC->CFGR &= (uint32_t)0xFF02FFFFU;
     RCC->CIER = 0x00000000U;
-    SCB->VTOR = FLASH_BASE; /* Vector Table Relocation in Internal FLASH */
+    SCB->VTOR = FLASH_BASE;
 }
 
 __attribute__((weak)) int _init()

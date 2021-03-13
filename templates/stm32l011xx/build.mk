@@ -1,6 +1,13 @@
+#
+#  Name: build.mk
+#
+#  Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+#  Licensed under the MIT license. See LICENSE file in the project root for details.
+#
+
 INCLUDE_PATH := $(INCLUDE_PATH) $(ROOT)
 
-CFLAGS := $(addprefix -I, $(INCLUDE_PATH))
+CFLAGS := $(addprefix -I, $(INCLUDE_PATH)) --specs=nano.specs
 CFLAGS += -Wall -Wno-strict-aliasing -I. -c -fno-common -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft
 CFLAGS += -ffast-math -ffunction-sections -fdata-sections -fsingle-precision-constant
 CFLAGS += -DSTM32L011xx -DARM_MATH_CM0PLUS -DARM_MATH_ROUNDING
@@ -21,7 +28,7 @@ S_OBJECTS_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.s, %.
 S_OBJECTS_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.s, %.o,$(S_SOURCE_FILES))))
 
 MAIN_LDFLAGS_COMMON  = -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -nostartfiles -T$(LD_PATH)/STM32L011K4Tx_FLASH.ld
-MAIN_LDFLAGS_COMMON  +=-nostdlib -lgcc -fno-exceptions -fno-rtti -Wl,--gc-sections
+MAIN_LDFLAGS_COMMON  += -lgcc -fno-exceptions -fno-rtti -Wl,--gc-sections --specs=nano.specs
 MAIN_LDFLAGS_RELEASE = $(MAIN_LDFLAGS_COMMON) -Wl,-Map=$(OUTDIR)/$(OUTPUT_NAME).map,-cref
 MAIN_LDFLAGS_DEBUG   = $(MAIN_LDFLAGS_COMMON) -Wl,-Map=$(OUTDIR)/$(OUTPUT_NAME)_d.map,-cref
 

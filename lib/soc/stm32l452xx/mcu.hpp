@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: mcu.hpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: mcu.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
@@ -15,7 +15,6 @@
 
 // cml
 #include <cml/bit_flag.hpp>
-#include <cml/frequency.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -147,6 +146,13 @@ public:
             uknown
         };
 
+        enum class Output : uint32_t
+        {
+            disabled = 0x0u,
+            enabled  = 0x1u,
+            unknown
+        };
+
         struct PLL
         {
             struct R
@@ -160,8 +166,8 @@ public:
                     unknown
                 };
 
-                Divider divider     = Divider::unknown;
-                bool output_enabled = false;
+                Divider divider = Divider::unknown;
+                Output output   = Output::unknown;
             };
 
             struct Q
@@ -175,8 +181,8 @@ public:
                     unknown
                 };
 
-                Divider divider     = Divider::unknown;
-                bool output_enabled = false;
+                Divider divider = Divider::unknown;
+                Output output   = Output::unknown;
             };
 
             struct P
@@ -188,8 +194,8 @@ public:
                     unknown
                 };
 
-                Divider divider     = Divider::unknown;
-                bool output_enabled = false;
+                Divider divider = Divider::unknown;
+                Output output   = Output::unknown;
             };
 
             uint32_t n = 0;
@@ -212,8 +218,8 @@ public:
                     unknown
                 };
 
-                Divider divider     = Divider::unknown;
-                bool output_enabled = false;
+                Divider divider = Divider::unknown;
+                Output output   = Output::unknown;
             };
 
             struct Q
@@ -227,8 +233,8 @@ public:
                     unknown
                 };
 
-                Divider divider     = Divider::unknown;
-                bool output_enabled = false;
+                Divider divider = Divider::unknown;
+                Output output   = Output::unknown;
             };
 
             struct P
@@ -240,8 +246,8 @@ public:
                     unknown
                 };
 
-                Divider divider     = Divider::unknown;
-                bool output_enabled = false;
+                Divider divider = Divider::unknown;
+                Output output   = Output::unknown;
             };
 
             uint32_t n = 0;
@@ -435,19 +441,19 @@ public:
         return static_cast<Sysclk_source>(cml::bit_flag::get(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
-    static cml::frequency get_sysclk_frequency_hz()
+    static uint32_t get_sysclk_frequency_hz()
     {
         return SystemCoreClock;
     }
 
-    static constexpr cml::frequency get_hsi_frequency_hz()
+    static constexpr uint32_t get_hsi_frequency_hz()
     {
-        return cml::MHz_to_Hz(16u);
+        return 16u * 1000000u;
     }
 
-    static constexpr cml::frequency get_lsi_frequency_hz()
+    static constexpr uint32_t get_lsi_frequency_hz()
     {
-        return cml::kHz_to_Hz(32);
+        return 32u * 1000;
     }
 
     static bool is_clock_enabled(Clock a_clock)
@@ -516,13 +522,11 @@ private:
     static void set_sysclk_source(Sysclk_source a_sysclk_source);
     static void set_bus_prescalers(const Bus_prescalers& a_prescalers);
 
-    static void increase_sysclk_frequency(Sysclk_source a_source,
-                                          cml::frequency a_frequency_hz,
-                                          const Bus_prescalers& a_prescalers);
+    static void
+    increase_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
 
-    static void decrease_sysclk_frequency(Sysclk_source a_source,
-                                          cml::frequency a_frequency_hz,
-                                          const Bus_prescalers& a_prescalers);
+    static void
+    decrease_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
 
     static uint32_t calculate_pll_r_output_frequency();
     static uint32_t calculate_pll_q_output_frequency();

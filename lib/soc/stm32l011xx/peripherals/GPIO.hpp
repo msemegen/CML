@@ -16,7 +16,7 @@
 // cml
 #include <cml/Non_copyable.hpp>
 #include <cml/bit.hpp>
-#include <cml/debug/assert.hpp>
+#include <cml/debug/assertion.hpp>
 
 namespace soc {
 namespace stm32l011xx {
@@ -157,7 +157,7 @@ public:
 
                 void operator()(Level a_level)
                 {
-                    assert(nullptr != this->function);
+                    cml_assert(nullptr != this->function);
 
                     this->function(a_level, this->p_user_data);
                 }

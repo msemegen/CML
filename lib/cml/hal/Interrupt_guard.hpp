@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: Interrupt_guard.hpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: Interrupt_guard.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // soc
 #include <soc/Interrupt_guard.hpp>

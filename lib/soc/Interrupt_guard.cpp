@@ -1,9 +1,9 @@
 /*
-    Name: interrupt_guard.cpp
-
-    Copyright(c) 2020 Jay Kickliter
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: Interrupt_guard.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // this
 #include <soc/interrupt_guard.hpp>

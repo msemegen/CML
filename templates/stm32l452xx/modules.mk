@@ -1,3 +1,10 @@
+#
+#  Name: modules.mk
+#
+#  Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+#  Licensed under the MIT license. See LICENSE file in the project root for details.
+#
+
 #lib
 C_SOURCE_PATHS   := $(C_SOURCE_PATHS)   $(CML_ROOT)/lib/
 CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(CML_ROOT)/lib/cml      \
@@ -14,7 +21,7 @@ CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(CML_ROOT)/lib/cml      \
 INCLUDE_PATH     := $(INCLUDE_PATH) $(CML_ROOT)/lib/
 
 #template
-C_SOURCE_PATHS   := $(C_SOURCE_PATHS)   $(ROOT)/
+C_SOURCE_PATHS   := $(C_SOURCE_PATHS)   $(ROOT)/../
 CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS) $(ROOT)/
 INCLUDE_PATH     := $(INCLUDE_PATH)     $(ROOT)/
 

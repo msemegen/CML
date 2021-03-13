@@ -1,9 +1,16 @@
+#
+#  Name: build.mk
+#
+#  Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+#  Licensed under the MIT license. See LICENSE file in the project root for details.
+#
+
 INCLUDE_PATH := $(INCLUDE_PATH) $(ROOT)
 
-CFLAGS := $(addprefix -I, $(INCLUDE_PATH))
+CFLAGS := $(addprefix -I, $(INCLUDE_PATH)) --specs=nano.specs
 CFLAGS += -Wall -Wno-strict-aliasing -I. -c -fno-common -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -ffast-math -ffunction-sections -fdata-sections -fsingle-precision-constant
-CFLAGS += -DSTM32L452xx -DARM_MATH_CM4 -DARM_MATH_MATRIX_CHECK -DARM_MATH_ROUNDING -D__FPU_PRESENT -DCML_DWT_PRESENT
+CFLAGS += -DSTM32L452xx -DARM_MATH_CM4 -DARM_MATH_ROUNDING -D__FPU_PRESENT -DCML_DWT_PRESENT
 
 CPPFLAGS := $(CFLAGS)
 CPPFLAGS += -std=c++17 -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics
@@ -20,8 +27,8 @@ S_SOURCE_FILES    := $(wildcard $(addsuffix /*.s, $(S_SOURCE_PATHS)))
 S_OBJECTS_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.s, %.o,$(S_SOURCE_FILES))))
 S_OBJECTS_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.s, %.o,$(S_SOURCE_FILES))))
 
-MAIN_LDFLAGS_COMMON  = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -nostartfiles
-MAIN_LDFLAGS_COMMON  +=-T$(LD_PATH)/STM32L452RETx_FLASH.ld -nostdlib -lgcc -fno-exceptions -fno-rtti -Wl,--gc-sections
+MAIN_LDFLAGS_COMMON  = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -nostartfiles --specs=nano.specs
+MAIN_LDFLAGS_COMMON  +=-T$(LD_PATH)/STM32L452RETx_FLASH.ld -lgcc -fno-exceptions -fno-rtti -Wl,--gc-sections
 MAIN_LDFLAGS_RELEASE = $(MAIN_LDFLAGS_COMMON) -Wl,-Map=$(OUTDIR)/$(OUTPUT_NAME).map,-cref
 MAIN_LDFLAGS_DEBUG   = $(MAIN_LDFLAGS_COMMON) -Wl,-Map=$(OUTDIR)/$(OUTPUT_NAME)_d.map,-cref
 

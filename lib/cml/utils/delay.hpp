@@ -1,16 +1,15 @@
 #pragma once
 
 /*
-    Name: delay.hpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: delay.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // cml
-#include <cml/debug/assert.hpp>
 #include <cml/hal/system_timer.hpp>
-#include <cml/time.hpp>
+#include <cml/various.hpp>
 
 #ifdef STM32L452xx
 #include <soc/stm32l452xx/misc.hpp>
@@ -34,14 +33,21 @@ public:
     delay& operator=(delay&&) = delete;
     delay& operator=(const delay&) = delete;
 
-    static void ms(time::tick a_time)
+    static void s(uint32_t a_time)
     {
-        time::tick start = hal::system_timer::get();
-        while (time::diff(hal::system_timer::get(), start) <= a_time)
+        uint32_t start = hal::system_timer::get();
+        while (various::time_diff(hal::system_timer::get(), start) <= a_time * 1000u)
             ;
     }
 
-    inline static void us(time::tick a_time)
+    static void ms(uint32_t a_time)
+    {
+        uint32_t start = hal::system_timer::get();
+        while (various::time_diff(hal::system_timer::get(), start) <= a_time)
+            ;
+    }
+
+    inline static void us(uint32_t a_time)
     {
 #ifdef STM32L452xx
         soc::stm32l452xx::misc::delay_us(a_time);

@@ -1,14 +1,14 @@
 #pragma once
 
 /*
-    Name: misc.hpp
+ *   Name: misc.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
-
-// cml
-#include <cml/time.hpp>
+// std
+#include <cstdint>
 
 namespace soc {
 namespace stm32l452xx {
@@ -23,7 +23,7 @@ public:
     misc& operator=(misc&&) = delete;
     misc& operator=(const misc&) = delete;
 
-    static void delay_us(cml::time::tick a_time);
+    static void delay_us(uint32_t a_time);
 };
 
 } // namespace stm32l452xx

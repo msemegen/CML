@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: USART.hpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: USART.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // cml
 #ifdef STM32L452xx

@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: I2C.hpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: I2C.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
@@ -16,8 +16,6 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/debug/assert.hpp>
-#include <cml/time.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -41,19 +39,19 @@ public:
         hsi    = 2
     };
 
+    enum class Bus_flag : uint32_t
+    {
+        ok               = 0x0,
+        crc_error        = 0x1,
+        buffer_error     = 0x2,
+        arbitration_lost = 0x4,
+        misplaced        = 0x8,
+        nack             = 0x10,
+        unknown          = 0x20
+    };
+
     struct Result
     {
-        enum class Bus_flag : uint32_t
-        {
-            ok               = 0x0,
-            crc_error        = 0x1,
-            buffer_error     = 0x2,
-            arbitration_lost = 0x4,
-            misplaced        = 0x8,
-            nack             = 0x10,
-            unknown          = 0x20
-        };
-
         Bus_flag bus_flag             = Bus_flag::unknown;
         uint32_t data_length_in_bytes = 0;
     };
@@ -61,10 +59,6 @@ public:
 public:
     Clock_source get_clock_source() const;
     bool is_enabled() const;
-
-    bool is_analog_filter() const;
-    uint32_t get_timing() const;
-    bool is_fast_plus() const;
 
     Id get_id() const
     {
@@ -81,17 +75,17 @@ protected:
     Id id;
 };
 
-constexpr I2C_base::Result::Bus_flag operator|(I2C_base::Result::Bus_flag a_f1, I2C_base::Result::Bus_flag a_f2)
+constexpr I2C_base::Bus_flag operator|(I2C_base::Bus_flag a_f1, I2C_base::Bus_flag a_f2)
 {
-    return static_cast<I2C_base::Result::Bus_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+    return static_cast<I2C_base::Bus_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
-constexpr I2C_base::Result::Bus_flag operator&(I2C_base::Result::Bus_flag a_f1, I2C_base::Result::Bus_flag a_f2)
+constexpr I2C_base::Bus_flag operator&(I2C_base::Bus_flag a_f1, I2C_base::Bus_flag a_f2)
 {
-    return static_cast<I2C_base::Result::Bus_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+    return static_cast<I2C_base::Bus_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
-constexpr I2C_base::Result::Bus_flag operator|=(I2C_base::Result::Bus_flag& a_f1, I2C_base::Result::Bus_flag a_f2)
+constexpr I2C_base::Bus_flag operator|=(I2C_base::Bus_flag& a_f1, I2C_base::Bus_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;
@@ -122,7 +116,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = void (*)(Result::Bus_flag a_bus_flag, I2C_master* a_p_this, void* a_p_user_data);
+        using Function = void (*)(Bus_flag a_bus_flag, I2C_master* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -130,10 +124,31 @@ public:
 
     struct Config
     {
-        bool analog_filter = false;
-        bool fast_plus     = false;
-        bool crc_enable    = false;
-        uint32_t timings   = 0;
+        enum class Analog_filter
+        {
+            enabled,
+            disabled,
+            unknown
+        };
+
+        enum class Fast_plus
+        {
+            enabled,
+            disabled,
+            unknown
+        };
+
+        enum class Crc
+        {
+            enabled,
+            disabled,
+            unknown
+        };
+
+        Analog_filter analog_filter = Analog_filter::unknown;
+        Fast_plus fast_plus         = Fast_plus::unknown;
+        Crc crc                     = Crc::unknown;
+        uint32_t timings            = 0;
     };
 
 public:
@@ -156,8 +171,7 @@ public:
         return this->transmit_bytes_polling(a_slave_address, &a_data, sizeof(a_data));
     }
 
-    template<typename Data_t>
-    Result transmit_polling(uint8_t a_slave_address, const Data_t& a_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result transmit_polling(uint8_t a_slave_address, const Data_t& a_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(a_slave_address, &a_data, sizeof(a_data), a_timeout);
@@ -169,8 +183,7 @@ public:
         return this->receive_bytes_polling(a_slave_address, a_p_data, sizeof(Data_t));
     }
 
-    template<typename Data_t>
-    Result receive_polling(uint8_t a_slave_address, Data_t* a_p_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result receive_polling(uint8_t a_slave_address, Data_t* a_p_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_slave_address, a_p_data, sizeof(Data_t), a_timeout);
@@ -180,13 +193,11 @@ public:
     Result transmit_bytes_polling(uint8_t a_slave_address,
                                   const void* a_p_data,
                                   uint32_t a_data_size_in_bytes,
-                                  cml::time::tick a_timeout);
+                                  uint32_t a_timeout);
 
     Result receive_bytes_polling(uint8_t a_slave_address, void* a_p_data, uint32_t a_data_size_in_bytes);
-    Result receive_bytes_polling(uint8_t a_slave_address,
-                                 void* a_p_data,
-                                 uint32_t a_data_size_in_bytes,
-                                 cml::time::tick a_timeout);
+    Result
+    receive_bytes_polling(uint8_t a_slave_address, void* a_p_data, uint32_t a_data_size_in_bytes, uint32_t a_timeout);
 
     void register_transmit_callback(uint8_t a_slave_address,
                                     const Transmit_callback& a_callback,
@@ -200,7 +211,7 @@ public:
     void unregister_receive_callback();
     void unregister_bus_status_callback();
 
-    bool is_slave_connected(uint8_t a_slave_address, cml::time::tick a_timeout) const;
+    bool is_slave_connected(uint8_t a_slave_address, uint32_t a_timeout) const;
 
     bool is_transmit_callback() const
     {
@@ -216,6 +227,8 @@ public:
     {
         return nullptr != this->bus_status_callback.function;
     }
+
+    Config get_config() const;
 
 private:
     friend void i2c_master_interrupt_handler(I2C_master* a_p_this);
@@ -251,7 +264,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = void (*)(Result::Bus_flag a_bus_flag, I2C_slave* a_p_this, void* a_p_user_data);
+        using Function = void (*)(Bus_flag a_bus_flag, I2C_slave* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -267,11 +280,32 @@ public:
 
     struct Config
     {
-        bool analog_filter = false;
-        bool fast_plus     = false;
-        bool crc_enable    = false;
-        uint32_t timings   = 0;
-        uint16_t address   = 0;
+        enum class Analog_filter : uint32_t
+        {
+            disabled = 0x0u,
+            enabled  = 0x1u,
+            unknown
+        };
+
+        enum class Fast_plus : uint32_t
+        {
+            disabled = 0x0u,
+            enabled  = 0x1u,
+            unknown
+        };
+
+        enum class Crc : uint32_t
+        {
+            disabled = 0x0u,
+            enabled  = 0x1u,
+            unknown
+        };
+
+        Analog_filter analog_filter = Analog_filter::unknown;
+        Fast_plus fast_plus         = Fast_plus::unknown;
+        Crc crc                     = Crc::unknown;
+        uint32_t timings            = 0;
+        uint16_t address            = 0;
     };
 
 public:
@@ -295,7 +329,7 @@ public:
         return this->transmit_bytes_polling(&a_data, sizeof(a_data));
     }
 
-    template<typename Data_t> Result transmit_polling(const Data_t& a_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result transmit_polling(const Data_t& a_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout);
@@ -307,20 +341,20 @@ public:
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
-    template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result receive_polling(Data_t* a_p_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
     Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_bytes);
-    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_bytes, cml::time::tick a_timeout);
+    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_bytes, uint32_t a_timeout);
 
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes);
-    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes, cml::time::tick a_timeout);
+    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes, uint32_t a_timeout);
 
-    void register_transmit_callback(const Transmit_callback& a_callback, uint32_t a_data_size_in_bytes);
-    void register_receive_callback(const Receive_callback& a_callback, uint32_t a_data_size_in_bytes);
+    void register_transmit_callback(const Transmit_callback& a_callback);
+    void register_receive_callback(const Receive_callback& a_callback);
     void register_bus_status_callback(const Bus_status_callback& a_callback);
     void register_address_match_callback(const Addres_match_callback& a_callback);
 
@@ -348,6 +382,8 @@ public:
     {
         return nullptr != this->address_match_callback.function;
     }
+
+    Config get_config() const;
 
 private:
     friend void i2c_slave_interrupt_handler(I2C_slave* a_p_this);

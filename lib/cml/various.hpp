@@ -1,22 +1,41 @@
 #pragma once
 
 /*
-    Name: various.hpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: various.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
+#include <limits>
 
 #define unused(x) ((void)(x))
 
 namespace cml {
 
-template<class Type, uint32_t n> constexpr uint32_t get_array_length(Type (&)[n])
+struct various
 {
-    return n;
-}
+    various()               = delete;
+    various(various&&)      = delete;
+    various(const various&) = delete;
+    ~various()              = delete;
+
+    various& operator=(various&&) = delete;
+    various& operator=(const various&) = delete;
+
+    static uint32_t time_diff(uint32_t a_left, uint32_t a_right)
+    {
+        if (a_left < a_right)
+        {
+            return (std::numeric_limits<uint32_t>::max() - a_left) + 1 + a_right;
+        }
+        else
+        {
+            return a_left - a_right;
+        }
+    }
+};
 
 } // namespace cml
