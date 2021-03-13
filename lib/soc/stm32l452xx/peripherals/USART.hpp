@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: USART.hpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: USART.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
@@ -16,8 +16,6 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/frequency.hpp>
-#include <cml/time.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -130,8 +128,8 @@ public:
             unknown
         };
 
-        Source source               = Source::unknown;
-        cml::frequency frequency_hz = 0;
+        Source source         = Source::unknown;
+        uint32_t frequency_hz = 0;
     };
 
     struct Result
@@ -183,7 +181,7 @@ public:
                 const Frame_format& frame_format,
                 const Clock& a_clock,
                 uint32_t a_irq_priority,
-                cml::time::tick a_timeout_ms);
+                uint32_t a_timeout_ms);
 
     void disable();
 
@@ -193,7 +191,7 @@ public:
         return this->transmit_bytes_polling(&a_data, sizeof(a_data));
     }
 
-    template<typename Data_t> Result transmit_polling(const Data_t& a_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result transmit_polling(const Data_t& a_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout);
@@ -205,19 +203,19 @@ public:
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
-    template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result receive_polling(Data_t* a_p_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
     Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words);
-    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
+    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, uint32_t a_timeout_ms);
     Result transmit_word(uint16_t a_word);
-    Result transmit_word(uint16_t a_word, cml::time::tick a_timeout_ms);
+    Result transmit_word(uint16_t a_word, uint32_t a_timeout_ms);
 
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words);
-    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
+    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, uint32_t a_timeout_ms);
 
     void register_transmit_callback(const Transmit_callback& a_callback);
     void register_receive_callback(const Receive_callback& a_callback);
@@ -233,7 +231,7 @@ public:
     void set_flow_control(Flow_control_flag a_flow_control);
     void set_sampling_method(Sampling_method a_sampling_method);
     void set_frame_format(const Frame_format& a_frame_format);
-    bool set_mode(Mode_flag a_mode, cml::time::tick a_timeout_ms);
+    bool set_mode(Mode_flag a_mode, uint32_t a_timeout_ms);
 
     bool is_transmit_callback() const
     {

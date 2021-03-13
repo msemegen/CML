@@ -18,8 +18,7 @@
 #include <cml/Non_copyable.hpp>
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
-#include <cml/debug/assert.hpp>
-#include <cml/time.hpp>
+#include <cml/debug/assertion.hpp>
 
 namespace soc {
 namespace stm32l011xx {
@@ -53,7 +52,7 @@ public:
             unknown          = 0x20
         };
 
-        Bus_flag bus_flag    = Bus_flag::unknown;
+        Bus_flag bus_flag             = Bus_flag::unknown;
         uint32_t data_length_in_bytes = 0;
     };
 
@@ -114,9 +113,9 @@ constexpr I2C_base::Result::Bus_flag operator|=(I2C_base::Result::Bus_flag& a_f1
 class I2C_master : public I2C_base
 {
 public:
-    using Id              = I2C_base::Id;
-    using Clock_source    = I2C_base::Clock_source;
-    using Result          = I2C_base::Result;
+    using Id           = I2C_base::Id;
+    using Clock_source = I2C_base::Clock_source;
+    using Result       = I2C_base::Result;
 
     struct Transmit_callback
     {
@@ -144,10 +143,31 @@ public:
 
     struct Config
     {
-        bool analog_filter = false;
-        bool fast_plus     = false;
-        bool crc_enable    = false;
-        uint32_t timings   = 0;
+        enum class Analog_filter
+        {
+            enabled,
+            disabled,
+            unknown
+        };
+
+        enum class Fast_plus
+        {
+            enabled,
+            disabled,
+            unknown
+        };
+
+        enum class Crc
+        {
+            enabled,
+            disabled,
+            unknown
+        };
+
+        Analog_filter analog_filter = Analog_filter::unknown;
+        Fast_plus fast_plus         = Fast_plus::unknown;
+        Crc crc                     = Crc::unknown;
+        uint32_t timings            = 0;
     };
 
 public:
@@ -170,8 +190,7 @@ public:
         return this->transmit_bytes_polling(a_slave_address, &a_data, sizeof(a_data));
     }
 
-    template<typename Data_t>
-    Result transmit_polling(uint8_t a_slave_address, const Data_t& a_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result transmit_polling(uint8_t a_slave_address, const Data_t& a_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(a_slave_address, &a_data, sizeof(a_data), a_timeout);
@@ -183,8 +202,7 @@ public:
         return this->receive_bytes_polling(a_slave_address, a_p_data, sizeof(Data_t));
     }
 
-    template<typename Data_t>
-    Result receive_polling(uint8_t a_slave_address, Data_t* a_p_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result receive_polling(uint8_t a_slave_address, Data_t* a_p_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_slave_address, a_p_data, sizeof(Data_t), a_timeout);
@@ -195,14 +213,12 @@ public:
     Result transmit_bytes_polling(uint8_t a_slave_address,
                                   const void* a_p_data,
                                   uint32_t a_data_size_in_bytes,
-                                  cml::time::tick a_timeout);
+                                  uint32_t a_timeout);
 
     Result receive_bytes_polling(uint8_t a_slave_address, void* a_p_data, uint32_t a_data_size_in_bytes);
 
-    Result receive_bytes_polling(uint8_t a_slave_address,
-                                 void* a_p_data,
-                                 uint32_t a_data_size_in_bytes,
-                                 cml::time::tick a_timeout);
+    Result
+    receive_bytes_polling(uint8_t a_slave_address, void* a_p_data, uint32_t a_data_size_in_bytes, uint32_t a_timeout);
 
     void register_transmit_callback(uint8_t a_slave_address,
                                     const Transmit_callback& a_callback,
@@ -218,7 +234,7 @@ public:
     void unregister_receive_callback();
     void unregister_bus_status_callback();
 
-    bool is_slave_connected(uint8_t a_slave_address, cml::time::tick a_timeout) const;
+    bool is_slave_connected(uint8_t a_slave_address, uint32_t a_timeout) const;
 
     bool is_transmit_callback() const
     {
@@ -247,17 +263,38 @@ private:
 class I2C_slave : public I2C_base
 {
 public:
-    using Id              = I2C_base::Id;
-    using Clock_source    = I2C_base::Clock_source;
-    using Result          = I2C_base::Result;
+    using Id           = I2C_base::Id;
+    using Clock_source = I2C_base::Clock_source;
+    using Result       = I2C_base::Result;
 
     struct Config
     {
-        bool analog_filter = false;
-        bool fast_plus     = false;
-        bool crc_enable    = false;
-        uint32_t timings   = 0;
-        uint16_t address   = 0;
+        enum class Analog_filter
+        {
+            enabled,
+            disabled,
+            unknown
+        };
+
+        enum class Fast_plus
+        {
+            enabled,
+            disabled,
+            unknown
+        };
+
+        enum class Crc
+        {
+            enabled,
+            disabled,
+            unknown
+        };
+
+        Analog_filter analog_filter = Analog_filter::unknown;
+        Fast_plus fast_plus         = Fast_plus::unknown;
+        Crc crc                     = Crc::unknown;
+        uint32_t timings            = 0;
+        uint16_t address            = 0;
     };
 
     struct Transmit_callback
@@ -312,7 +349,7 @@ public:
         return this->transmit_bytes_polling(&a_data, sizeof(a_data));
     }
 
-    template<typename Data_t> Result transmit_polling(const Data_t& a_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result transmit_polling(const Data_t& a_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout);
@@ -324,17 +361,17 @@ public:
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
-    template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result receive_polling(Data_t* a_p_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
     Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_bytes);
-    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_bytes, cml::time::tick a_timeout);
+    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_bytes, uint32_t a_timeout);
 
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes);
-    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes, cml::time::tick a_timeout);
+    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_bytes, uint32_t a_timeout);
 
     void register_transmit_callback(const Transmit_callback& a_callback, uint32_t a_data_size_in_bytes);
     void register_receive_callback(const Receive_callback& a_callback, uint32_t a_data_size_in_bytes);

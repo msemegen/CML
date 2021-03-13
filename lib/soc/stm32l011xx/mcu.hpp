@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: mcu.hpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: mcu.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
@@ -15,7 +15,6 @@
 
 // cml
 #include <cml/bit_flag.hpp>
-#include <cml/frequency.hpp>
 
 namespace soc {
 namespace stm32l011xx {
@@ -93,11 +92,6 @@ struct mcu
 
     struct Pll_config
     {
-        enum class Source : uint32_t
-        {
-            hsi = RCC_CFGR_PLLSRC_HSI
-        };
-
         enum class Multiplier
         {
             _3  = RCC_CFGR_PLLMUL3,
@@ -120,9 +114,27 @@ struct mcu
             unknown
         };
 
+        struct Source
+        {
+            enum class Type : uint32_t
+            {
+                hsi = RCC_CFGR_PLLSRC_HSI,
+                unknown
+            };
+
+            enum class Divider : uint32_t
+            {
+                _1 = 0,
+                _4 = RCC_CR_HSIDIVEN,
+                unknown
+            };
+
+            Type type       = Type::unknown;
+            Divider divider = Divider::unknown;
+        };
+
         Source source;
 
-        bool hsidiv_enabled   = false;
         Multiplier multiplier = Multiplier::unknown;
         Divider divider       = Divider::unknown;
     };
@@ -252,14 +264,14 @@ public:
         return SystemCoreClock;
     }
 
-    static constexpr cml::frequency get_hsi_frequency_hz()
+    static constexpr uint32_t get_hsi_frequency_hz()
     {
-        return cml::MHz_to_Hz(16u);
+        return 16u * 1000000u;
     }
 
-    static constexpr cml::frequency get_lsi_frequency_hz()
+    static constexpr uint32_t get_lsi_frequency_hz()
     {
-        return cml::kHz_to_Hz(37u);
+        return 37u * 1000u;
     }
 
     static bool is_clock_enabled(Clock a_clock)
@@ -323,13 +335,11 @@ private:
     static void set_sysclk_source(Sysclk_source a_sysclk_source);
     static void set_bus_prescalers(const Bus_prescalers& a_prescalers);
 
-    static void increase_sysclk_frequency(Sysclk_source a_source,
-                                          cml::frequency a_frequency_hz,
-                                          const Bus_prescalers& a_prescalers);
+    static void
+    increase_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
 
-    static void decrease_sysclk_frequency(Sysclk_source a_source,
-                                          cml::frequency a_frequency_hz,
-                                          const Bus_prescalers& a_prescalers);
+    static void
+    decrease_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
 
     static uint32_t calculate_frequency_from_pll_configuration();
 };

@@ -1,9 +1,9 @@
 /*
-    Name: ADC.cpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: ADC.cpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 #ifdef STM32L452xx
 
@@ -16,9 +16,9 @@
 
 // cml
 #include <cml/bit_flag.hpp>
-#include <cml/debug/assert.hpp>
+#include <cml/debug/assertion.hpp>
 #include <cml/utils/delay.hpp>
-#include <cml/utils/wait.hpp>
+#include <cml/utils/wait_until.hpp>
 
 #ifdef CML_ASSERT
 #include <soc/stm32l452xx/mcu.hpp>
@@ -49,7 +49,7 @@ extern "C" {
 
 void ADC1_IRQHandler()
 {
-    assert(nullptr != p_adc_1);
+    cml_assert(nullptr != p_adc_1);
     adc_interrupt_handler(p_adc_1);
 }
 
@@ -82,13 +82,13 @@ void adc_interrupt_handler(ADC* a_p_this)
 bool ADC::enable(Resolution a_resolution,
                  const Asynchronous_clock& a_clock,
                  uint32_t a_irq_priority,
-                 time::tick a_timeout)
+                 uint32_t a_timeout)
 {
-    assert(nullptr == p_adc_1);
-    assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
-           true == mcu::get_pll_config().pllsai1.r.output_enabled);
+    cml_assert(nullptr == p_adc_1);
+    cml_assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
+               true == mcu::get_pll_config().pllsai1.r.output_enabled);
 
-    time::tick start = system_timer::get();
+    uint32_t start = system_timer::get();
 
     bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
     bit_flag::clear(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
@@ -97,18 +97,15 @@ bool ADC::enable(Resolution a_resolution,
     return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
 
-bool ADC::enable(Resolution a_resolution,
-                 const Synchronous_clock& a_clock,
-                 uint32_t a_irq_priority,
-                 time::tick a_timeout)
+bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32_t a_irq_priority, uint32_t a_timeout)
 {
-    assert(nullptr == p_adc_1);
-    assert(Synchronous_clock::Divider::unknown != a_clock.divider);
-    assert(Synchronous_clock::Divider::_1 == a_clock.divider ?
-               mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
-               true);
+    cml_assert(nullptr == p_adc_1);
+    cml_assert(Synchronous_clock::Divider::unknown != a_clock.divider);
+    cml_assert(Synchronous_clock::Divider::_1 == a_clock.divider ?
+                   mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
+                   true);
 
-    time::tick start = system_timer::get();
+    uint32_t start = system_timer::get();
 
     bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
     bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<uint32_t>(a_clock.divider));
@@ -131,8 +128,8 @@ void ADC::disable()
 
 void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_count)
 {
-    assert(nullptr != a_p_channels);
-    assert(a_channels_count > 0);
+    cml_assert(nullptr != a_p_channels);
+    cml_assert(a_channels_count > 0);
 
     this->clear_active_channels();
 
@@ -140,25 +137,25 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_c
 
     for (uint32_t i = 0; i < a_channels_count && i < 4; i++)
     {
-        assert(Channel::Id::unknown != a_p_channels[i].id);
+        cml_assert(Channel::Id::unknown != a_p_channels[i].id);
         bit_flag::set(&(ADC1->SQR1), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 4; i < a_channels_count && i < 9; i++)
     {
-        assert(Channel::Id::unknown != a_p_channels[i].id);
+        cml_assert(Channel::Id::unknown != a_p_channels[i].id);
         bit_flag::set(&(ADC1->SQR2), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 9; i < a_channels_count && i < 14; i++)
     {
-        assert(Channel::Id::unknown != a_p_channels[i].id);
+        cml_assert(Channel::Id::unknown != a_p_channels[i].id);
         bit_flag::set(&(ADC1->SQR3), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 14; i < a_channels_count && i < 16; i++)
     {
-        assert(Channel::Id::unknown != a_p_channels[i].id);
+        cml_assert(Channel::Id::unknown != a_p_channels[i].id);
         bit_flag::set(&(ADC1->SQR4), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
@@ -210,42 +207,42 @@ void ADC::clear_active_channels()
 
 void ADC::read_polling(uint16_t* a_p_data, uint32_t a_count)
 {
-    assert(nullptr != a_p_data);
-    assert(a_count > 0);
+    cml_assert(nullptr != a_p_data);
+    cml_assert(a_count > 0);
 
-    assert(this->get_active_channels_count() == a_count);
+    cml_assert(this->get_active_channels_count() == a_count);
 
     bit_flag::set(&(ADC1->CR), ADC_CR_ADSTART);
 
     for (uint32_t i = 0; i < a_count; i++)
     {
-        wait::until(&(ADC1->ISR), ADC_ISR_EOC, false);
+        wait_until::all_bits(&(ADC1->ISR), ADC_ISR_EOC, false);
         a_p_data[i] = static_cast<uint16_t>(ADC1->DR);
     }
 
-    wait::until(&(ADC1->ISR), ADC_ISR_EOS, false);
+    wait_until::all_bits(&(ADC1->ISR), ADC_ISR_EOS, false);
     bit_flag::set(&(ADC1->ISR), ADC_ISR_EOS);
 
     bit_flag::set(&(ADC1->CR), ADC_CR_ADSTP);
     bit_flag::clear(&(ADC1->CR), ADC_CR_ADSTART);
 }
 
-bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeout)
+bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, uint32_t a_timeout)
 {
-    assert(nullptr != a_p_data);
-    assert(a_count > 0);
-    assert(a_timeout > 0);
+    cml_assert(nullptr != a_p_data);
+    cml_assert(a_count > 0);
+    cml_assert(a_timeout > 0);
 
-    assert(this->get_active_channels_count() == a_count);
+    cml_assert(this->get_active_channels_count() == a_count);
 
     bit_flag::set(&(ADC1->CR), ADC_CR_ADSTART);
 
-    bool ret         = true;
-    time::tick start = system_timer::get();
+    bool ret       = true;
+    uint32_t start = system_timer::get();
 
     for (uint32_t i = 0; i < a_count && true == ret; i++)
     {
-        ret = wait::until(&(ADC1->ISR), ADC_ISR_EOC, false, start, a_timeout);
+        ret = wait_until::all_bits(&(ADC1->ISR), ADC_ISR_EOC, false, start, a_timeout);
 
         if (true == ret)
         {
@@ -255,7 +252,7 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
     if (true == ret)
     {
-        ret = wait::until(&(ADC1->ISR), ADC_ISR_EOS, false, start, a_timeout);
+        ret = wait_until::all_bits(&(ADC1->ISR), ADC_ISR_EOS, false, start, a_timeout - (system_timer::get() - start));
 
         if (true == ret)
         {
@@ -271,7 +268,7 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
 void ADC::register_conversion_callback(const Conversion_callback& a_callback)
 {
-    assert(nullptr != a_callback.function);
+    cml_assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
 
@@ -310,7 +307,7 @@ void ADC::set_resolution(Resolution a_resolution)
     }
 }
 
-bool ADC::enable(Resolution a_resolution, time::tick a_start, uint32_t a_irq_priority, time::tick a_timeout)
+bool ADC::enable(Resolution a_resolution, uint32_t a_start, uint32_t a_irq_priority, uint32_t a_timeout)
 {
     p_adc_1 = this;
 
@@ -324,14 +321,15 @@ bool ADC::enable(Resolution a_resolution, time::tick a_start, uint32_t a_irq_pri
     bit_flag::clear(&(ADC1->CR), ADC_CR_ADCALDIF);
     bit_flag::set(&(ADC1->CR), ADC_CR_ADCAL);
 
-    bool ret = wait::until(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
+    bool ret = wait_until::all_bits(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
 
     if (true == ret)
     {
         bit_flag::set(&(ADC1->CFGR), static_cast<uint32_t>(a_resolution));
         bit_flag::set(&(ADC1->CR), ADC_CR_ADEN);
 
-        ret = wait::until(&(ADC1->ISR), ADC_ISR_ADRDY, false, a_start, a_timeout);
+        ret = wait_until::all_bits(
+            &(ADC1->ISR), ADC_ISR_ADRDY, false, a_start, a_timeout - (system_timer::get() - a_start));
     }
 
     if (true == ret)

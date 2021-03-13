@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: GPIO.hpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: GPIO.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
@@ -16,7 +16,7 @@
 // cml
 #include <cml/Non_copyable.hpp>
 #include <cml/bit.hpp>
-#include <cml/debug/assert.hpp>
+#include <cml/debug/assertion.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -160,7 +160,7 @@ public:
 
                 void operator()(Level a_level)
                 {
-                    assert(nullptr != this->function);
+                    cml_assert(nullptr != this->function);
 
                     this->function(a_level, this->p_user_data);
                 }
@@ -442,7 +442,7 @@ public:
 };
 
 constexpr GPIO::In::Pin::Interrupt_mode_flag operator|(GPIO::In::Pin::Interrupt_mode_flag a_f1,
-                                                  GPIO::In::Pin::Interrupt_mode_flag a_f2)
+                                                       GPIO::In::Pin::Interrupt_mode_flag a_f2)
 {
     return static_cast<GPIO::In::Pin::Interrupt_mode_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }

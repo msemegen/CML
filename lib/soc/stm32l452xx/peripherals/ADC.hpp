@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: ADC.cpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: ADC.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
@@ -15,7 +15,6 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/time.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -152,15 +151,10 @@ public:
         this->disable();
     }
 
-    bool enable(Resolution a_resolution,
-                const Asynchronous_clock& a_clock,
-                uint32_t a_irq_priority,
-                cml::time::tick a_timeout);
+    bool
+    enable(Resolution a_resolution, const Asynchronous_clock& a_clock, uint32_t a_irq_priority, uint32_t a_timeout);
 
-    bool enable(Resolution a_resolution,
-                const Synchronous_clock& a_clock,
-                uint32_t a_irq_priority,
-                cml::time::tick a_timeout);
+    bool enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32_t a_irq_priority, uint32_t a_timeout);
 
     void disable();
 
@@ -168,7 +162,7 @@ public:
     void clear_active_channels();
 
     void read_polling(uint16_t* a_p_data, uint32_t a_count);
-    bool read_polling(uint16_t* a_p_data, uint32_t a_count, cml::time::tick a_timeout);
+    bool read_polling(uint16_t* a_p_data, uint32_t a_count, uint32_t a_timeout);
 
     void register_conversion_callback(const Conversion_callback& a_callback);
     void unregister_conversion_callback();
@@ -193,7 +187,7 @@ public:
     }
 
 private:
-    bool enable(Resolution a_resolution, cml::time::tick a_start, uint32_t a_irq_priority, cml::time::tick a_timeout);
+    bool enable(Resolution a_resolution, uint32_t a_start, uint32_t a_irq_priority, uint32_t a_timeout);
 
 private:
     Conversion_callback callaback;

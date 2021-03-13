@@ -1,6 +1,0 @@
-
-//externals
-#include <gtest.h>
-
-
-

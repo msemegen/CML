@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: RS485.hpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: RS485.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
@@ -82,7 +82,7 @@ public:
                 const USART::Clock& a_clock,
                 GPIO::Out::Pin* a_p_flow_control_pin,
                 uint32_t a_irq_priority,
-                cml::time::tick a_timeout);
+                uint32_t a_timeout);
 
     void disable();
 
@@ -92,8 +92,7 @@ public:
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data));
     }
 
-    template<typename Data_t>
-    Result transmit_polling(uint8_t a_address, const Data_t& a_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result transmit_polling(uint8_t a_address, const Data_t& a_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->transmit_bytes_polling(a_address, &a_data, sizeof(a_data), a_timeout);
@@ -105,7 +104,7 @@ public:
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
-    template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout)
+    template<typename Data_t> Result receive_polling(Data_t* a_p_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
@@ -115,10 +114,10 @@ public:
     Result transmit_bytes_polling(uint8_t a_address,
                                   const void* a_p_data,
                                   uint32_t a_data_size_in_words,
-                                  cml::time::tick a_timeout_ms);
+                                  uint32_t a_timeout_ms);
 
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words);
-    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
+    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, uint32_t a_timeout_ms);
 
     void register_transmit_callback(const Transmit_callback& a_callback);
     void register_receive_callback(const Receive_callback& a_callback);

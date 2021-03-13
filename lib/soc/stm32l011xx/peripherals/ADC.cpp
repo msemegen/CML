@@ -1,9 +1,9 @@
 /*
-    Name: ADC.cpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: ADC.cpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 #ifdef STM32L011xx
 
@@ -12,15 +12,15 @@
 
 // soc
 #include <soc/Interrupt_guard.hpp>
-#include <soc/system_timer.hpp>
 #include <soc/stm32l011xx/mcu.hpp>
+#include <soc/system_timer.hpp>
 
 // cml
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
-#include <cml/debug/assert.hpp>
+#include <cml/debug/assertion.hpp>
 #include <cml/utils/delay.hpp>
-#include <cml/utils/wait.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace {
 
@@ -48,7 +48,7 @@ extern "C" {
 
 void ADC1_COMP_IRQHandler()
 {
-    assert(nullptr != p_adc_1);
+    cml_assert(nullptr != p_adc_1);
     adc_interrupt_handler(p_adc_1);
 }
 
@@ -83,15 +83,12 @@ void adc_interrupt_handler(ADC* a_p_this)
     }
 }
 
-bool ADC::enable(Resolution a_resolution,
-                 const Synchronous_clock& a_clock,
-                 uint32_t a_irq_priority,
-                 time::tick a_timeout)
+bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32_t a_irq_priority, uint32_t a_timeout)
 {
-    assert(nullptr == p_adc_1);
-    assert(a_timeout > 0);
+    cml_assert(nullptr == p_adc_1);
+    cml_assert(a_timeout > 0);
 
-    time::tick start = system_timer::get();
+    uint32_t start = system_timer::get();
 
     bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_ADC1EN);
     bit_flag::set(&(ADC1->CFGR2), ADC_CFGR2_CKMODE, static_cast<uint32_t>(a_clock.divider));
@@ -102,12 +99,12 @@ bool ADC::enable(Resolution a_resolution,
 bool ADC::enable(Resolution a_resolution,
                  const Asynchronous_clock& a_clock,
                  uint32_t a_irq_priority,
-                 time::tick a_timeout)
+                 uint32_t a_timeout)
 {
-    assert(nullptr == p_adc_1);
-    assert(true == mcu::is_clock_enabled(mcu::Clock::hsi));
+    cml_assert(nullptr == p_adc_1);
+    cml_assert(true == mcu::is_clock_enabled(mcu::Clock::hsi));
 
-    time::tick start = system_timer::get();
+    uint32_t start = system_timer::get();
 
     bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_ADC1EN);
     bit_flag::set(&(ADC1->CFGR2), ADC_CFGR2_CKMODE, static_cast<uint32_t>(a_clock.divider));
@@ -117,7 +114,7 @@ bool ADC::enable(Resolution a_resolution,
 
 void ADC::disable()
 {
-    assert(nullptr != p_adc_1);
+    cml_assert(nullptr != p_adc_1);
 
     ADC1->CR         = 0;
     ADC1->CFGR1      = 0;
@@ -133,7 +130,7 @@ void ADC::disable()
 
 void ADC::set_active_channels(Sampling_time a_sampling_time, const Channel* a_p_channels, uint32_t a_channels_count)
 {
-    assert(nullptr != p_adc_1);
+    cml_assert(nullptr != p_adc_1);
 
     ADC1->SMPR = static_cast<uint32_t>(a_sampling_time);
 
@@ -159,7 +156,7 @@ void ADC::set_active_channels(Sampling_time a_sampling_time, const Channel* a_p_
 
 void ADC::clear_active_channels()
 {
-    assert(nullptr != p_adc_1);
+    cml_assert(nullptr != p_adc_1);
 
     ADC1->SMPR   = 0;
     ADC1->CHSELR = 0;
@@ -169,43 +166,43 @@ void ADC::clear_active_channels()
 
 void ADC::read_polling(uint16_t* a_p_data, uint32_t a_count)
 {
-    assert(nullptr != p_adc_1);
-    assert(nullptr != a_p_data);
-    assert(a_count > 0);
+    cml_assert(nullptr != p_adc_1);
+    cml_assert(nullptr != a_p_data);
+    cml_assert(a_count > 0);
 
-    assert(this->get_active_channels_count() == a_count);
+    cml_assert(this->get_active_channels_count() == a_count);
 
     bit_flag::set(&(ADC1->CR), ADC_CR_ADSTART);
 
     for (uint32_t i = 0; i < a_count; i++)
     {
-        wait::until(&(ADC1->ISR), ADC_ISR_EOC, false);
+        wait_until::all_bits(&(ADC1->ISR), ADC_ISR_EOC, false);
         a_p_data[i] = static_cast<uint16_t>(ADC1->DR);
     }
 
-    wait::until(&(ADC1->ISR), ADC_ISR_EOS, false);
+    wait_until::all_bits(&(ADC1->ISR), ADC_ISR_EOS, false);
     bit_flag::set(&(ADC1->ISR), ADC_ISR_EOS);
 
     bit_flag::set(&(ADC1->CR), ADC_CR_ADSTP);
     bit_flag::clear(&(ADC1->CR), ADC_CR_ADSTART);
 }
 
-bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeout)
+bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, uint32_t a_timeout)
 {
-    assert(nullptr != p_adc_1);
-    assert(nullptr != a_p_data);
-    assert(a_count > 0);
-    assert(a_timeout > 0);
-    assert(this->get_active_channels_count() == a_count);
+    cml_assert(nullptr != p_adc_1);
+    cml_assert(nullptr != a_p_data);
+    cml_assert(a_count > 0);
+    cml_assert(a_timeout > 0);
+    cml_assert(this->get_active_channels_count() == a_count);
 
     bit_flag::set(&(ADC1->CR), ADC_CR_ADSTART);
 
-    bool ret         = true;
-    time::tick start = system_timer::get();
+    bool ret       = true;
+    uint32_t start = system_timer::get();
 
     for (uint32_t i = 0; i < a_count && true == ret; i++)
     {
-        ret = wait::until(&(ADC1->ISR), ADC_ISR_EOC, false, start, a_timeout);
+        ret = wait_until::all_bits(&(ADC1->ISR), ADC_ISR_EOC, false, start, a_timeout);
 
         if (true == ret)
         {
@@ -215,7 +212,7 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
     if (true == ret)
     {
-        ret = wait::until(&(ADC1->ISR), ADC_ISR_EOS, false, start, a_timeout);
+        ret = wait_until::all_bits(&(ADC1->ISR), ADC_ISR_EOS, false, start, a_timeout);
 
         if (true == ret)
         {
@@ -231,8 +228,8 @@ bool ADC::read_polling(uint16_t* a_p_data, uint32_t a_count, time::tick a_timeou
 
 void ADC::register_conversion_callback(const Conversion_callback& a_callback)
 {
-    assert(nullptr != p_adc_1);
-    assert(nullptr != a_callback.function);
+    cml_assert(nullptr != p_adc_1);
+    cml_assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
 
@@ -244,7 +241,7 @@ void ADC::register_conversion_callback(const Conversion_callback& a_callback)
 
 void ADC::unregister_conversion_callback()
 {
-    assert(nullptr != p_adc_1);
+    cml_assert(nullptr != p_adc_1);
 
     Interrupt_guard guard;
 
@@ -256,7 +253,7 @@ void ADC::unregister_conversion_callback()
 
 void ADC::set_resolution(Resolution a_resolution)
 {
-    assert(nullptr != p_adc_1);
+    cml_assert(nullptr != p_adc_1);
 
     bool is_started = bit_flag::is(ADC1->CR, ADC_CR_ADSTART);
 
@@ -275,7 +272,7 @@ void ADC::set_resolution(Resolution a_resolution)
 
 uint32_t ADC::get_active_channels_count() const
 {
-    assert(nullptr != p_adc_1);
+    cml_assert(nullptr != p_adc_1);
 
     uint32_t ret = 0;
 
@@ -287,7 +284,7 @@ uint32_t ADC::get_active_channels_count() const
     return ret;
 }
 
-bool ADC::enable(Resolution a_resolution, time::tick a_start, uint32_t a_irq_priority, time::tick a_timeout)
+bool ADC::enable(Resolution a_resolution, uint32_t a_start, uint32_t a_irq_priority, uint32_t a_timeout)
 {
     p_adc_1 = this;
 
@@ -304,14 +301,14 @@ bool ADC::enable(Resolution a_resolution, time::tick a_start, uint32_t a_irq_pri
 
     bit_flag::set(&(ADC1->CR), ADC_CR_ADCAL);
 
-    bool ret = wait::until(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
+    bool ret = wait_until::all_bits(&(ADC1->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
 
     if (true == ret)
     {
         bit_flag::set(&(ADC1->CFGR1), static_cast<uint32_t>(a_resolution));
         bit_flag::set(&(ADC1->CR), ADC_CR_ADEN);
 
-        ret = wait::until(&(ADC1->CR), ADC_CR_ADEN, false, a_start, a_timeout);
+        ret = wait_until::all_bits(&(ADC1->CR), ADC_CR_ADEN, false, a_start, a_timeout);
 
         if (true == ret)
         {

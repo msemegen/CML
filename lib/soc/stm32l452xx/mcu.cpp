@@ -1,9 +1,9 @@
 /*
-    Name: mcu.cpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: mcu.cpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 #ifdef STM32L452xx
 
@@ -12,18 +12,17 @@
 
 // cml
 #include <cml/bit.hpp>
-#include <cml/debug/assert.hpp>
-#include <cml/frequency.hpp>
-#include <cml/utils/wait.hpp>
+#include <cml/debug/assertion.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace {
 
 using namespace cml;
 using namespace soc::stm32l452xx;
 
-constexpr frequency msi_frequency_lut[] { kHz_to_Hz(100u), kHz_to_Hz(200u), kHz_to_Hz(400u), kHz_to_Hz(800u),
-                                          MHz_to_Hz(1u),   MHz_to_Hz(2u),   MHz_to_Hz(4u),   MHz_to_Hz(8u),
-                                          MHz_to_Hz(16u),  MHz_to_Hz(24u),  MHz_to_Hz(32u),  MHz_to_Hz(48u) };
+constexpr uint32_t msi_frequency_hz_lut[] { 100u * 1000u,   200u * 1000u,   400u * 1000u,   800u * 1000u,
+                                            1u * 1000000u,  2u * 1000000u,  4u * 1000000u,  8u * 1000000u,
+                                            16u * 1000000u, 24u * 1000000u, 32u * 1000000u, 48u * 1000000u };
 
 mcu::Sysclk_frequency_change_callback pre_sysclk_frequency_change_callback;
 mcu::Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
@@ -32,7 +31,8 @@ template<typename Config_t>
 uint32_t get_pll_register_config_from_factor(const Config_t& a_config, uint32_t a_enable_flag)
 {
     return (Config_t::Divider::unknown != a_config.divider ?
-                (static_cast<uint32_t>(a_config.divider) | (true == a_config.output_enabled ? a_enable_flag : 0)) :
+                (static_cast<uint32_t>(a_config.divider) |
+                 (mcu::Pll_config::Output::enabled == a_config.output ? a_enable_flag : 0)) :
                 0);
 }
 
@@ -52,68 +52,68 @@ void mcu::enable_msi_clock(Msi_frequency a_freq)
 
     bit_flag::set(&(RCC->CR), RCC_CR_MSION);
 
-    wait::until(&(RCC->CR), RCC_CR_MSIRDY, false);
+    wait_until::all_bits(&(RCC->CR), RCC_CR_MSIRDY, false);
 
     bit_flag::clear(&(RCC->ICSCR), RCC_ICSCR_MSITRIM);
     bit_flag::set(&(RCC->CR), RCC_CR_MSIRGSEL);
 
-    wait::until(&(RCC->CR), RCC_CR_MSIRDY, false);
+    wait_until::all_bits(&(RCC->CR), RCC_CR_MSIRDY, false);
 }
 
 void mcu::enable_hsi_clock(Hsi_frequency)
 {
     bit_flag::set(&(RCC->CR), RCC_CR_HSION, RCC_CR_HSION);
 
-    wait::until(&(RCC->CR), RCC_CR_HSIRDY, false);
+    wait_until::all_bits(&(RCC->CR), RCC_CR_HSIRDY, false);
 }
 
 void mcu::enable_lsi_clock(Lsi_frequency)
 {
     bit_flag::set(&(RCC->CSR), RCC_CSR_LSION, RCC_CSR_LSION);
 
-    wait::until(&(RCC->CSR), RCC_CSR_LSIRDY, false);
+    wait_until::all_bits(&(RCC->CSR), RCC_CSR_LSIRDY, false);
 }
 
 void mcu::enable_hsi48_clock(Hsi48_frequency)
 {
     bit_flag::set(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
 
-    wait::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, false);
+    wait_until::all_bits(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, false);
 }
 
 void mcu::disable_msi_clock()
 {
     bit_flag::clear(&(RCC->CR), RCC_CR_MSION);
 
-    wait::until(&(RCC->CR), RCC_CR_MSIRDY, true);
+    wait_until::all_bits(&(RCC->CR), RCC_CR_MSIRDY, true);
 }
 
 void mcu::disable_hsi_clock()
 {
     bit_flag::clear(&(RCC->CR), RCC_CR_HSION);
 
-    wait::until(&(RCC->CR), RCC_CR_HSIRDY, true);
+    wait_until::all_bits(&(RCC->CR), RCC_CR_HSIRDY, true);
 }
 
 void mcu::disable_lsi_clock()
 {
     bit_flag::clear(&(RCC->CSR), RCC_CSR_LSION);
 
-    wait::until(&(RCC->CSR), RCC_CSR_LSIRDY, true);
+    wait_until::all_bits(&(RCC->CSR), RCC_CSR_LSIRDY, true);
 }
 
 void mcu::disable_hsi48_clock()
 {
     bit_flag::clear(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
 
-    wait::until(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, true);
+    wait_until::all_bits(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, true);
 }
 
 void mcu::enable_pll(const Pll_config& a_config)
 {
-    assert((true == is_clock_enabled(Clock::msi) && a_config.source == Pll_config::Source::msi) ||
-           (true == is_clock_enabled(Clock::hsi) && a_config.source == Pll_config::Source::hsi));
-    assert((a_config.pll.n >= 8 && a_config.pll.n <= 86) && (a_config.pllsai1.n >= 8 && a_config.pllsai1.n <= 86));
+    cml_assert((true == is_clock_enabled(Clock::msi) && a_config.source == Pll_config::Source::msi) ||
+               (true == is_clock_enabled(Clock::hsi) && a_config.source == Pll_config::Source::hsi));
+    cml_assert((a_config.pll.n >= 8 && a_config.pll.n <= 86) && (a_config.pllsai1.n >= 8 && a_config.pllsai1.n <= 86));
 
     disable_pll();
 
@@ -150,15 +150,15 @@ void mcu::disable_pll()
 
 void mcu::set_clk48_clock_mux_source(Clk48_mux_source a_source)
 {
-    assert((a_source == Clk48_mux_source::hsi48 && is_clock_enabled(Clock::hsi48)) ||
-           (a_source == Clk48_mux_source::msi && is_clock_enabled(Clock::msi)) ||
+    cml_assert((a_source == Clk48_mux_source::hsi48 && is_clock_enabled(Clock::hsi48)) ||
+               (a_source == Clk48_mux_source::msi && is_clock_enabled(Clock::msi)) ||
 
-           ((a_source == Clk48_mux_source::pll_q && is_clock_enabled(Clock::pll)) &&
-            true == get_pll_config().pll.q.output_enabled) ||
-           ((a_source == Clk48_mux_source::pll_sai1_q && is_clock_enabled(Clock::pll)) &&
-            true == get_pll_config().pllsai1.q.output_enabled));
+               ((a_source == Clk48_mux_source::pll_q && is_clock_enabled(Clock::pll)) &&
+                Pll_config::Output::enable == get_pll_config().pll.q.output) ||
+               ((a_source == Clk48_mux_source::pll_sai1_q && is_clock_enabled(Clock::pll)) &&
+                true == get_pll_config().pllsai1.q.output_enabled));
 
-    assert(get_clk48_mux_freqency_hz() <= MHz_to_Hz(48));
+    cml_assert(get_clk48_mux_freqency_hz() <= 48 * 1000000u);
 
     bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_CLK48SEL, static_cast<uint32_t>(a_source));
 }
@@ -185,21 +185,21 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers)
     switch (a_source)
     {
         case Sysclk_source::hsi: {
-            assert(true == is_clock_enabled(Clock::hsi));
+            cml_assert(true == is_clock_enabled(Clock::hsi));
 
             frequency_hz = get_hsi_frequency_hz();
         }
         break;
 
         case Sysclk_source::msi: {
-            assert(true == is_clock_enabled(Clock::msi));
+            cml_assert(true == is_clock_enabled(Clock::msi));
 
-            frequency_hz = msi_frequency_lut[bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos];
+            frequency_hz = msi_frequency_hz_lut[bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos];
         }
         break;
 
         case Sysclk_source::pll: {
-            assert(true == is_clock_enabled(Clock::pll));
+            cml_assert(true == is_clock_enabled(Clock::pll));
 
             frequency_hz = calculate_pll_r_output_frequency();
         }
@@ -281,25 +281,25 @@ mcu::Bus_prescalers mcu::get_bus_prescalers()
 
 mcu::Pll_config mcu::get_pll_config()
 {
-    return
+    return {
+        static_cast<Pll_config::Source>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)),
+        static_cast<Pll_config::M>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)),
+        { bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLN),
+          { static_cast<Pll_config::PLL::R::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLR)),
+            static_cast<Pll_config::Output>(bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLREN)) },
+          { static_cast<Pll_config::PLL::Q::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ)),
+            static_cast<Pll_config::Output>(bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLQEN)) },
+          { static_cast<Pll_config::PLL::P::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLP)),
+            static_cast<Pll_config::Output>(bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLPEN)) } },
 
-        { static_cast<Pll_config::Source>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC)),
-          static_cast<Pll_config::M>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLM)),
-          { bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLN),
-            { static_cast<Pll_config::PLL::R::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLR)),
-              bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLREN) },
-            { static_cast<Pll_config::PLL::Q::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ)),
-              bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLQEN) },
-            { static_cast<Pll_config::PLL::P::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLP)),
-              bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLPEN) } },
-
-          { bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N),
-            { static_cast<Pll_config::PLLSAI1::R::Divider>(bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1R)),
-              bit_flag::is(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1REN) },
-            { static_cast<Pll_config::PLLSAI1::Q::Divider>(bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1Q)),
-              bit_flag::is(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1QEN) },
-            { static_cast<Pll_config::PLLSAI1::P::Divider>(bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1P)),
-              bit_flag::is(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1PEN) } } };
+        { bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N),
+          { static_cast<Pll_config::PLLSAI1::R::Divider>(bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1R)),
+            static_cast<Pll_config::Output>(bit_flag::is(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1REN)) },
+          { static_cast<Pll_config::PLLSAI1::Q::Divider>(bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1Q)),
+            static_cast<Pll_config::Output>(bit_flag::is(RCC->PLLCFGR, RCC_PLLSAI1CFGR_PLLSAI1QEN)) },
+          { static_cast<Pll_config::PLLSAI1::P::Divider>(bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1P)),
+            static_cast<Pll_config::Output>(bit_flag::is(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1PEN)) } }
+    };
 }
 
 uint32_t mcu::get_clk48_mux_freqency_hz()
@@ -309,7 +309,7 @@ uint32_t mcu::get_clk48_mux_freqency_hz()
     switch (source)
     {
         case Clk48_mux_source::hsi48: {
-            return MHz_to_Hz(48);
+            return 48 * 1000000u;
         }
         break;
 
@@ -325,7 +325,7 @@ uint32_t mcu::get_clk48_mux_freqency_hz()
 
         case mcu::Clk48_mux_source::msi: {
             uint32_t msi_range = bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
-            return msi_frequency_lut[msi_range];
+            return msi_frequency_hz_lut[msi_range];
         }
         break;
     }
@@ -338,27 +338,27 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
     switch (a_voltage_scaling)
     {
         case Voltage_scaling::_1: {
-            if (a_syclk_freq <= MHz_to_Hz(16))
+            if (a_syclk_freq <= 16 * 1000000u)
             {
                 return Flash_latency::_0;
             }
 
-            if (a_syclk_freq <= MHz_to_Hz(32))
+            if (a_syclk_freq <= 32 * 1000000u)
             {
                 return Flash_latency::_1;
             }
 
-            if (a_syclk_freq <= MHz_to_Hz(48))
+            if (a_syclk_freq <= 48 * 1000000u)
             {
                 return Flash_latency::_2;
             }
 
-            if (a_syclk_freq <= MHz_to_Hz(64))
+            if (a_syclk_freq <= 64 * 1000000u)
             {
                 return Flash_latency::_3;
             }
 
-            if (a_syclk_freq <= MHz_to_Hz(80))
+            if (a_syclk_freq <= 80 * 1000000u)
             {
                 return Flash_latency::_4;
             }
@@ -366,22 +366,22 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
         break;
 
         case Voltage_scaling::_2: {
-            if (a_syclk_freq <= MHz_to_Hz(6))
+            if (a_syclk_freq <= 6 * 1000000u)
             {
                 return Flash_latency::_0;
             }
 
-            if (a_syclk_freq <= MHz_to_Hz(12))
+            if (a_syclk_freq <= 12 * 1000000u)
             {
                 return Flash_latency::_1;
             }
 
-            if (a_syclk_freq <= MHz_to_Hz(18))
+            if (a_syclk_freq <= 18 * 1000000u)
             {
                 return Flash_latency::_2;
             }
 
-            if (a_syclk_freq <= MHz_to_Hz(26))
+            if (a_syclk_freq <= 26 * 1000000u)
             {
                 return Flash_latency::_3;
             }
@@ -389,7 +389,7 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
         break;
 
         case Voltage_scaling::unkown: {
-            assert(Voltage_scaling::unkown != a_voltage_scaling);
+            cml_assert(Voltage_scaling::unkown != a_voltage_scaling);
         }
         break;
     }
@@ -399,14 +399,14 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
 
 mcu::Voltage_scaling mcu::select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq)
 {
-    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= MHz_to_Hz(24)) ||
-        (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz_to_Hz(26)))
+    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= 24 * 1000000u) ||
+        (Sysclk_source::pll == a_source && a_sysclk_freq <= 26 * 1000000u))
     {
         return Voltage_scaling::_2;
     }
 
-    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= MHz_to_Hz(48)) ||
-        (Sysclk_source::pll == a_source && a_sysclk_freq <= MHz_to_Hz(80)) || (Sysclk_source::hsi == a_source))
+    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= 48 * 1000000u) ||
+        (Sysclk_source::pll == a_source && a_sysclk_freq <= 80 * 1000000u) || (Sysclk_source::hsi == a_source))
     {
         return Voltage_scaling::_1;
     }
@@ -416,7 +416,7 @@ mcu::Voltage_scaling mcu::select_voltage_scaling(Sysclk_source a_source, uint32_
 
 void mcu::set_flash_latency(Flash_latency a_latency)
 {
-    assert(a_latency != Flash_latency::unknown);
+    cml_assert(a_latency != Flash_latency::unknown);
 
     bit_flag::set(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<uint32_t>(a_latency));
 
@@ -426,7 +426,7 @@ void mcu::set_flash_latency(Flash_latency a_latency)
 
 void mcu::set_voltage_scaling(Voltage_scaling a_scaling)
 {
-    assert(a_scaling != Voltage_scaling::unkown);
+    cml_assert(a_scaling != Voltage_scaling::unkown);
 
     bit_flag::set(&(PWR->CR1), PWR_CR1_VOS, static_cast<uint32_t>(a_scaling));
 
@@ -443,9 +443,9 @@ void mcu::set_sysclk_source(Sysclk_source a_sysclk_source)
 
 void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
 {
-    assert(Bus_prescalers::AHB::unknown != a_prescalers.ahb);
-    assert(Bus_prescalers::APB1::unknown != a_prescalers.apb1);
-    assert(Bus_prescalers::APB2::unknown != a_prescalers.apb2);
+    cml_assert(Bus_prescalers::AHB::unknown != a_prescalers.ahb);
+    cml_assert(Bus_prescalers::APB1::unknown != a_prescalers.apb1);
+    cml_assert(Bus_prescalers::APB2::unknown != a_prescalers.apb2);
 
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32_t>(a_prescalers.ahb));
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32_t>(a_prescalers.apb1));
@@ -457,8 +457,8 @@ void mcu::increase_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency
     auto new_voltage_scaling = select_voltage_scaling(a_source, a_frequency_hz);
     auto new_flash_latency   = select_flash_latency(a_frequency_hz, new_voltage_scaling);
 
-    assert(Voltage_scaling::unkown != new_voltage_scaling);
-    assert(Flash_latency::unknown != new_flash_latency);
+    cml_assert(Voltage_scaling::unkown != new_voltage_scaling);
+    cml_assert(Flash_latency::unknown != new_flash_latency);
 
     if (Voltage_scaling::_2 == get_voltage_scaling() && Voltage_scaling::_1 == new_voltage_scaling)
     {
@@ -483,8 +483,8 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency
     auto new_voltage_scaling = select_voltage_scaling(a_source, a_frequency_hz);
     auto new_flash_latency   = select_flash_latency(a_frequency_hz, new_voltage_scaling);
 
-    assert(Voltage_scaling::unkown != new_voltage_scaling);
-    assert(Flash_latency::unknown != new_flash_latency);
+    cml_assert(Voltage_scaling::unkown != new_voltage_scaling);
+    cml_assert(Flash_latency::unknown != new_flash_latency);
 
     if (new_flash_latency != get_flash_latency())
     {
@@ -513,7 +513,7 @@ uint32_t mcu::calculate_pll_r_output_frequency()
     {
         case Pll_config::Source::msi: {
             uint32_t msi_range = bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
-            pllvco             = (msi_frequency_lut[msi_range] / m) * n;
+            pllvco             = (msi_frequency_hz_lut[msi_range] / m) * n;
         }
         break;
 
@@ -523,12 +523,12 @@ uint32_t mcu::calculate_pll_r_output_frequency()
         break;
 
         case Pll_config::Source::unknown: {
-            assert(false);
+            cml_assert(false);
         }
         break;
     }
 
-    assert(pllvco >= MHz_to_Hz(96) && pllvco <= MHz_to_Hz(344));
+    cml_assert(pllvco >= 96 * 1000000u && pllvco <= 344 * 1000000u);
 
     uint32_t pllr = ((bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
     return pllvco / pllr;
@@ -544,7 +544,7 @@ uint32_t mcu::calculate_pll_q_output_frequency()
     {
         case Pll_config::Source::msi: {
             const uint32_t msi_range = bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
-            return ((msi_frequency_lut[msi_range] / m) * n) / q;
+            return ((msi_frequency_hz_lut[msi_range] / m) * n) / q;
         }
 
         case Pll_config::Source::hsi: {
@@ -552,7 +552,7 @@ uint32_t mcu::calculate_pll_q_output_frequency()
         }
 
         case Pll_config::Source::unknown: {
-            assert(false);
+            cml_assert(false);
             return 0;
         }
     }
@@ -571,7 +571,7 @@ uint32_t mcu::calculate_pllsai1_q_output_frequency()
     {
         case Pll_config::Source::msi: {
             uint32_t msi_range = bit_flag::get(RCC->CR, RCC_CR_MSIRANGE) >> RCC_CR_MSIRANGE_Pos;
-            return ((msi_frequency_lut[msi_range] / m) * n) / q;
+            return ((msi_frequency_hz_lut[msi_range] / m) * n) / q;
         }
 
         case Pll_config::Source::hsi: {
@@ -579,7 +579,7 @@ uint32_t mcu::calculate_pllsai1_q_output_frequency()
         }
 
         default: {
-            assert(false);
+            cml_assert(false);
             return 0;
         }
     }

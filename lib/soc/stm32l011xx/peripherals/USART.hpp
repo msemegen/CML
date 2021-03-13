@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: USART.hpp
-
-    Copyright(c) 2019 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: USART.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
@@ -16,8 +16,6 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
-#include <cml/frequency.hpp>
-#include <cml/time.hpp>
 
 namespace soc {
 namespace stm32l011xx {
@@ -85,6 +83,16 @@ public:
         unknown
     };
 
+    enum class Bus_status_flag : uint32_t
+    {
+        ok             = 0x0,
+        framing_error  = 0x1,
+        parity_error   = 0x2,
+        overrun        = 0x4,
+        noise_detected = 0x8,
+        unknown        = 0x10
+    };
+
     struct Frame_format
     {
         Word_length word_length = Word_length::unknown;
@@ -111,23 +119,13 @@ public:
             unknown
         };
 
-        Source source               = Source::unknown;
-        cml::frequency frequency_hz = 0;
+        Source source         = Source::unknown;
+        uint32_t frequency_hz = 0;
     };
 
     struct Result
     {
-        enum class Bus_flag : uint32_t
-        {
-            ok             = 0x0,
-            framing_error  = 0x1,
-            parity_error   = 0x2,
-            overrun        = 0x4,
-            noise_detected = 0x8,
-            unknown        = 0x10
-        };
-
-        Bus_flag bus_flag             = Bus_flag::unknown;
+        Bus_status_flag bus_status    = Bus_status_flag::unknown;
         uint32_t data_length_in_words = 0;
     };
 
@@ -152,7 +150,7 @@ public:
 
     struct Bus_status_callback
     {
-        using Function = void (*)(Result::Bus_flag a_bus_status, USART* a_p_this, void* a_p_user_data);
+        using Function = void (*)(Bus_status_flag a_bus_status, USART* a_p_this, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
@@ -169,18 +167,11 @@ public:
         this->disable();
     }
 
-    USART()             = default;
-    USART(USART&)       = default;
-    USART(const USART&) = default;
-
-    USART& operator=(USART&&) = default;
-    USART& operator=(const USART&) = default;
-
     bool enable(const Config& a_config,
                 const Frame_format& a_frame_format,
                 const Clock& a_clock,
                 uint32_t a_irq_priority,
-                cml::time::tick a_timeout_ms);
+                uint32_t a_timeout);
 
     void disable();
 
@@ -190,10 +181,10 @@ public:
         return this->transmit_bytes_polling(&a_data, sizeof(a_data));
     }
 
-    template<typename Data_t> Result transmit_polling(const Data_t& a_data, cml::time::tick a_timeout_ms)
+    template<typename Data_t> Result transmit_polling(const Data_t& a_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
-        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout_ms);
+        return this->transmit_bytes_polling(&a_data, sizeof(a_data), a_timeout);
     }
 
     template<typename Data_t> Result receive_polling(Data_t* a_p_data)
@@ -202,19 +193,19 @@ public:
         return this->receive_bytes_polling(a_p_data, sizeof(Data_t));
     }
 
-    template<typename Data_t> Result receive_polling(Data_t* a_p_data, cml::time::tick a_timeout_ms)
+    template<typename Data_t> Result receive_polling(Data_t* a_p_data, uint32_t a_timeout)
     {
         static_assert(true == std::is_standard_layout<Data_t>::value && true == std::is_trivial<Data_t>::value);
-        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout_ms);
+        return this->receive_bytes_polling(a_p_data, sizeof(Data_t), a_timeout);
     }
 
     Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words);
-    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
+    Result transmit_bytes_polling(const void* a_p_data, uint32_t a_data_size_in_words, uint32_t a_timeout);
     Result transmit_word(uint16_t a_word);
-    Result transmit_word(uint16_t a_word, cml::time::tick a_timeout_ms);
+    Result transmit_word(uint16_t a_word, uint32_t a_timeout);
 
     Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words);
-    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, cml::time::tick a_timeout_ms);
+    Result receive_bytes_polling(void* a_p_data, uint32_t a_data_size_in_words, uint32_t a_timeout);
 
     void register_transmit_callback(const Transmit_callback& a_callback);
     void register_receive_callback(const Receive_callback& a_callback);
@@ -230,7 +221,7 @@ public:
     void set_flow_control(Flow_control_flag a_flow_control);
     void set_sampling_method(Sampling_method a_sampling_method);
     void set_frame_format(const Frame_format& a_frame_format);
-    bool set_mode(Mode_flag a_mode, cml::time::tick a_timeout_ms);
+    bool set_mode(Mode_flag a_mode, uint32_t a_timeout);
 
     bool is_transmit_callback() const
     {
@@ -289,17 +280,17 @@ private:
     friend void usart_interrupt_handler(USART* a_p_this);
 };
 
-constexpr USART::Result::Bus_flag operator|(USART::Result::Bus_flag a_f1, USART::Result::Bus_flag a_f2)
+constexpr USART::Bus_status_flag operator|(USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
 {
-    return static_cast<USART::Result::Bus_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+    return static_cast<USART::Bus_status_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Result::Bus_flag operator&(USART::Result::Bus_flag a_f1, USART::Result::Bus_flag a_f2)
+constexpr USART::Bus_status_flag operator&(USART::Bus_status_flag a_f1, USART::Bus_status_flag a_f2)
 {
-    return static_cast<USART::Result::Bus_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+    return static_cast<USART::Bus_status_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
 
-constexpr USART::Result::Bus_flag operator|=(USART::Result::Bus_flag& a_f1, USART::Result::Bus_flag a_f2)
+constexpr USART::Bus_status_flag operator|=(USART::Bus_status_flag& a_f1, USART::Bus_status_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;

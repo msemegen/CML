@@ -1,26 +1,22 @@
 /*
-    Name: system_timer.cpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: system_timer.cpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // this
 #include <soc/system_timer.hpp>
 
 namespace {
 
-using namespace cml;
-
-volatile time::tick cnt = 0;
+volatile uint32_t cnt = 0;
 
 } // namespace
 
 namespace soc {
 
-using namespace cml;
-
-time::tick system_timer::get()
+uint32_t system_timer::get()
 {
     return cnt;
 }

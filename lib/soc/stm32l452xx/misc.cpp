@@ -1,9 +1,9 @@
 /*
-    Name: misc.cpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: misc.cpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 #ifdef STM32L452xx
 
@@ -14,22 +14,21 @@
 #include <soc/stm32l452xx/mcu.hpp>
 
 // cml
-#include <cml/debug/assert.hpp>
-#include <cml/frequency.hpp>
+#include <cml/debug/assertion.hpp>
 
 namespace soc {
 namespace stm32l452xx {
 
 using namespace cml;
 
-void misc::delay_us(time::tick a_time)
+void misc::delay_us(uint32_t a_time)
 {
-    assert(true == mcu::is_dwt_enabled());
-    assert(mcu::get_sysclk_frequency_hz() >= MHz_to_Hz(1));
-    assert(a_time > 0);
+    cml_assert(true == mcu::is_dwt_enabled());
+    cml_assert(mcu::get_sysclk_frequency_hz() >= 1000000u);
+    cml_assert(a_time > 0);
 
     DWT->CYCCNT        = 0;
-    const uint32_t max = DWT->CYCCNT + (mcu::get_sysclk_frequency_hz() / MHz_to_Hz(1) * (a_time - 1));
+    const uint32_t max = DWT->CYCCNT + (mcu::get_sysclk_frequency_hz() / 1000000u * (a_time - 1));
     while (DWT->CYCCNT < max)
         ;
 }

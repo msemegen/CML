@@ -1,21 +1,21 @@
 #pragma once
 
 /*
-    Name: system_timer.hpp
+ *   Name: system_timer.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
-
-// cml
-#include <cml/time.hpp>
+// std
+#include <cstdint>
 
 namespace soc {
 
 class system_timer
 {
 public:
-    static cml::time::tick get();
+    static uint32_t get();
     static void update();
 
 private:
