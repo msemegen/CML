@@ -48,7 +48,7 @@ public:
     void register_early_wakeup_callback(const Callback& a_callback);
     void unregister_early_wakeup_callback();
 
-    static void feed();
+    void feed();
 };
 
 } // namespace peripherals
