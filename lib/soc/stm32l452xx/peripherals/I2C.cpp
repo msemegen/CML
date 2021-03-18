@@ -439,7 +439,7 @@ I2C_master::transmit_bytes_polling(uint8_t a_slave_address, const void* a_p_data
     const uint32_t data_size_mask =
         (static_cast<uint32_t>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos) & I2C_CR2_NBYTES_Msk;
 
-    get_i2c_ptr(this->id)->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND;
+    get_i2c_ptr(this->id)->CR2 = address_mask | data_size_mask | I2C_CR2_START;
 
     uint32_t bytes      = 0;
     bool error          = false;
@@ -450,6 +450,11 @@ I2C_master::transmit_bytes_polling(uint8_t a_slave_address, const void* a_p_data
         if (true == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_TXE) && bytes < a_data_size_in_bytes)
         {
             get_i2c_ptr(this->id)->TXDR = static_cast<const uint8_t*>(a_p_data)[bytes++];
+        }
+
+        if (true == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_TC))
+        {
+            bit_flag::set(&(get_i2c_ptr(this->id)->CR2), I2C_CR2_STOP);
         }
 
         error = is_I2C_ISR_error(this->id);
@@ -486,7 +491,7 @@ I2C_master::Result I2C_master::transmit_bytes_polling(uint8_t a_slave_address,
     const uint32_t address_mask   = static_cast<uint32_t>(a_slave_address) & I2C_CR2_SADD;
     const uint32_t data_size_mask = static_cast<uint32_t>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    get_i2c_ptr(this->id)->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND;
+    get_i2c_ptr(this->id)->CR2 = address_mask | data_size_mask | I2C_CR2_START;
 
     uint32_t bytes      = 0;
     bool error          = false;
@@ -498,6 +503,11 @@ I2C_master::Result I2C_master::transmit_bytes_polling(uint8_t a_slave_address,
         if (true == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_TXE) && bytes < a_data_size_in_bytes)
         {
             get_i2c_ptr(this->id)->TXDR = static_cast<const uint8_t*>(a_p_data)[bytes++];
+        }
+
+        if (true == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_TC))
+        {
+            bit_flag::set(&(get_i2c_ptr(this->id)->CR2), I2C_CR2_STOP);
         }
 
         error = is_I2C_ISR_error(this->id);
@@ -529,7 +539,7 @@ I2C_master::receive_bytes_polling(uint8_t a_slave_address, void* a_p_data, uint3
     const uint32_t address_mask   = static_cast<uint32_t>(a_slave_address) & I2C_CR2_SADD;
     const uint32_t data_size_mask = static_cast<uint32_t>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    get_i2c_ptr(this->id)->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
+    get_i2c_ptr(this->id)->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_RD_WRN;
 
     uint32_t bytes      = 0;
     bool error          = false;
@@ -540,19 +550,17 @@ I2C_master::receive_bytes_polling(uint8_t a_slave_address, void* a_p_data, uint3
         if (true == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_RXNE) && bytes < a_data_size_in_bytes)
         {
             static_cast<uint8_t*>(a_p_data)[bytes++] = static_cast<uint8_t>(get_i2c_ptr(this->id)->RXDR);
+
+            if (a_data_size_in_bytes == bytes)
+            {
+                bit_flag::set(&(get_i2c_ptr(this->id)->CR2), I2C_CR2_STOP);
+            }
         }
 
         error = is_I2C_ISR_error(this->id);
     }
 
-    if (false == error)
-    {
-        if (true == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_RXNE) && bytes < a_data_size_in_bytes)
-        {
-            static_cast<uint8_t*>(a_p_data)[bytes++] = static_cast<uint8_t>(get_i2c_ptr(this->id)->RXDR);
-        }
-    }
-    else
+    if (true == error)
     {
         bus_status = get_bus_status_flag_from_I2C_ISR(this->id);
 
@@ -583,7 +591,7 @@ I2C_master::Result I2C_master::receive_bytes_polling(uint8_t a_slave_address,
     const uint32_t address_mask   = static_cast<uint32_t>(a_slave_address) & I2C_CR2_SADD;
     const uint32_t data_size_mask = static_cast<uint32_t>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    get_i2c_ptr(this->id)->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
+    get_i2c_ptr(this->id)->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_RD_WRN;
 
     uint32_t bytes      = 0;
     bool error          = false;
@@ -595,19 +603,17 @@ I2C_master::Result I2C_master::receive_bytes_polling(uint8_t a_slave_address,
         if (true == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_RXNE) && bytes < a_data_size_in_bytes)
         {
             static_cast<uint8_t*>(a_p_data)[bytes++] = static_cast<uint8_t>(get_i2c_ptr(this->id)->RXDR);
+
+            if (a_data_size_in_bytes == bytes)
+            {
+                bit_flag::set(&(get_i2c_ptr(this->id)->CR2), I2C_CR2_STOP);
+            }
         }
 
         error = is_I2C_ISR_error(this->id);
     }
 
-    if (false == error)
-    {
-        if (true == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_RXNE) && bytes < a_data_size_in_bytes)
-        {
-            static_cast<uint8_t*>(a_p_data)[bytes++] = static_cast<uint8_t>(get_i2c_ptr(this->id)->RXDR);
-        }
-    }
-    else
+    if (true == error)
     {
         bus_status = get_bus_status_flag_from_I2C_ISR(this->id);
 
