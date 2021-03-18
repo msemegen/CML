@@ -27,5 +27,5 @@ using internal_flash = soc::stm32l452xx::internal_flash;
 using internal_flash = soc::stm32l011xx::internal_flash;
 #endif // STM32L011xx
 
-}
-}
+} // namespace hal
+} // namespace cml
