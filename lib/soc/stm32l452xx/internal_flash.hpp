@@ -14,7 +14,9 @@
 #include <stm32l452xx.h>
 
 // cml
+#include <cml/Non_copyable.hpp>
 #include <cml/bit_flag.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace soc {
 namespace stm32l452xx {
@@ -22,6 +24,11 @@ namespace stm32l452xx {
 class internal_flash
 {
 public:
+    enum
+    {
+        page_size_in_bytes = 2048
+    };
+
     enum class Latency : uint32_t
     {
         _0 = FLASH_ACR_LATENCY_0WS,
@@ -30,6 +37,10 @@ public:
         _3 = FLASH_ACR_LATENCY_3WS,
         _4 = FLASH_ACR_LATENCY_4WS,
         unknown
+    };
+
+    struct Result
+    {
     };
 
     struct Cache_settings
@@ -68,6 +79,52 @@ public:
     {
         return static_cast<Latency>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_LATENCY));
     }
+
+    static Result write_page(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes);
+    static Result write_page(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
+
+    static void read_page();
+    static void erase_page();
+
+private:
+    class Lock_guard : public cml::Non_copyable
+    {
+    public:
+        Lock_guard()
+        {
+            cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+
+            FLASH->KEYR = 0x45670123u;
+            FLASH->KEYR = 0xCDEF89ABu;
+
+            locked = true;
+        }
+
+        Lock_guard(uint32_t a_start, uint32_t a_timeout)
+        {
+            this->locked = cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, a_start, a_timeout);
+
+            if (true == this->locked)
+            {
+                FLASH->KEYR = 0x45670123u;
+                FLASH->KEYR = 0xCDEF89ABu;
+            }
+        }
+
+        ~Lock_guard()
+        {
+            cml::bit_flag::set(&(FLASH->CR), FLASH_CR_LOCK);
+            this->locked = false;
+        }
+
+        bool is_locked() const
+        {
+            return this->locked;
+        }
+
+    private:
+        bool locked;
+    };
 
 private:
     internal_flash()                      = delete;

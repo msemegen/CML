@@ -15,6 +15,7 @@
 
 // cml
 #include <cml/bit_flag.hpp>
+#include <cml/Non_copyable.hpp>
 
 namespace soc {
 namespace stm32l011xx {
@@ -34,6 +35,15 @@ public:
     {
         return static_cast<Latency>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_LATENCY));
     }
+
+private:
+    class Lock_guard : public cml::Non_copyable
+    {
+    public:
+
+        Lock_guard() {}
+        ~Lock_guard() {}
+    };
 
 private:
     internal_flash()                      = delete;
