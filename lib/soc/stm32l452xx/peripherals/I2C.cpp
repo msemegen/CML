@@ -464,9 +464,11 @@ I2C_master::transmit_bytes_polling(uint8_t a_slave_address, const void* a_p_data
     {
         bus_status = get_bus_status_flag_from_I2C_ISR(this->id);
 
-        if (Bus_flag::ok != bus_status)
+        clear_I2C_ISR_errors(this->id);
+
+        if (false == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_STOPF))
         {
-            clear_I2C_ISR_errors(this->id);
+            bit_flag::set(&(get_i2c_ptr(this->id)->CR2), I2C_CR2_STOP);
         }
     }
 
@@ -517,9 +519,11 @@ I2C_master::Result I2C_master::transmit_bytes_polling(uint8_t a_slave_address,
     {
         bus_status = get_bus_status_flag_from_I2C_ISR(this->id);
 
-        if (Bus_flag::ok != bus_status)
+        clear_I2C_ISR_errors(this->id);
+
+        if (false == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_STOPF))
         {
-            clear_I2C_ISR_errors(this->id);
+            bit_flag::set(&(get_i2c_ptr(this->id)->CR2), I2C_CR2_STOP);
         }
     }
 
@@ -564,9 +568,11 @@ I2C_master::receive_bytes_polling(uint8_t a_slave_address, void* a_p_data, uint3
     {
         bus_status = get_bus_status_flag_from_I2C_ISR(this->id);
 
-        if (Bus_flag::ok != bus_status)
+        clear_I2C_ISR_errors(this->id);
+
+        if (false == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_STOPF))
         {
-            clear_I2C_ISR_errors(this->id);
+            bit_flag::set(&(get_i2c_ptr(this->id)->CR2), I2C_CR2_STOP);
         }
     }
 
@@ -617,9 +623,11 @@ I2C_master::Result I2C_master::receive_bytes_polling(uint8_t a_slave_address,
     {
         bus_status = get_bus_status_flag_from_I2C_ISR(this->id);
 
-        if (Bus_flag::ok != bus_status)
+        clear_I2C_ISR_errors(this->id);
+
+        if (false == bit_flag::is(get_i2c_ptr(this->id)->ISR, I2C_ISR_STOPF))
         {
-            clear_I2C_ISR_errors(this->id);
+            bit_flag::set(&(get_i2c_ptr(this->id)->CR2), I2C_CR2_STOP);
         }
     }
 
