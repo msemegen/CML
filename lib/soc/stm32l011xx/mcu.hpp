@@ -83,13 +83,6 @@ struct mcu
         option_byte_loader          = RCC_CSR_OBLRSTF
     };
 
-    enum class Interrupt_line : int32_t
-    {
-        exti_0_1  = EXTI0_1_IRQn,
-        exti_2_3  = EXTI2_3_IRQn,
-        exti_4_15 = EXTI4_15_IRQn,
-    };
-
     struct Pll_config
     {
         enum class Multiplier
@@ -207,9 +200,6 @@ public:
 
     static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
 
-    static void enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority);
-    static void disable_interrupt_line(Interrupt_line a_line);
-
     static void reset();
     static void halt();
 
@@ -322,7 +312,7 @@ private:
     mcu()           = delete;
     mcu(const mcu&) = delete;
     mcu(mcu&&)      = delete;
-    ~mcu()          = default;
+    ~mcu()          = delete;
 
     mcu& operator=(const mcu&) = delete;
     mcu& operator=(mcu&&) = delete;

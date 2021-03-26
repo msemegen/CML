@@ -321,17 +321,6 @@ void mcu::set_sysclk_source(Sysclk_source a_sysclk_source)
         ;
 }
 
-void mcu::enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority)
-{
-    NVIC_SetPriority(static_cast<IRQn_Type>(a_line), a_priority);
-    NVIC_EnableIRQ(static_cast<IRQn_Type>(a_line));
-}
-
-void mcu::disable_interrupt_line(Interrupt_line a_line)
-{
-    NVIC_DisableIRQ(static_cast<IRQn_Type>(a_line));
-}
-
 void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
 {
     cml_assert(Bus_prescalers::AHB::unknown != a_prescalers.ahb);

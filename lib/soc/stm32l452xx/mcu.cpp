@@ -154,9 +154,9 @@ void mcu::set_clk48_clock_mux_source(Clk48_mux_source a_source)
                (a_source == Clk48_mux_source::msi && is_clock_enabled(Clock::msi)) ||
 
                ((a_source == Clk48_mux_source::pll_q && is_clock_enabled(Clock::pll)) &&
-                Pll_config::Output::enable == get_pll_config().pll.q.output) ||
+                Pll_config::Output::enabled == get_pll_config().pll.q.output) ||
                ((a_source == Clk48_mux_source::pll_sai1_q && is_clock_enabled(Clock::pll)) &&
-                true == get_pll_config().pllsai1.q.output_enabled));
+                Pll_config::Output::enabled == get_pll_config().pllsai1.q.output));
 
     cml_assert(get_clk48_mux_freqency_hz() <= 48 * 1000000u);
 
@@ -237,17 +237,6 @@ void mcu::set_nvic(const NVIC_config& a_config)
 {
     NVIC_SetPriorityGrouping(static_cast<uint32_t>(a_config.grouping));
     __set_BASEPRI(a_config.base_priority);
-}
-
-void mcu::enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority)
-{
-    NVIC_SetPriority(static_cast<IRQn_Type>(a_line), a_priority);
-    NVIC_EnableIRQ(static_cast<IRQn_Type>(a_line));
-}
-
-void mcu::disable_interrupt_line(Interrupt_line a_line)
-{
-    NVIC_DisableIRQ(static_cast<IRQn_Type>(a_line));
 }
 
 void mcu::reset()
