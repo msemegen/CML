@@ -111,11 +111,10 @@ Controller controllers[] = {
 
 struct Interrupt_handler
 {
-    GPIO::In::Pin::Interrupt_callback callback;
-    GPIO::In::Pin pin;
+    GPIO::EXTI::Callback callback;
 };
 
-Interrupt_handler interrupt_handlers[16];
+Interrupt_handler interrupt_handlers[7];
 
 } // namespace
 
@@ -128,13 +127,16 @@ static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
 {
     if (true == bit::is(a_pr1, a_index))
     {
-        interrupt_handlers[a_index].callback(interrupt_handlers[a_index].pin.get_level());
-
+        interrupt_handlers[a_index].callback.function(a_index, interrupt_handlers[a_index].callback.p_user_data);
         return true;
     }
 
     return false;
 }
+
+#ifndef EXTI
+#define EXTI ((EXTI_TypeDef*)EXTI_BASE)
+#endif
 
 void EXTI0_IRQHandler()
 {
@@ -236,67 +238,6 @@ GPIO::Level GPIO::In::Pin::get_level() const
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     return static_cast<Level>(bit::is(static_cast<GPIO_TypeDef*>(*(this->p_port))->IDR, this->id));
-}
-
-void GPIO::In::Pin::register_interrupt_callback(Interrupt_mode_flag a_mode, const Interrupt_callback& a_callback)
-{
-    cml_assert(true == mcu::is_syscfg_enabled());
-
-    volatile uint32_t* p_register = &(SYSCFG->EXTICR[this->id / 4u]);
-    uint32_t pos                  = ((static_cast<uint32_t>(this->id) % 4u) * 4u);
-
-#ifdef CML_ASSERT_ENABLED
-    const bool f = bit_flag::is(*p_register, static_cast<uint32_t>(this->p_port->get_id()) << pos);
-    cml_assert((GPIO::Id::a == this->p_port->get_id() && true == f) ||
-               (GPIO::Id::a != this->p_port->get_id() && false == f));
-#endif
-
-    Interrupt_guard guard;
-
-    bit_flag::set(p_register, 0x3u << pos, static_cast<uint32_t>(this->p_port->get_id()) << pos);
-
-    bit::clear(&(EXTI->RTSR1), this->id);
-    bit::clear(&(EXTI->FTSR1), this->id);
-    bit::set(&(EXTI->IMR1), this->id);
-
-    switch (a_mode)
-    {
-        case Interrupt_mode_flag::rising: {
-            bit::set(&(EXTI->RTSR1), this->id);
-        }
-        break;
-
-        case Interrupt_mode_flag::falling: {
-            bit::set(&(EXTI->FTSR1), this->id);
-        }
-        break;
-
-        default: {
-            if ((Interrupt_mode_flag::rising | Interrupt_mode_flag::falling) == a_mode)
-            {
-                bit::set(&(EXTI->RTSR1), this->id);
-                bit::set(&(EXTI->FTSR1), this->id);
-            }
-        }
-    }
-
-    interrupt_handlers[this->id].callback   = a_callback;
-    interrupt_handlers[this->id].pin.p_port = this->p_port;
-    interrupt_handlers[this->id].pin.id     = this->id;
-}
-
-void GPIO::In::Pin::unregister_interrupt_callback()
-{
-    Interrupt_guard guard;
-
-    bit::clear(&(EXTI->RTSR1), this->id);
-    bit::clear(&(EXTI->FTSR1), this->id);
-
-    bit_flag::clear(&(SYSCFG->EXTICR[this->id / 4u]),
-                    (static_cast<uint32_t>(this->p_port->get_id()) << ((static_cast<uint32_t>(this->id) % 4u) * 4u)));
-
-    interrupt_handlers[this->id].callback.function    = nullptr;
-    interrupt_handlers[this->id].callback.p_user_data = nullptr;
 }
 
 GPIO::Pull GPIO::In::Pin::get_pull() const
@@ -641,6 +582,114 @@ void GPIO::Alternate_function::disable(uint32_t a_id)
     bit_flag::clear(&(p_port->PUPDR), flag);
 
     this->p_port->give_pin(a_id);
+}
+
+#ifdef EXTI
+#undef EXTI
+#endif
+
+void GPIO::EXTI::enable(const Callback& a_callback, uint32_t a_priority)
+{
+    cml_assert(true == mcu::is_syscfg_enabled());
+
+    NVIC_SetPriority(static_cast<IRQn_Type>(this->id), a_priority);
+    NVIC_EnableIRQ(static_cast<IRQn_Type>(this->id));
+
+    if (this->id >= Id::_0 && this->id <= Id::_4)
+    {
+        interrupt_handlers[static_cast<uint32_t>(this->id) - static_cast<uint32_t>(Id::_0)].callback = a_callback;
+    }
+    else
+    {
+        if (Id::_5_9 == this->id)
+        {
+            interrupt_handlers[5].callback = a_callback;
+        }
+        else if (Id::_10_15 == this->id)
+        {
+            interrupt_handlers[6].callback = a_callback;
+        }
+    }
+}
+
+void GPIO::EXTI::disable()
+{
+    NVIC_DisableIRQ(static_cast<IRQn_Type>(this->id));
+}
+
+#ifndef EXTI
+#define EXTI ((EXTI_TypeDef*)EXTI_BASE)
+#endif
+
+#ifdef EXTI
+#undef EXTI
+#endif
+
+void GPIO::EXTI::attach(const GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigger)
+{
+    volatile uint32_t* p_register = &(SYSCFG->EXTICR[a_pin / 4u]);
+    uint32_t pos                  = ((static_cast<uint32_t>(a_pin) % 4u) * 4u);
+
+#ifdef CML_ASSERT_ENABLED
+    const bool f = bit_flag::is(*p_register, static_cast<uint32_t>(a_port.get_id()) << pos);
+    cml_assert((GPIO::Id::a == a_port.get_id() && true == f) || (GPIO::Id::a != a_port.get_id() && false == f));
+    cml_assert((Id::_0 == this->id && a_pin == 0u) || (Id::_1 == this->id && a_pin == 1u) ||
+               (Id::_2 == this->id && a_pin == 2u) || (Id::_3 == this->id && a_pin == 3u) ||
+               (Id::_4 == this->id && a_pin == 4u) || (Id::_5_9 == this->id && (a_pin >= 5u && a_pin <= 9u)) ||
+               (Id::_10_15 == this->id && (a_pin >= 10u && a_pin <= 15u)));
+#endif
+#ifndef EXTI
+#define EXTI ((EXTI_TypeDef*)EXTI_BASE)
+#endif
+
+    Interrupt_guard guard;
+
+    bit_flag::set(p_register, 0x3u << pos, static_cast<uint32_t>(a_port.get_id()) << pos);
+
+    bit::clear(&(EXTI->RTSR1), a_pin);
+    bit::clear(&(EXTI->FTSR1), a_pin);
+    bit::set(&(EXTI->IMR1), a_pin);
+
+    switch (a_trigger)
+    {
+        case Trigger_flag::rising: {
+            bit::set(&(EXTI->RTSR1), a_pin);
+        }
+        break;
+
+        case Trigger_flag::falling: {
+            bit::set(&(EXTI->FTSR1), a_pin);
+        }
+        break;
+
+        default: {
+            if ((Trigger_flag::rising | Trigger_flag::falling) == a_trigger)
+            {
+                bit::set(&(EXTI->RTSR1), a_pin);
+                bit::set(&(EXTI->FTSR1), a_pin);
+            }
+        }
+    }
+}
+
+#ifdef EXTI
+#undef EXTI
+#endif
+
+void GPIO::EXTI::deattach(const GPIO& a_port, uint32_t a_pin)
+{
+    Interrupt_guard guard;
+#ifndef EXTI
+#define EXTI ((EXTI_TypeDef*)EXTI_BASE)
+#endif
+
+    bit::clear(&(EXTI->RTSR1), a_pin);
+    bit::clear(&(EXTI->FTSR1), a_pin);
+
+    bit_flag::clear(&(SYSCFG->EXTICR[a_pin / 4u]),
+                    (static_cast<uint32_t>(a_port.get_id()) << ((static_cast<uint32_t>(a_pin) % 4u) * 4u)));
+
+    interrupt_handlers[a_pin].callback = { nullptr, nullptr };
 }
 
 } // namespace peripherals
