@@ -50,7 +50,8 @@ int main()
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
     mcu::set_sysclk(mcu::Sysclk_source::hsi,
-                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 });
+                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 },
+                    mcu::Voltage_scaling::_1);
 
     while (mcu::Sysclk_source::hsi != mcu::get_sysclk_source())
         ;
