@@ -84,14 +84,12 @@ public:
         _2 = FLASH_ACR_LATENCY_2WS,
         _3 = FLASH_ACR_LATENCY_3WS,
         _4 = FLASH_ACR_LATENCY_4WS,
-        unknown
     };
 
     enum class Voltage_scaling : uint32_t
     {
         _1 = PWR_CR1_VOS_0,
         _2 = PWR_CR1_VOS_1,
-        unkown
     };
 
     enum class Reset_source : uint32_t
@@ -340,7 +338,8 @@ public:
 
     static void set_clk48_clock_mux_source(Clk48_mux_source a_source);
 
-    static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
+    static void
+    set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, Voltage_scaling a_voltage_scaling);
     static void set_nvic(const NVIC_config& a_config);
 
     static void set_fpu_mode(FPU_mode a_mode)
@@ -501,18 +500,21 @@ private:
     mcu& operator=(mcu&&) = delete;
 
     static Flash_latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
-    static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);
 
     static void set_flash_latency(Flash_latency a_latency);
     static void set_voltage_scaling(Voltage_scaling a_scaling);
     static void set_sysclk_source(Sysclk_source a_sysclk_source);
     static void set_bus_prescalers(const Bus_prescalers& a_prescalers);
 
-    static void
-    increase_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
+    static void increase_sysclk_frequency(Sysclk_source a_source,
+                                          uint32_t a_frequency_hz,
+                                          const Bus_prescalers& a_prescalers,
+                                          Voltage_scaling a_voltage_scaling);
 
-    static void
-    decrease_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
+    static void decrease_sysclk_frequency(Sysclk_source a_source,
+                                          uint32_t a_frequency_hz,
+                                          const Bus_prescalers& a_prescalers,
+                                          Voltage_scaling a_voltage_scaling);
 
     static uint32_t calculate_pll_r_output_frequency();
     static uint32_t calculate_pll_q_output_frequency();
