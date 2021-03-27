@@ -80,50 +80,54 @@ public:
         return static_cast<Latency>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_LATENCY));
     }
 
-    static Result write_page(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes);
-    static Result write_page(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
+    static Result write_page_polling(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes);
+    static Result
+    write_page_polling(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
 
-    static void read_page();
-    static void erase_page();
+    static Result read_page_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes);
+    static Result read_page_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
+
+    static Result erase_page_polling(uint32_t a_address);
+    static Result erase_page_polling(uint32_t a_address, uint32_t a_timeout);
 
 private:
-    class Lock_guard : public cml::Non_copyable
+    class Unlock_guard : public cml::Non_copyable
     {
     public:
-        Lock_guard()
+        Unlock_guard()
         {
             cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
 
             FLASH->KEYR = 0x45670123u;
             FLASH->KEYR = 0xCDEF89ABu;
 
-            locked = true;
+            this->unlocked = true;
         }
 
-        Lock_guard(uint32_t a_start, uint32_t a_timeout)
+        Unlock_guard(uint32_t a_start, uint32_t a_timeout)
         {
-            this->locked = cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, a_start, a_timeout);
+            this->unlocked = cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, a_start, a_timeout);
 
-            if (true == this->locked)
+            if (true == this->unlocked)
             {
                 FLASH->KEYR = 0x45670123u;
                 FLASH->KEYR = 0xCDEF89ABu;
             }
         }
 
-        ~Lock_guard()
+        ~Unlock_guard()
         {
             cml::bit_flag::set(&(FLASH->CR), FLASH_CR_LOCK);
-            this->locked = false;
+            this->unlocked = false;
         }
 
-        bool is_locked() const
+        bool is_unlocked() const
         {
-            return this->locked;
+            return this->unlocked;
         }
 
     private:
-        bool locked;
+        bool unlocked;
     };
 
 private:
