@@ -16,6 +16,7 @@
 // cml
 #include <cml/Non_copyable.hpp>
 #include <cml/bit_flag.hpp>
+#include <cml/debug/assertion.hpp>
 #include <cml/utils/wait_until.hpp>
 
 namespace soc {
@@ -39,40 +40,42 @@ public:
         unknown
     };
 
+    enum class Mode
+    {
+        standard,
+        fast
+    };
+
+    enum class Cache_settings_flag : uint32_t
+    {
+        data         = FLASH_ACR_DCEN,
+        instructions = FLASH_ACR_ICEN
+    };
+
     struct Result
     {
     };
 
-    struct Cache_settings
+    static void set_cache_settings(const Cache_settings_flag& a_settings)
     {
-        enum class Data : uint32_t
-        {
-            disable = 0x0u,
-            enable  = FLASH_ACR_DCEN,
-            unknown
-        };
-
-        enum class Instructions : uint32_t
-        {
-            disable = 0x0u,
-            enable  = FLASH_ACR_ICEN,
-            unknown
-        };
-
-        Data data                 = Data::unknown;
-        Instructions instructions = Instructions::unknown;
-    };
-
-    static void set_cache_settings(const Cache_settings& a_settings)
-    {
-        cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_DCEN, static_cast<uint32_t>(a_settings.data));
-        cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_ICEN, static_cast<uint32_t>(a_settings.instructions));
+        cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_DCEN | FLASH_ACR_ICEN, static_cast<uint32_t>(a_settings));
     }
 
-    static Cache_settings get_cache_settings()
+    void set_prefetch_settings(bool a_enable)
     {
-        return { static_cast<Cache_settings::Data>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_DCEN)),
-                 static_cast<Cache_settings::Instructions>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_ICEN)) };
+        if (true == a_enable)
+        {
+            cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_PRFTEN);
+        }
+        else
+        {
+            cml::bit_flag::clear(&(FLASH->ACR), FLASH_ACR_PRFTEN);
+        }
+    }
+
+    static Cache_settings_flag get_cache_settings()
+    {
+        return static_cast<Cache_settings_flag>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_DCEN | FLASH_ACR_ICEN));
     }
 
     static Latency get_latency()
@@ -80,15 +83,15 @@ public:
         return static_cast<Latency>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_LATENCY));
     }
 
-    static Result write_page_polling(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes);
+    static Result write_polling(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes, Mode a_mode);
     static Result
-    write_page_polling(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
+    write_polling(uint32_t a_address, const void* a_p_data, uint32_t a_size_in_bytes, Mode a_mode, uint32_t a_timeout);
 
-    static Result read_page_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes);
-    static Result read_page_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
+    static Result read_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes);
+    static Result read_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
 
-    static Result erase_page_polling(uint32_t a_address);
-    static Result erase_page_polling(uint32_t a_address, uint32_t a_timeout);
+    static Result erase_page_polling(uint32_t a_address, Mode a_mode);
+    static Result erase_page_polling(uint32_t a_address, Mode a_mode, uint32_t a_timeout);
 
 private:
     class Unlock_guard : public cml::Non_copyable
@@ -98,8 +101,11 @@ private:
         {
             cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
 
-            FLASH->KEYR = 0x45670123u;
-            FLASH->KEYR = 0xCDEF89ABu;
+            if (true == cml::bit::is(FLASH->CR, FLASH_CR_LOCK))
+            {
+                FLASH->KEYR = 0x45670123u;
+                FLASH->KEYR = 0xCDEF89ABu;
+            }
 
             this->unlocked = true;
         }
@@ -108,7 +114,7 @@ private:
         {
             this->unlocked = cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, a_start, a_timeout);
 
-            if (true == this->unlocked)
+            if (true == this->unlocked && true == cml::bit::is(FLASH->CR, FLASH_CR_LOCK))
             {
                 FLASH->KEYR = 0x45670123u;
                 FLASH->KEYR = 0xCDEF89ABu;
@@ -139,6 +145,26 @@ private:
     internal_flash& operator=(const internal_flash&) = delete;
     internal_flash& operator=(internal_flash&&) = delete;
 };
+
+constexpr internal_flash::Cache_settings_flag operator|(internal_flash::Cache_settings_flag a_f1,
+                                                        internal_flash::Cache_settings_flag a_f2)
+{
+    return static_cast<internal_flash::Cache_settings_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+}
+
+constexpr internal_flash::Cache_settings_flag operator&(internal_flash::Cache_settings_flag a_f1,
+                                                        internal_flash::Cache_settings_flag a_f2)
+{
+    return static_cast<internal_flash::Cache_settings_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+}
+
+constexpr internal_flash::Cache_settings_flag operator|=(internal_flash::Cache_settings_flag& a_f1,
+                                                         internal_flash::Cache_settings_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
+
 
 } // namespace stm32l452xx
 } // namespace soc
