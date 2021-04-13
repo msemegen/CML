@@ -68,38 +68,48 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
 
     if (true == guard.is_unlocked())
     {
-        const Cache_mode_flag cache_mode = get_cache_mode();
-        bool is_error                    = false;
-
-        set_cache_mode(Cache_mode_flag::disabled);
+        Cache_disabler_guard cache_disabler_guard;
+        clear_FLASH_SR_errors();
 
         switch (a_mode)
         {
             case internal_flash::Mode::standard: {
-                clear_FLASH_SR_errors();
+                bit_flag::set(&(FLASH->CR), FLASH_CR_PG);
 
-                for (; words < a_size_in_double_words && false == is_error; words++)
+                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_page_address);
+                for (bool is_error = false; words < a_size_in_double_words && false == is_error; words++)
                 {
-                    bit_flag::set(&(FLASH->CR), FLASH_CR_PG);
+                    *(p_address + words * 2u + 0u) = static_cast<uint32_t>(a_p_data[words] >> 0x00u);
+                    *(p_address + words * 2u + 1u) = static_cast<uint32_t>(a_p_data[words] >> 0x20u);
 
-                    volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_page_address);
-
-                    *(p_address + 0) = static_cast<uint32_t>(a_p_data[words] >> 0x00u);
-                    *(p_address + 1) = static_cast<uint32_t>(a_p_data[words] >> 0x20u);
-
-                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
-                    bit_flag::clear(&(FLASH->CR), FLASH_CR_PG);
+                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY | FLASH_SR_EOP, true);
+                    bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
 
                     is_error = is_FLASH_SR_error();
                 }
+
+                bit_flag::clear(&(FLASH->CR), FLASH_CR_PG);
             }
             break;
             case internal_flash::Mode::fast: {
+                bit_flag::set(&(FLASH->CR), FLASH_CR_FSTPG);
+
+                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_page_address);
+                for (bool is_error = false; words < a_size_in_double_words && false == is_error; words++)
+                {
+                    *(p_address + words * 2u + 0u) = static_cast<uint32_t>(a_p_data[words] >> 0x00u);
+                    *(p_address + words * 2u + 1u) = static_cast<uint32_t>(a_p_data[words] >> 0x20u);
+
+                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY | FLASH_SR_EOP, true);
+                    bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
+
+                    is_error = is_FLASH_SR_error();
+                }
+
+                bit_flag::clear(&(FLASH->CR), FLASH_CR_FSTPG);
             }
             break;
         }
-
-        set_cache_mode(cache_mode);
     }
 
     return { get_status_flag_from_FLASH_SR(), words };
@@ -121,28 +131,62 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
     uint32_t timeout_start = system_timer::get();
 
     Unlock_guard guard(timeout_start, a_timeout);
+    Result ret { Result::Status_flag::locked, 0 };
 
     if (true == guard.is_unlocked())
     {
-        const Cache_mode_flag cache_mode = get_cache_mode();
-        set_cache_mode(Cache_mode_flag::disabled);
-
-        bool is_error = false;
+        Cache_disabler_guard cache_disabler_guard;
+        clear_FLASH_SR_errors();
 
         switch (a_mode)
         {
             case internal_flash::Mode::standard: {
+                bit_flag::set(&(FLASH->CR), FLASH_CR_PG);
+
+                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_page_address);
+                for (bool is_error = false; ret.words < a_size_in_double_words && false == is_error &&
+                                            a_timeout >= various::time_diff(system_timer::get(), timeout_start);
+                     ret.words++)
+                {
+                    *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
+                    *(p_address + ret.words * 2u + 1u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x20u);
+
+                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY | FLASH_SR_EOP, true);
+                    bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
+
+                    is_error = is_FLASH_SR_error();
+                }
+
+                bit_flag::clear(&(FLASH->CR), FLASH_CR_PG);
             }
             break;
+
             case internal_flash::Mode::fast: {
+                bit_flag::set(&(FLASH->CR), FLASH_CR_FSTPG);
+
+                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_page_address);
+                for (bool is_error = false; ret.words < a_size_in_double_words && false == is_error &&
+                                            a_timeout >= various::time_diff(system_timer::get(), timeout_start);
+                     ret.words++)
+                {
+                    *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
+                    *(p_address + ret.words * 2u + 1u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x20u);
+
+                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY | FLASH_SR_EOP, true);
+                    bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
+
+                    is_error = is_FLASH_SR_error();
+                }
+
+                bit_flag::clear(&(FLASH->CR), FLASH_CR_FSTPG);
             }
             break;
         }
 
-        set_cache_mode(cache_mode);
+        ret.status = get_status_flag_from_FLASH_SR();
     }
 
-    return Result();
+    return ret;
 }
 
 internal_flash::Result
@@ -160,7 +204,7 @@ internal_flash::read_polling(uint32_t a_page_address, uint32_t a_offset, void* a
         std::memcpy(a_p_data, reinterpret_cast<const uint8_t*>(a_page_address + a_offset), a_size_in_bytes);
     }
 
-    return { get_status_flag_from_FLASH_SR(), a_size_in_bytes };
+    return { get_status_flag_from_FLASH_SR(), 0 };
 }
 
 internal_flash::Result internal_flash::read_polling(uint32_t a_page_address,
@@ -178,69 +222,108 @@ internal_flash::Result internal_flash::read_polling(uint32_t a_page_address,
     uint32_t timeout_start = system_timer::get();
 
     Unlock_guard guard(timeout_start, a_timeout);
+    Result ret { Result::Status_flag::locked, 0 };
 
     if (true == guard.is_unlocked())
     {
         std::memcpy(a_p_data, reinterpret_cast<const uint8_t*>(a_page_address + a_offset), a_size_in_bytes);
+        ret.status = get_status_flag_from_FLASH_SR();
     }
 
-    return Result();
+    return ret;
 }
 
-internal_flash::Result internal_flash::erase_page_polling(uint32_t a_page_address, Mode a_mode)
+internal_flash::Result internal_flash::erase_page_polling(uint32_t a_page_address)
 {
     cml_assert(a_page_address >= start_address && a_page_address <= start_address + size_in_bytes);
-    cml_assert((Mode::fast == a_mode && mcu::Voltage_scaling::_1 == mcu::get_voltage_scaling()) ||
-               Mode::standard == a_mode);
 
-    Unlock_guard guard;
+    Unlock_guard unlock_guard;
 
-    if (true == guard.is_unlocked())
+    if (true == unlock_guard.is_unlocked())
     {
-        const Cache_mode_flag cache_mode = get_cache_mode();
-        set_cache_mode(Cache_mode_flag::disabled);
+        Cache_disabler_guard cache_disabler_guard;
+        clear_FLASH_SR_errors();
 
-        bool is_error = false;
+        uint32_t index = (a_page_address - start_address) / page_size_in_bytes;
 
-        switch (a_mode)
-        {
-            case internal_flash::Mode::standard: {
-                clear_FLASH_SR_errors();
+        bit_flag::set(&(FLASH->CR), FLASH_CR_PNB, (index << FLASH_CR_PNB_Pos));
+        bit_flag::set(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
+        wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
 
-                uint32_t index = (a_page_address - start_address) / page_size_in_bytes;
-
-                bit_flag::set(&(FLASH->CR), FLASH_CR_PNB, (index << FLASH_CR_PNB_Pos));
-                bit_flag::set(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
-                wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
-
-                bit_flag::clear(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
-            }
-            break;
-            case internal_flash::Mode::fast: {
-            }
-            break;
-        }
-
-        set_cache_mode(cache_mode);
+        bit_flag::clear(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
     }
 
     return { get_status_flag_from_FLASH_SR(), 0 };
 }
 
-internal_flash::Result internal_flash::erase_page_polling(uint32_t a_page_address, Mode a_mode, uint32_t a_timeout)
+internal_flash::Result internal_flash::erase_page_polling(uint32_t a_page_address, uint32_t a_timeout)
 {
     cml_assert(a_page_address >= start_address && a_page_address <= start_address + size_in_bytes);
-    cml_assert((Mode::fast == a_mode && mcu::Voltage_scaling::_1 == mcu::get_voltage_scaling()) ||
-               Mode::standard == a_mode);
     cml_assert(a_timeout > 0);
 
-    Unlock_guard guard;
+    uint32_t timeout_start = system_timer::get();
+    Result ret { Result::Status_flag::locked, 0 };
+
+    Unlock_guard guard(timeout_start, a_timeout);
 
     if (true == guard.is_unlocked())
     {
+        Cache_disabler_guard cache_disabler_guard;
+        clear_FLASH_SR_errors();
+
+        uint32_t index = (a_page_address - start_address) / page_size_in_bytes;
+
+        bit_flag::set(&(FLASH->CR), FLASH_CR_PNB, (index << FLASH_CR_PNB_Pos));
+        bit_flag::set(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
+
+        if (true == wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, timeout_start, a_timeout))
+        {
+            bit_flag::clear(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
+        }
+
+        ret.status = get_status_flag_from_FLASH_SR();
     }
 
-    return Result();
+    return ret;
+}
+
+internal_flash::Result internal_flash::erase_bank_polling(Bank_id)
+{
+    Unlock_guard unlock_guard;
+
+    if (true == unlock_guard.is_unlocked())
+    {
+        Cache_disabler_guard cache_disabler_guard;
+        clear_FLASH_SR_errors();
+
+        bit_flag::set(&(FLASH->CR), FLASH_CR_MER1 | FLASH_CR_STRT);
+        wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+    }
+
+    return { get_status_flag_from_FLASH_SR(), 0 };
+}
+
+internal_flash::Result internal_flash::erase_bank_polling(Bank_id, uint32_t a_timeout)
+{
+    cml_assert(a_timeout > 0);
+
+    uint32_t timeout_start = system_timer::get();
+    Result ret { Result::Status_flag::locked, 0 };
+
+    Unlock_guard unlock_guard(timeout_start, a_timeout);
+
+    if (true == unlock_guard.is_unlocked())
+    {
+        Cache_disabler_guard cache_disabler_guard;
+        clear_FLASH_SR_errors();
+
+        bit_flag::set(&(FLASH->CR), FLASH_CR_MER1 | FLASH_CR_STRT);
+        wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, timeout_start, a_timeout);
+
+        ret.status = get_status_flag_from_FLASH_SR();
+    }
+
+    return ret;
 }
 
 } // namespace stm32l452xx

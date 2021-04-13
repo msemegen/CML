@@ -32,6 +32,11 @@ public:
         size_in_bytes      = page_size_in_bytes * 256
     };
 
+    enum class Bank_id
+    {
+        _0
+    };
+
     enum class Latency : uint32_t
     {
         _0 = FLASH_ACR_LATENCY_0WS,
@@ -117,8 +122,11 @@ public:
                                uint32_t a_size_in_bytes,
                                uint32_t a_timeout);
 
-    static Result erase_page_polling(uint32_t a_page_address, Mode a_mode);
-    static Result erase_page_polling(uint32_t a_page_address, Mode a_mode, uint32_t a_timeout);
+    static Result erase_page_polling(uint32_t a_page_address);
+    static Result erase_page_polling(uint32_t a_page_address, uint32_t a_timeout);
+
+    static Result erase_bank_polling(Bank_id a_id);
+    static Result erase_bank_polling(Bank_id a_id, uint32_t a_timeout);
 
 private:
     class Unlock_guard : public cml::Non_copyable
@@ -161,6 +169,24 @@ private:
 
     private:
         bool unlocked;
+    };
+
+    class Cache_disabler_guard : private cml::Non_copyable
+    {
+    public:
+        Cache_disabler_guard()
+            : cache_mode(get_cache_mode())
+        {
+            set_cache_mode(Cache_mode_flag::disabled);
+        }
+
+        ~Cache_disabler_guard()
+        {
+            set_cache_mode(this->cache_mode);
+        }
+
+    private:
+        const Cache_mode_flag cache_mode;
     };
 
 private:
