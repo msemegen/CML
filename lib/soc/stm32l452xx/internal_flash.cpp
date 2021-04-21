@@ -52,12 +52,12 @@ namespace stm32l452xx {
 using namespace cml;
 using namespace cml::utils;
 
-internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
+internal_flash::Result internal_flash::write_polling(uint32_t a_address,
                                                      const uint64_t* a_p_data,
                                                      uint32_t a_size_in_double_words,
                                                      Mode a_mode)
 {
-    cml_assert(a_page_address >= start_address && a_page_address <= start_address + size_in_bytes);
+    cml_assert(a_address >= start_address && a_address <= start_address + size_in_bytes);
     cml_assert(nullptr != a_p_data);
     cml_assert(a_size_in_double_words > 0 && a_size_in_double_words <= page_size_in_bytes / 8u);
     cml_assert((Mode::fast == a_mode && mcu::Voltage_scaling::_1 == mcu::get_voltage_scaling()) ||
@@ -76,14 +76,13 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
             case internal_flash::Mode::standard: {
                 bit_flag::set(&(FLASH->CR), FLASH_CR_PG);
 
-                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_page_address);
+                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_address);
                 for (bool is_error = false; words < a_size_in_double_words && false == is_error; words++)
                 {
                     *(p_address + words * 2u + 0u) = static_cast<uint32_t>(a_p_data[words] >> 0x00u);
                     *(p_address + words * 2u + 1u) = static_cast<uint32_t>(a_p_data[words] >> 0x20u);
 
-                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY | FLASH_SR_EOP, true);
-                    bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
+                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
 
                     is_error = is_FLASH_SR_error();
                 }
@@ -94,14 +93,13 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
             case internal_flash::Mode::fast: {
                 bit_flag::set(&(FLASH->CR), FLASH_CR_FSTPG);
 
-                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_page_address);
+                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_address);
                 for (bool is_error = false; words < a_size_in_double_words && false == is_error; words++)
                 {
                     *(p_address + words * 2u + 0u) = static_cast<uint32_t>(a_p_data[words] >> 0x00u);
                     *(p_address + words * 2u + 1u) = static_cast<uint32_t>(a_p_data[words] >> 0x20u);
 
-                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY | FLASH_SR_EOP, true);
-                    bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
+                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
 
                     is_error = is_FLASH_SR_error();
                 }
@@ -115,13 +113,13 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
     return { get_status_flag_from_FLASH_SR(), words };
 }
 
-internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
+internal_flash::Result internal_flash::write_polling(uint32_t a_address,
                                                      const uint64_t* a_p_data,
                                                      uint32_t a_size_in_double_words,
                                                      Mode a_mode,
                                                      uint32_t a_timeout)
 {
-    cml_assert(a_page_address >= start_address && a_page_address <= start_address + size_in_bytes);
+    cml_assert(a_address >= start_address && a_address <= start_address + size_in_bytes);
     cml_assert(nullptr != a_p_data);
     cml_assert(a_size_in_double_words > 0 && a_size_in_double_words <= page_size_in_bytes / 8u);
     cml_assert((Mode::fast == a_mode && mcu::Voltage_scaling::_1 == mcu::get_voltage_scaling()) ||
@@ -143,7 +141,7 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
             case internal_flash::Mode::standard: {
                 bit_flag::set(&(FLASH->CR), FLASH_CR_PG);
 
-                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_page_address);
+                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_address);
                 for (bool is_error = false; ret.words < a_size_in_double_words && false == is_error &&
                                             a_timeout >= various::time_diff(system_timer::get(), timeout_start);
                      ret.words++)
@@ -151,8 +149,7 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
                     *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
                     *(p_address + ret.words * 2u + 1u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x20u);
 
-                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY | FLASH_SR_EOP, true);
-                    bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
+                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
 
                     is_error = is_FLASH_SR_error();
                 }
@@ -164,7 +161,7 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
             case internal_flash::Mode::fast: {
                 bit_flag::set(&(FLASH->CR), FLASH_CR_FSTPG);
 
-                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_page_address);
+                volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_address);
                 for (bool is_error = false; ret.words < a_size_in_double_words && false == is_error &&
                                             a_timeout >= various::time_diff(system_timer::get(), timeout_start);
                      ret.words++)
@@ -172,8 +169,7 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
                     *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
                     *(p_address + ret.words * 2u + 1u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x20u);
 
-                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY | FLASH_SR_EOP, true);
-                    bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
+                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
 
                     is_error = is_FLASH_SR_error();
                 }
@@ -190,10 +186,10 @@ internal_flash::Result internal_flash::write_polling(uint32_t a_page_address,
 }
 
 internal_flash::Result
-internal_flash::read_polling(uint32_t a_page_address, uint32_t a_offset, void* a_p_data, uint32_t a_size_in_bytes)
+internal_flash::read_polling(uint32_t a_address, uint32_t a_offset, void* a_p_data, uint32_t a_size_in_bytes)
 {
-    cml_assert(a_page_address >= start_address && a_page_address <= start_address + size_in_bytes);
-    cml_assert(a_page_address + a_offset <= a_page_address + page_size_in_bytes);
+    cml_assert(a_address >= start_address && a_address <= start_address + size_in_bytes);
+    cml_assert(a_address + a_offset <= a_address + page_size_in_bytes);
     cml_assert(nullptr != a_p_data);
     cml_assert(a_size_in_bytes > 0 && a_size_in_bytes <= page_size_in_bytes);
 
@@ -201,20 +197,20 @@ internal_flash::read_polling(uint32_t a_page_address, uint32_t a_offset, void* a
 
     if (true == guard.is_unlocked())
     {
-        std::memcpy(a_p_data, reinterpret_cast<const uint8_t*>(a_page_address + a_offset), a_size_in_bytes);
+        std::memcpy(a_p_data, reinterpret_cast<const uint8_t*>(a_address + a_offset), a_size_in_bytes);
     }
 
     return { get_status_flag_from_FLASH_SR(), 0 };
 }
 
-internal_flash::Result internal_flash::read_polling(uint32_t a_page_address,
+internal_flash::Result internal_flash::read_polling(uint32_t a_address,
                                                     uint32_t a_offset,
                                                     void* a_p_data,
                                                     uint32_t a_size_in_bytes,
                                                     uint32_t a_timeout)
 {
-    cml_assert(a_page_address >= start_address && a_page_address <= start_address + size_in_bytes);
-    cml_assert(a_page_address + a_offset <= a_page_address + page_size_in_bytes);
+    cml_assert(a_address >= start_address && a_address <= start_address + size_in_bytes);
+    cml_assert(a_address + a_offset <= a_address + page_size_in_bytes);
     cml_assert(nullptr != a_p_data);
     cml_assert(a_size_in_bytes > 0 && a_size_in_bytes <= page_size_in_bytes);
     cml_assert(a_timeout > 0);
@@ -226,7 +222,7 @@ internal_flash::Result internal_flash::read_polling(uint32_t a_page_address,
 
     if (true == guard.is_unlocked())
     {
-        std::memcpy(a_p_data, reinterpret_cast<const uint8_t*>(a_page_address + a_offset), a_size_in_bytes);
+        std::memcpy(a_p_data, reinterpret_cast<const uint8_t*>(a_address + a_offset), a_size_in_bytes);
         ret.status = get_status_flag_from_FLASH_SR();
     }
 

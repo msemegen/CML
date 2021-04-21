@@ -80,6 +80,7 @@ public:
         uint32_t words     = 0;
     };
 
+public:
     static void set_cache_mode(const Cache_mode_flag& a_mode)
     {
         cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_DCEN | FLASH_ACR_ICEN, static_cast<uint32_t>(a_mode));
@@ -154,6 +155,8 @@ private:
                 FLASH->KEYR = 0x45670123u;
                 FLASH->KEYR = 0xCDEF89ABu;
             }
+
+            this->unlocked = false == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
         }
 
         ~Unlock_guard()
