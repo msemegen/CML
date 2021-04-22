@@ -109,19 +109,15 @@ public:
     }
 
     static Result
-    write_polling(uint32_t a_page_address, const uint64_t* a_p_data, uint32_t a_size_in_double_words, Mode a_mode);
-    static Result write_polling(uint32_t a_page_address,
+    write_polling(uint32_t a_address, const uint64_t* a_p_data, uint32_t a_size_in_double_words, Mode a_mode);
+    static Result write_polling(uint32_t a_address,
                                 const uint64_t* a_p_data,
                                 uint32_t a_size_in_double_words,
                                 Mode a_mode,
                                 uint32_t a_timeout);
 
-    static Result read_polling(uint32_t a_page_address, uint32_t a_offset, void* a_p_data, uint32_t a_size_in_bytes);
-    static Result read_polling(uint32_t a_page_address,
-                               uint32_t a_offset,
-                               void* a_p_data,
-                               uint32_t a_size_in_bytes,
-                               uint32_t a_timeout);
+    static Result read_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes);
+    static Result read_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
 
     static Result erase_page_polling(uint32_t a_page_address);
     static Result erase_page_polling(uint32_t a_page_address, uint32_t a_timeout);
