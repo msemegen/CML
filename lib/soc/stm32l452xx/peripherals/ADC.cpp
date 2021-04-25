@@ -20,9 +20,9 @@
 #include <cml/utils/delay.hpp>
 #include <cml/utils/wait_until.hpp>
 
-#ifdef CML_ASSERT
+#ifdef CML_ASSERT_ENABLED
 #include <soc/stm32l452xx/mcu.hpp>
-#endif // CML_ASSERT
+#endif // CML_ASSERT_ENABLED
 
 namespace {
 
@@ -86,7 +86,7 @@ bool ADC::enable(Resolution a_resolution,
 {
     cml_assert(nullptr == p_adc_1);
     cml_assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
-               true == mcu::get_pll_config().pllsai1.r.output_enabled);
+               mcu::Pll_config::Output::enabled == mcu::get_pll_config().pllsai1.r.output);
 
     uint32_t start = system_timer::get();
 

@@ -12,6 +12,7 @@
 #include <stm32l452xx.h>
 
 // cml
+#include <cml/debug/assertion.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
@@ -20,16 +21,31 @@
 #include <cml/utils/delay.hpp>
 
 namespace {
+
 using namespace cml::hal;
+
 void system_timer_update(void*)
 {
     system_timer::update();
+}
+
+void assert_halt(void*)
+{
+    mcu::halt();
+    while (true)
+        ;
+}
+
+void assert_print(const char* a_p_file, uint32_t a_line, const char* a_p_expression, void* a_p_user_data)
+{
+    printf("ASSERT failed: %s, LOC: %lu, expression: \"%s\"\n", a_p_file, a_line, a_p_expression);
 }
 
 } // namespace
 
 int main()
 {
+    using namespace cml::debug;
     using namespace cml::hal;
     using namespace cml::hal::peripherals;
     using namespace cml::utils;
@@ -39,6 +55,9 @@ int main()
 
     systick::enable((mcu::get_sysclk_frequency_hz() / 1000u) - 1, systick::Prescaler::_1, 0x9u);
     systick::register_tick_callback({ system_timer_update, nullptr });
+
+    assertion::register_halt({ assert_halt, nullptr });
+    assertion::register_print({ assert_print, nullptr });
 
     printf("Sysclk source: ");
 

@@ -145,28 +145,6 @@ public:
         class Pin : private cml::Non_copyable
         {
         public:
-            enum class Interrupt_mode_flag : uint32_t
-            {
-                rising  = 0x1,
-                falling = 0x2,
-            };
-
-            struct Interrupt_callback
-            {
-                using Function = void (*)(Level a_level, void* a_p_user_data);
-
-                Function function = nullptr;
-                void* p_user_data = nullptr;
-
-                void operator()(Level a_level)
-                {
-                    cml_assert(nullptr != this->function);
-
-                    this->function(a_level, this->p_user_data);
-                }
-            };
-
-        public:
             Pin()
                 : p_port(nullptr)
                 , id(0xFF)
@@ -177,9 +155,6 @@ public:
 
             Pull get_pull() const;
             Level get_level() const;
-
-            void register_interrupt_callback(Interrupt_mode_flag a_mode, const Interrupt_callback& a_callback);
-            void unregister_interrupt_callback();
 
             GPIO* get_port() const
             {
@@ -362,6 +337,62 @@ public:
         friend GPIO;
     };
 
+#ifdef EXTI
+#undef EXTI
+#endif
+
+    class EXTI : private cml::Non_copyable
+    {
+    public:
+        enum class Id
+        {
+            _0     = EXTI0_IRQn,
+            _1     = EXTI1_IRQn,
+            _2     = EXTI2_IRQn,
+            _3     = EXTI3_IRQn,
+            _4     = EXTI4_IRQn,
+            _5_9   = EXTI9_5_IRQn,
+            _10_15 = EXTI15_10_IRQn
+        };
+
+        enum class Trigger_flag : uint32_t
+        {
+            rising  = 0x1,
+            falling = 0x2,
+            unknown
+        };
+
+        struct Callback
+        {
+            using Function = void (*)(uint32_t a_pin, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+
+    public:
+        EXTI(Id a_id)
+            : id(a_id)
+        {
+        }
+
+        ~EXTI()
+        {
+            this->disable();
+        }
+
+        void enable(const Callback& a_callback, uint32_t a_priority);
+        void disable();
+
+        void attach(const GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigger);
+        void deattach(const GPIO& a_port, uint32_t a_pin);
+
+    private:
+        Id id;
+
+        friend GPIO;
+    };
+
 public:
     GPIO(Id a_id)
         : id(a_id)
@@ -441,18 +472,15 @@ public:
     Alternate_function* const p_alternate_function;
 };
 
-constexpr GPIO::In::Pin::Interrupt_mode_flag operator|(GPIO::In::Pin::Interrupt_mode_flag a_f1,
-                                                       GPIO::In::Pin::Interrupt_mode_flag a_f2)
+constexpr GPIO::EXTI::Trigger_flag operator|(GPIO::EXTI::Trigger_flag a_f1, GPIO::EXTI::Trigger_flag a_f2)
 {
-    return static_cast<GPIO::In::Pin::Interrupt_mode_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+    return static_cast<GPIO::EXTI::Trigger_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
-constexpr GPIO::In::Pin::Interrupt_mode_flag operator&(GPIO::In::Pin::Interrupt_mode_flag a_f1,
-                                                       GPIO::In::Pin::Interrupt_mode_flag a_f2)
+constexpr GPIO::EXTI::Trigger_flag operator&(GPIO::EXTI::Trigger_flag a_f1, GPIO::EXTI::Trigger_flag a_f2)
 {
-    return static_cast<GPIO::In::Pin::Interrupt_mode_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+    return static_cast<GPIO::EXTI::Trigger_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
-constexpr GPIO::In::Pin::Interrupt_mode_flag operator|=(GPIO::In::Pin::Interrupt_mode_flag& a_f1,
-                                                        GPIO::In::Pin::Interrupt_mode_flag a_f2)
+constexpr GPIO::EXTI::Trigger_flag operator|=(GPIO::EXTI::Trigger_flag& a_f1, GPIO::EXTI::Trigger_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;

@@ -60,12 +60,18 @@ struct mcu
         _37_kHz
     };
 
+    enum class Flash_latency : uint32_t
+    {
+        _0 = 0,
+        _1 = FLASH_ACR_LATENCY,
+        unknown
+    };
+
     enum class Voltage_scaling : uint32_t
     {
         _1 = PWR_CR_VOS_0,
         _2 = PWR_CR_VOS_1,
         _3 = PWR_CR_VOS_0 | PWR_CR_VOS_1,
-        unknown
     };
 
     enum class Reset_source : uint32_t
@@ -77,13 +83,6 @@ struct mcu
         por_bdr                     = RCC_CSR_PORRSTF,
         pin                         = RCC_CSR_PINRSTF,
         option_byte_loader          = RCC_CSR_OBLRSTF
-    };
-
-    enum class Interrupt_line : int32_t
-    {
-        exti_0_1  = EXTI0_1_IRQn,
-        exti_2_3  = EXTI2_3_IRQn,
-        exti_4_15 = EXTI4_15_IRQn,
     };
 
     struct Pll_config
@@ -201,10 +200,8 @@ public:
     static void enable_pll(const Pll_config& a_pll_config);
     static void disable_pll();
 
-    static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
-
-    static void enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority);
-    static void disable_interrupt_line(Interrupt_line a_line);
+    static void
+    set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, Voltage_scaling a_voltage_scaling);
 
     static void reset();
     static void halt();
@@ -313,12 +310,12 @@ private:
     mcu()           = delete;
     mcu(const mcu&) = delete;
     mcu(mcu&&)      = delete;
-    ~mcu()          = default;
+    ~mcu()          = delete;
 
     mcu& operator=(const mcu&) = delete;
     mcu& operator=(mcu&&) = delete;
 
-    static internal_flash::Latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
+    static Flash_latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
     static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);
 
     static void set_flash_latency(internal_flash::Latency a_latency);
@@ -326,11 +323,15 @@ private:
     static void set_sysclk_source(Sysclk_source a_sysclk_source);
     static void set_bus_prescalers(const Bus_prescalers& a_prescalers);
 
-    static void
-    increase_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
+    static void increase_sysclk_frequency(Sysclk_source a_source,
+                                          uint32_t a_frequency_hz,
+                                          const Bus_prescalers& a_prescalers,
+                                          Voltage_scaling a_voltage_scaling);
 
-    static void
-    decrease_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
+    static void decrease_sysclk_frequency(Sysclk_source a_source,
+                                          uint32_t a_frequency_hz,
+                                          const Bus_prescalers& a_prescalers,
+                                          Voltage_scaling a_voltage_scaling);
 
     static uint32_t calculate_frequency_from_pll_configuration();
 };

@@ -12,24 +12,57 @@
 #include <cstdio>
 
 // cml
+#include <cml/debug/assertion.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/hal/system_timer.hpp>
+#include <cml/hal/systick.hpp>
+
+namespace {
+
+using namespace cml::hal;
+
+void system_timer_update(void*)
+{
+    system_timer::update();
+}
+
+void assert_halt(void*)
+{
+    mcu::halt();
+    while (true)
+        ;
+}
+
+void assert_print(const char* a_p_file, uint32_t a_line, const char* a_p_expression, void* a_p_user_data)
+{
+    printf("[%s, %lu]: \"%s\"\n", a_p_file, a_line, a_p_expression);
+}
+
+} // namespace
 
 int main()
 {
+    using namespace cml::debug;
     using namespace cml::hal;
     using namespace cml::hal::peripherals;
 
     mcu::enable_hsi_clock(mcu::Hsi_frequency::_16_MHz);
     mcu::set_sysclk(mcu::Sysclk_source::hsi,
-                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 });
+                    { mcu::Bus_prescalers::AHB::_1, mcu::Bus_prescalers::APB1::_1, mcu::Bus_prescalers::APB2::_1 },
+                    mcu::Voltage_scaling::_1);
 
     while (mcu::Sysclk_source::hsi != mcu::get_sysclk_source())
         ;
 
     mcu::disable_msi_clock();
+
+    systick::enable((mcu::get_sysclk_frequency_hz() / 1000u) - 1, systick::Prescaler::_1, 0x9u);
+    systick::register_tick_callback({ system_timer_update, nullptr });
+
+    assertion::register_halt({ assert_halt, nullptr });
+    assertion::register_print({ assert_print, nullptr });
 
     GPIO gpio_port_a(GPIO::Id::a);
     gpio_port_a.enable();

@@ -6,6 +6,7 @@
  */
 
 // cml
+#include <cml/debug/assertion.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/system_timer.hpp>
@@ -21,16 +22,29 @@ void system_timer_update(void*)
     system_timer::update();
 }
 
+void assert_halt(void*)
+{
+    mcu::halt();
+    while (true)
+        ;
+}
+
+void assert_print(const char*, uint32_t, const char*, void*) {}
+
 } // namespace
 
 int main()
 {
+    using namespace cml::debug;
     using namespace cml::hal;
     using namespace cml::hal::peripherals;
     using namespace cml::utils;
 
     systick::enable((mcu::get_sysclk_frequency_hz() / 1000u) - 1, systick::Prescaler::_1, 0x9u);
     systick::register_tick_callback({ system_timer_update, nullptr });
+
+    assertion::register_halt({ assert_halt, nullptr });
+    assertion::register_print({ assert_print, nullptr });
 
     GPIO gpio_port_a(GPIO::Id::a);
     gpio_port_a.enable();

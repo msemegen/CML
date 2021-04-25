@@ -80,11 +80,20 @@ public:
         _48_MHz
     };
 
+    enum class Flash_latency : uint32_t
+    {
+        _0 = FLASH_ACR_LATENCY_0WS,
+        _1 = FLASH_ACR_LATENCY_1WS,
+        _2 = FLASH_ACR_LATENCY_2WS,
+        _3 = FLASH_ACR_LATENCY_3WS,
+        _4 = FLASH_ACR_LATENCY_4WS,
+        unknown
+    };
+
     enum class Voltage_scaling : uint32_t
     {
         _1 = PWR_CR1_VOS_0,
         _2 = PWR_CR1_VOS_1,
-        unkown
     };
 
     enum class Reset_source : uint32_t
@@ -104,17 +113,6 @@ public:
         disabled               = 0x0u,
         privileged_access_only = 0xAu << 20u,
         enabled                = 0xFu << 20u,
-    };
-
-    enum class Interrupt_line : int32_t
-    {
-        exti_0     = EXTI0_IRQn,
-        exti_1     = EXTI1_IRQn,
-        exti_2     = EXTI2_IRQn,
-        exti_3     = EXTI3_IRQn,
-        exti_4     = EXTI4_IRQn,
-        exti_5_9   = EXTI9_5_IRQn,
-        exti_10_15 = EXTI15_10_IRQn
     };
 
     struct Pll_config
@@ -344,11 +342,9 @@ public:
 
     static void set_clk48_clock_mux_source(Clk48_mux_source a_source);
 
-    static void set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers);
+    static void
+    set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers, Voltage_scaling a_voltage_scaling);
     static void set_nvic(const NVIC_config& a_config);
-
-    static void enable_interrupt_line(Interrupt_line a_line, uint32_t a_priority);
-    static void disable_interrupt_line(Interrupt_line a_line);
 
     static void set_fpu_mode(FPU_mode a_mode)
     {
@@ -502,7 +498,7 @@ private:
     mcu& operator=(const mcu&) = delete;
     mcu& operator=(mcu&&) = delete;
 
-    static internal_flash::Latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
+    static Flash_latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
     static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);
 
     static void set_flash_latency(internal_flash::Latency a_latency);
@@ -510,11 +506,15 @@ private:
     static void set_sysclk_source(Sysclk_source a_sysclk_source);
     static void set_bus_prescalers(const Bus_prescalers& a_prescalers);
 
-    static void
-    increase_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
+    static void increase_sysclk_frequency(Sysclk_source a_source,
+                                          uint32_t a_frequency_hz,
+                                          const Bus_prescalers& a_prescalers,
+                                          Voltage_scaling a_voltage_scaling);
 
-    static void
-    decrease_sysclk_frequency(Sysclk_source a_source, uint32_t a_frequency_hz, const Bus_prescalers& a_prescalers);
+    static void decrease_sysclk_frequency(Sysclk_source a_source,
+                                          uint32_t a_frequency_hz,
+                                          const Bus_prescalers& a_prescalers,
+                                          Voltage_scaling a_voltage_scaling);
 
     static uint32_t calculate_pll_r_output_frequency();
     static uint32_t calculate_pll_q_output_frequency();
