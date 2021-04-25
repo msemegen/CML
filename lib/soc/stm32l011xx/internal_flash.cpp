@@ -174,6 +174,66 @@ internal_flash::read_polling(uint32_t a_address, void* a_p_data, uint32_t a_size
     return ret;
 }
 
+internal_flash::Result internal_flash::erase_page_polling(uint32_t a_page_address, uint32_t a_size_in_words)
+{
+    cml_assert(a_page_address >= start_address && a_page_address <= start_address + size_in_bytes);
+    cml_assert(a_size_in_words > 0);
+
+    Result ret { Result::Status_flag::locked, 0 };
+
+    Unlock_guard guard;
+
+    if (true == guard.is_unlocked())
+    {
+        bit_flag::set(&(FLASH->PECR), FLASH_PECR_ERASE | FLASH_PECR_PROG);
+
+        (*reinterpret_cast<uint32_t*>(a_page_address)) = 0x0u;
+        wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+
+        ret.status = get_status_flag_from_FLASH_SR();
+
+        if (true == bit_flag::is(FLASH->SR, FLASH_SR_EOP))
+        {
+            bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
+        }
+
+        bit_flag::clear(&(FLASH->PECR), FLASH_PECR_ERASE | FLASH_PECR_PROG);
+    }
+
+    return ret;
+}
+internal_flash::Result
+internal_flash::erase_page_polling(uint32_t a_page_address, uint32_t a_size_in_words, uint32_t a_timeout)
+{
+    cml_assert(a_page_address >= start_address && a_page_address <= start_address + size_in_bytes);
+    cml_assert(a_size_in_words > 0);
+
+    uint32_t timeout_start = system_timer::get();
+
+    Result ret { Result::Status_flag::locked, 0 };
+
+    Unlock_guard guard(timeout_start, a_timeout);
+
+    if (true == guard.is_unlocked())
+    {
+        bit_flag::set(&(FLASH->PECR), FLASH_PECR_ERASE | FLASH_PECR_PROG);
+
+        (*reinterpret_cast<uint32_t*>(a_page_address)) = 0x0u;
+        wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+
+        ret.status = get_status_flag_from_FLASH_SR();
+
+        if (true == bit_flag::is(FLASH->SR, FLASH_SR_EOP))
+        {
+            bit_flag::set(&(FLASH->SR), FLASH_SR_EOP);
+        }
+
+        bit_flag::clear(&(FLASH->PECR), FLASH_PECR_ERASE | FLASH_PECR_PROG);
+    }
+
+    return ret;
+}
+
 } // namespace stm32l011xx
 } // namespace soc
 

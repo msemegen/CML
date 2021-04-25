@@ -41,11 +41,6 @@ public:
         unknown
     };
 
-    enum class Bank_id
-    {
-        _0
-    };
-
     struct Result
     {
         enum class Status_flag : uint32_t
@@ -78,11 +73,8 @@ public:
     static Result read_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes);
     static Result read_polling(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
 
-    static Result erase_page_polling(uint32_t a_page_address);
-    static Result erase_page_polling(uint32_t a_page_address, uint32_t a_timeout);
-
-    static Result erase_bank_polling(Bank_id a_id);
-    static Result erase_bank_polling(Bank_id a_id, uint32_t a_timeout);
+    static Result erase_page_polling(uint32_t a_page_address, uint32_t a_size_in_words);
+    static Result erase_page_polling(uint32_t a_page_address, uint32_t a_size_in_words, uint32_t a_timeout);
 
 private:
     class Unlock_guard : public cml::Non_copyable
