@@ -38,7 +38,6 @@ public:
     {
         _0 = 0x0u,
         _1 = FLASH_ACR_LATENCY,
-        unknown
     };
 
     struct Result

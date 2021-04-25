@@ -60,13 +60,6 @@ struct mcu
         _37_kHz
     };
 
-    enum class Flash_latency : uint32_t
-    {
-        _0 = 0,
-        _1 = FLASH_ACR_LATENCY,
-        unknown
-    };
-
     enum class Voltage_scaling : uint32_t
     {
         _1 = PWR_CR_VOS_0,
@@ -315,7 +308,7 @@ private:
     mcu& operator=(const mcu&) = delete;
     mcu& operator=(mcu&&) = delete;
 
-    static Flash_latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
+    static internal_flash::Latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
     static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);
 
     static void set_flash_latency(internal_flash::Latency a_latency);

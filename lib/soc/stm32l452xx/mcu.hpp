@@ -80,16 +80,6 @@ public:
         _48_MHz
     };
 
-    enum class Flash_latency : uint32_t
-    {
-        _0 = FLASH_ACR_LATENCY_0WS,
-        _1 = FLASH_ACR_LATENCY_1WS,
-        _2 = FLASH_ACR_LATENCY_2WS,
-        _3 = FLASH_ACR_LATENCY_3WS,
-        _4 = FLASH_ACR_LATENCY_4WS,
-        unknown
-    };
-
     enum class Voltage_scaling : uint32_t
     {
         _1 = PWR_CR1_VOS_0,
@@ -498,7 +488,7 @@ private:
     mcu& operator=(const mcu&) = delete;
     mcu& operator=(mcu&&) = delete;
 
-    static Flash_latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
+    static internal_flash::Latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
     static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);
 
     static void set_flash_latency(internal_flash::Latency a_latency);
