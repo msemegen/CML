@@ -16,6 +16,9 @@
 // cml
 #include <cml/bit_flag.hpp>
 
+// soc
+#include <soc/stm32l011xx/internal_flash.hpp>
+
 namespace soc {
 namespace stm32l011xx {
 
@@ -61,6 +64,7 @@ struct mcu
     {
         _0 = 0,
         _1 = FLASH_ACR_LATENCY,
+        unknown
     };
 
     enum class Voltage_scaling : uint32_t
@@ -288,11 +292,6 @@ public:
         return static_cast<Voltage_scaling>(cml::bit_flag::get(PWR->CR, PWR_CR_VOS));
     }
 
-    static Flash_latency get_flash_latency()
-    {
-        return static_cast<Flash_latency>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_LATENCY));
-    }
-
     static Reset_source get_reset_source()
     {
         uint32_t flag = cml::bit_flag::get(RCC->CSR, 0xFB000000u);
@@ -317,9 +316,9 @@ private:
     mcu& operator=(mcu&&) = delete;
 
     static Flash_latency select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling);
-    //static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);
+    static Voltage_scaling select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq);
 
-    static void set_flash_latency(Flash_latency a_latency);
+    static void set_flash_latency(internal_flash::Latency a_latency);
     static void set_voltage_scaling(Voltage_scaling a_scaling);
     static void set_sysclk_source(Sysclk_source a_sysclk_source);
     static void set_bus_prescalers(const Bus_prescalers& a_prescalers);

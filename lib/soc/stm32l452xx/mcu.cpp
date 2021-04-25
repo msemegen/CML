@@ -222,7 +222,7 @@ void mcu::set_sysclk(Sysclk_source a_source, const Bus_prescalers& a_prescalers,
             ;
     }
 
-    if (Flash_latency::_0 != get_flash_latency())
+    if (internal_flash::Latency::_0 != internal_flash::get_latency())
     {
         bit_flag::set(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
     }
@@ -322,34 +322,34 @@ uint32_t mcu::get_clk48_mux_freqency_hz()
     return 0;
 }
 
-mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling)
+internal_flash::Latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scaling a_voltage_scaling)
 {
     switch (a_voltage_scaling)
     {
         case Voltage_scaling::_1: {
             if (a_syclk_freq <= 16u * 1000000u)
             {
-                return Flash_latency::_0;
+                return internal_flash::Latency::_0;
             }
 
             if (a_syclk_freq <= 32u * 1000000u)
             {
-                return Flash_latency::_1;
+                return internal_flash::Latency::_1;
             }
 
             if (a_syclk_freq <= 48u * 1000000u)
             {
-                return Flash_latency::_2;
+                return internal_flash::Latency::_2;
             }
 
             if (a_syclk_freq <= 64u * 1000000u)
             {
-                return Flash_latency::_3;
+                return internal_flash::Latency::_3;
             }
 
             if (a_syclk_freq <= 80u * 1000000u)
             {
-                return Flash_latency::_4;
+                return internal_flash::Latency::_4;
             }
         }
         break;
@@ -357,33 +357,51 @@ mcu::Flash_latency mcu::select_flash_latency(uint32_t a_syclk_freq, Voltage_scal
         case Voltage_scaling::_2: {
             if (a_syclk_freq <= 6u * 1000000u)
             {
-                return Flash_latency::_0;
+                return internal_flash::Latency::_0;
             }
 
             if (a_syclk_freq <= 12u * 1000000u)
             {
-                return Flash_latency::_1;
+                return internal_flash::Latency::_1;
             }
 
             if (a_syclk_freq <= 18u * 1000000u)
             {
-                return Flash_latency::_2;
+                return internal_flash::Latency::_2;
             }
 
             if (a_syclk_freq <= 26u * 1000000u)
             {
-                return Flash_latency::_3;
+                return internal_flash::Latency::_3;
             }
         }
         break;
     }
 
-    cml_assert(false);
-    return static_cast<Flash_latency>(static_cast<uint32_t>(Flash_latency::_4) + 1u);
+    return Flash_latency::unknown;
+}
+
+mcu::Voltage_scaling mcu::select_voltage_scaling(Sysclk_source a_source, uint32_t a_sysclk_freq)
+{
+    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= 24 * 1000000u) ||
+        (Sysclk_source::pll == a_source && a_sysclk_freq <= 26 * 1000000u))
+    {
+        return Voltage_scaling::_2;
+    }
+
+    if ((Sysclk_source::msi == a_source && a_sysclk_freq <= 48 * 1000000u) ||
+        (Sysclk_source::pll == a_source && a_sysclk_freq <= 80 * 1000000u) || (Sysclk_source::hsi == a_source))
+    {
+        return Voltage_scaling::_1;
+    }
+
+    return Voltage_scaling::unkown;
 }
 
 void mcu::set_flash_latency(Flash_latency a_latency)
 {
+    cml_assert(a_latency != Flash_latency::unknown);
+
     bit_flag::set(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<uint32_t>(a_latency));
 
     while (false == bit_flag::is(FLASH->ACR, static_cast<uint32_t>(a_latency)))
@@ -425,14 +443,15 @@ void mcu::increase_sysclk_frequency(Sysclk_source a_source,
                ((get_sysclk_source() == Sysclk_source::msi && a_frequency_hz <= 24u * 1000000u) ||
                 (get_sysclk_source() == Sysclk_source::pll && a_frequency_hz <= 26 * 1000000u)));
 
-    Flash_latency new_flash_latency = select_flash_latency(a_frequency_hz, a_voltage_scaling);
+    cml_assert(Voltage_scaling::unkown != new_voltage_scaling);
+    cml_assert(Flash_latency::unknown != new_flash_latency);
 
     if (a_voltage_scaling != get_voltage_scaling())
     {
         set_voltage_scaling(a_voltage_scaling);
     }
 
-    if (new_flash_latency != get_flash_latency())
+    if (new_flash_latency != internal_flash::get_latency())
     {
         set_flash_latency(new_flash_latency);
     }
@@ -454,9 +473,13 @@ void mcu::decrease_sysclk_frequency(Sysclk_source a_source,
 
     set_sysclk_source(a_source);
 
-    Flash_latency new_flash_latency = select_flash_latency(a_frequency_hz, a_voltage_scaling);
+    auto new_voltage_scaling = select_voltage_scaling(a_source, a_frequency_hz);
+    auto new_flash_latency   = select_flash_latency(a_frequency_hz, new_voltage_scaling);
 
-    if (new_flash_latency != get_flash_latency())
+    cml_assert(Voltage_scaling::unkown != new_voltage_scaling);
+    cml_assert(Flash_latency::unknown != new_flash_latency);
+
+    if (new_flash_latency != internal_flash::get_latency())
     {
         set_flash_latency(new_flash_latency);
     }
