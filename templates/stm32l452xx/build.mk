@@ -10,7 +10,7 @@ INCLUDE_PATH := $(INCLUDE_PATH) $(ROOT)
 CFLAGS := $(addprefix -I, $(INCLUDE_PATH)) --specs=nano.specs
 CFLAGS += -Wall -Wno-strict-aliasing -I. -c -fno-common -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -ffast-math -ffunction-sections -fdata-sections -fsingle-precision-constant
-CFLAGS += -DSTM32L452xx -DARM_MATH_CM4 -DARM_MATH_ROUNDING -D__FPU_PRESENT -DCML_DWT_PRESENT
+CFLAGS += -DSTM32L4 -DSTM32L452xx -DARM_MATH_CM4 -DARM_MATH_ROUNDING -D__FPU_PRESENT -DCML_DWT_PRESENT
 
 CPPFLAGS := $(CFLAGS)
 CPPFLAGS += -std=c++17 -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics
@@ -23,9 +23,8 @@ CPP_SOURCE_FILES    := $(wildcard $(addsuffix /*.cpp, $(CPP_SOURCE_PATHS)))
 CPP_OBJECTS_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.cpp, %.o,$(CPP_SOURCE_FILES))))
 CPP_OBJECTS_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.cpp, %.o,$(CPP_SOURCE_FILES))))
 
-S_SOURCE_FILES    := $(wildcard $(addsuffix /*.s, $(S_SOURCE_PATHS)))
-S_OBJECTS_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.s, %.o,$(S_SOURCE_FILES))))
-S_OBJECTS_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.s, %.o,$(S_SOURCE_FILES))))
+STARTUP_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.s, %.o,$(STARTUP_FILE))))
+STARTUP_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.s, %.o,$(STARTUP_FILE))))
 
 MAIN_LDFLAGS_COMMON  = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -nostartfiles --specs=nano.specs
 MAIN_LDFLAGS_COMMON  +=-T$(LD_PATH)/STM32L452RETx_FLASH.ld -lgcc -fno-exceptions -fno-rtti -Wl,--gc-sections
@@ -40,7 +39,6 @@ RELEASE_FLAGS = -Os
 
 vpath %.c   $(C_SOURCE_PATHS)
 vpath %.cpp $(CPP_SOURCE_PATHS)
-vpath %.s   $(S_SOURCE_PATHS)
 
 .PHONY: release
 .PHONY: debug
@@ -49,7 +47,8 @@ vpath %.s   $(S_SOURCE_PATHS)
 .PHONY: flashd
 
 release: $(OUTPUT_NAME).bin
-debug:   $(OUTPUT_NAME)_d.bin
+debug: $(OUTPUT_NAME)_d.bin
+
 clean:
 	rm -rf $(OUTDIR)/*
 
@@ -77,7 +76,7 @@ $(CPP_OBJECTS_RELEASE): $(OUTDIR_RELEASE)/%.o : %.cpp
 	mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CPPFLAGS) $(RELEASE_FLAGS)
 
-$(S_OBJECTS_RELEASE): $(OUTDIR_RELEASE)/%.o : %.s
+$(STARTUP_RELEASE): $(STARTUP_FILE)
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CFLAGS) $(RELEASE_FLAGS)
@@ -92,12 +91,12 @@ $(CPP_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%.o : %.cpp
 	mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CPPFLAGS) $(DEBUG_FLAGS)
 
-$(S_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%.o : %.s
-	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
+$(STARTUP_DEBUG) : $(STARTUP_FILE)
+	@bash -c 'echo -e $<" \e[ 01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CFLAGS) $(DEBUG_FLAGS)
 
-$(OUTPUT_NAME).elf : $(C_OBJECTS_RELEASE) $(CPP_OBJECTS_RELEASE) $(S_OBJECTS_RELEASE)
+$(OUTPUT_NAME).elf : $(C_OBJECTS_RELEASE) $(CPP_OBJECTS_RELEASE) $(STARTUP_RELEASE)
 	bash -c 'echo -e "$@ \e[01;36m[linking]\e[0m" '
 	$(CXX) $^ $(MAIN_LDFLAGS_RELEASE)  -o $(OUTDIR)/$(OUTPUT_NAME).elf
 
@@ -106,7 +105,7 @@ $(OUTPUT_NAME).bin : $(OUTPUT_NAME).elf
 	$(CP) $(CPFLAGS) $(OUTDIR)/$(OUTPUT_NAME).elf $(OUTDIR)/$(OUTPUT_NAME).bin
 	$(OD) $(ODFLAGS) $(OUTDIR)/$(OUTPUT_NAME).elf> $(OUTDIR)/$(OUTPUT_NAME).lst
 
-$(OUTPUT_NAME)_d.elf : $(C_OBJECTS_DEBUG) $(CPP_OBJECTS_DEBUG) $(S_OBJECTS_DEBUG)
+$(OUTPUT_NAME)_d.elf : $(C_OBJECTS_DEBUG) $(CPP_OBJECTS_DEBUG) $(STARTUP_DEBUG)
 	bash -c 'echo -e "$@ \e[01;36m[linking]\e[0m" '
 	$(CXX) $^ $(MAIN_LDFLAGS_DEBUG)  -o $(OUTDIR)/$(OUTPUT_NAME)_d.elf
 

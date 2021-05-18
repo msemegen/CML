@@ -8,7 +8,7 @@
 #ifdef STM32L452xx
 
 // this
-#include <soc/stm32l452xx/mcu.hpp>
+#include <soc/stm32l4/mcu.hpp>
 
 // cml
 #include <cml/bit.hpp>
@@ -18,7 +18,11 @@
 namespace {
 
 using namespace cml;
-using namespace soc::stm32l452xx;
+using namespace soc::stm32l4;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 constexpr uint32_t msi_frequency_hz_lut[] { 100u * 1000u,   200u * 1000u,   400u * 1000u,   800u * 1000u,
                                             1u * 1000000u,  2u * 1000000u,  4u * 1000000u,  8u * 1000000u,
@@ -36,10 +40,16 @@ uint32_t get_pll_register_config_from_factor(const Config_t& a_config, uint32_t 
                 0);
 }
 
+#endif
+
 } // namespace
 
 namespace soc {
-namespace stm32l452xx {
+namespace stm32l4 {
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 using namespace cml;
 using namespace cml::utils;
@@ -564,7 +574,9 @@ uint32_t mcu::calculate_pllsai1_q_output_frequency()
     return 0;
 }
 
-} // namespace stm32l452xx
+#endif
+
+} // namespace stm32l4
 } // namespace soc
 
 #endif // STM32L452xx

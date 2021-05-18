@@ -5,11 +5,13 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
+#ifdef STM32L4
+
 // this
-#include <soc/stm32l452xx/peripherals/IWDG.hpp>
+#include <soc/stm32l4/peripherals/IWDG.hpp>
 
 // soc
-#include <soc/stm32l452xx/mcu.hpp>
+#include <soc/stm32l4/mcu.hpp>
 #include <soc/system_timer.hpp>
 
 // cml
@@ -21,6 +23,10 @@ namespace {
 
 using namespace cml;
 
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
+
 struct control_flags
 {
     static constexpr uint32_t reload               = 0xAAAAu;
@@ -31,14 +37,20 @@ struct control_flags
 
 bool created = false;
 
+#endif
+
 } // namespace
 
 namespace soc {
-namespace stm32l452xx {
+namespace stm32l4 {
 namespace peripherals {
 
 using namespace cml;
 using namespace cml::utils;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 IWDG::IWDG()
 {
@@ -116,6 +128,10 @@ void IWDG::feed()
 #endif // IWDG
 }
 
+#endif
+
 } // namespace peripherals
-} // namespace stm32l452xx
+} // namespace stm32l4
 } // namespace soc
+
+#endif // STM32L4

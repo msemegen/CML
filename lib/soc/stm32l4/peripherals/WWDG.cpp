@@ -5,8 +5,10 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
+#ifdef STM32L4
+
 // this
-#include <soc/stm32l452xx/peripherals/wwdg.hpp>
+#include <soc/stm32l4/peripherals/WWDG.hpp>
 
 // cml
 #include <cml/bit_flag.hpp>
@@ -17,7 +19,7 @@
 
 namespace {
 
-using namespace soc::stm32l452xx::peripherals;
+using namespace soc::stm32l4::peripherals;
 
 uint16_t reload = 0;
 bool created    = false;
@@ -39,10 +41,14 @@ void WWDG_IRQHandler()
 } // extern C
 
 namespace soc {
-namespace stm32l452xx {
+namespace stm32l4 {
 namespace peripherals {
 
 using namespace cml;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 WWDG::WWDG()
 {
@@ -114,6 +120,10 @@ void WWDG::feed()
 #endif
 }
 
+#endif
+
 } // namespace peripherals
-} // namespace stm32l452xx
+} // namespace stm32l4
 } // namespace soc
+
+#endif // STM32L4

@@ -21,7 +21,7 @@ namespace hal {
 namespace peripherals {
 
 #ifdef STM32L4
-using ADC = soc::stm32l452xx::peripherals::ADC;
+using ADC = soc::stm32l4::peripherals::ADC;
 #endif // STM32L4
 
 #ifdef STM32L011xx

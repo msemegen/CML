@@ -11,14 +11,18 @@
 #include <cstdint>
 
 // externals
-#include <stm32l452xx.h>
+#include <stm32l4xx.h>
 
 // cml
 #include <cml/Non_copyable.hpp>
 
 namespace soc {
-namespace stm32l452xx {
+namespace stm32l4 {
 namespace peripherals {
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 #ifdef IWDG
 #undef IWDG
@@ -54,6 +58,8 @@ public:
     void feed();
 };
 
+#endif
+
 } // namespace peripherals
-} // namespace stm32l452xx
+} // namespace stm32l4
 } // namespace soc

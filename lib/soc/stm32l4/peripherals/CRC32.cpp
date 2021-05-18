@@ -21,6 +21,10 @@ namespace soc {
 namespace stm32l4 {
 namespace peripherals {
 
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
+
 using namespace cml;
 
 CRC32::CRC32()
@@ -63,8 +67,10 @@ uint32_t CRC32::calculate(const uint8_t* a_p_data, uint32_t a_data_size)
     return CRC->DR;
 }
 
+#endif
+
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace soc
 
-#endif // STM32L452xx
+#endif // STM32L4

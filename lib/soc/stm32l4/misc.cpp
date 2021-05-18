@@ -8,16 +8,16 @@
 #ifdef STM32L452xx
 
 // this
-#include <soc/stm32l452xx/misc.hpp>
+#include <soc/stm32l4/misc.hpp>
 
 // soc
-#include <soc/stm32l452xx/mcu.hpp>
+#include <soc/stm32l4/mcu.hpp>
 
 // cml
 #include <cml/debug/assertion.hpp>
 
 namespace soc {
-namespace stm32l452xx {
+namespace stm32l4 {
 
 using namespace cml;
 
@@ -33,7 +33,7 @@ void misc::delay_us(uint32_t a_time)
         ;
 }
 
-} // namespace stm32l452xx
+} // namespace stm32l4
 } // namespace soc
 
-#endif // STM32L452xx
+#endif // STM32L4

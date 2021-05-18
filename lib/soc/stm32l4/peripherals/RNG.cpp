@@ -5,12 +5,14 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
+#ifdef STM32L4
+
 // this
-#include <soc/stm32l452xx/peripherals/RNG.hpp>
+#include <soc/stm32l4/peripherals/RNG.hpp>
 
 // soc
 #include <soc/Interrupt_guard.hpp>
-#include <soc/stm32l452xx/mcu.hpp>
+#include <soc/stm32l4/mcu.hpp>
 #include <soc/system_timer.hpp>
 
 // cml
@@ -20,9 +22,17 @@
 
 namespace {
 
-using namespace soc::stm32l452xx::peripherals;
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
+
+using namespace soc::stm32l4::peripherals;
 
 RNG::New_value_callback new_value_callback;
+
+bool created = false;
+
+#endif
 
 } // namespace
 
@@ -30,6 +40,10 @@ extern "C" {
 
 using namespace cml;
 using namespace cml::debug;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 void RNG_IRQHandler()
 {
@@ -57,18 +71,31 @@ void RNG_IRQHandler()
     NVIC_ClearPendingIRQ(RNG_IRQn);
 }
 
+#endif
+
 } // extern "C"
 
 namespace soc {
-namespace stm32l452xx {
+namespace stm32l4 {
 namespace peripherals {
 
 using namespace cml::utils;
-using namespace soc::stm32l452xx;
 
-RNG::RNG() {}
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
-RNG::~RNG() {}
+RNG::RNG()
+{
+    cml_assert(false == created);
+    created = true;
+}
+
+RNG::~RNG()
+{
+    this->disable();
+    created = false;
+}
 
 bool RNG::enable(uint32_t a_irq_priority, uint32_t a_timeout)
 {
@@ -183,6 +210,10 @@ void RNG::unregister_new_value_callback()
     new_value_callback = { nullptr, nullptr };
 }
 
+#endif
+
 } // namespace peripherals
-} // namespace stm32l452xx
+} // namespace stm32l4
 } // namespace soc
+
+#endif // STM32L4

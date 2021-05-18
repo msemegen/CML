@@ -11,7 +11,7 @@
 #include <cstdint>
 
 namespace soc {
-namespace stm32l452xx {
+namespace stm32l4 {
 
 class misc
 {
@@ -26,5 +26,5 @@ public:
     static void delay_us(uint32_t a_time);
 };
 
-} // namespace stm32l452xx
+} // namespace stm32l4
 } // namespace soc

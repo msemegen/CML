@@ -5,14 +5,14 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
-#ifdef STM32L452xx
+#ifdef STM32L4
 
 // this
-#include <soc/stm32l452xx/peripherals/I2C.hpp>
+#include <soc/stm32l4/peripherals/I2C.hpp>
 
 // soc
 #include <soc/Interrupt_guard.hpp>
-#include <soc/stm32l452xx/mcu.hpp>
+#include <soc/stm32l4/mcu.hpp>
 #include <soc/system_timer.hpp>
 
 // cml
@@ -25,7 +25,11 @@
 namespace {
 
 using namespace cml;
-using namespace soc::stm32l452xx::peripherals;
+using namespace soc::stm32l4::peripherals;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 struct Controller
 {
@@ -198,9 +202,15 @@ uint32_t get_RCC_CCIPR_from_clock_source(I2C_base::Clock_source a_clock_source, 
     return 0;
 }
 
+#endif
+
 } // namespace
 
 extern "C" {
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 void interrupt_handler(uint32_t a_controller_index)
 {
@@ -237,14 +247,20 @@ void I2C4_EV_IRQHandler()
     interrupt_handler(3);
 }
 
+#endif
+
 } // extern "C"
 
 namespace soc {
-namespace stm32l452xx {
+namespace stm32l4 {
 namespace peripherals {
 
 using namespace cml;
 using namespace cml::utils;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 void i2c_master_interrupt_handler(I2C_master* a_p_this)
 {
@@ -1092,8 +1108,10 @@ I2C_slave::Config I2C_slave::get_config() const
              static_cast<uint16_t>(get_i2c_ptr(this->id)->OAR1 & 0x7Fu) };
 }
 
+#endif
+
 } // namespace peripherals
-} // namespace stm32l452xx
+} // namespace stm32l4
 } // namespace soc
 
-#endif // STM32L452xx
+#endif // STM32L4

@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 // externals
-#include <stm32l452xx.h>
+#include <stm32l4xx.h>
 
 uint32_t SystemCoreClock = 4000000;
 

@@ -25,6 +25,10 @@ namespace {
 using namespace cml;
 using namespace soc::stm32l4::peripherals;
 
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
+
 void gpio_a_enable()
 {
     bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
@@ -116,12 +120,18 @@ struct Interrupt_handler
 
 Interrupt_handler interrupt_handlers[7];
 
+#endif
+
 } // namespace
 
 extern "C" {
 
 using namespace cml;
 using namespace soc;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
 {
@@ -200,11 +210,17 @@ void EXTI15_10_IRQHandler()
     }
 }
 
+#endif
+
 } // extern "C"
 
 namespace soc {
 namespace stm32l4 {
 namespace peripherals {
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 
 using namespace cml;
 
@@ -691,6 +707,8 @@ void GPIO::EXTI::deattach(const GPIO& a_port, uint32_t a_pin)
 
     interrupt_handlers[a_pin].callback = { nullptr, nullptr };
 }
+
+#endif
 
 } // namespace peripherals
 } // namespace stm32l4
