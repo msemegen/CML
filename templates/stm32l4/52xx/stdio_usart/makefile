@@ -11,7 +11,7 @@ endif
 
 PROJECT_NAME := cml_stm32l452xx_stdio_usart
 ROOT         := $(CURDIR)
-CML_ROOT     := $(ROOT)/../../..
+CML_ROOT     := $(ROOT)/../../../..
 LIBRARIES    := $(ROOT)/libraries
 OUTPUT_NAME  := $(PROJECT_NAME)
 
@@ -24,7 +24,7 @@ OUTDIR_DEBUG   	   := $(OUTDIR)/debug
 OUTDIR_RELEASE 	   := $(OUTDIR)/release
 
 include $(ROOT)/../modules.mk
-include $(ROOT)/../../tc.mk
+include $(ROOT)/../../../tc.mk
 
 LD_PATH = $(ROOT)/../
 

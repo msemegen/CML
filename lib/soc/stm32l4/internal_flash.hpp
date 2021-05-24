@@ -130,7 +130,7 @@ public:
     static Result erase_bank_polling(Bank_id a_id, uint32_t a_timeout);
 
 private:
-    class Unlock_guard : public cml::Non_copyable
+    class Unlock_guard : private cml::Non_copyable
     {
     public:
         Unlock_guard()
