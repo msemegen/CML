@@ -18,7 +18,7 @@
 #include <cml/bit_flag.hpp>
 #ifdef CML_ASSERT_ENABLED
 #include <soc/stm32l4/mcu.hpp>
-#endif //  CML_ASSERT
+#endif // CML_ASSERT
 
 namespace {
 
@@ -59,6 +59,8 @@ void gpio_c_disable()
     bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
 }
 
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
 void gpio_d_enable()
 {
     bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
@@ -68,7 +70,10 @@ void gpio_d_disable()
 {
     bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
 }
+#endif
 
+#if defined(STM32L431xx) || defined(STM32L433xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
 void gpio_e_enable()
 {
     bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
@@ -78,6 +83,7 @@ void gpio_e_disable()
 {
     bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
 }
+#endif
 
 void gpio_h_enable()
 {
@@ -106,8 +112,18 @@ Controller controllers[] = {
     { GPIOA, gpio_a_enable, gpio_a_disable },
     { GPIOB, gpio_b_enable, gpio_b_disable },
     { GPIOC, gpio_c_enable, gpio_c_disable },
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
     { GPIOD, gpio_d_enable, gpio_d_disable },
+#else
+    { nullptr, nullptr, nullptr },
+#endif
+#if defined(STM32L431xx) || defined(STM32L433xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
     { GPIOE, gpio_e_enable, gpio_e_disable },
+#else
+    { nullptr, nullptr, nullptr },
+#endif
     { nullptr, nullptr, nullptr },
     { nullptr, nullptr, nullptr },
     { GPIOH, gpio_h_enable, gpio_h_disable },

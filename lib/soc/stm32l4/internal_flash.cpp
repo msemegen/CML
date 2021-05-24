@@ -5,7 +5,7 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
-#ifdef STM32L452xx
+#ifdef STM32L4
 
 // std
 #include <cstring>
@@ -347,4 +347,4 @@ internal_flash::Result internal_flash::erase_bank_polling(Bank_id, uint32_t a_ti
 } // namespace stm32l4
 } // namespace soc
 
-#endif // STM32L452xx
+#endif // STM32L4

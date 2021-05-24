@@ -23,6 +23,9 @@
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
 
+// externals
+#include <stm32l4xx.h>
+
 namespace {
 
 using namespace cml;
@@ -82,6 +85,8 @@ void usart_2_disable()
     NVIC_DisableIRQ(USART2_IRQn);
 }
 
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
 void usart_3_enable(USART::Clock::Source a_clock_source, uint32_t a_irq_priority)
 {
     constexpr uint32_t clock_source_lut[] = { 0, RCC_CCIPR_USART3SEL_0, RCC_CCIPR_USART3SEL_1 };
@@ -97,10 +102,15 @@ void usart_3_disable()
     bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_USART3EN);
     NVIC_DisableIRQ(USART3_IRQn);
 }
+#endif
 
 Controller controllers[] = { { USART1, nullptr, nullptr, usart_1_enable, usart_1_disable },
                              { USART2, nullptr, nullptr, usart_2_enable, usart_2_disable },
-                             { USART3, nullptr, nullptr, usart_3_enable, usart_3_disable } };
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+                             { USART3, nullptr, nullptr, usart_3_enable, usart_3_disable }
+#endif
+};
 
 USART_TypeDef* get_usart_ptr(USART::Id a_id)
 {
@@ -180,10 +190,13 @@ void USART2_IRQHandler()
     interrupt_handler(1);
 }
 
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
 void USART3_IRQHandler()
 {
     interrupt_handler(2);
 }
+#endif
 
 #endif
 

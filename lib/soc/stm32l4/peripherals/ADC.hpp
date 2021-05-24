@@ -23,13 +23,15 @@ namespace peripherals {
 #if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
     defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
     defined(STM32L452xx) || defined(STM32L462xx)
-
 class ADC : private cml::Non_copyable
 {
 public:
     enum class Id : uint32_t
     {
-        _1 = 0u
+        _1 = 0u,
+#if defined(STM32L412xx) || defined(STM32L422xx)
+        _2 = 1u
+#endif
     };
 
     enum class Resolution : uint32_t
@@ -103,6 +105,8 @@ public:
         Divider divider = Divider::unknown;
     };
 
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
     struct Asynchronous_clock
     {
         enum class Divider : uint32_t
@@ -131,6 +135,7 @@ public:
         Source source   = Source::unknown;
         Divider divider = Divider::unknown;
     };
+#endif
 
     struct Calibration_data
     {
@@ -148,15 +153,21 @@ public:
     };
 
 public:
-    ADC(Id) {}
+    ADC(Id a_id)
+        : id(a_id)
+    {
+    }
 
     ~ADC()
     {
         this->disable();
     }
 
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
     bool
     enable(Resolution a_resolution, const Asynchronous_clock& a_clock, uint32_t a_irq_priority, uint32_t a_timeout);
+#endif
 
     bool enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32_t a_irq_priority, uint32_t a_timeout);
 
@@ -171,10 +182,7 @@ public:
     void register_conversion_callback(const Conversion_callback& a_callback);
     void unregister_conversion_callback();
 
-    uint32_t get_active_channels_count() const
-    {
-        return (ADC1->SQR1 & 0xFu) + 1;
-    }
+    uint32_t get_active_channels_count() const;
 
     void set_resolution(Resolution a_resolution);
 
@@ -187,7 +195,7 @@ public:
 
     constexpr Id get_id() const
     {
-        return Id::_1;
+        return this->id;
     }
 
 private:
@@ -195,6 +203,8 @@ private:
 
 private:
     Conversion_callback callaback;
+
+    Id id;
 
 private:
     friend void adc_interrupt_handler(ADC* a_p_this);

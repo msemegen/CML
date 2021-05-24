@@ -11,9 +11,6 @@
 #include <cstdint>
 #include <type_traits>
 
-// externals
-#include <stm32l4xx.h>
-
 // cml
 #include <cml/Non_copyable.hpp>
 
@@ -31,9 +28,14 @@ public:
     enum class Id : uint32_t
     {
         _1,
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
         _2,
+#endif
         _3,
+#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
         _4
+#endif
     };
 
     enum class Clock_source : uint32_t

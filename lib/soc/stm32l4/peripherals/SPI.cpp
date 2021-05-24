@@ -21,6 +21,9 @@
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
 
+// externals
+#include <stm32l4xx.h>
+
 // TODO: CML - SPI half-duplex and simplex implementation
 
 namespace {
@@ -81,6 +84,8 @@ void spi_1_disable()
     NVIC_DisableIRQ(SPI1_IRQn);
 }
 
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
 void spi_2_enable(uint32_t a_irq_priority)
 {
     bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN);
@@ -94,7 +99,10 @@ void spi_2_disable()
     bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN);
     NVIC_DisableIRQ(SPI2_IRQn);
 }
+#endif
 
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
 void spi_3_enable(uint32_t a_irq_priority)
 {
     bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN);
@@ -108,10 +116,22 @@ void spi_3_disable()
     bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN);
     NVIC_DisableIRQ(SPI3_IRQn);
 }
+#endif
 
-Controller controllers[] { { SPI1, nullptr, nullptr, spi_1_enable, spi_1_disable },
-                           { SPI2, nullptr, nullptr, spi_2_enable, spi_2_disable },
-                           { SPI3, nullptr, nullptr, spi_3_enable, spi_3_disable } };
+Controller controllers[]
+{
+    { SPI1, nullptr, nullptr, spi_1_enable, spi_1_disable },
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        { SPI2, nullptr, nullptr, spi_2_enable, spi_2_disable },
+#endif
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+    {
+        SPI3, nullptr, nullptr, spi_3_enable, spi_3_disable
+    }
+#endif
+};
 
 SPI_TypeDef* get_spi_ptr(SPI_base::Id a_id)
 {
@@ -1511,4 +1531,4 @@ SPI_slave::Config SPI_slave::get_config() const
 } // namespace stm32l4
 } // namespace soc
 
-#endif // STM32L452xx
+#endif // STM32L4

@@ -9,7 +9,7 @@
 #include <soc/interrupt_guard.hpp>
 
 // externals
-#ifdef STM32L452xx
+#ifdef STM32L4
 #include <stm32l4xx.h>
 #endif
 

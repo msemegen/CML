@@ -11,7 +11,7 @@
 #include <cstdint>
 
 // externals
-#include <stm32l452xx.h>
+#include <stm32l4xx.h>
 
 // cml
 #include <cml/bit_flag.hpp>
@@ -47,10 +47,13 @@ public:
 
     enum class Clk48_mux_source : uint32_t
     {
-        hsi48      = 0x0u,
+        hsi48 = 0x0u,
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
         pll_sai1_q = RCC_CCIPR_CLK48SEL_0,
-        pll_q      = RCC_CCIPR_CLK48SEL_1,
-        msi        = RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1,
+#endif
+        pll_q = RCC_CCIPR_CLK48SEL_1,
+        msi   = RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1,
     };
 
     enum class Msi_frequency : uint32_t
@@ -169,7 +172,8 @@ public:
                 Divider divider = Divider::unknown;
                 Output output   = Output::unknown;
             };
-
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
             struct P
             {
                 enum class Divider : uint32_t
@@ -182,14 +186,21 @@ public:
                 Divider divider = Divider::unknown;
                 Output output   = Output::unknown;
             };
+#endif
 
             uint32_t n = 0;
 
             R r;
             Q q;
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+
             P p;
+#endif
         };
 
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
         struct PLLSAI1
         {
             struct R
@@ -241,12 +252,16 @@ public:
             Q q;
             P p;
         };
+#endif
 
         Source source = Source::unknown;
         M m           = M::uknown;
 
         PLL pll;
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
         PLLSAI1 pllsai1;
+#endif
     };
 
     struct Device_id
@@ -512,7 +527,10 @@ private:
 
     static uint32_t calculate_pll_r_output_frequency();
     static uint32_t calculate_pll_q_output_frequency();
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
     static uint32_t calculate_pllsai1_q_output_frequency();
+#endif
 };
 
 #endif

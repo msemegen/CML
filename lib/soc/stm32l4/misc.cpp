@@ -5,7 +5,7 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
-#ifdef STM32L452xx
+#ifdef STM32L4
 
 // this
 #include <soc/stm32l4/misc.hpp>

@@ -22,6 +22,9 @@
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
 
+// externals
+#include <stm32l4xx.h>
+
 namespace {
 
 using namespace cml;
@@ -61,6 +64,8 @@ void i2c_1_disable()
     NVIC_DisableIRQ(I2C1_EV_IRQn);
 }
 
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
 void i2c_2_enable(uint32_t a_clock_source, uint32_t a_irq_priority)
 {
     cml_assert(0 != a_clock_source);
@@ -77,6 +82,7 @@ void i2c_2_disable()
     bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C2EN);
     NVIC_DisableIRQ(I2C2_EV_IRQn);
 }
+#endif
 
 void i2c_3_enable(uint32_t a_clock_source, uint32_t a_irq_priority)
 {
@@ -95,6 +101,7 @@ void i2c_3_disable()
     NVIC_DisableIRQ(I2C3_EV_IRQn);
 }
 
+#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
 void i2c_4_enable(uint32_t a_clock_source, uint32_t a_irq_priority)
 {
     cml_assert(0 != a_clock_source);
@@ -111,11 +118,22 @@ void i2c_4_disable()
     bit_flag::clear(&(RCC->APB1ENR2), RCC_APB1ENR2_I2C4EN);
     NVIC_DisableIRQ(I2C4_EV_IRQn);
 }
+#endif
 
-Controller controllers[] { { I2C1, nullptr, nullptr, i2c_1_enable, i2c_1_disable },
-                           { I2C2, nullptr, nullptr, i2c_2_enable, i2c_2_disable },
-                           { I2C3, nullptr, nullptr, i2c_3_enable, i2c_3_disable },
-                           { I2C4, nullptr, nullptr, i2c_4_enable, i2c_4_disable } };
+Controller controllers[]
+{
+    { I2C1, nullptr, nullptr, i2c_1_enable, i2c_1_disable },
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        { I2C2, nullptr, nullptr, i2c_2_enable, i2c_2_disable },
+#endif
+        { I2C3, nullptr, nullptr, i2c_3_enable, i2c_3_disable },
+#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+    {
+        I2C4, nullptr, nullptr, i2c_4_enable, i2c_4_disable
+    }
+#endif
+};
 
 I2C_TypeDef* get_i2c_ptr(I2C_base::Id a_id)
 {
@@ -167,19 +185,26 @@ I2C_base::Clock_source get_clock_source_from_RCC_CCIPR(I2C_base::Id a_id)
     switch (a_id)
     {
         case I2C_base::Id::_1:
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
         case I2C_base::Id::_2:
+#endif
         case I2C_base::Id::_3: {
             return static_cast<I2C_base::Clock_source>(
                 bit_flag::get(RCC->CCIPR, 0x3 << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32_t>(a_id) * 2)) >>
                 RCC_CCIPR_I2C1SEL_Pos);
         }
         break;
-
-        default: {
+#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case I2C_base::Id::_4: {
             return static_cast<I2C_base::Clock_source>(bit_flag::get(RCC->CCIPR2, RCC_CCIPR2_I2C4SEL));
         }
         break;
+#endif
     }
+
+    cml_assert(false);
+    return static_cast<I2C_base::Clock_source>(static_cast<uint32_t>(I2C_base::Clock_source::hsi) + 1);
 }
 
 uint32_t get_RCC_CCIPR_from_clock_source(I2C_base::Clock_source a_clock_source, I2C_base::Id a_id)
@@ -187,16 +212,20 @@ uint32_t get_RCC_CCIPR_from_clock_source(I2C_base::Clock_source a_clock_source, 
     switch (a_id)
     {
         case I2C_base::Id::_1:
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
         case I2C_base::Id::_2:
+#endif
         case I2C_base::Id::_3: {
             return static_cast<uint32_t>(a_clock_source) << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32_t>(a_id) * 2);
         }
         break;
-
+#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
         case I2C_base::Id::_4: {
             return static_cast<uint32_t>(a_clock_source);
         }
         break;
+#endif
     }
 
     return 0;

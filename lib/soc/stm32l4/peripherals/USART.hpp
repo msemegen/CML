@@ -32,7 +32,10 @@ public:
     {
         _1 = 0,
         _2 = 1,
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
         _3 = 2
+#endif
     };
 
     enum class Oversampling : uint32_t

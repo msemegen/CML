@@ -26,7 +26,7 @@ namespace peripherals {
     defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
     defined(STM32L452xx) || defined(STM32L462xx)
 
-class RS485 : cml::Non_copyable
+class RS485 : private cml::Non_copyable
 {
 public:
     using Oversampling    = USART::Oversampling;

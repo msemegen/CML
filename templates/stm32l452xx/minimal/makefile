@@ -15,6 +15,9 @@ CML_ROOT     := $(ROOT)/../../..
 LIBRARIES    := $(ROOT)/libraries
 OUTPUT_NAME  := $(PROJECT_NAME)
 
+MCU_FAMILY := STM32L4
+MCU_TYPE   := STM32L452xx
+
 OUTPUT_FOLDER_NAME := output
 OUTDIR         	   := $(ROOT)/$(OUTPUT_FOLDER_NAME)
 OUTDIR_DEBUG   	   := $(OUTDIR)/debug
