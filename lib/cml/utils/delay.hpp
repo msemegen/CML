@@ -11,9 +11,9 @@
 #include <cml/hal/system_timer.hpp>
 #include <cml/various.hpp>
 
-#ifdef STM32L452xx
-#include <soc/stm32l452xx/misc.hpp>
-#endif // STM32L452xx
+#ifdef STM32L4
+#include <soc/stm32l4/misc.hpp>
+#endif // STM32L4
 
 #ifdef STM32L011xx
 #include <soc/stm32l011xx/misc.hpp>
@@ -49,9 +49,9 @@ public:
 
     inline static void us(uint32_t a_time)
     {
-#ifdef STM32L452xx
-        soc::stm32l452xx::misc::delay_us(a_time);
-#endif // STM32L452xx
+#ifdef STM32L4
+        soc::stm32l4::misc::delay_us(a_time);
+#endif // STM32L4
 
 #ifdef STM32L011xx
         soc::stm32l011xx::misc::delay_us(a_time);

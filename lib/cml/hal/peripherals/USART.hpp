@@ -8,9 +8,9 @@
  */
 
 // cml
-#ifdef STM32L452xx
-#include <soc/stm32l452xx/peripherals/USART.hpp>
-#endif // STM32L452xx
+#ifdef STM32L4
+#include <soc/stm32l4/peripherals/USART.hpp>
+#endif // STM32L4
 
 #ifdef STM32L011xx
 #include <soc/stm32l011xx/peripherals/USART.hpp>
@@ -20,8 +20,8 @@ namespace cml {
 namespace hal {
 namespace peripherals {
 
-#ifdef STM32L452xx
-using USART = soc::stm32l452xx::peripherals::USART;
+#ifdef STM32L4
+using USART = soc::stm32l4::peripherals::USART;
 #endif // STM32L452xx
 
 #ifdef STM32L011xx

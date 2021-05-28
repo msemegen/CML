@@ -8,17 +8,17 @@
  */
 
 // cml
-#ifdef STM32L452xx
-#include <soc/stm32l452xx/peripherals/RNG.hpp>
+#ifdef STM32L4
+#include <soc/stm32l4/peripherals/RNG.hpp>
 #endif // STM32L452xx
 
 namespace cml {
 namespace hal {
 namespace peripherals {
 
-#ifdef STM32L452xx
-using RNG = soc::stm32l452xx::peripherals::RNG;
-#endif // STM32L452xx
+#ifdef STM32L4
+using RNG = soc::stm32l4::peripherals::RNG;
+#endif // STM32L4
 
 } // namespace peripherals
 } // namespace hal

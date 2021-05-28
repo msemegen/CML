@@ -8,9 +8,9 @@
  */
 
 // cml
-#ifdef STM32L452xx
-#include <soc/stm32l452xx/peripherals/ADC.hpp>
-#endif // STM32L452xx
+#ifdef STM32L4
+#include <soc/stm32l4/peripherals/ADC.hpp>
+#endif // STM32L4
 
 #ifdef STM32L011xx
 #include <soc/stm32l011xx/peripherals/ADC.hpp>
@@ -20,9 +20,9 @@ namespace cml {
 namespace hal {
 namespace peripherals {
 
-#ifdef STM32L452xx
-using ADC = soc::stm32l452xx::peripherals::ADC;
-#endif // STM32L452xx
+#ifdef STM32L4
+using ADC = soc::stm32l4::peripherals::ADC;
+#endif // STM32L4
 
 #ifdef STM32L011xx
 using ADC = soc::stm32l011xx::peripherals::ADC;

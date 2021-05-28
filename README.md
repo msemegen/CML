@@ -1,4 +1,4 @@
 # CML
 Cortex-M Library 
 
-HAL for STM32 MCUs (currently L011xx and L452xx only). 
+HAL for part of STM32L4 family (STM32L412xx, STM32L422xx, STM32L431xx, STM32L432xx, STM32L433xx, STM32L442xx, STM32L443xx, STM32L451xx, STM32L452xx, STM32L462xx)
