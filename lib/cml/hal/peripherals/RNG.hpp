@@ -7,7 +7,6 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
-// cml
 #ifdef STM32L4
 #include <soc/stm32l4/peripherals/RNG.hpp>
 #endif // STM32L452xx

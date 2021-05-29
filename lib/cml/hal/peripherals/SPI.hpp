@@ -11,10 +11,6 @@
 #include <soc/stm32l4/peripherals/SPI.hpp>
 #endif // STM32L4
 
-#ifdef STM32L011xx
-#include <soc/stm32l011xx/peripherals/SPI.hpp>
-#endif // STM32L011xx
-
 namespace cml {
 namespace hal {
 namespace peripherals {
@@ -24,12 +20,6 @@ using SPI_base   = soc::stm32l4::peripherals::SPI_base;
 using SPI_master = soc::stm32l4::peripherals::SPI_master;
 using SPI_slave  = soc::stm32l4::peripherals::SPI_slave;
 #endif // STM32L4
-
-#ifdef STM32L011xx
-using SPI_base   = soc::stm32l011xx::peripherals::SPI_base;
-using SPI_master = soc::stm32l011xx::peripherals::SPI_master;
-using SPI_slave  = soc::stm32l011xx::peripherals::SPI_slave;
-#endif
 
 } // namespace peripherals
 } // namespace hal

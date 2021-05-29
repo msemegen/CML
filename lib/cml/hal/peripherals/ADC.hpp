@@ -12,10 +12,6 @@
 #include <soc/stm32l4/peripherals/ADC.hpp>
 #endif // STM32L4
 
-#ifdef STM32L011xx
-#include <soc/stm32l011xx/peripherals/ADC.hpp>
-#endif // STM32L011xx
-
 namespace cml {
 namespace hal {
 namespace peripherals {
@@ -23,10 +19,6 @@ namespace peripherals {
 #ifdef STM32L4
 using ADC = soc::stm32l4::peripherals::ADC;
 #endif // STM32L4
-
-#ifdef STM32L011xx
-using ADC = soc::stm32l011xx::peripherals::ADC;
-#endif // STM32L011xx
 
 } // namespace peripherals
 } // namespace hal
