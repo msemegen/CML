@@ -84,9 +84,11 @@ extern "C" {
     defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
     defined(STM32L452xx) || defined(STM32L462xx)
 
-    void TIM6_IRQHandler() {}
+void TIM6_DAC_IRQHandler() {}
 
-
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
+void TIM7_IRQHandler() {}
+#endif
 
 #endif
 }
