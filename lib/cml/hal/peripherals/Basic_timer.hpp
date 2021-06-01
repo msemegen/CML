@@ -1,14 +1,14 @@
 #pragma once
 
 /*
- *   Name: ADC.hpp
+ *   Name: Basic_timer.hpp
  *
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
 #ifdef STM32L4
-#include <soc/stm32l4/peripherals/ADC.hpp>
+#include <soc/stm32l4/peripherals/Basic_timer.hpp>
 #endif // STM32L4
 
 namespace cml {
@@ -16,7 +16,7 @@ namespace hal {
 namespace peripherals {
 
 #ifdef STM32L4
-using ADC = soc::stm32l4::peripherals::ADC;
+using Basic_timer = soc::stm32l4::peripherals::Basic_timer;
 #endif // STM32L4
 
 } // namespace peripherals
