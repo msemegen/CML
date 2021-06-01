@@ -61,10 +61,15 @@ public:
     void register_overload_callback(const Overload_callback& a_callback);
     void unregister_overload_callback();
 
+    bool is_overload_event() const;
+
 private:
     Id id;
 
     Overload_callback overload_callback;
+
+private:
+    friend void interrupt_handler(Basic_timer* a_p_this);
 };
 
 #endif
