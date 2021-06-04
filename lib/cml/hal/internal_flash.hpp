@@ -12,20 +12,12 @@
 #include <soc/stm32l4/internal_flash.hpp>
 #endif // STM32L4
 
-#ifdef STM32L011xx
-#include <soc/stm32l011xx/internal_flash.hpp>
-#endif // STM32L011xx
-
 namespace cml {
 namespace hal {
 
 #ifdef STM32L4
 using internal_flash = soc::stm32l4::internal_flash;
 #endif // STM32L4
-
-#ifdef STM32L011xx
-using internal_flash = soc::stm32l011xx::internal_flash;
-#endif // STM32L011xx
 
 } // namespace hal
 } // namespace cml
