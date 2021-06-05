@@ -1,19 +1,19 @@
 #pragma once
 
 /*
- *   Name: systick.hpp
+ *   Name: Systick.hpp
  *
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
 // soc
-#include <soc/systick.hpp>
+#include <soc/Systick.hpp>
 
 namespace cml {
 namespace hal {
 
-using systick = soc::systick;
+using Systick = soc::Systick;
 
 } // namespace hal
 } // namespace cml

@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- *   Name: systick.hpp
+ *   Name: Systick.hpp
  *
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
@@ -15,13 +15,12 @@
 #include <stm32l4xx.h>
 #endif
 
-#ifdef STM32L011xx
-#include <stm32l0xx.h>
-#endif
+// cml
+#include <cml/Non_copyable.hpp>
 
 namespace soc {
 
-class systick
+class Systick : private cml::Non_copyable
 {
 public:
     enum class Prescaler : uint32_t
@@ -38,22 +37,19 @@ public:
         void* p_user_data = nullptr;
     };
 
-    static void enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_priority);
-    static void disable();
+    void enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_priority);
+    void disable();
 
-    static void register_tick_callback(const Tick_callback& a_callback);
-    static void unregister_tick_callback();
+    void register_tick_callback(const Tick_callback& a_callback);
+    void unregister_tick_callback();
 
-    static bool is_enabled();
+    bool is_enabled();
 
 private:
-    systick()               = delete;
-    systick(systick&&)      = delete;
-    systick(const systick&) = delete;
-    ~systick()              = default;
+    Tick_callback tick_callback;
 
-    systick& operator=(systick&&) = delete;
-    systick& operator=(const systick&) = delete;
+private:
+    void friend systick_interrupt_handler(Systick* a_p_this);
 };
 
 } // namespace soc
