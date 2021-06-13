@@ -25,7 +25,6 @@ public:
         sleep_on_exit,
         wfi,
         wfe,
-        unknown
     };
 
     enum class Deep_sleep
@@ -52,11 +51,6 @@ public:
                 __WFE();
             }
             break;
-
-            case Core_sleep_mode::unknown: {
-                cml_assert(a_mode != Core_sleep_mode::unknown);
-            }
-            break;
         }
 
         switch (a_deep_sleep)
@@ -78,6 +72,8 @@ public:
         cml::bit_flag::clear(&(SCB->SCR), SCB_SCR_SLEEPONEXIT_Msk);
         cml::bit_flag::clear(&(SCB->SCR), SCB_SCR_SLEEPDEEP_Msk);
     }
+
+    void peripheral_enable();
 
 private:
     pwr()           = delete;

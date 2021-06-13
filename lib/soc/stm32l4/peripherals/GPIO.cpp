@@ -29,72 +29,6 @@ using namespace soc::stm32l4::peripherals;
     defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
     defined(STM32L452xx) || defined(STM32L462xx)
 
-void gpio_a_enable()
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
-}
-
-void gpio_a_disable()
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
-}
-
-void gpio_b_enable()
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
-}
-
-void gpio_b_disable()
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
-}
-
-void gpio_c_enable()
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
-}
-
-void gpio_c_disable()
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
-}
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-void gpio_d_enable()
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
-}
-
-void gpio_d_disable()
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
-}
-#endif
-
-#if defined(STM32L431xx) || defined(STM32L433xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-void gpio_e_enable()
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
-}
-
-void gpio_e_disable()
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
-}
-#endif
-
-void gpio_h_enable()
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
-}
-
-void gpio_h_disable()
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
-}
-
 uint32_t get_index_from_Id(GPIO::Id a_id)
 {
     return static_cast<uint32_t>(a_id);
@@ -103,30 +37,23 @@ uint32_t get_index_from_Id(GPIO::Id a_id)
 struct Controller
 {
     GPIO_TypeDef* p_registers = nullptr;
-
-    void (*enable)()  = nullptr;
-    void (*disable)() = nullptr;
 };
 
 Controller controllers[] = {
-    { GPIOA, gpio_a_enable, gpio_a_disable },
-    { GPIOB, gpio_b_enable, gpio_b_disable },
-    { GPIOC, gpio_c_enable, gpio_c_disable },
+    { GPIOA },   { GPIOB },   { GPIOC },
 #if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    { GPIOD, gpio_d_enable, gpio_d_disable },
+    { GPIOD },
 #else
     { nullptr, nullptr, nullptr },
 #endif
 #if defined(STM32L431xx) || defined(STM32L433xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
     defined(STM32L452xx) || defined(STM32L462xx)
-    { GPIOE, gpio_e_enable, gpio_e_disable },
+    { GPIOE },
 #else
-    { nullptr, nullptr, nullptr },
+    { nullptr },
 #endif
-    { nullptr, nullptr, nullptr },
-    { nullptr, nullptr, nullptr },
-    { GPIOH, gpio_h_enable, gpio_h_disable },
+    { nullptr }, { nullptr }, { GPIOH },
 };
 
 struct Interrupt_handler
@@ -243,21 +170,17 @@ using namespace cml;
 void GPIO::enable()
 {
     this->p_gpio = controllers[get_index_from_Id(this->id)].p_registers;
-    controllers[get_index_from_Id(this->id)].enable();
-
     bit::set(&(this->flags), 31u);
 }
 
 void GPIO::disable()
 {
-    controllers[get_index_from_Id(this->id)].disable();
-
     bit::clear(&(this->flags), 31);
 }
 
 void GPIO::In::Pin::set_pull(Pull a_pull)
 {
-    cml_assert(Pull::unknown != a_pull);
+    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
@@ -298,7 +221,7 @@ void GPIO::Out::Pin::toggle_level()
 
 void GPIO::Out::Pin::set_mode(Mode a_mode)
 {
-    cml_assert(Mode::unknown != a_mode);
+    cml_assert(static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1) != a_mode);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
@@ -308,7 +231,7 @@ void GPIO::Out::Pin::set_mode(Mode a_mode)
 
 void GPIO::Out::Pin::set_pull(Pull a_pull)
 {
-    cml_assert(Pull::unknown != a_pull);
+    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
@@ -318,7 +241,7 @@ void GPIO::Out::Pin::set_pull(Pull a_pull)
 
 void GPIO::Out::Pin::set_speed(Speed a_speed)
 {
-    cml_assert(Speed::unknown != a_speed);
+    cml_assert(static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1) != a_speed);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
@@ -359,7 +282,7 @@ GPIO::Speed GPIO::Out::Pin::get_speed() const
 
 void GPIO::Analog::Pin::set_pull(Pull a_pull)
 {
-    cml_assert(Pull::unknown != a_pull);
+    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
@@ -377,7 +300,7 @@ GPIO::Pull GPIO::Analog::Pin::get_pull() const
 
 void GPIO::Alternate_function::Pin::set_mode(Mode a_mode)
 {
-    cml_assert(Mode::unknown != a_mode);
+    cml_assert(static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1) != a_mode);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
@@ -387,7 +310,7 @@ void GPIO::Alternate_function::Pin::set_mode(Mode a_mode)
 
 void GPIO::Alternate_function::Pin::set_pull(Pull a_pull)
 {
-    cml_assert(Pull::unknown != a_pull);
+    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
@@ -397,7 +320,7 @@ void GPIO::Alternate_function::Pin::set_pull(Pull a_pull)
 
 void GPIO::Alternate_function::Pin::set_speed(Speed a_speed)
 {
-    cml_assert(Speed::unknown != a_speed);
+    cml_assert(static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1) != a_speed);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
@@ -448,7 +371,7 @@ GPIO::Speed GPIO::Alternate_function::Pin::get_speed() const
 void GPIO::In::enable(uint32_t a_id, Pull a_pull, Pin* a_p_pin)
 {
     cml_assert(a_id < 16);
-    cml_assert(Pull::unknown != a_pull);
+    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
 
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
@@ -488,9 +411,9 @@ void GPIO::Out::enable(uint32_t a_id, const Config& a_config, Pin* a_p_pin)
 {
     cml_assert(a_id < 16);
 
-    cml_assert(Pull::unknown != a_config.pull);
-    cml_assert(Speed::unknown != a_config.speed);
-    cml_assert(Mode::unknown != a_config.mode);
+    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_config.pull);
+    cml_assert(static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1) != a_config.speed);
+    cml_assert(static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1) != a_config.mode);
 
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
@@ -536,7 +459,7 @@ void GPIO::Analog::enable(uint32_t a_id, Pull a_pull, Pin* a_p_out_pin)
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
 
-    cml_assert(Pull::unknown != a_pull);
+    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
 
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(this->p_port));
 
@@ -569,9 +492,9 @@ void GPIO::Alternate_function::enable(uint32_t a_id, const Config& a_config, Pin
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
 
-    cml_assert(Pull::unknown != a_config.pull);
-    cml_assert(Speed::unknown != a_config.speed);
-    cml_assert(Mode::unknown != a_config.mode);
+    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_config.pull);
+    cml_assert(static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1) != a_config.speed);
+    cml_assert(static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1) != a_config.mode);
 
     const uint32_t clear_flag_2bit = 0x3u << (a_id * 2);
 
@@ -727,6 +650,30 @@ void GPIO::EXTI::deattach(const GPIO& a_port, uint32_t a_pin)
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+
+using namespace soc::stm32l4::peripherals;
+
+void rcc<GPIO>::enable(GPIO::Id a_id, bool a_enable_in_lp)
+{
+    bit_flag::set(&(RCC->AHB2ENR), 0x1ul << (RCC_AHB2ENR_GPIOAEN_Pos + static_cast<uint32_t>(a_id)));
+
+    if (true == a_enable_in_lp)
+    {
+        bit::set(&(RCC->AHB2SMENR), static_cast<uint32_t>(a_id));
+    }
+}
+
+void rcc<GPIO>::disable(GPIO::Id a_id) 
+{
+    bit_flag::clear(&(RCC->AHB2ENR), 0x1ul << (RCC_AHB2ENR_GPIOAEN_Pos + static_cast<uint32_t>(a_id)));
+    bit::clear(&(RCC->AHB2SMENR), static_cast<uint32_t>(a_id));
+}
+
 } // namespace stm32l4
 } // namespace soc
 

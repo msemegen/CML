@@ -17,6 +17,7 @@ namespace peripherals {
 
 #ifdef STM32L4
 using ADC = soc::stm32l4::peripherals::ADC;
+
 #endif // STM32L4
 
 } // namespace peripherals

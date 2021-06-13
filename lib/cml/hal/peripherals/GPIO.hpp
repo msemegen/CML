@@ -16,7 +16,8 @@ namespace hal {
 namespace peripherals {
 
 #ifdef STM32L4
-using GPIO = soc::stm32l4::peripherals::GPIO;
+using GPIO                     = soc::stm32l4::peripherals::GPIO;
+template<typename T> using rcc = soc::stm32l4::rcc<T>;
 #endif // STM32L4
 
 } // namespace peripherals

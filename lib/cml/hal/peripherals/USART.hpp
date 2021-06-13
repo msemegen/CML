@@ -16,8 +16,9 @@ namespace hal {
 namespace peripherals {
 
 #ifdef STM32L4
-using USART = soc::stm32l4::peripherals::USART;
-#endif // STM32L452xx
+using USART                    = soc::stm32l4::peripherals::USART;
+template<typename T> using rcc = soc::stm32l4::rcc<T>;
+#endif // STM32L4
 
 } // namespace peripherals
 } // namespace hal

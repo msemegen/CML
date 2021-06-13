@@ -13,6 +13,9 @@
 // externals
 #include <stm32l4xx.h>
 
+// soc
+#include <soc/stm32l4/rcc.hpp>
+
 // cml
 #include <cml/Non_copyable.hpp>
 

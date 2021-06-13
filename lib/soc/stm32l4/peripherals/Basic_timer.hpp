@@ -10,6 +10,9 @@
 // std
 #include <cstdint>
 
+// soc
+#include <soc/stm32l4/rcc.hpp>
+
 // cml
 #include <cml/Non_copyable.hpp>
 
@@ -40,6 +43,12 @@ public:
         void* p_user_data = nullptr;
     };
 
+    struct Config
+    {
+        uint16_t prescaler   = 0u;
+        uint16_t auto_reload = 0u;
+    };
+
 public:
     Basic_timer(Id a_id)
         : id(a_id)
@@ -52,7 +61,7 @@ public:
         this->disable();
     }
 
-    void enable(uint16_t a_prescaler, uint16_t a_auto_reload, uint32_t a_irq_priority);
+    void enable(const Config& a_config, uint32_t a_irq_priority);
     void disable();
 
     void start();
@@ -75,5 +84,15 @@ private:
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+template<> struct rcc<peripherals::Basic_timer>
+{
+    static void enable(peripherals::Basic_timer::Id a_id, bool a_enable_in_lp);
+    static void disable(peripherals::Basic_timer::Id a_id);
+};
 } // namespace stm32l4
 } // namespace soc

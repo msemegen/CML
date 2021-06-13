@@ -11,6 +11,9 @@
 #include <cstdint>
 #include <type_traits>
 
+// soc
+#include <soc/stm32l4/rcc.hpp>
+
 // cml
 #include <cml/Non_copyable.hpp>
 
@@ -38,13 +41,6 @@ public:
 #endif
     };
 
-    enum class Clock_source : uint32_t
-    {
-        pclk1  = 0,
-        sysclk = 1,
-        hsi    = 2
-    };
-
     enum class Bus_flag : uint32_t
     {
         ok               = 0x0,
@@ -53,17 +49,15 @@ public:
         arbitration_lost = 0x4,
         misplaced        = 0x8,
         nack             = 0x10,
-        unknown          = 0x20
     };
 
     struct Result
     {
-        Bus_flag bus_flag             = Bus_flag::unknown;
+        Bus_flag bus_flag             = static_cast<Bus_flag>(static_cast<uint32_t>(Bus_flag::nack) + 1);
         uint32_t data_length_in_bytes = 0;
     };
 
 public:
-    Clock_source get_clock_source() const;
     bool is_enabled() const;
 
     Id get_id() const
@@ -85,12 +79,10 @@ constexpr I2C_base::Bus_flag operator|(I2C_base::Bus_flag a_f1, I2C_base::Bus_fl
 {
     return static_cast<I2C_base::Bus_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
 }
-
 constexpr I2C_base::Bus_flag operator&(I2C_base::Bus_flag a_f1, I2C_base::Bus_flag a_f2)
 {
     return static_cast<I2C_base::Bus_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
 }
-
 constexpr I2C_base::Bus_flag operator|=(I2C_base::Bus_flag& a_f1, I2C_base::Bus_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
@@ -101,7 +93,6 @@ class I2C_master : public I2C_base
 {
 public:
     using Id           = I2C_base::Id;
-    using Clock_source = I2C_base::Clock_source;
     using Result       = I2C_base::Result;
 
     struct Transmit_callback
@@ -132,28 +123,25 @@ public:
     {
         enum class Analog_filter
         {
-            enabled,
             disabled,
-            unknown
+            enabled
         };
 
         enum class Fast_plus
         {
-            enabled,
             disabled,
-            unknown
+            enabled
         };
 
         enum class Crc
         {
-            enabled,
             disabled,
-            unknown
+            enabled
         };
 
-        Analog_filter analog_filter = Analog_filter::unknown;
-        Fast_plus fast_plus         = Fast_plus::unknown;
-        Crc crc                     = Crc::unknown;
+        Analog_filter analog_filter = static_cast<Analog_filter>(static_cast<uint32_t>(Analog_filter::enabled) + 1);
+        Fast_plus fast_plus         = static_cast<Fast_plus>(static_cast<uint32_t>(Fast_plus::enabled) + 1);
+        Crc crc                     = static_cast<Crc>(static_cast<uint32_t>(Crc::enabled) + 1);
         uint32_t timings            = 0;
     };
 
@@ -168,7 +156,7 @@ public:
         this->diasble();
     }
 
-    void enable(const Config& a_config, Clock_source a_clock_source, uint32_t a_irq_priority);
+    void enable(const Config& a_config, uint32_t a_irq_priority);
     void diasble();
 
     template<typename Data_t> Result transmit_polling(uint8_t a_slave_address, const Data_t& a_data)
@@ -249,7 +237,6 @@ class I2C_slave : public I2C_base
 {
 public:
     using Id           = I2C_base::Id;
-    using Clock_source = I2C_base::Clock_source;
     using Result       = I2C_base::Result;
 
     struct Transmit_callback
@@ -288,28 +275,25 @@ public:
     {
         enum class Analog_filter : uint32_t
         {
-            disabled = 0x0u,
-            enabled  = 0x1u,
-            unknown
+            disabled,
+            enabled,
         };
 
         enum class Fast_plus : uint32_t
         {
-            disabled = 0x0u,
-            enabled  = 0x1u,
-            unknown
+            disabled,
+            enabled,
         };
 
         enum class Crc : uint32_t
         {
-            disabled = 0x0u,
-            enabled  = 0x1u,
-            unknown
+            disabled,
+            enabled,
         };
 
-        Analog_filter analog_filter = Analog_filter::unknown;
-        Fast_plus fast_plus         = Fast_plus::unknown;
-        Crc crc                     = Crc::unknown;
+        Analog_filter analog_filter = static_cast<Analog_filter>(static_cast<uint32_t>(Analog_filter::enabled) + 1);
+        Fast_plus fast_plus         = static_cast<Fast_plus>(static_cast<uint32_t>(Fast_plus::enabled) + 1);
+        Crc crc                     = static_cast<Crc>(static_cast<uint32_t>(Crc::enabled) + 1);
         uint32_t timings            = 0;
         uint16_t address            = 0;
     };
@@ -325,7 +309,7 @@ public:
         this->diasble();
     }
 
-    void enable(const Config& a_config, Clock_source a_clock_source, uint32_t a_irq_priority);
+    void enable(const Config& a_config, uint32_t a_irq_priority);
 
     void diasble();
 
@@ -404,5 +388,22 @@ private:
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+template<> struct rcc<peripherals::I2C_base>
+{
+    enum class Clock_source : uint32_t
+    {
+        pclk1  = 0,
+        sysclk = 1,
+        hsi    = 2
+    };
+
+    static void enable(peripherals::I2C_base::Id a_id, Clock_source a_clock_source, bool a_enable_in_lp);
+    static void disable(peripherals::I2C_base::Id a_id);
+};
 } // namespace stm32l4
 } // namespace soc

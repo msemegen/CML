@@ -16,6 +16,7 @@
 
 // soc
 #include <soc/stm32l4/peripherals/GPIO.hpp>
+#include <soc/stm32l4/rcc.hpp>
 
 namespace soc {
 namespace stm32l4 {
@@ -48,7 +49,6 @@ public:
         crc_error   = 0x2u,
         frame_error = 0x4u,
         mode_fault  = 0x8u,
-        unknown     = 0x10u
     };
 
     struct Frame_format
@@ -68,64 +68,36 @@ public:
             _14 = 0xD00u,
             _15 = 0xE00u,
             _16 = 0xF00u,
-            unknown
         };
 
         enum class Bit_significance : uint32_t
         {
             most  = 0x0u,
             least = SPI_CR1_LSBFIRST,
-            unknown
         };
 
         enum class Polarity : uint32_t
         {
-            high    = SPI_CR1_CPOL,
-            low     = 0x0u,
-            unknown = 0xFF
+            low  = 0x0u,
+            high = SPI_CR1_CPOL
         };
 
         enum class Phase : uint32_t
         {
             first_edge  = 0x0u,
             second_edge = SPI_CR1_CPHA,
-            unknown     = 0xFF
         };
 
-        Polarity polarity                 = Polarity::unknown;
-        Phase phase                       = Phase::unknown;
-        Word_length word_length           = Word_length::unknown;
-        Bit_significance bit_significance = Bit_significance::unknown;
-    };
-
-    struct Clock_source
-    {
-        enum class Type
-        {
-            pclkx,
-            unknown
-        };
-
-        enum class Prescaler : uint32_t
-        {
-            _2   = 0x00u,
-            _4   = 0x08u,
-            _8   = 0x10u,
-            _16  = 0x18u,
-            _32  = 0x20u,
-            _64  = 0x28u,
-            _128 = 0x30u,
-            _256 = 0x38u,
-            unknown
-        };
-
-        Type type           = Type::unknown;
-        Prescaler prescaler = Prescaler::unknown;
+        Polarity polarity       = static_cast<Polarity>(static_cast<uint32_t>(Polarity::high) + 1);
+        Phase phase             = static_cast<Phase>(static_cast<uint32_t>(Phase::second_edge) + 1);
+        Word_length word_length = static_cast<Word_length>(static_cast<uint32_t>(Word_length::_16) + 1);
+        Bit_significance bit_significance =
+            static_cast<Bit_significance>(static_cast<uint32_t>(Bit_significance::least) + 1);
     };
 
     struct Result
     {
-        Bus_flag bus_flag             = Bus_flag::unknown;
+        Bus_flag bus_flag             = static_cast<Bus_flag>(static_cast<uint32_t>(Bus_flag::mode_fault) + 1);
         uint32_t data_length_in_words = 0;
     };
 
@@ -182,7 +154,6 @@ public:
     void unregister_bus_status_callback();
 
     Frame_format get_frame_format() const;
-    Clock_source get_clock_source() const;
 
 protected:
     SPI_base(Id a_id)
@@ -223,36 +194,47 @@ class SPI_master : public SPI_base
 public:
     using Id           = SPI_base::Id;
     using Frame_format = SPI_base::Frame_format;
-    using Clock_source = SPI_base::Clock_source;
     using Result       = SPI_base::Result;
 
     struct Config
     {
+        enum class Clock_prescaler : uint32_t
+        {
+            _2   = 0x00u,
+            _4   = 0x08u,
+            _8   = 0x10u,
+            _16  = 0x18u,
+            _32  = 0x20u,
+            _64  = 0x28u,
+            _128 = 0x30u,
+            _256 = 0x38u,
+        };
+
         enum class Wiring : uint32_t
         {
             full_duplex = 0x0000u,
-            half_duplex = SPI_CR1_BIDIMODE,
             simplex     = SPI_CR1_RXONLY,
-            unknown
+            half_duplex = SPI_CR1_BIDIMODE
         };
 
         enum class NSS_management : uint32_t
         {
             hardware,
-            software = SPI_CR1_SSM | SPI_CR1_SSI,
-            unknown
+            software = SPI_CR1_SSM | SPI_CR1_SSI
         };
 
         enum class Crc : uint32_t
         {
-            enable  = SPI_CR1_CRCEN,
             disable = 0x0u,
-            unknown
+            enable  = SPI_CR1_CRCEN
         };
 
-        Wiring wiring                 = Wiring::unknown;
-        NSS_management nss_management = NSS_management::unknown;
-        Crc crc                       = Crc::unknown;
+        Clock_prescaler clock_prescaler =
+            static_cast<Clock_prescaler>(static_cast<uint32_t>(Clock_prescaler::_256) + 1);
+        Wiring wiring = static_cast<Wiring>(static_cast<uint32_t>(Wiring::half_duplex) + 1);
+        NSS_management nss_management =
+            static_cast<NSS_management>(static_cast<uint32_t>(NSS_management::software) + 1);
+        Crc crc = static_cast<Crc>(static_cast<uint32_t>(Crc::enable) + 1);
     };
 
 public:
@@ -266,10 +248,7 @@ public:
         this->disable();
     }
 
-    void enable(const Config& a_config,
-                const Frame_format& a_frame_format,
-                const Clock_source& a_clock_source,
-                uint32_t a_irq_priority);
+    void enable(const Config& a_config, const Frame_format& a_frame_format, uint32_t a_irq_priority);
     void disable();
 
     template<typename Data_t> Result transmit_polling(const Data_t& a_data, GPIO::Out::Pin* a_p_nss = nullptr)
@@ -347,27 +326,38 @@ class SPI_slave : public SPI_base
 public:
     using Id           = SPI_base::Id;
     using Frame_format = SPI_base::Frame_format;
-    using Clock_source = SPI_base::Clock_source;
 
     struct Config
     {
+        enum class Clock_prescaler : uint32_t
+        {
+            _2   = 0x00u,
+            _4   = 0x08u,
+            _8   = 0x10u,
+            _16  = 0x18u,
+            _32  = 0x20u,
+            _64  = 0x28u,
+            _128 = 0x30u,
+            _256 = 0x38u,
+        };
+
         enum class Wiring : uint32_t
         {
             full_duplex = 0x0000u,
-            half_duplex = SPI_CR1_BIDIMODE,
             simplex     = SPI_CR1_RXONLY,
-            unknown
+            half_duplex = SPI_CR1_BIDIMODE
         };
 
         enum class Crc : uint32_t
         {
-            enable  = SPI_CR1_CRCEN,
             disable = 0x0u,
-            unknown
+            enable  = SPI_CR1_CRCEN,
         };
 
-        Wiring wiring = Wiring::unknown;
-        Crc crc       = Crc::unknown;
+        Clock_prescaler clock_prescaler =
+            static_cast<Clock_prescaler>(static_cast<uint32_t>(Clock_prescaler::_256) + 1);
+        Wiring wiring = static_cast<Wiring>(static_cast<uint32_t>(Wiring::half_duplex) + 1);
+        Crc crc       = static_cast<Crc>(static_cast<uint32_t>(Crc::enable) + 1);
     };
 
 public:
@@ -381,10 +371,7 @@ public:
         this->disable();
     }
 
-    void enable(const Config& a_config,
-                const Frame_format& a_frame_format,
-                const Clock_source& a_clock_source,
-                uint32_t a_irq_priority);
+    void enable(const Config& a_config, const Frame_format& a_frame_format, uint32_t a_irq_priority);
     void disable();
 
     template<typename Data_t> Result transmit_polling(const Data_t& a_data)
@@ -444,5 +431,15 @@ public:
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+template<> struct rcc<peripherals::SPI_base>
+{
+    static void enable(peripherals::SPI_base::Id a_id, bool a_enable_in_lp);
+    static void disable(peripherals::SPI_base::Id a_id);
+};
 } // namespace stm32l4
 } // namespace soc

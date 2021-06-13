@@ -13,6 +13,9 @@
 // externals
 #include <stm32l4xx.h>
 
+// soc
+#include <soc/stm32l4/rcc.hpp>
+
 // cml
 #include <cml/Non_copyable.hpp>
 
@@ -65,7 +68,6 @@ public:
             _16,
             temperature_sensor,
             battery_voltage,
-            unknown
         };
 
         enum class Sampling_time : uint32_t
@@ -78,37 +80,40 @@ public:
             _92_5_clock_cycles  = 0x5u,
             _247_5_clock_cycles = 0x6u,
             _640_5_clock_cycles = 0x7u,
-            unknown
         };
 
-        Id id                       = Id::unknown;
-        Sampling_time sampling_time = Sampling_time::unknown;
+        Id id = static_cast<Id>(static_cast<uint32_t>(Id::battery_voltage) + 1);
+        Sampling_time sampling_time =
+            static_cast<Sampling_time>(static_cast<uint32_t>(Sampling_time::_640_5_clock_cycles) + 1);
     };
 
     struct Synchronous_clock
     {
+        enum class Source
+        {
+            pclk,
+        };
+
         enum class Divider : uint32_t
         {
             _1 = ADC_CCR_CKMODE_0,
             _2 = ADC_CCR_CKMODE_1,
             _4 = ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1,
-            unknown
         };
 
-        enum class Source
-        {
-            pclk,
-            unknown
-        };
-
-        Source source   = Source::unknown;
-        Divider divider = Divider::unknown;
+        Source source   = static_cast<Source>(static_cast<uint32_t>(Source::pclk) + 1);
+        Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_4) + 1);
     };
 
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
     struct Asynchronous_clock
     {
+        enum class Source
+        {
+            pllsai,
+        };
+
         enum class Divider : uint32_t
         {
             _1   = 0x0u,
@@ -123,17 +128,10 @@ public:
             _64  = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_3,
             _128 = ADC_CCR_PRESC_1 | ADC_CCR_PRESC_3,
             _256 = ADC_CCR_PRESC_0 | ADC_CCR_PRESC_1 | ADC_CCR_PRESC_3,
-            unknown
         };
 
-        enum class Source
-        {
-            pllsai,
-            unknown
-        };
-
-        Source source   = Source::unknown;
-        Divider divider = Divider::unknown;
+        Source source   = static_cast<Source>(static_cast<uint32_t>(Source::pllsai) + 1);
+        Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_256) + 1);
     };
 #endif
 
@@ -198,6 +196,11 @@ public:
         return this->id;
     }
 
+#if defined(STM32L412xx) || defined(STM32L422xx)
+    static void enable_in_low_power_mode();
+    static void disable_in_low_power_mode();
+#endif
+
 private:
     bool enable(Resolution a_resolution, uint32_t a_start, uint32_t a_irq_priority, uint32_t a_timeout);
 
@@ -213,5 +216,20 @@ private:
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+template<> struct rcc<peripherals::ADC>
+{
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
+    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
+    defined(STM32L452xx) || defined(STM32L462xx)
+#endif
+    static void enable(peripherals::ADC::Id a_id);
+    static void disable(peripherals::ADC::Id a_id);
+    static void enable_in_lp();
+};
 } // namespace stm32l4
 } // namespace soc

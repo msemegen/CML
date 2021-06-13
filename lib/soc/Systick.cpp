@@ -56,6 +56,8 @@ void Systick::enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_p
     SysTick->LOAD = a_start_value;
     SysTick->VAL  = 0;
     SysTick->CTRL = static_cast<uint32_t>(a_prescaler) | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
+
+    p_systick = this;
 }
 
 void Systick::disable()

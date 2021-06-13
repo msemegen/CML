@@ -135,7 +135,8 @@ bool ADC::enable(Resolution a_resolution,
                  uint32_t a_irq_priority,
                  uint32_t a_timeout)
 {
-    cml_assert(mcu::Pll_config::Source::unknown != mcu::get_pll_config().source &&
+    cml_assert(static_cast<mcu::Pll_config::Source>(static_cast<uint32_t>(mcu::Pll_config::Source::hsi) + 1) !=
+                   mcu::get_pll_config().source &&
                mcu::Pll_config::Output::enabled == mcu::get_pll_config().pllsai1.r.output);
 
     uint32_t start = system_timer::get();
@@ -147,7 +148,6 @@ bool ADC::enable(Resolution a_resolution,
 #else
     bit_flag::clear(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
     bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<uint32_t>(a_clock.divider));
-
 #endif
     return this->enable(a_resolution, start, a_irq_priority, a_timeout);
 }
@@ -155,7 +155,8 @@ bool ADC::enable(Resolution a_resolution,
 
 bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32_t a_irq_priority, uint32_t a_timeout)
 {
-    cml_assert(Synchronous_clock::Divider::unknown != a_clock.divider);
+    cml_assert(static_cast<Synchronous_clock::Divider>(static_cast<uint32_t>(Synchronous_clock::Divider::_4) + 1) !=
+               a_clock.divider);
     cml_assert(Synchronous_clock::Divider::_1 == a_clock.divider ?
                    mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
                    true);
@@ -203,25 +204,29 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_c
 
     for (uint32_t i = 0; i < a_channels_count && i < 4; i++)
     {
-        cml_assert(Channel::Id::unknown != a_p_channels[i].id);
+        cml_assert(static_cast<Channel::Id>(static_cast<uint32_t>(Channel::Id::battery_voltage) + 1) !=
+                   a_p_channels[i].id);
         bit_flag::set(&(get_adc_ptr(this->id)->SQR1), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 4; i < a_channels_count && i < 9; i++)
     {
-        cml_assert(Channel::Id::unknown != a_p_channels[i].id);
+        cml_assert(static_cast<Channel::Id>(static_cast<uint32_t>(Channel::Id::battery_voltage) + 1) !=
+                   a_p_channels[i].id);
         bit_flag::set(&(get_adc_ptr(this->id)->SQR2), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 9; i < a_channels_count && i < 14; i++)
     {
-        cml_assert(Channel::Id::unknown != a_p_channels[i].id);
+        cml_assert(static_cast<Channel::Id>(static_cast<uint32_t>(Channel::Id::battery_voltage) + 1) !=
+                   a_p_channels[i].id);
         bit_flag::set(&(get_adc_ptr(this->id)->SQR3), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 14; i < a_channels_count && i < 16; i++)
     {
-        cml_assert(Channel::Id::unknown != a_p_channels[i].id);
+        cml_assert(static_cast<Channel::Id>(static_cast<uint32_t>(Channel::Id::battery_voltage) + 1) !=
+                   a_p_channels[i].id);
         bit_flag::set(&(get_adc_ptr(this->id)->SQR4), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
@@ -393,6 +398,18 @@ void ADC::set_resolution(Resolution a_resolution)
         bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_ADSTART);
     }
 }
+
+#if defined(STM32L412xx) || defined(STM32L422xx)
+void ADC::enable_in_low_power_mode()
+{
+    bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_ADCSMEN);
+}
+
+void ADC::disable_in_low_power_mode()
+{
+    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_ADCSMEN);
+}
+#endif
 
 bool ADC::enable(Resolution a_resolution, uint32_t a_start, uint32_t a_irq_priority, uint32_t a_timeout)
 {

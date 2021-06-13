@@ -40,8 +40,6 @@ CRC32::~CRC32()
 
 void CRC32::enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse)
 {
-    bit_flag::set(&(RCC->AHB1ENR), RCC_AHB1ENR_CRCEN);
-
     bit_flag::clear(&(CRC->CR), CRC_CR_POLYSIZE);
     bit_flag::set(&(CRC->CR), static_cast<uint32_t>(a_in_reverse));
     bit_flag::set(&(CRC->CR), static_cast<uint32_t>(a_out_reverse));
@@ -70,6 +68,30 @@ uint32_t CRC32::calculate(const uint8_t* a_p_data, uint32_t a_data_size)
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+
+using namespace soc::stm32l4::peripherals;
+
+void rcc<CRC32>::enable(bool a_enable_in_lp)
+{
+    bit_flag::set(&(RCC->AHB1ENR), RCC_AHB1ENR_CRCEN);
+
+    if (true == a_enable_in_lp)
+    {
+        bit_flag::set(&(RCC->AHB1SMENR), RCC_AHB1SMENR_CRCSMEN);
+    }
+}
+
+void rcc<CRC32>::disable()
+{
+    bit_flag::clear(&(RCC->AHB1ENR), RCC_AHB1ENR_CRCEN);
+    bit_flag::clear(&(RCC->AHB1SMENR), RCC_AHB1SMENR_CRCSMEN);
+}
+
 } // namespace stm32l4
 } // namespace soc
 

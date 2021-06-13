@@ -118,7 +118,6 @@ public:
         {
             msi = RCC_PLLCFGR_PLLSRC_MSI,
             hsi = RCC_PLLCFGR_PLLSRC_HSI,
-            unknown
         };
 
         enum class M : uint32_t
@@ -131,14 +130,12 @@ public:
             _6 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_0,
             _7 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1,
             _8 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
-            uknown
         };
 
         enum class Output : uint32_t
         {
             disabled = 0x0u,
             enabled  = 0x1u,
-            unknown
         };
 
         struct PLL
@@ -151,11 +148,10 @@ public:
                     _4 = RCC_PLLCFGR_PLLR_0,
                     _6 = RCC_PLLCFGR_PLLR_1,
                     _8 = RCC_PLLCFGR_PLLR_0 | RCC_PLLCFGR_PLLR_1,
-                    unknown
                 };
 
-                Divider divider = Divider::unknown;
-                Output output   = Output::unknown;
+                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_8) + 1);
+                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
             };
 
             struct Q
@@ -166,11 +162,10 @@ public:
                     _4 = RCC_PLLCFGR_PLLQ_0 >> RCC_PLLCFGR_PLLQ_Pos,
                     _6 = RCC_PLLCFGR_PLLQ_1 >> RCC_PLLCFGR_PLLQ_Pos,
                     _8 = (RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1) >> RCC_PLLCFGR_PLLQ_Pos,
-                    unknown
                 };
 
-                Divider divider = Divider::unknown;
-                Output output   = Output::unknown;
+                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_8) + 1);
+                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
             };
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
@@ -180,21 +175,18 @@ public:
                 {
                     _7  = 0u,
                     _17 = RCC_PLLCFGR_PLLP_Msk,
-                    unknown
                 };
 
-                Divider divider = Divider::unknown;
-                Output output   = Output::unknown;
+                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_17) + 1);
+                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
             };
 #endif
-
             uint32_t n = 0;
 
             R r;
             Q q;
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-
             P p;
 #endif
         };
@@ -211,11 +203,10 @@ public:
                     _4 = RCC_PLLSAI1CFGR_PLLSAI1R_0,
                     _6 = RCC_PLLSAI1CFGR_PLLSAI1R_1,
                     _8 = RCC_PLLSAI1CFGR_PLLSAI1R,
-                    unknown
                 };
 
-                Divider divider = Divider::unknown;
-                Output output   = Output::unknown;
+                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_8) + 1);
+                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
             };
 
             struct Q
@@ -226,11 +217,10 @@ public:
                     _4 = RCC_PLLSAI1CFGR_PLLSAI1Q_0,
                     _6 = RCC_PLLSAI1CFGR_PLLSAI1Q_1,
                     _8 = RCC_PLLSAI1CFGR_PLLSAI1Q_0 | RCC_PLLSAI1CFGR_PLLSAI1Q_1,
-                    unknown
                 };
 
-                Divider divider = Divider::unknown;
-                Output output   = Output::unknown;
+                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_8) + 1);
+                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
             };
 
             struct P
@@ -239,11 +229,10 @@ public:
                 {
                     _7  = 0u,
                     _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk,
-                    unknown
                 };
 
-                Divider divider = Divider::unknown;
-                Output output   = Output::unknown;
+                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_17) + 1);
+                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
             };
 
             uint32_t n = 0;
@@ -254,8 +243,8 @@ public:
         };
 #endif
 
-        Source source = Source::unknown;
-        M m           = M::uknown;
+        Source source = static_cast<Source>(static_cast<uint32_t>(Source::hsi) + 1);
+        M m           = static_cast<M>(static_cast<uint32_t>(M::_8) + 1);
 
         PLL pll;
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
@@ -291,7 +280,6 @@ public:
             _128 = RCC_CFGR_HPRE_DIV128,
             _256 = RCC_CFGR_HPRE_DIV256,
             _512 = RCC_CFGR_HPRE_DIV512,
-            unknown
         };
 
         enum class APB1 : uint32_t
@@ -301,7 +289,6 @@ public:
             _4  = RCC_CFGR_PPRE1_DIV4,
             _8  = RCC_CFGR_PPRE1_DIV8,
             _16 = RCC_CFGR_PPRE1_DIV16,
-            unknown
         };
 
         enum class APB2 : uint32_t
@@ -311,12 +298,11 @@ public:
             _4  = RCC_CFGR_PPRE2_DIV4,
             _8  = RCC_CFGR_PPRE2_DIV8,
             _16 = RCC_CFGR_PPRE2_DIV16,
-            unknown
         };
 
-        AHB ahb   = AHB::unknown;
-        APB1 apb1 = APB1::unknown;
-        APB2 apb2 = APB2::unknown;
+        AHB ahb   = static_cast<AHB>(static_cast<uint32_t>(AHB::_512) + 1);
+        APB1 apb1 = static_cast<APB1>(static_cast<uint32_t>(APB1::_16) + 1);
+        APB2 apb2 = static_cast<APB2>(static_cast<uint32_t>(APB2::_16) + 1);
     };
 
     struct NVIC_config
@@ -328,10 +314,9 @@ public:
             _2 = 0x5,
             _3 = 0x4,
             _4 = 0x3,
-            unknown
         };
 
-        Grouping grouping      = Grouping::unknown;
+        Grouping grouping      = static_cast<Grouping>(static_cast<uint32_t>(Grouping::_4) + 1);
         uint32_t base_priority = 0;
     };
 
