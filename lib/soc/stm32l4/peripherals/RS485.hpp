@@ -83,10 +83,8 @@ public:
         this->disable();
     }
 
-    bool enable(const Config& a_config,
-                GPIO::Out::Pin* a_p_flow_control_pin,
-                uint32_t a_irq_priority,
-                uint32_t a_timeout);
+    bool
+    enable(const Config& a_config, GPIO::Out::Pin* a_p_flow_control_pin, uint32_t a_irq_priority, uint32_t a_timeout);
 
     void disable();
 

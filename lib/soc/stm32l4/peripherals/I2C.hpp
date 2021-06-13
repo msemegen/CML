@@ -92,8 +92,8 @@ constexpr I2C_base::Bus_flag operator|=(I2C_base::Bus_flag& a_f1, I2C_base::Bus_
 class I2C_master : public I2C_base
 {
 public:
-    using Id           = I2C_base::Id;
-    using Result       = I2C_base::Result;
+    using Id     = I2C_base::Id;
+    using Result = I2C_base::Result;
 
     struct Transmit_callback
     {
@@ -236,8 +236,8 @@ private:
 class I2C_slave : public I2C_base
 {
 public:
-    using Id           = I2C_base::Id;
-    using Result       = I2C_base::Result;
+    using Id     = I2C_base::Id;
+    using Result = I2C_base::Result;
 
     struct Transmit_callback
     {

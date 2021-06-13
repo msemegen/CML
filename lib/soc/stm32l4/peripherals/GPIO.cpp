@@ -668,7 +668,7 @@ void rcc<GPIO>::enable(GPIO::Id a_id, bool a_enable_in_lp)
     }
 }
 
-void rcc<GPIO>::disable(GPIO::Id a_id) 
+void rcc<GPIO>::disable(GPIO::Id a_id)
 {
     bit_flag::clear(&(RCC->AHB2ENR), 0x1ul << (RCC_AHB2ENR_GPIOAEN_Pos + static_cast<uint32_t>(a_id)));
     bit::clear(&(RCC->AHB2SMENR), static_cast<uint32_t>(a_id));
