@@ -1527,38 +1527,70 @@ using namespace soc::stm32l4::peripherals;
 
 void rcc<SPI_base>::enable(SPI_base::Id a_id, bool a_enable_in_lp)
 {
-    if (SPI_base::Id::_1 == a_id)
+    switch (a_id)
     {
-        bit::set(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN_Pos);
-    }
-    else
-    {
-        bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN_Pos + (static_cast<uint32_t>(a_id) - 1));
-    }
+        case SPI_base::Id::_1: {
+            bit::set(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN_Pos);
 
-    if (true == a_enable_in_lp)
-    {
-        if (SPI_base::Id::_1 == a_id)
-        {
-            bit::set(&(RCC->APB2SMENR), RCC_APB2SMENR_SPI1SMEN_Pos);
+            if (true == a_enable_in_lp)
+            {
+                bit::set(&(RCC->APB2SMENR), RCC_APB2SMENR_SPI1SMEN_Pos);
+            }
         }
-        else
-        {
-            bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI3SMEN_Pos + (static_cast<uint32_t>(a_id) - 1));
+        break;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case SPI_base::Id::_2: {
+            bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN_Pos);
+
+            if (true == a_enable_in_lp)
+            {
+                bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI2SMEN_Pos);
+            }
         }
+        break;
+#endif
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case SPI_base::Id::_3: {
+            bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN_Pos);
+
+            if (true == a_enable_in_lp)
+            {
+                bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI3SMEN_Pos);
+            }
+        }
+        break;
+#endif
     }
 }
 void rcc<SPI_base>::disable(SPI_base::Id a_id)
 {
-    if (SPI_base::Id::_1 == a_id)
+    switch (a_id)
     {
-        bit::clear(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN_Pos);
-        bit::clear(&(RCC->APB2SMENR), RCC_APB2SMENR_SPI1SMEN_Pos);
-    }
-    else
-    {
-        bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN_Pos + (static_cast<uint32_t>(a_id) - 1));
-        bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI3SMEN_Pos + (static_cast<uint32_t>(a_id) - 1));
+        case SPI_base::Id::_1: {
+            bit::clear(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN_Pos);
+            bit::clear(&(RCC->APB2SMENR), RCC_APB2SMENR_SPI1SMEN_Pos);
+        }
+        break;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case SPI_base::Id::_2: {
+            bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN_Pos);
+            bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI2SMEN_Pos);
+        }
+        break;
+#endif
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case SPI_base::Id::_3: {
+            bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN_Pos);
+            bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI3SMEN_Pos);
+        }
+        break;
+#endif
     }
 }
 

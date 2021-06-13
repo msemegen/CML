@@ -45,7 +45,7 @@ Controller controllers[] = {
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
     { GPIOD },
 #else
-    { nullptr, nullptr, nullptr },
+    { nullptr },
 #endif
 #if defined(STM32L431xx) || defined(STM32L433xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
     defined(STM32L452xx) || defined(STM32L462xx)

@@ -128,61 +128,54 @@ void adc_interrupt_handler(ADC* a_p_this)
     }
 }
 
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-bool ADC::enable(Resolution a_resolution,
-                 const Asynchronous_clock& a_clock,
-                 uint32_t a_irq_priority,
-                 uint32_t a_timeout)
+bool ADC::enable(Resolution a_resolution, uint32_t a_irq_priority, uint32_t a_timeout)
 {
-    cml_assert(static_cast<mcu::Pll_config::Source>(static_cast<uint32_t>(mcu::Pll_config::Source::hsi) + 1) !=
-                   mcu::get_pll_config().source &&
-               mcu::Pll_config::Output::enabled == mcu::get_pll_config().pllsai1.r.output);
-
     uint32_t start = system_timer::get();
 
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
 #if defined(STM32L412xx) || defined(STM32L422xx)
-    bit_flag::clear(&(ADC12_COMMON->CCR), ADC_CCR_CKMODE);
-    bit_flag::set(&(ADC12_COMMON->CCR), ADC_CCR_PRESC, static_cast<uint32_t>(a_clock.divider));
+    NVIC_SetPriority(ADC1_2_IRQn, a_irq_priority);
+    NVIC_EnableIRQ(ADC1_2_IRQn);
 #else
-    bit_flag::clear(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE);
-    bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_PRESC, static_cast<uint32_t>(a_clock.divider));
-#endif
-    return this->enable(a_resolution, start, a_irq_priority, a_timeout);
-}
+    NVIC_SetPriority(ADC1_IRQn, a_irq_priority);
+    NVIC_EnableIRQ(ADC1_IRQn);
 #endif
 
-bool ADC::enable(Resolution a_resolution, const Synchronous_clock& a_clock, uint32_t a_irq_priority, uint32_t a_timeout)
-{
-    cml_assert(static_cast<Synchronous_clock::Divider>(static_cast<uint32_t>(Synchronous_clock::Divider::_4) + 1) !=
-               a_clock.divider);
-    cml_assert(Synchronous_clock::Divider::_1 == a_clock.divider ?
-                   mcu::Bus_prescalers::AHB::_1 == mcu::get_bus_prescalers().ahb :
-                   true);
+    bit_flag::clear(&(get_adc_ptr(this->id)->CR), ADC_CR_DEEPPWD);
+    bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_ADVREGEN);
+    delay::us(21u);
 
-    uint32_t start = system_timer::get();
+    bit_flag::clear(&(get_adc_ptr(this->id)->CR), ADC_CR_ADCALDIF);
+    bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_ADCAL);
 
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
-#if defined(STM32L412xx) || defined(STM32L422xx)
-    bit_flag::set(&(ADC12_COMMON->CCR), ADC_CCR_CKMODE, static_cast<uint32_t>(a_clock.divider));
-#else
-    bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE, static_cast<uint32_t>(a_clock.divider));
-#endif
-    return this->enable(a_resolution, start, a_irq_priority, a_timeout);
+    bool ret = wait_until::all_bits(&(get_adc_ptr(this->id)->CR), ADC_CR_ADCAL, true, start, a_timeout);
+
+    if (true == ret)
+    {
+        bit_flag::set(&(get_adc_ptr(this->id)->CFGR), static_cast<uint32_t>(a_resolution));
+        bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_ADEN);
+
+        ret = wait_until::all_bits(
+            &(get_adc_ptr(this->id)->ISR), ADC_ISR_ADRDY, false, start, a_timeout - (system_timer::get() - start));
+    }
+
+    if (true == ret)
+    {
+        bit_flag::set(&(get_adc_ptr(this->id)->ISR), ADC_ISR_ADRDY);
+        controllers[static_cast<uint32_t>(this->id)].p_adc = this;
+    }
+
+    if (false == ret)
+    {
+        this->disable();
+    }
+
+    return ret;
 }
 
 void ADC::disable()
 {
     get_adc_ptr(this->id)->CR = 0;
-#if defined(STM32L412xx) || defined(STM32L422xx)
-    ADC12_COMMON->CCR = 0;
-#else
-    ADC1_COMMON->CCR = 0;
-#endif
-
     bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_DEEPPWD);
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
 
 #if defined(STM32L412xx) || defined(STM32L422xx)
     NVIC_DisableIRQ(ADC1_2_IRQn);
@@ -398,61 +391,6 @@ void ADC::set_resolution(Resolution a_resolution)
         bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_ADSTART);
     }
 }
-
-#if defined(STM32L412xx) || defined(STM32L422xx)
-void ADC::enable_in_low_power_mode()
-{
-    bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_ADCSMEN);
-}
-
-void ADC::disable_in_low_power_mode()
-{
-    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_ADCSMEN);
-}
-#endif
-
-bool ADC::enable(Resolution a_resolution, uint32_t a_start, uint32_t a_irq_priority, uint32_t a_timeout)
-{
-#if defined(STM32L412xx) || defined(STM32L422xx)
-    NVIC_SetPriority(ADC1_2_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(ADC1_2_IRQn);
-#else
-    NVIC_SetPriority(ADC1_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(ADC1_IRQn);
-#endif
-
-    bit_flag::clear(&(get_adc_ptr(this->id)->CR), ADC_CR_DEEPPWD);
-    bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_ADVREGEN);
-    delay::us(21u);
-
-    bit_flag::clear(&(get_adc_ptr(this->id)->CR), ADC_CR_ADCALDIF);
-    bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_ADCAL);
-
-    bool ret = wait_until::all_bits(&(get_adc_ptr(this->id)->CR), ADC_CR_ADCAL, true, a_start, a_timeout);
-
-    if (true == ret)
-    {
-        bit_flag::set(&(get_adc_ptr(this->id)->CFGR), static_cast<uint32_t>(a_resolution));
-        bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_ADEN);
-
-        ret = wait_until::all_bits(
-            &(get_adc_ptr(this->id)->ISR), ADC_ISR_ADRDY, false, a_start, a_timeout - (system_timer::get() - a_start));
-    }
-
-    if (true == ret)
-    {
-        bit_flag::set(&(get_adc_ptr(this->id)->ISR), ADC_ISR_ADRDY);
-        controllers[static_cast<uint32_t>(this->id)].p_adc = this;
-    }
-
-    if (false == ret)
-    {
-        this->disable();
-    }
-
-    return ret;
-}
-
 #endif
 
 } // namespace peripherals
@@ -464,9 +402,42 @@ namespace stm32l4 {
 
 using namespace soc::stm32l4::peripherals;
 
-void rcc<ADC>::enable(ADC::Id a_id) {}
-void rcc<ADC>::disable(peripherals::ADC::Id a_id) {}
-void rcc<ADC>::enable_in_lp() {}
+void rcc<ADC>::enable(Clock_source a_source, Prescaler a_prescaler, bool a_enable_in_lp)
+{
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+
+    switch (a_source)
+    {
+        case Clock_source::pclk: {
+            cml_assert(a_prescaler <= Prescaler::_4);
+#if defined(STM32L412xx) || defined(STM32L422xx)
+            bit_flag::set(&(ADC12_COMMON->CCR), ADC_CCR_CKMODE_Msk, static_cast<uint32_t>(a_prescaler) << 16ul);
+#else
+            bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE_Msk, static_cast<uint32_t>(a_prescaler) << 16ul);
+#endif
+        }
+        break;
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case Clock_source::pllsai: {
+            bit_flag::clear(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE_Msk);
+            bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_PRESC_Msk, static_cast<uint32_t>(a_prescaler) << 18ul);
+        }
+        break;
+#endif
+    }
+
+    if (true == a_enable_in_lp)
+    {
+        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_ADCSMEN);
+    }
+}
+
+void rcc<ADC>::disable()
+{
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
+    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_ADCSMEN);
+}
 
 } // namespace stm32l4
 } // namespace soc
