@@ -459,4 +459,16 @@ bool ADC::enable(Resolution a_resolution, uint32_t a_start, uint32_t a_irq_prior
 } // namespace stm32l4
 } // namespace soc
 
+namespace soc {
+namespace stm32l4 {
+
+using namespace soc::stm32l4::peripherals;
+
+void rcc<ADC>::enable(ADC::Id a_id) {}
+void rcc<ADC>::disable(peripherals::ADC::Id a_id) {}
+void rcc<ADC>::enable_in_lp() {}
+
+} // namespace stm32l4
+} // namespace soc
+
 #endif // STM32L4
