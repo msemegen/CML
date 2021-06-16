@@ -13,8 +13,6 @@
 #include <cml/hal/system_timer.hpp>
 #include <cml/utils/delay.hpp>
 
-#include <cml/hal/peripherals/Basic_timer.hpp>
-
 namespace {
 
 using namespace cml::hal;
@@ -59,17 +57,9 @@ int main()
     gpio_port_a.p_out->enable(5u, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
     led_pin.set_level(GPIO::Level::low);
 
-    rcc<Basic_timer>::enable(Basic_timer::Id::_6, true);
-    Basic_timer timer(Basic_timer::Id::_6);
-
-    timer.enable({ 10000u - 1u, (200u) - 1 }, 0x1u);
-    timer.start();
-
     while (true)
     {
-        while (false == timer.is_overload_event())
-            ;
         led_pin.toggle_level();
-        //delay::ms(500u);
+        delay::ms(500u);
     }
 }
