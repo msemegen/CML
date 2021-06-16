@@ -38,77 +38,16 @@ using namespace soc::stm32l4::peripherals;
 
 struct Controller
 {
-    using Enable_function  = void (*)(USART::Clock::Source a_clock_source, uint32_t a_irq_priority);
-    using Disable_function = void (*)();
-
     USART_TypeDef* p_registers = nullptr;
     USART* p_usart_handle      = nullptr;
     RS485* p_rs485_handle      = nullptr;
-
-    Enable_function enable   = nullptr;
-    Disable_function disable = nullptr;
 };
 
-void usart_1_enable(USART::Clock::Source a_clock_source, uint32_t a_irq_priority)
-{
-    cml_assert(a_clock_source != USART::Clock::Source::unknown);
-
-    constexpr uint32_t clock_source_lut[] = { 0, RCC_CCIPR_USART1SEL_0, RCC_CCIPR_USART1SEL_1 };
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART1SEL, clock_source_lut[static_cast<uint32_t>(a_clock_source)]);
-    bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN);
-
-    NVIC_SetPriority(USART1_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(USART1_IRQn);
-}
-
-void usart_1_disable()
-{
-    bit_flag::clear(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN);
-    NVIC_DisableIRQ(USART1_IRQn);
-}
-
-void usart_2_enable(USART::Clock::Source a_clock_source, uint32_t a_irq_priority)
-{
-    cml_assert(a_clock_source != USART::Clock::Source::unknown);
-
-    constexpr uint32_t clock_source_lut[] = { 0, RCC_CCIPR_USART2SEL_0, RCC_CCIPR_USART2SEL_1 };
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART2SEL, clock_source_lut[static_cast<uint32_t>(a_clock_source)]);
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN);
-
-    NVIC_SetPriority(USART2_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(USART2_IRQn);
-}
-
-void usart_2_disable()
-{
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN);
-    NVIC_DisableIRQ(USART2_IRQn);
-}
-
+Controller controllers[] = { { USART1, nullptr, nullptr },
+                             { USART2, nullptr, nullptr },
 #if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-void usart_3_enable(USART::Clock::Source a_clock_source, uint32_t a_irq_priority)
-{
-    constexpr uint32_t clock_source_lut[] = { 0, RCC_CCIPR_USART3SEL_0, RCC_CCIPR_USART3SEL_1 };
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART3SEL, clock_source_lut[static_cast<int32_t>(a_clock_source)]);
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_USART3EN);
-
-    NVIC_SetPriority(USART3_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(USART3_IRQn);
-}
-
-void usart_3_disable()
-{
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_USART3EN);
-    NVIC_DisableIRQ(USART3_IRQn);
-}
-#endif
-
-Controller controllers[] = { { USART1, nullptr, nullptr, usart_1_enable, usart_1_disable },
-                             { USART2, nullptr, nullptr, usart_2_enable, usart_2_disable },
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-                             { USART3, nullptr, nullptr, usart_3_enable, usart_3_disable }
+                             { USART3, nullptr, nullptr }
 #endif
 };
 
@@ -323,20 +262,21 @@ void rs485_interrupt_handler(RS485* a_p_this)
 
 bool USART::enable(const Config& a_config,
                    const Frame_format& a_frame_format,
-                   const Clock& a_clock,
                    uint32_t a_irq_priority,
                    uint32_t a_timeout_ms)
 {
     cml_assert(0 != a_config.baud_rate);
-    cml_assert(Flow_control_flag::unknown != a_config.flow_control);
-    cml_assert(Stop_bits::unknown != a_config.stop_bits);
-    cml_assert(Sampling_method::unknown != a_config.sampling_method);
+    cml_assert(0 != a_config.clock_freq_Hz);
 
-    cml_assert(Parity::unknown != a_frame_format.parity);
-    cml_assert(Word_length::unknown != a_frame_format.word_length);
+    cml_assert(static_cast<Flow_control_flag>(static_cast<uint32_t>(Flow_control_flag::clear_to_send) + 1) !=
+               a_config.flow_control);
+    cml_assert(static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1) != a_config.stop_bits);
+    cml_assert(static_cast<Sampling_method>(static_cast<uint32_t>(Sampling_method::one_sample_bit) + 1) !=
+               a_config.sampling_method);
 
-    cml_assert(Clock::Source::unknown != a_clock.source);
-    cml_assert(0 != a_clock.frequency_hz);
+    cml_assert(static_cast<Parity>(static_cast<uint32_t>(Parity::odd) + 1) != a_frame_format.parity);
+    cml_assert(static_cast<Word_length>(static_cast<uint32_t>(Word_length::_7_bit) + 1) != a_frame_format.word_length);
+
     cml_assert(a_timeout_ms > 0);
 
     cml_assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle &&
@@ -346,23 +286,17 @@ bool USART::enable(const Config& a_config,
 
     controllers[static_cast<uint32_t>(this->id)].p_usart_handle = this;
     controllers[static_cast<uint32_t>(this->id)].p_rs485_handle = nullptr;
-    controllers[static_cast<uint32_t>(this->id)].enable(a_clock.source, a_irq_priority);
 
     switch (a_config.oversampling)
     {
         case Oversampling::_16: {
-            get_usart_ptr(this->id)->BRR = a_clock.frequency_hz / a_config.baud_rate;
+            get_usart_ptr(this->id)->BRR = a_config.clock_freq_Hz / a_config.baud_rate;
         }
         break;
 
         case Oversampling::_8: {
-            const uint32_t usartdiv      = 2 * a_clock.frequency_hz / a_config.baud_rate;
+            const uint32_t usartdiv      = 2 * a_config.clock_freq_Hz / a_config.baud_rate;
             get_usart_ptr(this->id)->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
-        }
-        break;
-
-        case Oversampling::unknown: {
-            cml_assert(a_config.oversampling != Oversampling::unknown);
         }
         break;
     }
@@ -375,23 +309,31 @@ bool USART::enable(const Config& a_config,
                                    static_cast<uint32_t>(a_frame_format.parity) |
                                    static_cast<uint32_t>(a_frame_format.word_length) | USART_CR1_UE;
 
-    this->baud_rate    = a_config.baud_rate;
-    this->clock        = a_clock;
-    this->frame_format = a_frame_format;
+    this->baud_rate     = a_config.baud_rate;
+    this->clock_freq_Hz = a_config.clock_freq_Hz;
+    this->frame_format  = a_frame_format;
 
     uint32_t wait_flag = (true == bit_flag::is(get_usart_ptr(this->id)->CR1, USART_CR1_RE) ? USART_ISR_REACK : 0) |
                          (true == bit_flag::is(get_usart_ptr(this->id)->CR1, USART_CR1_TE) ? USART_ISR_TEACK : 0);
+
+    NVIC_SetPriority(
+        static_cast<IRQn_Type>(static_cast<uint32_t>(IRQn_Type::USART1_IRQn) + static_cast<uint32_t>(this->id)),
+        a_irq_priority);
+    NVIC_EnableIRQ(
+        static_cast<IRQn_Type>(static_cast<uint32_t>(IRQn_Type::USART1_IRQn) + static_cast<uint32_t>(this->id)));
 
     return wait_until::all_bits(&(get_usart_ptr(this->id)->ISR), wait_flag, false, start, a_timeout_ms);
 }
 
 void USART::disable()
 {
+    NVIC_DisableIRQ(
+        static_cast<IRQn_Type>(static_cast<uint32_t>(IRQn_Type::USART1_IRQn) + static_cast<uint32_t>(this->id)));
+
     get_usart_ptr(this->id)->CR1 = 0;
     get_usart_ptr(this->id)->CR2 = 0;
     get_usart_ptr(this->id)->CR3 = 0;
 
-    controllers[static_cast<uint32_t>(this->id)].disable();
     controllers[static_cast<uint32_t>(this->id)].p_usart_handle = nullptr;
 }
 
@@ -737,18 +679,13 @@ void USART::set_baud_rate(uint32_t a_baud_rate)
     switch (oversampling)
     {
         case Oversampling::_8: {
-            const uint32_t usartdiv      = 2 * this->clock.frequency_hz / a_baud_rate;
+            const uint32_t usartdiv      = 2 * this->clock_freq_Hz / a_baud_rate;
             get_usart_ptr(this->id)->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
 
         case Oversampling::_16: {
-            get_usart_ptr(this->id)->BRR = this->clock.frequency_hz / a_baud_rate;
-        }
-        break;
-
-        case Oversampling::unknown: {
-            cml_assert(Oversampling::unknown != oversampling);
+            get_usart_ptr(this->id)->BRR = this->clock_freq_Hz / a_baud_rate;
         }
         break;
     }
@@ -756,7 +693,7 @@ void USART::set_baud_rate(uint32_t a_baud_rate)
 
 void USART::set_oversampling(Oversampling a_oversampling)
 {
-    cml_assert(Oversampling::unknown != a_oversampling);
+    cml_assert(static_cast<Oversampling>(static_cast<uint32_t>(Oversampling::_8) + 1) != a_oversampling);
 
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), static_cast<uint32_t>(a_oversampling));
@@ -765,7 +702,7 @@ void USART::set_oversampling(Oversampling a_oversampling)
 
 void USART::set_stop_bits(Stop_bits a_stop_bits)
 {
-    cml_assert(Stop_bits::unknown != a_stop_bits);
+    cml_assert(static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1) != a_stop_bits);
 
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR2), static_cast<uint32_t>(a_stop_bits));
@@ -774,7 +711,8 @@ void USART::set_stop_bits(Stop_bits a_stop_bits)
 
 void USART::set_flow_control(Flow_control_flag a_flow_control)
 {
-    cml_assert(Flow_control_flag::unknown != a_flow_control);
+    cml_assert(static_cast<Flow_control_flag>(static_cast<uint32_t>(Flow_control_flag::clear_to_send) + 1) !=
+               a_flow_control);
 
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR3), static_cast<uint32_t>(a_flow_control));
@@ -783,7 +721,8 @@ void USART::set_flow_control(Flow_control_flag a_flow_control)
 
 void USART::set_sampling_method(Sampling_method a_sampling_method)
 {
-    cml_assert(Sampling_method::unknown != a_sampling_method);
+    cml_assert(static_cast<Sampling_method>(static_cast<uint32_t>(Sampling_method::one_sample_bit) + 1) !=
+               a_sampling_method);
 
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR3), USART_CR3_ONEBIT, static_cast<uint32_t>(a_sampling_method));
@@ -792,8 +731,8 @@ void USART::set_sampling_method(Sampling_method a_sampling_method)
 
 void USART::set_frame_format(const Frame_format& a_frame_format)
 {
-    cml_assert(USART::Word_length::unknown != a_frame_format.word_length);
-    cml_assert(USART::Parity::unknown != a_frame_format.parity);
+    cml_assert(static_cast<Word_length>(static_cast<uint32_t>(Word_length::_7_bit) + 1) != a_frame_format.word_length);
+    cml_assert(static_cast<Parity>(static_cast<uint32_t>(Parity::odd) + 1) != a_frame_format.parity);
 
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR1),
@@ -806,7 +745,7 @@ void USART::set_frame_format(const Frame_format& a_frame_format)
 
 bool USART::set_mode(Mode_flag a_mode, uint32_t a_timeout_ms)
 {
-    cml_assert(Mode_flag::unknown != a_mode);
+    cml_assert(static_cast<Mode_flag>(static_cast<uint32_t>(Mode_flag::tx) + 1) != a_mode);
     cml_assert(a_timeout_ms > 0);
 
     uint32_t start = system_timer::get();
@@ -851,17 +790,17 @@ bool USART::is_enabled() const
 }
 
 bool RS485::enable(const Config& a_config,
-                   const USART::Clock& a_clock,
                    GPIO::Out::Pin* a_p_flow_control_pin,
                    uint32_t a_irq_priority,
                    uint32_t a_timeout)
 {
     cml_assert(nullptr != a_p_flow_control_pin);
-    cml_assert(0 != a_config.baud_rate);
-    cml_assert(Stop_bits::unknown != a_config.stop_bits);
 
-    cml_assert(USART::Clock::Source::unknown != a_clock.source);
-    cml_assert(0 != a_clock.frequency_hz);
+    cml_assert(0 != a_config.baud_rate);
+    cml_assert(0 != a_config.clock_freq_Hz);
+
+    cml_assert(static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1) != a_config.stop_bits);
+
     cml_assert(a_timeout > 0);
 
     cml_assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_usart_handle &&
@@ -871,23 +810,18 @@ bool RS485::enable(const Config& a_config,
 
     controllers[static_cast<uint32_t>(this->id)].p_rs485_handle = this;
     controllers[static_cast<uint32_t>(this->id)].p_usart_handle = nullptr;
-    controllers[static_cast<uint32_t>(this->id)].enable(a_clock.source, a_irq_priority);
+    // controllers[static_cast<uint32_t>(this->id)].enable(a_clock.source, a_irq_priority);
 
     switch (a_config.oversampling)
     {
         case Oversampling::_16: {
-            get_usart_ptr(this->id)->BRR = a_clock.frequency_hz / a_config.baud_rate;
+            get_usart_ptr(this->id)->BRR = a_config.clock_freq_Hz / a_config.baud_rate;
         }
         break;
 
         case Oversampling::_8: {
-            const uint32_t usartdiv      = 2 * a_clock.frequency_hz / a_config.baud_rate;
+            const uint32_t usartdiv      = 2 * a_config.clock_freq_Hz / a_config.baud_rate;
             get_usart_ptr(this->id)->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
-        }
-        break;
-
-        case Oversampling::unknown: {
-            cml_assert(a_config.oversampling != Oversampling::unknown);
         }
         break;
     }
@@ -903,7 +837,7 @@ bool RS485::enable(const Config& a_config,
 
     this->p_flow_control_pin = a_p_flow_control_pin;
     this->baud_rate          = a_config.baud_rate;
-    this->clock              = a_clock;
+    this->clock_freq_Hz      = a_config.clock_freq_Hz;
 
     bool ret = wait_until::all_bits(
         &(get_usart_ptr(this->id)->ISR), USART_ISR_TEACK | USART_ISR_REACK | USART_ISR_RWU, false, start, a_timeout);
@@ -923,7 +857,6 @@ void RS485::disable()
     get_usart_ptr(this->id)->CR3 = 0;
     get_usart_ptr(this->id)->RQR = 0;
 
-    controllers[static_cast<uint32_t>(this->id)].disable();
     controllers[static_cast<uint32_t>(this->id)].p_rs485_handle = nullptr;
 
     this->p_flow_control_pin = nullptr;
@@ -1214,18 +1147,13 @@ void RS485::set_baud_rate(uint32_t a_baud_rate)
     switch (oversampling)
     {
         case Oversampling::_8: {
-            const uint32_t usartdiv      = 2 * this->clock.frequency_hz / a_baud_rate;
+            const uint32_t usartdiv      = 2 * this->clock_freq_Hz / a_baud_rate;
             get_usart_ptr(this->id)->BRR = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
 
         case Oversampling::_16: {
-            get_usart_ptr(this->id)->BRR = this->clock.frequency_hz / a_baud_rate;
-        }
-        break;
-
-        case Oversampling::unknown: {
-            cml_assert(Oversampling::unknown != oversampling);
+            get_usart_ptr(this->id)->BRR = this->clock_freq_Hz / a_baud_rate;
         }
         break;
     }
@@ -1233,7 +1161,7 @@ void RS485::set_baud_rate(uint32_t a_baud_rate)
 
 void RS485::set_oversampling(Oversampling a_oversampling)
 {
-    cml_assert(Oversampling::unknown != a_oversampling);
+    cml_assert(static_cast<Oversampling>(static_cast<uint32_t>(Oversampling::_8) + 1) != a_oversampling);
 
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), static_cast<uint32_t>(a_oversampling));
@@ -1242,7 +1170,7 @@ void RS485::set_oversampling(Oversampling a_oversampling)
 
 void RS485::set_stop_bits(Stop_bits a_stop_bits)
 {
-    cml_assert(Stop_bits::unknown != a_stop_bits);
+    cml_assert(static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1) != a_stop_bits);
 
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR2), static_cast<uint32_t>(a_stop_bits));
@@ -1268,6 +1196,61 @@ RS485::Stop_bits RS485::get_stop_bits() const
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+
+using namespace soc::stm32l4::peripherals;
+
+void rcc<USART>::enable(USART::Id a_id, const Clock_source& a_clock_source, bool a_enable_in_lp)
+{
+    const uint32_t clock_source_lut[] = { 0,
+                                          0x1ul << static_cast<uint32_t>(a_id) * 2ul,
+                                          0x2ul << static_cast<uint32_t>(a_id) * 2ul };
+    bit_flag::set(&(RCC->CCIPR),
+                  0x3ul << (static_cast<uint32_t>(a_id) * 2ul),
+                  clock_source_lut[static_cast<uint32_t>(a_clock_source)]);
+
+    if (USART::Id::_1 == a_id)
+    {
+        bit::set(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN_Pos);
+    }
+    else
+    {
+        bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN_Pos + static_cast<uint32_t>(a_id) - 1u);
+    }
+
+    if (true == a_enable_in_lp)
+    {
+        if (USART::Id::_1 == a_id)
+        {
+            bit::set(&(RCC->APB2SMENR), RCC_APB2SMENR_USART1SMEN_Pos);
+        }
+        else
+        {
+            bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_USART2SMEN_Pos + static_cast<uint32_t>(a_id) - 1);
+        }
+    }
+}
+
+void rcc<USART>::disable(USART::Id a_id)
+{
+    bit_flag::clear(&(RCC->CCIPR), 0x3ul << (static_cast<uint32_t>(a_id) * 2ul));
+
+    if (USART::Id::_1 == a_id)
+    {
+        bit::clear(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN_Pos);
+        bit::clear(&(RCC->APB2SMENR), RCC_APB2SMENR_USART1SMEN_Pos);
+    }
+    else
+    {
+        bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN_Pos + static_cast<uint32_t>(a_id) - 1u);
+        bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_USART2SMEN_Pos + static_cast<uint32_t>(a_id) - 1);
+    }
+}
+
 } // namespace stm32l4
 } // namespace soc
 

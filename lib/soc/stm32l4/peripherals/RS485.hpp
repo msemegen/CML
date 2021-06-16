@@ -65,8 +65,9 @@ public:
     struct Config
     {
         uint32_t baud_rate        = 0;
-        Oversampling oversampling = Oversampling::unknown;
-        Stop_bits stop_bits       = Stop_bits::unknown;
+        uint32_t clock_freq_Hz    = 0;
+        Oversampling oversampling = static_cast<Oversampling>(static_cast<uint32_t>(Oversampling::_8) + 1);
+        Stop_bits stop_bits       = static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1);
         uint8_t address           = 0;
     };
 
@@ -82,11 +83,8 @@ public:
         this->disable();
     }
 
-    bool enable(const Config& a_config,
-                const USART::Clock& a_clock,
-                GPIO::Out::Pin* a_p_flow_control_pin,
-                uint32_t a_irq_priority,
-                uint32_t a_timeout);
+    bool
+    enable(const Config& a_config, GPIO::Out::Pin* a_p_flow_control_pin, uint32_t a_irq_priority, uint32_t a_timeout);
 
     void disable();
 
@@ -145,11 +143,6 @@ public:
         return this->baud_rate;
     }
 
-    const USART::Clock& get_clock() const
-    {
-        return this->clock;
-    }
-
     bool is_transmit_callback() const
     {
         return nullptr != this->transmit_callback.function;
@@ -174,7 +167,7 @@ private:
     Bus_status_callback bus_status_callback;
 
     uint32_t baud_rate;
-    USART::Clock clock;
+    uint32_t clock_freq_Hz;
 
 private:
     friend void rs485_interrupt_handler(RS485* a_p_this);

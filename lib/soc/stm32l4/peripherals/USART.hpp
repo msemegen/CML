@@ -14,6 +14,9 @@
 // externals
 #include <stm32l4xx.h>
 
+// soc
+#include <soc/stm32l4/rcc.hpp>
+
 // cml
 #include <cml/Non_copyable.hpp>
 
@@ -42,7 +45,6 @@ public:
     {
         _8  = USART_CR1_OVER8,
         _16 = 0,
-        unknown
     };
 
     enum class Stop_bits : uint32_t
@@ -51,7 +53,6 @@ public:
         _1   = 0x0u,
         _1_5 = USART_CR2_STOP_0 | USART_CR2_STOP_1,
         _2   = USART_CR2_STOP_1,
-        unknown
     };
 
     enum class Flow_control_flag : uint32_t
@@ -59,21 +60,18 @@ public:
         none            = 0x0u,
         request_to_send = USART_CR3_RTSE,
         clear_to_send   = USART_CR3_CTSE,
-        unknown
     };
 
     enum Sampling_method : uint32_t
     {
         three_sample_bit = 0,
         one_sample_bit   = USART_CR3_ONEBIT,
-        unknown
     };
 
     enum class Mode_flag : uint32_t
     {
-        tx      = USART_CR1_TE,
-        rx      = USART_CR1_RE,
-        unknown = 0x0u
+        tx = USART_CR1_TE,
+        rx = USART_CR1_RE,
     };
 
     enum class Word_length : uint32_t
@@ -81,7 +79,6 @@ public:
         _7_bit = USART_CR1_M1,
         _8_bit = 0x0u,
         _9_bit = USART_CR1_M0,
-        unknown
     };
 
     enum class Parity : uint32_t
@@ -89,7 +86,6 @@ public:
         none = 0x0u,
         even = USART_CR1_PCE,
         odd  = USART_CR1_PCE | USART_CR1_PS,
-        unknown
     };
 
     enum class Frame_length : uint32_t
@@ -106,42 +102,31 @@ public:
         parity_error   = 0x2,
         overrun        = 0x4,
         noise_detected = 0x8,
-        unknown        = 0x10
     };
 
     struct Frame_format
     {
-        Word_length word_length = Word_length::unknown;
-        Parity parity           = Parity::unknown;
+        Word_length word_length = static_cast<Word_length>(static_cast<uint32_t>(Word_length::_7_bit) + 1);
+        Parity parity           = static_cast<Parity>(static_cast<uint32_t>(Parity::odd) + 1);
     };
 
     struct Config
     {
-        uint32_t baud_rate              = 0;
-        Oversampling oversampling       = Oversampling::unknown;
-        Stop_bits stop_bits             = Stop_bits::unknown;
-        Flow_control_flag flow_control  = Flow_control_flag::unknown;
-        Sampling_method sampling_method = Sampling_method::unknown;
-        Mode_flag mode                  = Mode_flag::unknown;
-    };
-
-    struct Clock
-    {
-        enum class Source : uint32_t
-        {
-            pclk,
-            sysclk,
-            hsi,
-            unknown
-        };
-
-        Source source         = Source::unknown;
-        uint32_t frequency_hz = 0;
+        uint32_t baud_rate        = 0;
+        uint32_t clock_freq_Hz    = 0;
+        Oversampling oversampling = static_cast<Oversampling>(static_cast<uint32_t>(Oversampling::_8) + 1);
+        Stop_bits stop_bits       = static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1);
+        Flow_control_flag flow_control =
+            static_cast<Flow_control_flag>(static_cast<uint32_t>(Flow_control_flag::clear_to_send) + 1);
+        Sampling_method sampling_method =
+            static_cast<Sampling_method>(static_cast<uint32_t>(Sampling_method::one_sample_bit) + 1);
+        Mode_flag mode = static_cast<Mode_flag>(static_cast<uint32_t>(Mode_flag::tx) + 1);
     };
 
     struct Result
     {
-        Bus_status_flag bus_status    = Bus_status_flag::unknown;
+        Bus_status_flag bus_status =
+            static_cast<Bus_status_flag>(static_cast<uint32_t>(Bus_status_flag::noise_detected) + 1);
         uint32_t data_length_in_words = 0;
     };
 
@@ -176,6 +161,7 @@ public:
     USART(Id a_id)
         : id(a_id)
         , baud_rate(0)
+        , clock_freq_Hz(0)
     {
     }
 
@@ -184,11 +170,8 @@ public:
         this->disable();
     }
 
-    bool enable(const Config& a_config,
-                const Frame_format& frame_format,
-                const Clock& a_clock,
-                uint32_t a_irq_priority,
-                uint32_t a_timeout_ms);
+    bool
+    enable(const Config& a_config, const Frame_format& frame_format, uint32_t a_irq_priority, uint32_t a_timeout_ms);
 
     void disable();
 
@@ -268,11 +251,6 @@ public:
         return this->baud_rate;
     }
 
-    const Clock& get_clock() const
-    {
-        return this->clock;
-    }
-
     const Frame_format& get_frame_format() const
     {
         return this->frame_format;
@@ -291,8 +269,7 @@ private:
     Bus_status_callback bus_status_callback;
 
     uint32_t baud_rate;
-
-    Clock clock;
+    uint32_t clock_freq_Hz;
     Frame_format frame_format;
 
 private:
@@ -350,5 +327,22 @@ constexpr USART::Mode_flag operator|=(USART::Mode_flag& a_f1, USART::Mode_flag a
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+template<> struct rcc<peripherals::USART>
+{
+    enum class Clock_source : uint32_t
+    {
+        pclk,
+        sysclk,
+        hsi,
+    };
+
+    static void enable(peripherals::USART::Id a_id, const Clock_source& a_clock_source, bool a_enable_in_lp);
+    static void disable(peripherals::USART::Id a_id);
+};
 } // namespace stm32l4
 } // namespace soc

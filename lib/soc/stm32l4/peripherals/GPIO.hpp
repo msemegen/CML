@@ -13,6 +13,9 @@
 // externals
 #include <stm32l4xx.h>
 
+// soc
+#include <soc/stm32l4/rcc.hpp>
+
 // cml
 #include <cml/Non_copyable.hpp>
 #include <cml/bit.hpp>
@@ -55,7 +58,6 @@ public:
     {
         push_pull  = 0,
         open_drain = 1,
-        unknown
     };
 
     enum class Pull : uint32_t
@@ -63,7 +65,6 @@ public:
         none = 0x0u,
         up   = 0x1u,
         down = 0x2u,
-        unknown
     };
 
     enum class Speed : uint32_t
@@ -72,7 +73,6 @@ public:
         medium = 0x1u,
         high   = 0x2u,
         ultra  = 0x3u,
-        unknown
     };
 
     class Out : private cml::Non_copyable
@@ -80,9 +80,9 @@ public:
     public:
         struct Config
         {
-            Mode mode   = Mode::unknown;
-            Pull pull   = Pull::unknown;
-            Speed speed = Speed::unknown;
+            Mode mode   = static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1);
+            Pull pull   = static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1);
+            Speed speed = static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1);
         };
 
         class Pin : private cml::Non_copyable
@@ -273,9 +273,9 @@ public:
     public:
         struct Config
         {
-            Mode mode   = Mode::unknown;
-            Pull pull   = Pull::unknown;
-            Speed speed = Speed::unknown;
+            Mode mode   = static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1);
+            Pull pull   = static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1);
+            Speed speed = static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1);
 
             uint32_t function = 0;
         };
@@ -369,7 +369,6 @@ public:
         {
             rising  = 0x1,
             falling = 0x2,
-            unknown
         };
 
         struct Callback
@@ -402,6 +401,11 @@ public:
 
         friend GPIO;
     };
+
+    // struct rcc
+    //{
+
+    //};
 
 public:
     GPIO(Id a_id)
@@ -499,5 +503,15 @@ constexpr GPIO::EXTI::Trigger_flag operator|=(GPIO::EXTI::Trigger_flag& a_f1, GP
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+template<> struct rcc<peripherals::GPIO>
+{
+    static void enable(peripherals::GPIO::Id a_id, bool a_enable_in_lp);
+    static void disable(peripherals::GPIO::Id a_id);
+};
 } // namespace stm32l4
 } // namespace soc

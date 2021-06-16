@@ -48,7 +48,6 @@ public:
         _2 = FLASH_ACR_LATENCY_2WS,
         _3 = FLASH_ACR_LATENCY_3WS,
         _4 = FLASH_ACR_LATENCY_4WS,
-        unknown
     };
 
     enum class Mode
@@ -77,10 +76,9 @@ public:
             fast_programming_error      = FLASH_SR_FASTERR,
             programming_error           = FLASH_SR_PROGERR,
             locked,
-            unknown
         };
 
-        Status_flag status = Status_flag::unknown;
+        Status_flag status = static_cast<Status_flag>(static_cast<uint32_t>(Status_flag::locked) + 1);
         uint32_t words     = 0;
     };
 

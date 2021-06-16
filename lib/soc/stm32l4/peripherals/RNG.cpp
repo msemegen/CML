@@ -108,7 +108,6 @@ bool RNG::enable(uint32_t a_irq_priority, uint32_t a_timeout)
 #define RNG ((RNG_TypeDef*)RNG_BASE)
 #endif
 
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
     bit_flag::set(&(RNG->CR), RNG_CR_RNGEN);
 
     bool ret = false == bit_flag::is(RNG->SR, RNG_SR_SEIS);
@@ -213,6 +212,28 @@ void RNG::unregister_new_value_callback()
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+
+using namespace soc::stm32l4::peripherals;
+
+void rcc<RNG>::enable(bool a_enable_in_lp)
+{
+    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
+
+    if (true == a_enable_in_lp)
+    {
+        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_RNGSMEN);
+    }
+}
+void rcc<RNG>::disable()
+{
+    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
+    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_RNGSMEN);
+}
 } // namespace stm32l4
 } // namespace soc
 

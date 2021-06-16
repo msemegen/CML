@@ -13,11 +13,11 @@
 
 // cml
 #include <cml/debug/assertion.hpp>
+#include <cml/hal/Systick.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/hal/system_timer.hpp>
-#include <cml/hal/systick.hpp>
 #include <cml/utils/delay.hpp>
 
 namespace {
@@ -53,8 +53,10 @@ int main()
     setvbuf(stdout, nullptr, _IONBF, 0);
     setvbuf(stderr, nullptr, _IONBF, 0);
 
-    systick::enable((mcu::get_sysclk_frequency_hz() / 1000u) - 1, systick::Prescaler::_1, 0x9u);
-    systick::register_tick_callback({ system_timer_update, nullptr });
+    Systick systick;
+
+    systick.enable((mcu::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
+    systick.register_tick_callback({ system_timer_update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });

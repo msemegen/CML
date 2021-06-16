@@ -11,6 +11,7 @@
 #include <soc/stm32l4/peripherals/Basic_timer.hpp>
 
 // cml
+#include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 
@@ -28,47 +29,13 @@ using namespace soc::stm32l4::peripherals;
 
 struct Controller
 {
-    using Enable_function  = void (*)(uint32_t a_irq_priority);
-    using Disable_function = void (*)();
-
     TIM_TypeDef* p_registers    = nullptr;
     Basic_timer* p_timer_handle = nullptr;
-
-    Enable_function enable   = nullptr;
-    Disable_function disable = nullptr;
 };
 
-void tim6_enable(uint32_t a_irq_priority)
-{
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM6EN);
-    NVIC_SetPriority(TIM6_DAC_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(TIM6_DAC_IRQn);
-}
-
-void tim6_disable()
-{
-    NVIC_DisableIRQ(TIM6_DAC_IRQn);
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM6EN);
-};
-
+Controller controllers[] = { { TIM6, nullptr },
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-void tim7_enable(uint32_t a_irq_priority)
-{
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM7EN);
-    NVIC_SetPriority(TIM7_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(TIM7_IRQn);
-}
-
-void tim7_disable()
-{
-    NVIC_DisableIRQ(TIM7_IRQn);
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM7EN);
-};
-#endif
-
-Controller controllers[] = { { TIM6, nullptr, tim6_enable, tim6_disable },
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-                             { TIM7, nullptr, tim7_enable, tim7_disable }
+                             { TIM7, nullptr }
 #endif
 };
 
@@ -117,23 +84,27 @@ void interrupt_handler(Basic_timer* a_p_this)
     get_timer_registers(a_p_this->id)->SR = 0;
 }
 
-void Basic_timer::enable(uint16_t a_prescaler, uint16_t a_auto_reload, uint32_t a_irq_priority)
+void Basic_timer::enable(const Config& a_config, uint32_t a_irq_priority)
 {
-    controllers[static_cast<uint32_t>(this->id)].enable(a_irq_priority);
     controllers[static_cast<uint32_t>(this->id)].p_timer_handle = this;
 
-    get_timer_registers(this->id)->SR  = 0;
     get_timer_registers(this->id)->CNT = 0;
-    get_timer_registers(this->id)->PSC = a_prescaler;
-    get_timer_registers(this->id)->ARR = a_auto_reload;
+    get_timer_registers(this->id)->PSC = a_config.prescaler;
+    get_timer_registers(this->id)->ARR = a_config.auto_reload;
 
     get_timer_registers(this->id)->CR1 = TIM_CR1_UIFREMAP | TIM_CR1_ARPE;
+    get_timer_registers(this->id)->SR  = 0;
+
+    NVIC_SetPriority(IRQn_Type::TIM6_DAC_IRQn, a_irq_priority);
+    NVIC_EnableIRQ(IRQn_Type::TIM6_DAC_IRQn);
 }
 
 void Basic_timer::disable()
 {
+    NVIC_DisableIRQ(IRQn_Type::TIM6_DAC_IRQn);
+
     get_timer_registers(this->id)->CR1 = 0;
-    controllers[static_cast<uint32_t>(this->id)].disable();
+
     controllers[static_cast<uint32_t>(this->id)].p_timer_handle = nullptr;
 }
 
@@ -177,4 +148,29 @@ bool Basic_timer::is_overload_event() const
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+
+using namespace soc::stm32l4::peripherals;
+
+void rcc<Basic_timer>::enable(Basic_timer::Id a_id, bool a_enable_in_lp)
+{
+    bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM6EN_Pos + static_cast<uint32_t>(a_id));
+
+    if (true == a_enable_in_lp)
+    {
+        bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_TIM6SMEN_Pos + static_cast<uint32_t>(a_id));
+    }
+}
+
+void rcc<Basic_timer>::disable(Basic_timer::Id a_id)
+{
+    bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM6EN_Pos + static_cast<uint32_t>(a_id));
+    bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_TIM6SMEN_Pos + static_cast<uint32_t>(a_id));
+}
+
+} // namespace stm32l4
+} // namespace soc
+
 #endif

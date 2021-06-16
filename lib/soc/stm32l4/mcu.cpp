@@ -34,10 +34,8 @@ mcu::Sysclk_frequency_change_callback post_sysclk_frequency_change_callback;
 template<typename Config_t>
 uint32_t get_pll_register_config_from_factor(const Config_t& a_config, uint32_t a_enable_flag)
 {
-    return (Config_t::Divider::unknown != a_config.divider ?
-                (static_cast<uint32_t>(a_config.divider) |
-                 (mcu::Pll_config::Output::enabled == a_config.output ? a_enable_flag : 0)) :
-                0);
+    return (static_cast<uint32_t>(a_config.divider) |
+            (mcu::Pll_config::Output::enabled == a_config.output ? a_enable_flag : 0));
 }
 
 #endif
@@ -121,6 +119,45 @@ void mcu::disable_hsi48_clock()
 
 void mcu::enable_pll(const Pll_config& a_config)
 {
+    cml_assert(a_config.source != static_cast<Pll_config::Source>(static_cast<uint32_t>(Pll_config::Source::hsi) + 1));
+    cml_assert(a_config.m != static_cast<Pll_config::M>(static_cast<uint32_t>(Pll_config::M::_8) + 1));
+
+    cml_assert(a_config.pll.r.divider !=
+               static_cast<Pll_config::PLL::R::Divider>(static_cast<uint32_t>(Pll_config::PLL::R::Divider::_8) + 1));
+    cml_assert(a_config.pll.r.output !=
+               static_cast<Pll_config::Output>(static_cast<uint32_t>(Pll_config::Output::enabled) + 1));
+
+    cml_assert(a_config.pll.q.divider !=
+               static_cast<Pll_config::PLL::Q::Divider>(static_cast<uint32_t>(Pll_config::PLL::Q::Divider::_8) + 1));
+    cml_assert(a_config.pll.q.output !=
+               static_cast<Pll_config::Output>(static_cast<uint32_t>(Pll_config::Output::enabled) + 1));
+
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+    cml_assert(a_config.pll.p.divider !=
+               static_cast<Pll_config::PLL::P::Divider>(static_cast<uint32_t>(Pll_config::PLL::P::Divider::_17) + 1));
+    cml_assert(a_config.pll.p.output !=
+               static_cast<Pll_config::Output>(static_cast<uint32_t>(Pll_config::Output::enabled) + 1));
+#endif
+
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+    cml_assert(a_config.pllsai1.r.divider != static_cast<Pll_config::PLLSAI1::R::Divider>(
+                                                 static_cast<uint32_t>(Pll_config::PLLSAI1::R::Divider::_8) + 1));
+    cml_assert(a_config.pllsai1.r.output !=
+               static_cast<Pll_config::Output>(static_cast<uint32_t>(Pll_config::Output::enabled) + 1));
+
+    cml_assert(a_config.pllsai1.q.divider != static_cast<Pll_config::PLLSAI1::Q::Divider>(
+                                                 static_cast<uint32_t>(Pll_config::PLLSAI1::Q::Divider::_8) + 1));
+    cml_assert(a_config.pllsai1.q.output !=
+               static_cast<Pll_config::Output>(static_cast<uint32_t>(Pll_config::Output::enabled) + 1));
+
+    cml_assert(a_config.pllsai1.p.divider != static_cast<Pll_config::PLLSAI1::P::Divider>(
+                                                 static_cast<uint32_t>(Pll_config::PLLSAI1::P::Divider::_17) + 1));
+    cml_assert(a_config.pllsai1.p.output !=
+               static_cast<Pll_config::Output>(static_cast<uint32_t>(Pll_config::Output::enabled) + 1));
+#endif
+
     cml_assert((true == is_clock_enabled(Clock::msi) && a_config.source == Pll_config::Source::msi) ||
                (true == is_clock_enabled(Clock::hsi) && a_config.source == Pll_config::Source::hsi));
     cml_assert((a_config.pll.n >= 8 && a_config.pll.n <= 86));
@@ -455,9 +492,12 @@ void mcu::set_sysclk_source(Sysclk_source a_sysclk_source)
 
 void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
 {
-    cml_assert(Bus_prescalers::AHB::unknown != a_prescalers.ahb);
-    cml_assert(Bus_prescalers::APB1::unknown != a_prescalers.apb1);
-    cml_assert(Bus_prescalers::APB2::unknown != a_prescalers.apb2);
+    cml_assert(static_cast<Bus_prescalers::AHB>(static_cast<uint32_t>(Bus_prescalers::AHB::_512) + 1) !=
+               a_prescalers.ahb);
+    cml_assert(static_cast<Bus_prescalers::APB1>(static_cast<uint32_t>(Bus_prescalers::APB1::_16) + 1) !=
+               a_prescalers.apb1);
+    cml_assert(static_cast<Bus_prescalers::APB2>(static_cast<uint32_t>(Bus_prescalers::APB2::_16) + 1) !=
+               a_prescalers.apb2);
 
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32_t>(a_prescalers.ahb));
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32_t>(a_prescalers.apb1));
@@ -541,11 +581,6 @@ uint32_t mcu::calculate_pll_r_output_frequency()
             pllvco = (get_hsi_frequency_hz() / m) * n;
         }
         break;
-
-        case Pll_config::Source::unknown: {
-            cml_assert(false);
-        }
-        break;
     }
 
     cml_assert(pllvco >= 96 * 1000000u && pllvco <= 344 * 1000000u);
@@ -569,11 +604,6 @@ uint32_t mcu::calculate_pll_q_output_frequency()
 
         case Pll_config::Source::hsi: {
             return ((get_hsi_frequency_hz() / m) * n) / q;
-        }
-
-        case Pll_config::Source::unknown: {
-            cml_assert(false);
-            return 0;
         }
     }
 

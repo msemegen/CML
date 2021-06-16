@@ -13,6 +13,9 @@
 // externals
 #include <stm32l4xx.h>
 
+// soc
+#include <soc/stm32l4/rcc.hpp>
+
 // cml
 #include <cml/Non_copyable.hpp>
 #include <cml/bit_flag.hpp>
@@ -55,5 +58,15 @@ public:
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+template<> struct rcc<peripherals::CRC32>
+{
+    static void enable(bool a_enable_in_lp);
+    static void disable();
+};
 } // namespace stm32l4
 } // namespace soc

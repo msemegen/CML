@@ -12,11 +12,11 @@
 #include <cstdio>
 
 // cml
+#include <cml/hal/Systick.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
 #include <cml/hal/system_timer.hpp>
-#include <cml/hal/systick.hpp>
 
 namespace {
 
@@ -47,13 +47,19 @@ int main()
     using namespace cml::hal;
     using namespace cml::hal::peripherals;
 
-    systick::enable((mcu::get_sysclk_frequency_hz() / 1000u) - 1, systick::Prescaler::_1, 0x9u);
-    systick::register_tick_callback({ system_timer_update, nullptr });
+    Systick systick;
+    GPIO gpio_port_a(GPIO::Id::a);
+    USART iostream(USART::Id::_2);
 
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });
 
-    GPIO gpio_port_a(GPIO::Id::a);
+    systick.enable((mcu::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
+    systick.register_tick_callback({ system_timer_update, nullptr });
+
+    rcc<GPIO>::enable(GPIO::Id::a, false);
+    rcc<USART>::enable(USART::Id::_2, rcc<USART>::Clock_source::sysclk, false);
+
     gpio_port_a.enable();
 
     GPIO::Alternate_function::Config usart_pin_config = {
@@ -63,16 +69,14 @@ int main()
     gpio_port_a.p_alternate_function->enable(2u, usart_pin_config);
     gpio_port_a.p_alternate_function->enable(3u, usart_pin_config);
 
-    USART iostream(USART::Id::_2);
-
     bool iostream_ready = iostream.enable({ 115200,
+                                            mcu::get_sysclk_frequency_hz(),
                                             USART::Oversampling::_16,
                                             USART::Stop_bits::_1,
                                             USART::Flow_control_flag::none,
                                             USART::Sampling_method::three_sample_bit,
                                             USART::Mode_flag::tx | USART::Mode_flag::rx },
                                           { USART::Word_length::_8_bit, USART::Parity::none },
-                                          { USART::Clock::Source::sysclk, mcu::get_sysclk_frequency_hz() },
                                           0x1u,
                                           10u);
 

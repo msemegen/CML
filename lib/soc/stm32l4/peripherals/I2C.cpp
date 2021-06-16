@@ -36,101 +36,22 @@ using namespace soc::stm32l4::peripherals;
 
 struct Controller
 {
-    using Enable_function  = void (*)(uint32_t a_clock_source, uint32_t a_irq_priority);
-    using Disable_function = void (*)();
-
     I2C_TypeDef* p_registers        = nullptr;
     I2C_master* p_i2c_master_handle = nullptr;
     I2C_slave* p_i2c_slave_handle   = nullptr;
-
-    Enable_function enable   = nullptr;
-    Disable_function disable = nullptr;
 };
-
-void i2c_1_enable(uint32_t a_clock_source, uint32_t a_irq_priority)
-{
-    cml_assert(0 != a_clock_source);
-
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_I2C1SEL, a_clock_source);
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C1EN);
-
-    NVIC_SetPriority(I2C1_EV_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(I2C1_EV_IRQn);
-}
-
-void i2c_1_disable()
-{
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C1EN);
-    NVIC_DisableIRQ(I2C1_EV_IRQn);
-}
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-void i2c_2_enable(uint32_t a_clock_source, uint32_t a_irq_priority)
-{
-    cml_assert(0 != a_clock_source);
-
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_I2C2SEL, a_clock_source);
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C2EN);
-
-    NVIC_SetPriority(I2C2_EV_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(I2C2_EV_IRQn);
-}
-
-void i2c_2_disable()
-{
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C2EN);
-    NVIC_DisableIRQ(I2C2_EV_IRQn);
-}
-#endif
-
-void i2c_3_enable(uint32_t a_clock_source, uint32_t a_irq_priority)
-{
-    cml_assert(0 != a_clock_source);
-
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_I2C3SEL, a_clock_source);
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C3EN);
-
-    NVIC_SetPriority(I2C3_EV_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(I2C3_EV_IRQn);
-}
-
-void i2c_3_disable()
-{
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C3EN);
-    NVIC_DisableIRQ(I2C3_EV_IRQn);
-}
-
-#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-void i2c_4_enable(uint32_t a_clock_source, uint32_t a_irq_priority)
-{
-    cml_assert(0 != a_clock_source);
-
-    bit_flag::set(&(RCC->CCIPR2), RCC_CCIPR2_I2C4SEL, a_clock_source);
-    bit_flag::set(&(RCC->APB1ENR2), RCC_APB1ENR2_I2C4EN);
-
-    NVIC_SetPriority(I2C4_EV_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(I2C4_EV_IRQn);
-}
-
-void i2c_4_disable()
-{
-    bit_flag::clear(&(RCC->APB1ENR2), RCC_APB1ENR2_I2C4EN);
-    NVIC_DisableIRQ(I2C4_EV_IRQn);
-}
-#endif
 
 Controller controllers[]
 {
-    { I2C1, nullptr, nullptr, i2c_1_enable, i2c_1_disable },
+    { I2C1, nullptr, nullptr },
 #if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        { I2C2, nullptr, nullptr, i2c_2_enable, i2c_2_disable },
+        { I2C2, nullptr, nullptr },
 #endif
-        { I2C3, nullptr, nullptr, i2c_3_enable, i2c_3_disable },
+        { I2C3, nullptr, nullptr },
 #if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
     {
-        I2C4, nullptr, nullptr, i2c_4_enable, i2c_4_disable
+        I2C4, nullptr, nullptr
     }
 #endif
 };
@@ -178,57 +99,6 @@ I2C_base::Bus_flag get_bus_status_flag_from_I2C_ISR(I2C_base::Id a_id)
     }
 
     return ret;
-}
-
-I2C_base::Clock_source get_clock_source_from_RCC_CCIPR(I2C_base::Id a_id)
-{
-    switch (a_id)
-    {
-        case I2C_base::Id::_1:
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        case I2C_base::Id::_2:
-#endif
-        case I2C_base::Id::_3: {
-            return static_cast<I2C_base::Clock_source>(
-                bit_flag::get(RCC->CCIPR, 0x3 << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32_t>(a_id) * 2)) >>
-                RCC_CCIPR_I2C1SEL_Pos);
-        }
-        break;
-#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        case I2C_base::Id::_4: {
-            return static_cast<I2C_base::Clock_source>(bit_flag::get(RCC->CCIPR2, RCC_CCIPR2_I2C4SEL));
-        }
-        break;
-#endif
-    }
-
-    cml_assert(false);
-    return static_cast<I2C_base::Clock_source>(static_cast<uint32_t>(I2C_base::Clock_source::hsi) + 1);
-}
-
-uint32_t get_RCC_CCIPR_from_clock_source(I2C_base::Clock_source a_clock_source, I2C_base::Id a_id)
-{
-    switch (a_id)
-    {
-        case I2C_base::Id::_1:
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        case I2C_base::Id::_2:
-#endif
-        case I2C_base::Id::_3: {
-            return static_cast<uint32_t>(a_clock_source) << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32_t>(a_id) * 2);
-        }
-        break;
-#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        case I2C_base::Id::_4: {
-            return static_cast<uint32_t>(a_clock_source);
-        }
-        break;
-#endif
-    }
-
-    return 0;
 }
 
 #endif
@@ -428,20 +298,18 @@ bool I2C_base::is_enabled() const
     return bit_flag::is(controllers[static_cast<uint32_t>(this->id)].p_registers->CR1, I2C_CR1_PE);
 }
 
-I2C_base::Clock_source I2C_base::get_clock_source() const
+void I2C_master::enable(const Config& a_config, uint32_t a_irq_priority)
 {
-    return get_clock_source_from_RCC_CCIPR(this->id);
-}
+    cml_assert(a_config.analog_filter !=
+               static_cast<Config::Analog_filter>(static_cast<uint32_t>(Config::Analog_filter::enabled) + 1));
+    cml_assert(a_config.fast_plus !=
+               static_cast<Config::Fast_plus>(static_cast<uint32_t>(Config::Fast_plus::enabled) + 1));
+    cml_assert(a_config.crc != static_cast<Config::Crc>(static_cast<uint32_t>(Config::Crc::enabled) + 1));
 
-void I2C_master::enable(const Config& a_config, Clock_source a_clock_source, uint32_t a_irq_priority)
-{
     cml_assert((Config::Fast_plus::enabled == a_config.fast_plus && true == mcu::is_syscfg_enabled()) ||
                Config::Fast_plus::disabled == a_config.fast_plus);
     cml_assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_i2c_slave_handle &&
                nullptr == controllers[static_cast<uint32_t>(this->id)].p_i2c_master_handle);
-
-    controllers[static_cast<uint32_t>(this->id)].enable(get_RCC_CCIPR_from_clock_source(a_clock_source, this->id),
-                                                        a_irq_priority);
 
     controllers[static_cast<uint32_t>(this->id)].p_i2c_slave_handle  = nullptr;
     controllers[static_cast<uint32_t>(this->id)].p_i2c_master_handle = this;
@@ -458,10 +326,78 @@ void I2C_master::enable(const Config& a_config, Clock_source a_clock_source, uin
     {
         bit::set(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<uint32_t>(this->id));
     }
+
+    switch (this->id)
+    {
+        case Id::_1: {
+            NVIC_SetPriority(IRQn_Type::I2C1_ER_IRQn, a_irq_priority);
+            NVIC_SetPriority(IRQn_Type::I2C1_EV_IRQn, a_irq_priority);
+            NVIC_EnableIRQ(IRQn_Type::I2C1_ER_IRQn);
+            NVIC_EnableIRQ(IRQn_Type::I2C1_EV_IRQn);
+        }
+        break;
+
+        case Id::_3: {
+            NVIC_SetPriority(IRQn_Type::I2C3_ER_IRQn, a_irq_priority);
+            NVIC_SetPriority(IRQn_Type::I2C3_EV_IRQn, a_irq_priority);
+            NVIC_EnableIRQ(IRQn_Type::I2C3_ER_IRQn);
+            NVIC_EnableIRQ(IRQn_Type::I2C3_EV_IRQn);
+        }
+        break;
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case Id::_2: {
+            NVIC_SetPriority(IRQn_Type::I2C2_ER_IRQn, a_irq_priority);
+            NVIC_SetPriority(IRQn_Type::I2C2_EV_IRQn, a_irq_priority);
+            NVIC_EnableIRQ(IRQn_Type::I2C2_ER_IRQn);
+            NVIC_EnableIRQ(IRQn_Type::I2C2_EV_IRQn);
+        }
+        break;
+#endif
+#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case Id::_4: {
+            NVIC_SetPriority(IRQn_Type::I2C4_ER_IRQn, a_irq_priority);
+            NVIC_SetPriority(IRQn_Type::I2C4_EV_IRQn, a_irq_priority);
+            NVIC_EnableIRQ(IRQn_Type::I2C4_ER_IRQn);
+            NVIC_EnableIRQ(IRQn_Type::I2C4_EV_IRQn);
+        }
+        break;
+#endif
+    }
 }
 
 void I2C_master::diasble()
 {
+    switch (this->id)
+    {
+        case Id::_1: {
+            NVIC_DisableIRQ(IRQn_Type::I2C1_ER_IRQn);
+            NVIC_DisableIRQ(IRQn_Type::I2C1_EV_IRQn);
+        }
+        break;
+
+        case Id::_3: {
+            NVIC_DisableIRQ(IRQn_Type::I2C3_ER_IRQn);
+            NVIC_DisableIRQ(IRQn_Type::I2C3_EV_IRQn);
+        }
+        break;
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case Id::_2: {
+            NVIC_DisableIRQ(IRQn_Type::I2C2_ER_IRQn);
+            NVIC_DisableIRQ(IRQn_Type::I2C2_EV_IRQn);
+        }
+        break;
+#endif
+#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case Id::_4: {
+            NVIC_DisableIRQ(IRQn_Type::I2C4_ER_IRQn);
+            NVIC_DisableIRQ(IRQn_Type::I2C4_EV_IRQn);
+        }
+        break;
+#endif
+    }
+
     get_i2c_ptr(this->id)->CR1 = 0;
 
     if (true == bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<uint32_t>(this->id)))
@@ -469,7 +405,6 @@ void I2C_master::diasble()
         bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<uint32_t>(this->id));
     }
 
-    controllers[static_cast<uint32_t>(this->id)].disable();
     controllers[static_cast<uint32_t>(this->id)].p_i2c_master_handle = nullptr;
 }
 
@@ -799,16 +734,20 @@ I2C_master::Config I2C_master::get_config() const
              get_i2c_ptr(this->id)->TIMINGR };
 }
 
-void I2C_slave::enable(const Config& a_config, Clock_source a_clock_source, uint32_t a_irq_priority)
+void I2C_slave::enable(const Config& a_config, uint32_t a_irq_priority)
 {
+    cml_assert(a_config.analog_filter !=
+               static_cast<Config::Analog_filter>(static_cast<uint32_t>(Config::Analog_filter::enabled) + 1));
+    cml_assert(a_config.fast_plus !=
+               static_cast<Config::Fast_plus>(static_cast<uint32_t>(Config::Fast_plus::enabled) + 1));
+    cml_assert(a_config.crc != static_cast<Config::Crc>(static_cast<uint32_t>(Config::Crc::enabled) + 1));
     cml_assert(a_config.address <= 0x7F);
+
     cml_assert((Config::Fast_plus::enabled == a_config.fast_plus && true == mcu::is_syscfg_enabled()) ||
                Config::Fast_plus::disabled == a_config.fast_plus);
     cml_assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_i2c_slave_handle &&
                nullptr == controllers[static_cast<uint32_t>(this->id)].p_i2c_master_handle);
 
-    controllers[static_cast<uint32_t>(this->id)].enable(get_RCC_CCIPR_from_clock_source(a_clock_source, this->id),
-                                                        a_irq_priority);
     controllers[static_cast<uint32_t>(this->id)].p_i2c_slave_handle = this;
 
     get_i2c_ptr(this->id)->CR1     = 0;
@@ -832,7 +771,6 @@ void I2C_slave::diasble()
         bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + static_cast<uint32_t>(this->id));
     }
 
-    controllers[static_cast<uint32_t>(this->id)].disable();
     controllers[static_cast<uint32_t>(this->id)].p_i2c_slave_handle = nullptr;
 }
 
@@ -1140,6 +1078,71 @@ I2C_slave::Config I2C_slave::get_config() const
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+
+using namespace soc::stm32l4::peripherals;
+
+void rcc<I2C_base>::enable(I2C_base::Id a_id, Clock_source a_clock_source, bool a_enable_in_lp)
+{
+#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+    if (I2C_base::Id::_4 != a_id)
+    {
+        bit_flag::set(&(RCC->CCIPR),
+                      0x3ul << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32_t>(a_id) * 2),
+                      static_cast<uint32_t>(a_clock_source)
+                          << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32_t>(a_id) * 2));
+        bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C1EN_Pos + static_cast<uint32_t>(a_id));
+
+        if (true == a_enable_in_lp)
+        {
+            bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_I2C1SMEN_Pos + static_cast<uint32_t>(a_id));
+        }
+    }
+    else
+    {
+        bit_flag::set(&(RCC->CCIPR2), RCC_CCIPR2_I2C4SEL, static_cast<uint32_t>(a_clock_source));
+        bit::set(&(RCC->APB1ENR2), RCC_APB1ENR2_I2C4EN_Pos);
+
+        if (true == a_enable_in_lp)
+        {
+            bit::set(&(RCC->APB1SMENR2), RCC_APB1SMENR2_I2C4SMEN_Pos);
+        }
+    }
+#else
+    bit_flag::set(&(RCC->CCIPR),
+                  0x3ul << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32_t>(a_id) * 2),
+                  static_cast<uint32_t>(a_clock_source) << (RCC_CCIPR_I2C1SEL_Pos + static_cast<uint32_t>(a_id) * 2));
+    bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C1EN_Pos + static_cast<uint32_t>(a_id));
+
+    if (true == a_enable_in_lp)
+    {
+        bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_I2C1SMEN_Pos + static_cast<uint32_t>(a_id));
+    }
+#endif
+}
+void rcc<I2C_base>::disable(I2C_base::Id a_id)
+{
+#if defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+    if (I2C_base::Id::_4 != a_id)
+    {
+        bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C1EN_Pos + static_cast<uint32_t>(a_id));
+        bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_I2C1SMEN_Pos + static_cast<uint32_t>(a_id));
+    }
+    else
+    {
+        bit::clear(&(RCC->APB1ENR2), RCC_APB1ENR2_I2C4EN_Pos);
+        bit::clear(&(RCC->APB1SMENR2), RCC_APB1SMENR2_I2C4SMEN_Pos);
+    }
+#else
+    bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C1EN_Pos + static_cast<uint32_t>(a_id));
+    bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_I2C1SMEN_Pos + static_cast<uint32_t>(a_id));
+#endif
+}
+
 } // namespace stm32l4
 } // namespace soc
 

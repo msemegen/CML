@@ -59,76 +59,22 @@ constexpr Direction_flag operator|=(Direction_flag& a_f1, Direction_flag a_f2)
 
 struct Controller
 {
-    using Enable_function  = void (*)(uint32_t a_irq_priority);
-    using Disable_function = void (*)();
-
     SPI_TypeDef* p_registers        = nullptr;
     SPI_master* p_spi_master_handle = nullptr;
     SPI_slave* p_spi_slave_handle   = nullptr;
-
-    Enable_function enable   = nullptr;
-    Disable_function disable = nullptr;
 };
-
-void spi_1_enable(uint32_t a_irq_priority)
-{
-    bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN);
-
-    NVIC_SetPriority(SPI1_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(SPI1_IRQn);
-}
-
-void spi_1_disable()
-{
-    bit_flag::clear(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN);
-    NVIC_DisableIRQ(SPI1_IRQn);
-}
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-void spi_2_enable(uint32_t a_irq_priority)
-{
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN);
-
-    NVIC_SetPriority(SPI2_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(SPI2_IRQn);
-}
-
-void spi_2_disable()
-{
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN);
-    NVIC_DisableIRQ(SPI2_IRQn);
-}
-#endif
-
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-void spi_3_enable(uint32_t a_irq_priority)
-{
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN);
-
-    NVIC_SetPriority(SPI3_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(SPI3_IRQn);
-}
-
-void spi_3_disable()
-{
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN);
-    NVIC_DisableIRQ(SPI3_IRQn);
-}
-#endif
 
 Controller controllers[]
 {
-    { SPI1, nullptr, nullptr, spi_1_enable, spi_1_disable },
+    { SPI1, nullptr, nullptr },
 #if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        { SPI2, nullptr, nullptr, spi_2_enable, spi_2_disable },
+        { SPI2, nullptr, nullptr },
 #endif
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
     {
-        SPI3, nullptr, nullptr, spi_3_enable, spi_3_disable
+        SPI3, nullptr, nullptr
     }
 #endif
 };
@@ -497,26 +443,24 @@ SPI_base::Frame_format SPI_base::get_frame_format() const
                  Frame_format::Bit_significance::least :
                  Frame_format::Bit_significance::most };
 }
-SPI_base::Clock_source SPI_base::get_clock_source() const
-{
-    return { Clock_source::Type::pclkx,
-             static_cast<Clock_source::Prescaler>(bit_flag::get(get_spi_ptr(this->id)->CR1, SPI_CR1_BR)) };
-}
 
-void SPI_master::enable(const Config& a_config,
-                        const Frame_format& a_frame_format,
-                        const Clock_source& a_clock_source,
-                        uint32_t a_irq_priority)
+void SPI_master::enable(const Config& a_config, const Frame_format& a_frame_format, uint32_t a_irq_priority)
 {
-    cml_assert(Config::Wiring::unknown != a_config.wiring);
-    cml_assert(Config::Crc::unknown != a_config.crc);
-    cml_assert(Config::NSS_management::unknown != a_config.nss_management);
-    cml_assert(Frame_format::Bit_significance::unknown != a_frame_format.bit_significance);
-    cml_assert(Frame_format::Phase::unknown != a_frame_format.phase);
-    cml_assert(Frame_format::Polarity::unknown != a_frame_format.polarity);
-    cml_assert(Frame_format::Word_length::unknown != a_frame_format.word_length);
-    cml_assert(Clock_source::Prescaler::unknown != a_clock_source.prescaler);
-    cml_assert(Clock_source::Type::unknown != a_clock_source.type);
+    cml_assert(static_cast<Config::Wiring>(static_cast<uint32_t>(Config::Wiring::half_duplex) + 1) != a_config.wiring);
+    cml_assert(static_cast<Config::Crc>(static_cast<uint32_t>(Config::Crc::enable) + 1) != a_config.crc);
+    cml_assert(static_cast<Config::NSS_management>(static_cast<uint32_t>(Config::NSS_management::software) + 1) !=
+               a_config.nss_management);
+    cml_assert(
+        static_cast<Frame_format::Bit_significance>(static_cast<uint32_t>(Frame_format::Bit_significance::least) + 1) !=
+        a_frame_format.bit_significance);
+    cml_assert(static_cast<Frame_format::Phase>(static_cast<uint32_t>(Frame_format::Phase::second_edge) + 1) !=
+               a_frame_format.phase);
+    cml_assert(static_cast<Frame_format::Polarity>(static_cast<uint32_t>(Frame_format::Polarity::high) + 1) !=
+               a_frame_format.polarity);
+    cml_assert(static_cast<Frame_format::Word_length>(static_cast<uint32_t>(Frame_format::Word_length::_16) + 1) !=
+               a_frame_format.word_length);
+    cml_assert(static_cast<Config::Clock_prescaler>(static_cast<uint32_t>(Config::Clock_prescaler::_256) + 1) !=
+               a_config.clock_prescaler);
 
     // not implemented Config::Wiring::half_duplex and Config::Wiring::Simplex
     cml_assert(Config::Wiring::full_duplex == a_config.wiring);
@@ -524,7 +468,6 @@ void SPI_master::enable(const Config& a_config,
     cml_assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_spi_slave_handle &&
                nullptr == controllers[static_cast<uint32_t>(this->id)].p_spi_master_handle);
 
-    controllers[static_cast<uint32_t>(this->id)].enable(a_irq_priority);
     controllers[static_cast<uint32_t>(this->id)].p_spi_slave_handle  = nullptr;
     controllers[static_cast<uint32_t>(this->id)].p_spi_master_handle = this;
 
@@ -535,12 +478,57 @@ void SPI_master::enable(const Config& a_config,
     get_spi_ptr(this->id)->CR1 =
         SPI_CR1_MSTR | static_cast<uint32_t>(a_config.wiring) | static_cast<uint32_t>(a_frame_format.phase) |
         static_cast<uint32_t>(a_frame_format.polarity) | static_cast<uint32_t>(a_frame_format.bit_significance) |
-        static_cast<uint32_t>(a_clock_source.prescaler) | (Config::Crc::enable == a_config.crc ? SPI_CR1_CRCEN : 0x0u) |
+        static_cast<uint32_t>(a_config.clock_prescaler) | (Config::Crc::enable == a_config.crc ? SPI_CR1_CRCEN : 0x0u) |
         (Config::NSS_management::software == a_config.nss_management ? SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_SPE : 0x0u);
+
+    switch (this->id)
+    {
+        case Id::_1: {
+            NVIC_SetPriority(IRQn_Type::SPI1_IRQn, a_irq_priority);
+            NVIC_EnableIRQ(IRQn_Type::SPI1_IRQn);
+        }
+        break;
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case Id::_2: {
+            NVIC_SetPriority(IRQn_Type::SPI2_IRQn, a_irq_priority);
+            NVIC_EnableIRQ(IRQn_Type::SPI2_IRQn);
+        }
+#endif
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case Id::_3: {
+            NVIC_SetPriority(IRQn_Type::SPI3_IRQn, a_irq_priority);
+            NVIC_EnableIRQ(IRQn_Type::SPI3_IRQn);
+        }
+        break;
+#endif
+    }
 }
 
 void SPI_master::disable()
 {
+    switch (this->id)
+    {
+        case Id::_1: {
+            NVIC_DisableIRQ(IRQn_Type::SPI1_IRQn);
+        }
+        break;
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case Id::_2: {
+            NVIC_DisableIRQ(IRQn_Type::SPI2_IRQn);
+        }
+#endif
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case Id::_3: {
+            NVIC_DisableIRQ(IRQn_Type::SPI3_IRQn);
+        }
+        break;
+#endif
+    }
+
     if (false == bit_flag::is(get_spi_ptr(this->id)->CR1, SPI_CR1_BIDIMODE) &&
         true == bit_flag::is(get_spi_ptr(this->id)->CR1, SPI_CR1_RXONLY))
     {
@@ -570,7 +558,6 @@ void SPI_master::disable()
     get_spi_ptr(this->id)->CR2 = 0;
     get_spi_ptr(this->id)->CR1 = 0;
 
-    controllers[static_cast<uint32_t>(this->id)].disable();
     controllers[static_cast<uint32_t>(this->id)].p_spi_master_handle = nullptr;
 }
 
@@ -1083,7 +1070,8 @@ SPI_master::Result SPI_master::transmit_receive_bytes_polling(const void* a_p_tx
 
 SPI_master::Config SPI_master::get_config() const
 {
-    return { true == bit_flag::is(get_spi_ptr(this->id)->CR1, SPI_CR1_BIDIMODE) ?
+    return { static_cast<Config::Clock_prescaler>(bit_flag::get(get_spi_ptr(this->id)->CR1, SPI_CR1_BR_Msk)),
+             true == bit_flag::is(get_spi_ptr(this->id)->CR1, SPI_CR1_BIDIMODE) ?
                  Config::Wiring::half_duplex :
                  (true == bit_flag::is(get_spi_ptr(this->id)->CR1, SPI_CR1_RXONLY) ? Config::Wiring::simplex :
                                                                                      Config::Wiring::full_duplex),
@@ -1093,19 +1081,21 @@ SPI_master::Config SPI_master::get_config() const
              static_cast<Config::Crc>(bit_flag::is(get_spi_ptr(this->id)->CR1, SPI_CR1_CRCEN)) };
 }
 
-void SPI_slave::enable(const Config& a_config,
-                       const Frame_format& a_frame_format,
-                       const Clock_source& a_clock_source,
-                       uint32_t a_irq_priority)
+void SPI_slave::enable(const Config& a_config, const Frame_format& a_frame_format, uint32_t a_irq_priority)
 {
-    cml_assert(Config::Wiring::unknown != a_config.wiring);
-    cml_assert(Config::Crc::unknown != a_config.crc);
-    cml_assert(Frame_format::Bit_significance::unknown != a_frame_format.bit_significance);
-    cml_assert(Frame_format::Phase::unknown != a_frame_format.phase);
-    cml_assert(Frame_format::Polarity::unknown != a_frame_format.polarity);
-    cml_assert(Frame_format::Word_length::unknown != a_frame_format.word_length);
-    cml_assert(Clock_source::Prescaler::unknown != a_clock_source.prescaler);
-    cml_assert(Clock_source::Type::unknown != a_clock_source.type);
+    cml_assert(static_cast<Config::Wiring>(static_cast<uint32_t>(Config::Wiring::half_duplex) + 1) != a_config.wiring);
+    cml_assert(static_cast<Config::Crc>(static_cast<uint32_t>(Config::Crc::enable) + 1) != a_config.crc);
+    cml_assert(
+        static_cast<Frame_format::Bit_significance>(static_cast<uint32_t>(Frame_format::Bit_significance::least) + 1) !=
+        a_frame_format.bit_significance);
+    cml_assert(static_cast<Frame_format::Phase>(static_cast<uint32_t>(Frame_format::Phase::second_edge) + 1) !=
+               a_frame_format.phase);
+    cml_assert(static_cast<Frame_format::Polarity>(static_cast<uint32_t>(Frame_format::Polarity::high) + 1) !=
+               a_frame_format.polarity);
+    cml_assert(static_cast<Frame_format::Word_length>(static_cast<uint32_t>(Frame_format::Word_length::_16) + 1) !=
+               a_frame_format.word_length);
+    cml_assert(static_cast<Config::Clock_prescaler>(static_cast<uint32_t>(Config::Clock_prescaler::_256) + 1) !=
+               a_config.clock_prescaler);
 
     // not implemented Config::Wiring::half_duplex and Config::Wiring::Simplex
     cml_assert(Config::Wiring::full_duplex == a_config.wiring);
@@ -1113,7 +1103,6 @@ void SPI_slave::enable(const Config& a_config,
     cml_assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_spi_slave_handle &&
                nullptr == controllers[static_cast<uint32_t>(this->id)].p_spi_master_handle);
 
-    controllers[static_cast<uint32_t>(this->id)].enable(a_irq_priority);
     controllers[static_cast<uint32_t>(this->id)].p_spi_slave_handle  = this;
     controllers[static_cast<uint32_t>(this->id)].p_spi_master_handle = nullptr;
 
@@ -1123,7 +1112,7 @@ void SPI_slave::enable(const Config& a_config,
     get_spi_ptr(this->id)->CR1 = static_cast<uint32_t>(a_config.wiring) | static_cast<uint32_t>(a_frame_format.phase) |
                                  static_cast<uint32_t>(a_frame_format.polarity) |
                                  static_cast<uint32_t>(a_frame_format.bit_significance) |
-                                 static_cast<uint32_t>(a_clock_source.prescaler) |
+                                 static_cast<uint32_t>(a_config.clock_prescaler) |
                                  (Config::Crc::enable == a_config.crc ? SPI_CR1_CRCEN : 0x0u) | SPI_CR1_SPE;
 }
 
@@ -1158,7 +1147,6 @@ void SPI_slave::disable()
     get_spi_ptr(this->id)->CR2 = 0;
     get_spi_ptr(this->id)->CR1 = 0;
 
-    controllers[static_cast<uint32_t>(this->id)].disable();
     controllers[static_cast<uint32_t>(this->id)].p_spi_master_handle = nullptr;
 }
 
@@ -1518,7 +1506,8 @@ SPI_slave::Result SPI_slave::transmit_receive_bytes_polling(const void* a_p_tx_d
 
 SPI_slave::Config SPI_slave::get_config() const
 {
-    return { true == bit_flag::is(get_spi_ptr(this->id)->CR1, SPI_CR1_BIDIMODE) ?
+    return { static_cast<Config::Clock_prescaler>(bit_flag::get(get_spi_ptr(this->id)->CR1, SPI_CR1_BR_Msk)),
+             true == bit_flag::is(get_spi_ptr(this->id)->CR1, SPI_CR1_BIDIMODE) ?
                  Config::Wiring::half_duplex :
                  (true == bit_flag::is(get_spi_ptr(this->id)->CR1, SPI_CR1_RXONLY) ? Config::Wiring::simplex :
                                                                                      Config::Wiring::full_duplex),
@@ -1528,6 +1517,83 @@ SPI_slave::Config SPI_slave::get_config() const
 #endif
 
 } // namespace peripherals
+} // namespace stm32l4
+} // namespace soc
+
+namespace soc {
+namespace stm32l4 {
+
+using namespace soc::stm32l4::peripherals;
+
+void rcc<SPI_base>::enable(SPI_base::Id a_id, bool a_enable_in_lp)
+{
+    switch (a_id)
+    {
+        case SPI_base::Id::_1: {
+            bit::set(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN_Pos);
+
+            if (true == a_enable_in_lp)
+            {
+                bit::set(&(RCC->APB2SMENR), RCC_APB2SMENR_SPI1SMEN_Pos);
+            }
+        }
+        break;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case SPI_base::Id::_2: {
+            bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN_Pos);
+
+            if (true == a_enable_in_lp)
+            {
+                bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI2SMEN_Pos);
+            }
+        }
+        break;
+#endif
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case SPI_base::Id::_3: {
+            bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN_Pos);
+
+            if (true == a_enable_in_lp)
+            {
+                bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI3SMEN_Pos);
+            }
+        }
+        break;
+#endif
+    }
+}
+void rcc<SPI_base>::disable(SPI_base::Id a_id)
+{
+    switch (a_id)
+    {
+        case SPI_base::Id::_1: {
+            bit::clear(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN_Pos);
+            bit::clear(&(RCC->APB2SMENR), RCC_APB2SMENR_SPI1SMEN_Pos);
+        }
+        break;
+
+#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case SPI_base::Id::_2: {
+            bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN_Pos);
+            bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI2SMEN_Pos);
+        }
+        break;
+#endif
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+        case SPI_base::Id::_3: {
+            bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN_Pos);
+            bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI3SMEN_Pos);
+        }
+        break;
+#endif
+    }
+}
+
 } // namespace stm32l4
 } // namespace soc
 
