@@ -56,8 +56,6 @@ public:
     ~IWDG();
 
     bool enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_window, uint32_t a_timeout);
-    void disable();
-
     void feed();
 };
 

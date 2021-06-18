@@ -61,7 +61,6 @@ IWDG::IWDG()
 IWDG::~IWDG()
 {
     created = false;
-    this->disable();
 }
 
 bool IWDG::enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_window, uint32_t a_timeout)
@@ -101,11 +100,6 @@ bool IWDG::enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_wind
         {
             IWDG->KR = control_flags::reload;
         }
-    }
-
-    if (false == ret)
-    {
-        this->disable();
     }
 
     return ret;

@@ -16,12 +16,12 @@ CPPFLAGS := $(CFLAGS)
 CPPFLAGS += -std=c++17 -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics
 
 C_SOURCE_FILES    := $(wildcard $(addsuffix /*.c, $(C_SOURCE_PATHS)))
-C_OBJECTS_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.c, %.o,$(C_SOURCE_FILES))))
-C_OBJECTS_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.c, %.o,$(C_SOURCE_FILES))))
+C_OBJECTS_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.c, %_c.o,$(C_SOURCE_FILES))))
+C_OBJECTS_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.c, %_c.o,$(C_SOURCE_FILES))))
 
 CPP_SOURCE_FILES    := $(wildcard $(addsuffix /*.cpp, $(CPP_SOURCE_PATHS)))
-CPP_OBJECTS_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.cpp, %.o,$(CPP_SOURCE_FILES))))
-CPP_OBJECTS_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.cpp, %.o,$(CPP_SOURCE_FILES))))
+CPP_OBJECTS_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.cpp, %_cpp.o,$(CPP_SOURCE_FILES))))
+CPP_OBJECTS_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.cpp, %_cpp.o,$(CPP_SOURCE_FILES))))
 
 STARTUP_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.s, %.o,$(STARTUP_FILE))))
 STARTUP_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.s, %.o,$(STARTUP_FILE))))
@@ -35,10 +35,10 @@ ODFLAGS = -S
 CPFLAGS = -Obinary
 
 DEBUG_FLAGS = -O0 -g3 -DCML_ASSERT_ENABLED
-RELEASE_FLAGS = -Os
+RELEASE_FLAGS = -O3
 
-vpath %.c   $(C_SOURCE_PATHS)
 vpath %.cpp $(CPP_SOURCE_PATHS)
+vpath %.c   $(C_SOURCE_PATHS)
 
 .PHONY: release
 .PHONY: debug
@@ -66,12 +66,12 @@ flashd: $(OUTPUT_NAME)_d.bin
 								-c "reset run" 								 \
 								-c "shutdown"
 
-$(C_OBJECTS_RELEASE): $(OUTDIR_RELEASE)/%.o : %.c
+$(C_OBJECTS_RELEASE): $(OUTDIR_RELEASE)/%_c.o : %.c
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
 	$(CC) -c -o $@ $< $(CFLAGS) $(RELEASE_FLAGS)
 
-$(CPP_OBJECTS_RELEASE): $(OUTDIR_RELEASE)/%.o : %.cpp
+$(CPP_OBJECTS_RELEASE): $(OUTDIR_RELEASE)/%_cpp.o : %.cpp
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CPPFLAGS) $(RELEASE_FLAGS)
@@ -81,12 +81,12 @@ $(STARTUP_RELEASE): $(STARTUP_FILE)
 	mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CFLAGS) $(RELEASE_FLAGS)
 
-$(C_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%.o : %.c
+$(C_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%_c.o : %.c
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
 	$(CC) -c -o $@ $< $(CFLAGS) $(DEBUG_FLAGS)
 
-$(CPP_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%.o : %.cpp
+$(CPP_OBJECTS_DEBUG): $(OUTDIR_DEBUG)/%_cpp.o : %.cpp
 	@bash -c 'echo -e $<" \e[01;32m[compiling]\e[0m"'
 	mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CPPFLAGS) $(DEBUG_FLAGS)

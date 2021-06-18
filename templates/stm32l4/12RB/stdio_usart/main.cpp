@@ -16,6 +16,7 @@
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
+#include <cml/hal/rcc.hpp>
 #include <cml/hal/system_timer.hpp>
 
 namespace {
@@ -56,6 +57,8 @@ int main()
     assertion::register_print({ assert_print, nullptr });
 
     GPIO gpio_port_a(GPIO::Id::a);
+
+    rcc<GPIO>::enable(GPIO::Id::a, false);
     gpio_port_a.enable();
 
     GPIO::Alternate_function::Config usart_pin_config = {
@@ -67,14 +70,15 @@ int main()
 
     USART iostream(USART::Id::_2);
 
+    rcc<USART>::enable(USART::Id::_2, rcc<USART>::Clock_source::sysclk, false);
     bool iostream_ready = iostream.enable({ 115200,
+                                            mcu::get_sysclk_frequency_hz(),
                                             USART::Oversampling::_16,
                                             USART::Stop_bits::_1,
                                             USART::Flow_control_flag::none,
                                             USART::Sampling_method::three_sample_bit,
                                             USART::Mode_flag::tx | USART::Mode_flag::rx },
                                           { USART::Word_length::_8_bit, USART::Parity::none },
-                                          { USART::Clock::Source::sysclk, mcu::get_sysclk_frequency_hz() },
                                           0x1u,
                                           10u);
 

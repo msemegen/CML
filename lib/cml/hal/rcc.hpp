@@ -8,17 +8,15 @@
  */
 
 #ifdef STM32L4
-#include <soc/stm32l4/peripherals/ADC.hpp>
+#include <soc/stm32l4/rcc.hpp>
 #endif // STM32L4
 
 namespace cml {
 namespace hal {
-namespace peripherals {
 
 #ifdef STM32L4
-using ADC = soc::stm32l4::peripherals::ADC;
+template<typename T> using rcc = soc::stm32l4::rcc<T>;
 #endif // STM32L4
 
-} // namespace peripherals
 } // namespace hal
 } // namespace cml

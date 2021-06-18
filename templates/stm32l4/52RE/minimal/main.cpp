@@ -10,6 +10,7 @@
 #include <cml/hal/Systick.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
+#include <cml/hal/rcc.hpp>
 #include <cml/hal/system_timer.hpp>
 #include <cml/utils/delay.hpp>
 

@@ -45,25 +45,19 @@ using namespace cml::debug;
     defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
     defined(STM32L452xx) || defined(STM32L462xx)
 
+#define RNG_T ((RNG_TypeDef*)RNG_BASE)
+
 void RNG_IRQHandler()
 {
     cml_assert(nullptr != new_value_callback.function);
 
-#ifndef RNG
-#define RNG ((RNG_TypeDef*)RNG_BASE)
-#endif
-
-    const uint32_t isr = RNG->SR;
+    const uint32_t isr = RNG_T->SR;
     uint32_t value     = 0;
 
     if (true == bit_flag::is(isr, RNG_SR_DRDY))
     {
-        value = RNG->DR;
+        value = RNG_T->DR;
     }
-
-#ifdef RNG
-#undef RNG
-#endif
 
     new_value_callback.function(
         value, bit_flag::is(isr, RNG_SR_CECS), bit_flag::is(isr, RNG_SR_SECS), new_value_callback.p_user_data);
@@ -104,23 +98,15 @@ bool RNG::enable(uint32_t a_irq_priority, uint32_t a_timeout)
 
     uint32_t start = system_timer::get();
 
-#ifndef RNG
-#define RNG ((RNG_TypeDef*)RNG_BASE)
-#endif
+    bit_flag::set(&(RNG_T->CR), RNG_CR_RNGEN);
 
-    bit_flag::set(&(RNG->CR), RNG_CR_RNGEN);
-
-    bool ret = false == bit_flag::is(RNG->SR, RNG_SR_SEIS);
+    bool ret = false == bit_flag::is(RNG_T->SR, RNG_SR_SEIS);
 
     if (true == ret)
     {
-        ret = wait_until::all_bits(&(RNG->SR), RNG_SR_SECS, true, start, a_timeout) &&
-              wait_until::all_bits(&(RNG->SR), RNG_SR_CECS, true, start, a_timeout);
+        ret = wait_until::all_bits(&(RNG_T->SR), RNG_SR_SECS, true, start, a_timeout) &&
+              wait_until::all_bits(&(RNG_T->SR), RNG_SR_CECS, true, start, a_timeout);
     }
-
-#ifdef RNG
-#undef RNG
-#endif
 
     if (true == ret)
     {
@@ -133,17 +119,7 @@ bool RNG::enable(uint32_t a_irq_priority, uint32_t a_timeout)
 
 void RNG::disable()
 {
-#ifndef RNG
-#define RNG ((RNG_TypeDef*)RNG_BASE)
-#endif
-
-    bit_flag::clear(&(RNG->CR), RNG_CR_RNGEN);
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_RNGEN);
-
-#ifdef RNG
-#undef RNG
-#endif
-
+    bit_flag::clear(&(RNG_T->CR), RNG_CR_RNGEN);
     NVIC_DisableIRQ(RNG_IRQn);
 }
 
@@ -153,20 +129,12 @@ bool RNG::get_value_polling(uint32_t* a_p_value, uint32_t a_timeout)
 
     uint32_t start = system_timer::get();
 
-#ifndef RNG
-#define RNG ((RNG_TypeDef*)RNG_BASE)
-#endif
-
-    bool ret = wait_until::all_bits(&(RNG->SR), RNG_SR_DRDY, false, start, a_timeout);
+    bool ret = wait_until::all_bits(&(RNG_T->SR), RNG_SR_DRDY, false, start, a_timeout);
 
     if (true == ret)
     {
-        (*a_p_value) = RNG->DR;
+        (*a_p_value) = RNG_T->DR;
     }
-
-#ifdef RNG
-#undef RNG
-#endif
 
     return ret;
 }
@@ -179,15 +147,7 @@ void RNG::register_new_value_callback(const New_value_callback& a_callback)
 
     new_value_callback = a_callback;
 
-#ifndef RNG
-#define RNG ((RNG_TypeDef*)RNG_BASE)
-#endif
-
-    bit_flag::set(&(RNG->CR), RNG_CR_IE);
-
-#ifdef RNG
-#undef RNG
-#endif
+    bit_flag::set(&(RNG_T->CR), RNG_CR_IE);
 }
 
 void RNG::unregister_new_value_callback()
@@ -196,15 +156,7 @@ void RNG::unregister_new_value_callback()
 
     Interrupt_guard guard;
 
-#ifndef RNG
-#define RNG ((RNG_TypeDef*)RNG_BASE)
-#endif
-
-    bit_flag::clear(&(RNG->CR), RNG_CR_IE);
-
-#ifdef RNG
-#undef RNG
-#endif
+    bit_flag::clear(&(RNG_T->CR), RNG_CR_IE);
 
     new_value_callback = { nullptr, nullptr };
 }

@@ -35,6 +35,7 @@ CRC32::CRC32()
 
 CRC32::~CRC32()
 {
+    this->disable();
     created = false;
 }
 

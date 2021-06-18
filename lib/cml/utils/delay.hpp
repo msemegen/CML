@@ -15,10 +15,6 @@
 #include <soc/stm32l4/misc.hpp>
 #endif // STM32L4
 
-#ifdef STM32L011xx
-#include <soc/stm32l011xx/misc.hpp>
-#endif // STM32L011xx
-
 namespace cml {
 namespace utils {
 
@@ -52,10 +48,6 @@ public:
 #ifdef STM32L4
         soc::stm32l4::misc::delay_us(a_time);
 #endif // STM32L4
-
-#ifdef STM32L011xx
-        soc::stm32l011xx::misc::delay_us(a_time);
-#endif // STM32L011xx
     }
 };
 
