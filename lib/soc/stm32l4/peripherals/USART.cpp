@@ -268,14 +268,12 @@ bool USART::enable(const Config& a_config,
     cml_assert(0 != a_config.baud_rate);
     cml_assert(0 != a_config.clock_freq_Hz);
 
-    cml_assert(static_cast<Flow_control_flag>(static_cast<uint32_t>(Flow_control_flag::clear_to_send) + 1) !=
-               a_config.flow_control);
-    cml_assert(static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1) != a_config.stop_bits);
-    cml_assert(static_cast<Sampling_method>(static_cast<uint32_t>(Sampling_method::one_sample_bit) + 1) !=
-               a_config.sampling_method);
+    cml_assert(various::enum_incorrect_value<Flow_control_flag>() != a_config.flow_control);
+    cml_assert(various::enum_incorrect_value<Stop_bits>() != a_config.stop_bits);
+    cml_assert(various::enum_incorrect_value<Sampling_method>() != a_config.sampling_method);
 
-    cml_assert(static_cast<Parity>(static_cast<uint32_t>(Parity::odd) + 1) != a_frame_format.parity);
-    cml_assert(static_cast<Word_length>(static_cast<uint32_t>(Word_length::_7_bit) + 1) != a_frame_format.word_length);
+    cml_assert(various::enum_incorrect_value<Parity>() != a_frame_format.parity);
+    cml_assert(various::enum_incorrect_value<Word_length>() != a_frame_format.word_length);
 
     cml_assert(a_timeout_ms > 0);
 
@@ -693,8 +691,6 @@ void USART::set_baud_rate(uint32_t a_baud_rate)
 
 void USART::set_oversampling(Oversampling a_oversampling)
 {
-    cml_assert(static_cast<Oversampling>(static_cast<uint32_t>(Oversampling::_8) + 1) != a_oversampling);
-
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), static_cast<uint32_t>(a_oversampling));
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
@@ -702,8 +698,6 @@ void USART::set_oversampling(Oversampling a_oversampling)
 
 void USART::set_stop_bits(Stop_bits a_stop_bits)
 {
-    cml_assert(static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1) != a_stop_bits);
-
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR2), static_cast<uint32_t>(a_stop_bits));
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
@@ -711,9 +705,6 @@ void USART::set_stop_bits(Stop_bits a_stop_bits)
 
 void USART::set_flow_control(Flow_control_flag a_flow_control)
 {
-    cml_assert(static_cast<Flow_control_flag>(static_cast<uint32_t>(Flow_control_flag::clear_to_send) + 1) !=
-               a_flow_control);
-
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR3), static_cast<uint32_t>(a_flow_control));
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
@@ -721,9 +712,6 @@ void USART::set_flow_control(Flow_control_flag a_flow_control)
 
 void USART::set_sampling_method(Sampling_method a_sampling_method)
 {
-    cml_assert(static_cast<Sampling_method>(static_cast<uint32_t>(Sampling_method::one_sample_bit) + 1) !=
-               a_sampling_method);
-
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR3), USART_CR3_ONEBIT, static_cast<uint32_t>(a_sampling_method));
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
@@ -731,8 +719,8 @@ void USART::set_sampling_method(Sampling_method a_sampling_method)
 
 void USART::set_frame_format(const Frame_format& a_frame_format)
 {
-    cml_assert(static_cast<Word_length>(static_cast<uint32_t>(Word_length::_7_bit) + 1) != a_frame_format.word_length);
-    cml_assert(static_cast<Parity>(static_cast<uint32_t>(Parity::odd) + 1) != a_frame_format.parity);
+    cml_assert(various::enum_incorrect_value<Word_length>() != a_frame_format.word_length);
+    cml_assert(various::enum_incorrect_value<Parity>() != a_frame_format.parity);
 
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR1),
@@ -745,7 +733,6 @@ void USART::set_frame_format(const Frame_format& a_frame_format)
 
 bool USART::set_mode(Mode_flag a_mode, uint32_t a_timeout_ms)
 {
-    cml_assert(static_cast<Mode_flag>(static_cast<uint32_t>(Mode_flag::tx) + 1) != a_mode);
     cml_assert(a_timeout_ms > 0);
 
     uint32_t start = system_timer::get();
@@ -799,7 +786,8 @@ bool RS485::enable(const Config& a_config,
     cml_assert(0 != a_config.baud_rate);
     cml_assert(0 != a_config.clock_freq_Hz);
 
-    cml_assert(static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1) != a_config.stop_bits);
+    cml_assert(various::enum_incorrect_value<Stop_bits>() != a_config.stop_bits);
+    cml_assert(various::enum_incorrect_value<Oversampling>() != a_config.oversampling);
 
     cml_assert(a_timeout > 0);
 
@@ -810,7 +798,6 @@ bool RS485::enable(const Config& a_config,
 
     controllers[static_cast<uint32_t>(this->id)].p_rs485_handle = this;
     controllers[static_cast<uint32_t>(this->id)].p_usart_handle = nullptr;
-    // controllers[static_cast<uint32_t>(this->id)].enable(a_clock.source, a_irq_priority);
 
     switch (a_config.oversampling)
     {
@@ -1161,8 +1148,6 @@ void RS485::set_baud_rate(uint32_t a_baud_rate)
 
 void RS485::set_oversampling(Oversampling a_oversampling)
 {
-    cml_assert(static_cast<Oversampling>(static_cast<uint32_t>(Oversampling::_8) + 1) != a_oversampling);
-
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), static_cast<uint32_t>(a_oversampling));
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
@@ -1170,8 +1155,6 @@ void RS485::set_oversampling(Oversampling a_oversampling)
 
 void RS485::set_stop_bits(Stop_bits a_stop_bits)
 {
-    cml_assert(static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1) != a_stop_bits);
-
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR2), static_cast<uint32_t>(a_stop_bits));
     bit_flag::set(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);

@@ -8,9 +8,14 @@
 // this
 #include <soc/stm32l4/pwr.hpp>
 
+// cml
+#include <cml/various.hpp>
+
 namespace soc {
 namespace stm32l4 {
-pwr::Core_sleep_mode pwr::core_sleep_mode =
-    static_cast<pwr::Core_sleep_mode>(static_cast<uint32_t>(pwr::Core_sleep_mode::wfe) + 1);
+
+using namespace cml;
+
+pwr::Core_sleep_mode pwr::core_sleep_mode = various::enum_incorrect_value<pwr::Core_sleep_mode>();
 } // namespace stm32l4
 } // namespace soc

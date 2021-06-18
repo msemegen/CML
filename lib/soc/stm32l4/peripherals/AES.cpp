@@ -41,34 +41,34 @@ AES::~AES()
     created = false;
 }
 
-void AES::enable(Chaining_mode a_mode)
+void AES::enable(const Config& a_config)
 {
     bit_flag::clear(&(AES_T->CR), AES_CR_EN);
 
-    switch (a_mode)
+    switch (a_config.chaining_mode)
     {
-        case Chaining_mode::ecb: {
+        case Config::Chaining_mode::ecb: {
 
         }
         break;
 
-        case Chaining_mode::cbc: {
+        case Config::Chaining_mode::cbc: {
         }
         break;
 
-        case Chaining_mode::ctr: {
+        case Config::Chaining_mode::ctr: {
         }
         break;
 
-        case Chaining_mode::gcm: {
+        case Config::Chaining_mode::gcm: {
         }
         break;
 
-        case Chaining_mode::gmac: {
+        case Config::Chaining_mode::gmac: {
         }
         break;
 
-        case Chaining_mode::ccm: {
+        case Config::Chaining_mode::ccm: {
         }
         break;
     }

@@ -12,9 +12,13 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/various.hpp>
 
 // soc
 #include <soc/stm32l4/rcc.hpp>
+
+// std
+#include <limits>
 
 #if defined(STM32L422xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L462xx)
 
@@ -30,21 +34,35 @@ namespace peripherals {
 class AES : private cml::Non_copyable
 {
 public:
-    enum class Chaining_mode
+
+    struct Config
     {
-        ecb,
-        cbc,
-        ctr,
-        gcm,
-        gmac,
-        ccm
+        enum class Chaining_mode
+        {
+            ecb,
+            cbc,
+            ctr,
+            gcm,
+            gmac,
+            ccm
+        };
+    
+        enum class Key_size
+        {
+            _128b = 0x0u,
+            _256b = AES_CR_KEYSIZE_Msk
+        };
+
+        Chaining_mode chaining_mode = cml::various::enum_incorrect_value<Chaining_mode>();
+        Key_size key_size           = cml::various::enum_incorrect_value<Key_size>();
     };
+
 
 public:
     AES();
     ~AES();
 
-    void enable(Chaining_mode a_mode);
+    void enable(const Config& a_config);
     void disable();
 
     void encrypt();

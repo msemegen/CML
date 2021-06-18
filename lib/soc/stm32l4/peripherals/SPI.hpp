@@ -13,6 +13,7 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/various.hpp>
 
 // soc
 #include <soc/stm32l4/peripherals/GPIO.hpp>
@@ -88,16 +89,15 @@ public:
             second_edge = SPI_CR1_CPHA,
         };
 
-        Polarity polarity       = static_cast<Polarity>(static_cast<uint32_t>(Polarity::high) + 1);
-        Phase phase             = static_cast<Phase>(static_cast<uint32_t>(Phase::second_edge) + 1);
-        Word_length word_length = static_cast<Word_length>(static_cast<uint32_t>(Word_length::_16) + 1);
-        Bit_significance bit_significance =
-            static_cast<Bit_significance>(static_cast<uint32_t>(Bit_significance::least) + 1);
+        Polarity polarity                 = cml::various::enum_incorrect_value<Polarity>();
+        Phase phase                       = cml::various::enum_incorrect_value<Phase>();
+        Word_length word_length           = cml::various::enum_incorrect_value<Word_length>();
+        Bit_significance bit_significance = cml::various::enum_incorrect_value<Bit_significance>();
     };
 
     struct Result
     {
-        Bus_flag bus_flag             = static_cast<Bus_flag>(static_cast<uint32_t>(Bus_flag::mode_fault) + 1);
+        Bus_flag bus_flag             = cml::various::enum_incorrect_value<Bus_flag>();
         uint32_t data_length_in_words = 0;
     };
 
@@ -229,12 +229,10 @@ public:
             enable  = SPI_CR1_CRCEN
         };
 
-        Clock_prescaler clock_prescaler =
-            static_cast<Clock_prescaler>(static_cast<uint32_t>(Clock_prescaler::_256) + 1);
-        Wiring wiring = static_cast<Wiring>(static_cast<uint32_t>(Wiring::half_duplex) + 1);
-        NSS_management nss_management =
-            static_cast<NSS_management>(static_cast<uint32_t>(NSS_management::software) + 1);
-        Crc crc = static_cast<Crc>(static_cast<uint32_t>(Crc::enable) + 1);
+        Clock_prescaler clock_prescaler = cml::various::enum_incorrect_value<Clock_prescaler>();
+        Wiring wiring                   = cml::various::enum_incorrect_value<Wiring>();
+        NSS_management nss_management   = cml::various::enum_incorrect_value<NSS_management>();
+        Crc crc                         = cml::various::enum_incorrect_value<Crc>();
     };
 
 public:
@@ -354,10 +352,9 @@ public:
             enable  = SPI_CR1_CRCEN,
         };
 
-        Clock_prescaler clock_prescaler =
-            static_cast<Clock_prescaler>(static_cast<uint32_t>(Clock_prescaler::_256) + 1);
-        Wiring wiring = static_cast<Wiring>(static_cast<uint32_t>(Wiring::half_duplex) + 1);
-        Crc crc       = static_cast<Crc>(static_cast<uint32_t>(Crc::enable) + 1);
+        Clock_prescaler clock_prescaler = cml::various::enum_incorrect_value<Clock_prescaler>();
+        Wiring wiring                   = cml::various::enum_incorrect_value<Wiring>();
+        Crc crc                         = cml::various::enum_incorrect_value<Crc>();
     };
 
 public:

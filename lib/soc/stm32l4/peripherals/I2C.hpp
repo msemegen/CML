@@ -16,6 +16,7 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/various.hpp>
 
 namespace soc {
 namespace stm32l4 {
@@ -53,7 +54,7 @@ public:
 
     struct Result
     {
-        Bus_flag bus_flag             = static_cast<Bus_flag>(static_cast<uint32_t>(Bus_flag::nack) + 1);
+        Bus_flag bus_flag             = cml::various::enum_incorrect_value<Bus_flag>();
         uint32_t data_length_in_bytes = 0;
     };
 
@@ -139,9 +140,9 @@ public:
             enabled
         };
 
-        Analog_filter analog_filter = static_cast<Analog_filter>(static_cast<uint32_t>(Analog_filter::enabled) + 1);
-        Fast_plus fast_plus         = static_cast<Fast_plus>(static_cast<uint32_t>(Fast_plus::enabled) + 1);
-        Crc crc                     = static_cast<Crc>(static_cast<uint32_t>(Crc::enabled) + 1);
+        Analog_filter analog_filter = cml::various::enum_incorrect_value<Analog_filter>();
+        Fast_plus fast_plus         = cml::various::enum_incorrect_value<Fast_plus>();
+        Crc crc                     = cml::various::enum_incorrect_value<Crc>();
         uint32_t timings            = 0;
     };
 
@@ -291,9 +292,9 @@ public:
             enabled,
         };
 
-        Analog_filter analog_filter = static_cast<Analog_filter>(static_cast<uint32_t>(Analog_filter::enabled) + 1);
-        Fast_plus fast_plus         = static_cast<Fast_plus>(static_cast<uint32_t>(Fast_plus::enabled) + 1);
-        Crc crc                     = static_cast<Crc>(static_cast<uint32_t>(Crc::enabled) + 1);
+        Analog_filter analog_filter = cml::various::enum_incorrect_value<Analog_filter>();
+        Fast_plus fast_plus         = cml::various::enum_incorrect_value<Fast_plus>();
+        Crc crc                     = cml::various::enum_incorrect_value<Crc>();
         uint32_t timings            = 0;
         uint16_t address            = 0;
     };

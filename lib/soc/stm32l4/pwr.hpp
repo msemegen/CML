@@ -73,8 +73,6 @@ public:
         cml::bit_flag::clear(&(SCB->SCR), SCB_SCR_SLEEPDEEP_Msk);
     }
 
-    void peripheral_enable();
-
 private:
     pwr()           = delete;
     pwr(const pwr&) = delete;

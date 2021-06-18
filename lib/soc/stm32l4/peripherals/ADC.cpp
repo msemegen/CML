@@ -197,29 +197,25 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_c
 
     for (uint32_t i = 0; i < a_channels_count && i < 4; i++)
     {
-        cml_assert(static_cast<Channel::Id>(static_cast<uint32_t>(Channel::Id::battery_voltage) + 1) !=
-                   a_p_channels[i].id);
+        cml_assert(various::enum_incorrect_value<Channel::Id>() != a_p_channels[i].id);
         bit_flag::set(&(get_adc_ptr(this->id)->SQR1), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 4; i < a_channels_count && i < 9; i++)
     {
-        cml_assert(static_cast<Channel::Id>(static_cast<uint32_t>(Channel::Id::battery_voltage) + 1) !=
-                   a_p_channels[i].id);
+        cml_assert(various::enum_incorrect_value<Channel::Id>() != a_p_channels[i].id);
         bit_flag::set(&(get_adc_ptr(this->id)->SQR2), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 9; i < a_channels_count && i < 14; i++)
     {
-        cml_assert(static_cast<Channel::Id>(static_cast<uint32_t>(Channel::Id::battery_voltage) + 1) !=
-                   a_p_channels[i].id);
+        cml_assert(various::enum_incorrect_value<Channel::Id>() != a_p_channels[i].id);
         bit_flag::set(&(get_adc_ptr(this->id)->SQR3), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
     for (uint32_t i = 14; i < a_channels_count && i < 16; i++)
     {
-        cml_assert(static_cast<Channel::Id>(static_cast<uint32_t>(Channel::Id::battery_voltage) + 1) !=
-                   a_p_channels[i].id);
+        cml_assert(various::enum_incorrect_value<Channel::Id>() != a_p_channels[i].id);
         bit_flag::set(&(get_adc_ptr(this->id)->SQR4), static_cast<uint32_t>(a_p_channels[i].id) << 6 * (i + 1));
     }
 
@@ -227,6 +223,8 @@ void ADC::set_active_channels(const Channel* a_p_channels, uint32_t a_channels_c
 
     for (uint32_t i = 0; i < a_channels_count; i++)
     {
+        cml_assert(various::enum_incorrect_value<Channel::Sampling_time>() != a_p_channels[i].sampling_time);
+
         const uint32_t channel_id        = static_cast<uint32_t>(a_p_channels[i].id);
         const uint32_t sampling_time_val = static_cast<uint32_t>(a_p_channels[i].sampling_time);
         const uint32_t register_index    = channel_id / 10;

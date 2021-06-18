@@ -18,6 +18,7 @@
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 #include <cml/utils/wait_until.hpp>
+#include <cml/various.hpp>
 
 namespace soc {
 namespace stm32l4 {
@@ -78,7 +79,7 @@ public:
             locked,
         };
 
-        Status_flag status = static_cast<Status_flag>(static_cast<uint32_t>(Status_flag::locked) + 1);
+        Status_flag status = cml::various::enum_incorrect_value<Status_flag>();
         uint32_t words     = 0;
     };
 

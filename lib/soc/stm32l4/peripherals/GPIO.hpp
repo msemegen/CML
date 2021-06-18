@@ -20,6 +20,7 @@
 #include <cml/Non_copyable.hpp>
 #include <cml/bit.hpp>
 #include <cml/debug/assertion.hpp>
+#include <cml/various.hpp>
 
 namespace soc {
 namespace stm32l4 {
@@ -80,9 +81,9 @@ public:
     public:
         struct Config
         {
-            Mode mode   = static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1);
-            Pull pull   = static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1);
-            Speed speed = static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1);
+            Mode mode   = cml::various::enum_incorrect_value<Mode>();
+            Pull pull   = cml::various::enum_incorrect_value<Pull>();
+            Speed speed = cml::various::enum_incorrect_value<Speed>();
         };
 
         class Pin : private cml::Non_copyable
@@ -273,9 +274,9 @@ public:
     public:
         struct Config
         {
-            Mode mode   = static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1);
-            Pull pull   = static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1);
-            Speed speed = static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1);
+            Mode mode   = cml::various::enum_incorrect_value<Mode>();
+            Pull pull   = cml::various::enum_incorrect_value<Pull>();
+            Speed speed = cml::various::enum_incorrect_value<Speed>();
 
             uint32_t function = 0;
         };
@@ -401,11 +402,6 @@ public:
 
         friend GPIO;
     };
-
-    // struct rcc
-    //{
-
-    //};
 
 public:
     GPIO(Id a_id)

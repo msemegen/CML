@@ -18,6 +18,7 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/various.hpp>
 
 namespace soc {
 namespace stm32l4 {
@@ -82,9 +83,8 @@ public:
             _640_5_clock_cycles = 0x7u,
         };
 
-        Id id = static_cast<Id>(static_cast<uint32_t>(Id::battery_voltage) + 1);
-        Sampling_time sampling_time =
-            static_cast<Sampling_time>(static_cast<uint32_t>(Sampling_time::_640_5_clock_cycles) + 1);
+        Id id                       = cml::various::enum_incorrect_value<Id>();
+        Sampling_time sampling_time = cml::various::enum_incorrect_value<Sampling_time>();
     };
 
     struct Calibration_data

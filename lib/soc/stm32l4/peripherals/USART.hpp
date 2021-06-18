@@ -19,6 +19,7 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/various.hpp>
 
 namespace soc {
 namespace stm32l4 {
@@ -106,27 +107,24 @@ public:
 
     struct Frame_format
     {
-        Word_length word_length = static_cast<Word_length>(static_cast<uint32_t>(Word_length::_7_bit) + 1);
-        Parity parity           = static_cast<Parity>(static_cast<uint32_t>(Parity::odd) + 1);
+        Word_length word_length = cml::various::enum_incorrect_value<Word_length>();
+        Parity parity           = cml::various::enum_incorrect_value<Parity>();
     };
 
     struct Config
     {
-        uint32_t baud_rate        = 0;
-        uint32_t clock_freq_Hz    = 0;
-        Oversampling oversampling = static_cast<Oversampling>(static_cast<uint32_t>(Oversampling::_8) + 1);
-        Stop_bits stop_bits       = static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1);
-        Flow_control_flag flow_control =
-            static_cast<Flow_control_flag>(static_cast<uint32_t>(Flow_control_flag::clear_to_send) + 1);
-        Sampling_method sampling_method =
-            static_cast<Sampling_method>(static_cast<uint32_t>(Sampling_method::one_sample_bit) + 1);
-        Mode_flag mode = static_cast<Mode_flag>(static_cast<uint32_t>(Mode_flag::tx) + 1);
+        uint32_t baud_rate              = 0;
+        uint32_t clock_freq_Hz          = 0;
+        Oversampling oversampling       = cml::various::enum_incorrect_value<Oversampling>();
+        Stop_bits stop_bits             = cml::various::enum_incorrect_value<Stop_bits>();
+        Flow_control_flag flow_control  = cml::various::enum_incorrect_value<Flow_control_flag>();
+        Sampling_method sampling_method = cml::various::enum_incorrect_value<Sampling_method>();
+        Mode_flag mode                  = cml::various::enum_incorrect_value<Mode_flag>();
     };
 
     struct Result
     {
-        Bus_status_flag bus_status =
-            static_cast<Bus_status_flag>(static_cast<uint32_t>(Bus_status_flag::noise_detected) + 1);
+        Bus_status_flag bus_status    = cml::various::enum_incorrect_value<Bus_status_flag>();
         uint32_t data_length_in_words = 0;
     };
 

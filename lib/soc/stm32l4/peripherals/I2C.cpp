@@ -300,11 +300,9 @@ bool I2C_base::is_enabled() const
 
 void I2C_master::enable(const Config& a_config, uint32_t a_irq_priority)
 {
-    cml_assert(a_config.analog_filter !=
-               static_cast<Config::Analog_filter>(static_cast<uint32_t>(Config::Analog_filter::enabled) + 1));
-    cml_assert(a_config.fast_plus !=
-               static_cast<Config::Fast_plus>(static_cast<uint32_t>(Config::Fast_plus::enabled) + 1));
-    cml_assert(a_config.crc != static_cast<Config::Crc>(static_cast<uint32_t>(Config::Crc::enabled) + 1));
+    cml_assert(various::enum_incorrect_value<Config::Analog_filter>() != a_config.analog_filter);
+    cml_assert(various::enum_incorrect_value<Config::Fast_plus>() != a_config.fast_plus);
+    cml_assert(various::enum_incorrect_value<Config::Crc>() != a_config.crc);
 
     cml_assert((Config::Fast_plus::enabled == a_config.fast_plus && true == mcu::is_syscfg_enabled()) ||
                Config::Fast_plus::disabled == a_config.fast_plus);
@@ -736,11 +734,9 @@ I2C_master::Config I2C_master::get_config() const
 
 void I2C_slave::enable(const Config& a_config, uint32_t a_irq_priority)
 {
-    cml_assert(a_config.analog_filter !=
-               static_cast<Config::Analog_filter>(static_cast<uint32_t>(Config::Analog_filter::enabled) + 1));
-    cml_assert(a_config.fast_plus !=
-               static_cast<Config::Fast_plus>(static_cast<uint32_t>(Config::Fast_plus::enabled) + 1));
-    cml_assert(a_config.crc != static_cast<Config::Crc>(static_cast<uint32_t>(Config::Crc::enabled) + 1));
+    cml_assert(various::enum_incorrect_value<Config::Analog_filter>() != a_config.analog_filter);
+    cml_assert(various::enum_incorrect_value<Config::Fast_plus>() != a_config.fast_plus);
+    cml_assert(various::enum_incorrect_value<Config::Crc>() != a_config.crc);
     cml_assert(a_config.address <= 0x7F);
 
     cml_assert((Config::Fast_plus::enabled == a_config.fast_plus && true == mcu::is_syscfg_enabled()) ||

@@ -17,6 +17,7 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/various.hpp>
 
 namespace soc {
 namespace stm32l4 {
@@ -66,8 +67,8 @@ public:
     {
         uint32_t baud_rate        = 0;
         uint32_t clock_freq_Hz    = 0;
-        Oversampling oversampling = static_cast<Oversampling>(static_cast<uint32_t>(Oversampling::_8) + 1);
-        Stop_bits stop_bits       = static_cast<Stop_bits>(static_cast<uint32_t>(Stop_bits::_1_5) + 1);
+        Oversampling oversampling = cml::various::enum_incorrect_value<Oversampling>();
+        Stop_bits stop_bits       = cml::various::enum_incorrect_value<Stop_bits>();
         uint8_t address           = 0;
     };
 

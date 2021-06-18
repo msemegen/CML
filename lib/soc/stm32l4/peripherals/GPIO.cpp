@@ -87,47 +87,45 @@ static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
     return false;
 }
 
-#ifndef EXTI
-#define EXTI ((EXTI_TypeDef*)EXTI_BASE)
-#endif
+#define EXTI_T ((EXTI_TypeDef*)EXTI_BASE)
 
 void EXTI0_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 0))
+    if (true == interrupt_handler(EXTI_T->PR1, 0))
     {
-        bit::set(&(EXTI->PR1), 0);
+        bit::set(&(EXTI_T->PR1), 0);
     }
 }
 
 void EXTI1_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 1))
+    if (true == interrupt_handler(EXTI_T->PR1, 1))
     {
-        bit::set(&(EXTI->PR1), 1);
+        bit::set(&(EXTI_T->PR1), 1);
     }
 }
 
 void EXTI2_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 2))
+    if (true == interrupt_handler(EXTI_T->PR1, 2))
     {
-        bit::set(&(EXTI->PR1), 2);
+        bit::set(&(EXTI_T->PR1), 2);
     }
 }
 
 void EXTI3_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 3))
+    if (true == interrupt_handler(EXTI_T->PR1, 3))
     {
-        bit::set(&(EXTI->PR1), 3);
+        bit::set(&(EXTI_T->PR1), 3);
     }
 }
 
 void EXTI4_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI->PR1, 4))
+    if (true == interrupt_handler(EXTI_T->PR1, 4))
     {
-        bit::set(&(EXTI->PR1), 4);
+        bit::set(&(EXTI_T->PR1), 4);
     }
 }
 
@@ -135,9 +133,9 @@ void EXTI9_5_IRQHandler()
 {
     for (uint32_t i = 5u; i <= 9u; i++)
     {
-        if (true == interrupt_handler(EXTI->PR1, i))
+        if (true == interrupt_handler(EXTI_T->PR1, i))
         {
-            bit::set(&(EXTI->PR1), i);
+            bit::set(&(EXTI_T->PR1), i);
         }
     }
 }
@@ -146,9 +144,9 @@ void EXTI15_10_IRQHandler()
 {
     for (uint32_t i = 10u; i <= 15u; i++)
     {
-        if (true == interrupt_handler(EXTI->PR1, i))
+        if (true == interrupt_handler(EXTI_T->PR1, i))
         {
-            bit::set(&(EXTI->PR1), i);
+            bit::set(&(EXTI_T->PR1), i);
         }
     }
 }
@@ -180,7 +178,6 @@ void GPIO::disable()
 
 void GPIO::In::Pin::set_pull(Pull a_pull)
 {
-    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
@@ -221,7 +218,6 @@ void GPIO::Out::Pin::toggle_level()
 
 void GPIO::Out::Pin::set_mode(Mode a_mode)
 {
-    cml_assert(static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1) != a_mode);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
@@ -231,7 +227,6 @@ void GPIO::Out::Pin::set_mode(Mode a_mode)
 
 void GPIO::Out::Pin::set_pull(Pull a_pull)
 {
-    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
@@ -241,7 +236,6 @@ void GPIO::Out::Pin::set_pull(Pull a_pull)
 
 void GPIO::Out::Pin::set_speed(Speed a_speed)
 {
-    cml_assert(static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1) != a_speed);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
@@ -282,7 +276,6 @@ GPIO::Speed GPIO::Out::Pin::get_speed() const
 
 void GPIO::Analog::Pin::set_pull(Pull a_pull)
 {
-    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
@@ -300,7 +293,6 @@ GPIO::Pull GPIO::Analog::Pin::get_pull() const
 
 void GPIO::Alternate_function::Pin::set_mode(Mode a_mode)
 {
-    cml_assert(static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1) != a_mode);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OTYPER),
@@ -310,7 +302,6 @@ void GPIO::Alternate_function::Pin::set_mode(Mode a_mode)
 
 void GPIO::Alternate_function::Pin::set_pull(Pull a_pull)
 {
-    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->PUPDR),
@@ -320,7 +311,6 @@ void GPIO::Alternate_function::Pin::set_pull(Pull a_pull)
 
 void GPIO::Alternate_function::Pin::set_speed(Speed a_speed)
 {
-    cml_assert(static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1) != a_speed);
     cml_assert(nullptr != this->p_port && 0xFF != this->id);
 
     bit_flag::set(&(static_cast<GPIO_TypeDef*>(*(this->p_port))->OSPEEDR),
@@ -371,7 +361,6 @@ GPIO::Speed GPIO::Alternate_function::Pin::get_speed() const
 void GPIO::In::enable(uint32_t a_id, Pull a_pull, Pin* a_p_pin)
 {
     cml_assert(a_id < 16);
-    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
 
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
@@ -411,9 +400,9 @@ void GPIO::Out::enable(uint32_t a_id, const Config& a_config, Pin* a_p_pin)
 {
     cml_assert(a_id < 16);
 
-    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_config.pull);
-    cml_assert(static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1) != a_config.speed);
-    cml_assert(static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1) != a_config.mode);
+    cml_assert(various::enum_incorrect_value<Pull>() != a_config.pull);
+    cml_assert(various::enum_incorrect_value<Speed>() != a_config.speed);
+    cml_assert(various::enum_incorrect_value<Mode>() != a_config.mode);
 
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
@@ -459,8 +448,6 @@ void GPIO::Analog::enable(uint32_t a_id, Pull a_pull, Pin* a_p_out_pin)
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
 
-    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_pull);
-
     GPIO_TypeDef* p_port = static_cast<GPIO_TypeDef*>(*(this->p_port));
 
     bit_flag::set(&(p_port->PUPDR), 0x3u << (a_id * 2), static_cast<uint32_t>(a_pull) << (a_id * 2));
@@ -492,9 +479,9 @@ void GPIO::Alternate_function::enable(uint32_t a_id, const Config& a_config, Pin
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
 
-    cml_assert(static_cast<Pull>(static_cast<uint32_t>(Pull::down) + 1) != a_config.pull);
-    cml_assert(static_cast<Speed>(static_cast<uint32_t>(Speed::ultra) + 1) != a_config.speed);
-    cml_assert(static_cast<Mode>(static_cast<uint32_t>(Mode::open_drain) + 1) != a_config.mode);
+    cml_assert(various::enum_incorrect_value<Pull>() != a_config.pull);
+    cml_assert(various::enum_incorrect_value<Speed>() != a_config.speed);
+    cml_assert(various::enum_incorrect_value<Mode>() != a_config.mode);
 
     const uint32_t clear_flag_2bit = 0x3u << (a_id * 2);
 
@@ -539,10 +526,6 @@ void GPIO::Alternate_function::disable(uint32_t a_id)
     this->p_port->give_pin(a_id);
 }
 
-#ifdef EXTI
-#undef EXTI
-#endif
-
 void GPIO::EXTI::enable(const Callback& a_callback, uint32_t a_priority)
 {
     cml_assert(true == mcu::is_syscfg_enabled());
@@ -572,14 +555,6 @@ void GPIO::EXTI::disable()
     NVIC_DisableIRQ(static_cast<IRQn_Type>(this->id));
 }
 
-#ifndef EXTI
-#define EXTI ((EXTI_TypeDef*)EXTI_BASE)
-#endif
-
-#ifdef EXTI
-#undef EXTI
-#endif
-
 void GPIO::EXTI::attach(const GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigger)
 {
     volatile uint32_t* p_register = &(SYSCFG->EXTICR[a_pin / 4u]);
@@ -593,53 +568,43 @@ void GPIO::EXTI::attach(const GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigg
                (Id::_4 == this->id && a_pin == 4u) || (Id::_5_9 == this->id && (a_pin >= 5u && a_pin <= 9u)) ||
                (Id::_10_15 == this->id && (a_pin >= 10u && a_pin <= 15u)));
 #endif
-#ifndef EXTI
-#define EXTI ((EXTI_TypeDef*)EXTI_BASE)
-#endif
 
     Interrupt_guard guard;
 
     bit_flag::set(p_register, 0x3u << pos, static_cast<uint32_t>(a_port.get_id()) << pos);
 
-    bit::clear(&(EXTI->RTSR1), a_pin);
-    bit::clear(&(EXTI->FTSR1), a_pin);
-    bit::set(&(EXTI->IMR1), a_pin);
+    bit::clear(&(EXTI_T->RTSR1), a_pin);
+    bit::clear(&(EXTI_T->FTSR1), a_pin);
+    bit::set(&(EXTI_T->IMR1), a_pin);
 
     switch (a_trigger)
     {
         case Trigger_flag::rising: {
-            bit::set(&(EXTI->RTSR1), a_pin);
+            bit::set(&(EXTI_T->RTSR1), a_pin);
         }
         break;
 
         case Trigger_flag::falling: {
-            bit::set(&(EXTI->FTSR1), a_pin);
+            bit::set(&(EXTI_T->FTSR1), a_pin);
         }
         break;
 
         default: {
             if ((Trigger_flag::rising | Trigger_flag::falling) == a_trigger)
             {
-                bit::set(&(EXTI->RTSR1), a_pin);
-                bit::set(&(EXTI->FTSR1), a_pin);
+                bit::set(&(EXTI_T->RTSR1), a_pin);
+                bit::set(&(EXTI_T->FTSR1), a_pin);
             }
         }
     }
 }
 
-#ifdef EXTI
-#undef EXTI
-#endif
-
 void GPIO::EXTI::deattach(const GPIO& a_port, uint32_t a_pin)
 {
     Interrupt_guard guard;
-#ifndef EXTI
-#define EXTI ((EXTI_TypeDef*)EXTI_BASE)
-#endif
 
-    bit::clear(&(EXTI->RTSR1), a_pin);
-    bit::clear(&(EXTI->FTSR1), a_pin);
+    bit::clear(&(EXTI_T->RTSR1), a_pin);
+    bit::clear(&(EXTI_T->FTSR1), a_pin);
 
     bit_flag::clear(&(SYSCFG->EXTICR[a_pin / 4u]),
                     (static_cast<uint32_t>(a_port.get_id()) << ((static_cast<uint32_t>(a_pin) % 4u) * 4u)));

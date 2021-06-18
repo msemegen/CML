@@ -15,6 +15,7 @@
 
 // cml
 #include <cml/bit_flag.hpp>
+#include <cml/various.hpp>
 
 // soc
 #include <soc/stm32l4/internal_flash.hpp>
@@ -150,8 +151,8 @@ public:
                     _8 = RCC_PLLCFGR_PLLR_0 | RCC_PLLCFGR_PLLR_1,
                 };
 
-                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_8) + 1);
-                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
+                Divider divider = cml::various::enum_incorrect_value<Divider>();
+                Output output   = cml::various::enum_incorrect_value<Output>();
             };
 
             struct Q
@@ -164,8 +165,8 @@ public:
                     _8 = (RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1) >> RCC_PLLCFGR_PLLQ_Pos,
                 };
 
-                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_8) + 1);
-                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
+                Divider divider = cml::various::enum_incorrect_value<Divider>();
+                Output output   = cml::various::enum_incorrect_value<Output>();
             };
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
@@ -177,8 +178,8 @@ public:
                     _17 = RCC_PLLCFGR_PLLP_Msk,
                 };
 
-                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_17) + 1);
-                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
+                Divider divider = cml::various::enum_incorrect_value<Divider>();
+                Output output   = cml::various::enum_incorrect_value<Output>();
             };
 #endif
             uint32_t n = 0;
@@ -205,8 +206,8 @@ public:
                     _8 = RCC_PLLSAI1CFGR_PLLSAI1R,
                 };
 
-                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_8) + 1);
-                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
+                Divider divider = cml::various::enum_incorrect_value<Divider>();
+                Output output   = cml::various::enum_incorrect_value<Output>();
             };
 
             struct Q
@@ -219,8 +220,8 @@ public:
                     _8 = RCC_PLLSAI1CFGR_PLLSAI1Q_0 | RCC_PLLSAI1CFGR_PLLSAI1Q_1,
                 };
 
-                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_8) + 1);
-                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
+                Divider divider = cml::various::enum_incorrect_value<Divider>();
+                Output output   = cml::various::enum_incorrect_value<Output>();
             };
 
             struct P
@@ -231,8 +232,8 @@ public:
                     _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk,
                 };
 
-                Divider divider = static_cast<Divider>(static_cast<uint32_t>(Divider::_17) + 1);
-                Output output   = static_cast<Output>(static_cast<uint32_t>(Output::enabled) + 1);
+                Divider divider = cml::various::enum_incorrect_value<Divider>();
+                Output output   = cml::various::enum_incorrect_value<Output>();
             };
 
             uint32_t n = 0;
@@ -243,8 +244,8 @@ public:
         };
 #endif
 
-        Source source = static_cast<Source>(static_cast<uint32_t>(Source::hsi) + 1);
-        M m           = static_cast<M>(static_cast<uint32_t>(M::_8) + 1);
+        Source source = cml::various::enum_incorrect_value<Source>();
+        M m           = cml::various::enum_incorrect_value<M>();
 
         PLL pll;
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
@@ -300,9 +301,9 @@ public:
             _16 = RCC_CFGR_PPRE2_DIV16,
         };
 
-        AHB ahb   = static_cast<AHB>(static_cast<uint32_t>(AHB::_512) + 1);
-        APB1 apb1 = static_cast<APB1>(static_cast<uint32_t>(APB1::_16) + 1);
-        APB2 apb2 = static_cast<APB2>(static_cast<uint32_t>(APB2::_16) + 1);
+        AHB ahb   = cml::various::enum_incorrect_value<AHB>();
+        APB1 apb1 = cml::various::enum_incorrect_value<APB1>();
+        APB2 apb2 = cml::various::enum_incorrect_value<APB2>();
     };
 
     struct NVIC_config
@@ -316,7 +317,7 @@ public:
             _4 = 0x3,
         };
 
-        Grouping grouping      = static_cast<Grouping>(static_cast<uint32_t>(Grouping::_4) + 1);
+        Grouping grouping      = cml::various::enum_incorrect_value<Grouping>();
         uint32_t base_priority = 0;
     };
 
