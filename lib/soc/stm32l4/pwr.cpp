@@ -16,6 +16,6 @@ namespace stm32l4 {
 
 using namespace cml;
 
-pwr::Core_sleep_mode pwr::core_sleep_mode = various::enum_incorrect_value<pwr::Core_sleep_mode>();
+pwr::Core_sleep_mode pwr::core_sleep_mode = various::get_enum_incorrect_value<pwr::Core_sleep_mode>();
 } // namespace stm32l4
 } // namespace soc

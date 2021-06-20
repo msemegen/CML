@@ -83,8 +83,8 @@ public:
             _640_5_clock_cycles = 0x7u,
         };
 
-        Id id                       = cml::various::enum_incorrect_value<Id>();
-        Sampling_time sampling_time = cml::various::enum_incorrect_value<Sampling_time>();
+        Id id                       = cml::various::get_enum_incorrect_value<Id>();
+        Sampling_time sampling_time = cml::various::get_enum_incorrect_value<Sampling_time>();
     };
 
     struct Calibration_data

@@ -107,24 +107,24 @@ public:
 
     struct Frame_format
     {
-        Word_length word_length = cml::various::enum_incorrect_value<Word_length>();
-        Parity parity           = cml::various::enum_incorrect_value<Parity>();
+        Word_length word_length = cml::various::get_enum_incorrect_value<Word_length>();
+        Parity parity           = cml::various::get_enum_incorrect_value<Parity>();
     };
 
     struct Config
     {
         uint32_t baud_rate              = 0;
         uint32_t clock_freq_Hz          = 0;
-        Oversampling oversampling       = cml::various::enum_incorrect_value<Oversampling>();
-        Stop_bits stop_bits             = cml::various::enum_incorrect_value<Stop_bits>();
-        Flow_control_flag flow_control  = cml::various::enum_incorrect_value<Flow_control_flag>();
-        Sampling_method sampling_method = cml::various::enum_incorrect_value<Sampling_method>();
-        Mode_flag mode                  = cml::various::enum_incorrect_value<Mode_flag>();
+        Oversampling oversampling       = cml::various::get_enum_incorrect_value<Oversampling>();
+        Stop_bits stop_bits             = cml::various::get_enum_incorrect_value<Stop_bits>();
+        Flow_control_flag flow_control  = cml::various::get_enum_incorrect_value<Flow_control_flag>();
+        Sampling_method sampling_method = cml::various::get_enum_incorrect_value<Sampling_method>();
+        Mode_flag mode                  = cml::various::get_enum_incorrect_value<Mode_flag>();
     };
 
     struct Result
     {
-        Bus_status_flag bus_status    = cml::various::enum_incorrect_value<Bus_status_flag>();
+        Bus_status_flag bus_status    = cml::various::get_enum_incorrect_value<Bus_status_flag>();
         uint32_t data_length_in_words = 0;
     };
 

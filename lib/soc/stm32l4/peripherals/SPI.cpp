@@ -446,14 +446,14 @@ SPI_base::Frame_format SPI_base::get_frame_format() const
 
 void SPI_master::enable(const Config& a_config, const Frame_format& a_frame_format, uint32_t a_irq_priority)
 {
-    cml_assert(various::enum_incorrect_value<Config::Wiring>() != a_config.wiring);
-    cml_assert(various::enum_incorrect_value<Config::Crc>() != a_config.crc);
-    cml_assert(various::enum_incorrect_value<Config::NSS_management>() != a_config.nss_management);
-    cml_assert(various::enum_incorrect_value<Frame_format::Bit_significance>() != a_frame_format.bit_significance);
-    cml_assert(various::enum_incorrect_value<Frame_format::Phase>() != a_frame_format.phase);
-    cml_assert(various::enum_incorrect_value<Frame_format::Polarity>() != a_frame_format.polarity);
-    cml_assert(various::enum_incorrect_value<Frame_format::Word_length>() != a_frame_format.word_length);
-    cml_assert(various::enum_incorrect_value<Config::Clock_prescaler>() != a_config.clock_prescaler);
+    cml_assert(various::get_enum_incorrect_value<Config::Wiring>() != a_config.wiring);
+    cml_assert(various::get_enum_incorrect_value<Config::Crc>() != a_config.crc);
+    cml_assert(various::get_enum_incorrect_value<Config::NSS_management>() != a_config.nss_management);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Bit_significance>() != a_frame_format.bit_significance);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Phase>() != a_frame_format.phase);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Polarity>() != a_frame_format.polarity);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Word_length>() != a_frame_format.word_length);
+    cml_assert(various::get_enum_incorrect_value<Config::Clock_prescaler>() != a_config.clock_prescaler);
 
     // not implemented Config::Wiring::half_duplex and Config::Wiring::Simplex
     cml_assert(Config::Wiring::full_duplex == a_config.wiring);
@@ -1076,13 +1076,13 @@ SPI_master::Config SPI_master::get_config() const
 
 void SPI_slave::enable(const Config& a_config, const Frame_format& a_frame_format, uint32_t a_irq_priority)
 {
-    cml_assert(various::enum_incorrect_value<Config::Wiring>() != a_config.wiring);
-    cml_assert(various::enum_incorrect_value<Config::Crc>() != a_config.crc);
-    cml_assert(various::enum_incorrect_value<Frame_format::Bit_significance>() != a_frame_format.bit_significance);
-    cml_assert(various::enum_incorrect_value<Frame_format::Phase>() != a_frame_format.phase);
-    cml_assert(various::enum_incorrect_value<Frame_format::Polarity>() != a_frame_format.polarity);
-    cml_assert(various::enum_incorrect_value<Frame_format::Word_length>() != a_frame_format.word_length);
-    cml_assert(various::enum_incorrect_value<Config::Clock_prescaler>() != a_config.clock_prescaler);
+    cml_assert(various::get_enum_incorrect_value<Config::Wiring>() != a_config.wiring);
+    cml_assert(various::get_enum_incorrect_value<Config::Crc>() != a_config.crc);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Bit_significance>() != a_frame_format.bit_significance);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Phase>() != a_frame_format.phase);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Polarity>() != a_frame_format.polarity);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Word_length>() != a_frame_format.word_length);
+    cml_assert(various::get_enum_incorrect_value<Config::Clock_prescaler>() != a_config.clock_prescaler);
 
     // not implemented Config::Wiring::half_duplex and Config::Wiring::Simplex
     cml_assert(Config::Wiring::full_duplex == a_config.wiring);

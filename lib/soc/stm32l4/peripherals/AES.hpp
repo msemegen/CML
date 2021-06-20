@@ -53,8 +53,8 @@ public:
             _256b = AES_CR_KEYSIZE_Msk
         };
 
-        Chaining_mode chaining_mode = cml::various::enum_incorrect_value<Chaining_mode>();
-        Key_size key_size           = cml::various::enum_incorrect_value<Key_size>();
+        Chaining_mode chaining_mode = cml::various::get_enum_incorrect_value<Chaining_mode>();
+        Key_size key_size           = cml::various::get_enum_incorrect_value<Key_size>();
     };
 
 

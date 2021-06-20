@@ -67,8 +67,8 @@ public:
     {
         uint32_t baud_rate        = 0;
         uint32_t clock_freq_Hz    = 0;
-        Oversampling oversampling = cml::various::enum_incorrect_value<Oversampling>();
-        Stop_bits stop_bits       = cml::various::enum_incorrect_value<Stop_bits>();
+        Oversampling oversampling = cml::various::get_enum_incorrect_value<Oversampling>();
+        Stop_bits stop_bits       = cml::various::get_enum_incorrect_value<Stop_bits>();
         uint8_t address           = 0;
     };
 

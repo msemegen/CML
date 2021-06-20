@@ -151,8 +151,8 @@ public:
                     _8 = RCC_PLLCFGR_PLLR_0 | RCC_PLLCFGR_PLLR_1,
                 };
 
-                Divider divider = cml::various::enum_incorrect_value<Divider>();
-                Output output   = cml::various::enum_incorrect_value<Output>();
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
             };
 
             struct Q
@@ -165,8 +165,8 @@ public:
                     _8 = (RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1) >> RCC_PLLCFGR_PLLQ_Pos,
                 };
 
-                Divider divider = cml::various::enum_incorrect_value<Divider>();
-                Output output   = cml::various::enum_incorrect_value<Output>();
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
             };
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
@@ -178,8 +178,8 @@ public:
                     _17 = RCC_PLLCFGR_PLLP_Msk,
                 };
 
-                Divider divider = cml::various::enum_incorrect_value<Divider>();
-                Output output   = cml::various::enum_incorrect_value<Output>();
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
             };
 #endif
             uint32_t n = 0;
@@ -206,8 +206,8 @@ public:
                     _8 = RCC_PLLSAI1CFGR_PLLSAI1R,
                 };
 
-                Divider divider = cml::various::enum_incorrect_value<Divider>();
-                Output output   = cml::various::enum_incorrect_value<Output>();
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
             };
 
             struct Q
@@ -220,8 +220,8 @@ public:
                     _8 = RCC_PLLSAI1CFGR_PLLSAI1Q_0 | RCC_PLLSAI1CFGR_PLLSAI1Q_1,
                 };
 
-                Divider divider = cml::various::enum_incorrect_value<Divider>();
-                Output output   = cml::various::enum_incorrect_value<Output>();
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
             };
 
             struct P
@@ -232,8 +232,8 @@ public:
                     _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk,
                 };
 
-                Divider divider = cml::various::enum_incorrect_value<Divider>();
-                Output output   = cml::various::enum_incorrect_value<Output>();
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
             };
 
             uint32_t n = 0;
@@ -244,8 +244,8 @@ public:
         };
 #endif
 
-        Source source = cml::various::enum_incorrect_value<Source>();
-        M m           = cml::various::enum_incorrect_value<M>();
+        Source source = cml::various::get_enum_incorrect_value<Source>();
+        M m           = cml::various::get_enum_incorrect_value<M>();
 
         PLL pll;
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
@@ -301,9 +301,9 @@ public:
             _16 = RCC_CFGR_PPRE2_DIV16,
         };
 
-        AHB ahb   = cml::various::enum_incorrect_value<AHB>();
-        APB1 apb1 = cml::various::enum_incorrect_value<APB1>();
-        APB2 apb2 = cml::various::enum_incorrect_value<APB2>();
+        AHB ahb   = cml::various::get_enum_incorrect_value<AHB>();
+        APB1 apb1 = cml::various::get_enum_incorrect_value<APB1>();
+        APB2 apb2 = cml::various::get_enum_incorrect_value<APB2>();
     };
 
     struct NVIC_config
@@ -317,7 +317,7 @@ public:
             _4 = 0x3,
         };
 
-        Grouping grouping      = cml::various::enum_incorrect_value<Grouping>();
+        Grouping grouping      = cml::various::get_enum_incorrect_value<Grouping>();
         uint32_t base_priority = 0;
     };
 

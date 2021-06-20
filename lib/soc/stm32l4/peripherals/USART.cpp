@@ -268,12 +268,12 @@ bool USART::enable(const Config& a_config,
     cml_assert(0 != a_config.baud_rate);
     cml_assert(0 != a_config.clock_freq_Hz);
 
-    cml_assert(various::enum_incorrect_value<Flow_control_flag>() != a_config.flow_control);
-    cml_assert(various::enum_incorrect_value<Stop_bits>() != a_config.stop_bits);
-    cml_assert(various::enum_incorrect_value<Sampling_method>() != a_config.sampling_method);
+    cml_assert(various::get_enum_incorrect_value<Flow_control_flag>() != a_config.flow_control);
+    cml_assert(various::get_enum_incorrect_value<Stop_bits>() != a_config.stop_bits);
+    cml_assert(various::get_enum_incorrect_value<Sampling_method>() != a_config.sampling_method);
 
-    cml_assert(various::enum_incorrect_value<Parity>() != a_frame_format.parity);
-    cml_assert(various::enum_incorrect_value<Word_length>() != a_frame_format.word_length);
+    cml_assert(various::get_enum_incorrect_value<Parity>() != a_frame_format.parity);
+    cml_assert(various::get_enum_incorrect_value<Word_length>() != a_frame_format.word_length);
 
     cml_assert(a_timeout_ms > 0);
 
@@ -719,8 +719,8 @@ void USART::set_sampling_method(Sampling_method a_sampling_method)
 
 void USART::set_frame_format(const Frame_format& a_frame_format)
 {
-    cml_assert(various::enum_incorrect_value<Word_length>() != a_frame_format.word_length);
-    cml_assert(various::enum_incorrect_value<Parity>() != a_frame_format.parity);
+    cml_assert(various::get_enum_incorrect_value<Word_length>() != a_frame_format.word_length);
+    cml_assert(various::get_enum_incorrect_value<Parity>() != a_frame_format.parity);
 
     bit_flag::clear(&(get_usart_ptr(this->id)->CR1), USART_CR1_UE);
     bit_flag::set(&(get_usart_ptr(this->id)->CR1),
@@ -786,8 +786,8 @@ bool RS485::enable(const Config& a_config,
     cml_assert(0 != a_config.baud_rate);
     cml_assert(0 != a_config.clock_freq_Hz);
 
-    cml_assert(various::enum_incorrect_value<Stop_bits>() != a_config.stop_bits);
-    cml_assert(various::enum_incorrect_value<Oversampling>() != a_config.oversampling);
+    cml_assert(various::get_enum_incorrect_value<Stop_bits>() != a_config.stop_bits);
+    cml_assert(various::get_enum_incorrect_value<Oversampling>() != a_config.oversampling);
 
     cml_assert(a_timeout > 0);
 

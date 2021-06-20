@@ -400,9 +400,9 @@ void GPIO::Out::enable(uint32_t a_id, const Config& a_config, Pin* a_p_pin)
 {
     cml_assert(a_id < 16);
 
-    cml_assert(various::enum_incorrect_value<Pull>() != a_config.pull);
-    cml_assert(various::enum_incorrect_value<Speed>() != a_config.speed);
-    cml_assert(various::enum_incorrect_value<Mode>() != a_config.mode);
+    cml_assert(various::get_enum_incorrect_value<Pull>() != a_config.pull);
+    cml_assert(various::get_enum_incorrect_value<Speed>() != a_config.speed);
+    cml_assert(various::get_enum_incorrect_value<Mode>() != a_config.mode);
 
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
@@ -479,9 +479,9 @@ void GPIO::Alternate_function::enable(uint32_t a_id, const Config& a_config, Pin
     cml_assert(true == this->p_port->is_enabled());
     cml_assert(false == this->p_port->is_pin_taken(a_id));
 
-    cml_assert(various::enum_incorrect_value<Pull>() != a_config.pull);
-    cml_assert(various::enum_incorrect_value<Speed>() != a_config.speed);
-    cml_assert(various::enum_incorrect_value<Mode>() != a_config.mode);
+    cml_assert(various::get_enum_incorrect_value<Pull>() != a_config.pull);
+    cml_assert(various::get_enum_incorrect_value<Speed>() != a_config.speed);
+    cml_assert(various::get_enum_incorrect_value<Mode>() != a_config.mode);
 
     const uint32_t clear_flag_2bit = 0x3u << (a_id * 2);
 

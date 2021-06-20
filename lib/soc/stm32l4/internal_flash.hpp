@@ -79,7 +79,7 @@ public:
             locked,
         };
 
-        Status_flag status = cml::various::enum_incorrect_value<Status_flag>();
+        Status_flag status = cml::various::get_enum_incorrect_value<Status_flag>();
         uint32_t words     = 0;
     };
 

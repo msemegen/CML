@@ -38,7 +38,7 @@ struct various
         }
     }
 
-    template<typename Type_t> constexpr static Type_t enum_incorrect_value()
+    template<typename Type_t> constexpr static Type_t get_enum_incorrect_value()
     {
         static_assert(true == std::is_enum_v<Type_t>);
         return static_cast<Type_t>(std::numeric_limits<std::underlying_type_t<Type_t>>::max());

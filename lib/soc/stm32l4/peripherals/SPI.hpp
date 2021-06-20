@@ -89,15 +89,15 @@ public:
             second_edge = SPI_CR1_CPHA,
         };
 
-        Polarity polarity                 = cml::various::enum_incorrect_value<Polarity>();
-        Phase phase                       = cml::various::enum_incorrect_value<Phase>();
-        Word_length word_length           = cml::various::enum_incorrect_value<Word_length>();
-        Bit_significance bit_significance = cml::various::enum_incorrect_value<Bit_significance>();
+        Polarity polarity                 = cml::various::get_enum_incorrect_value<Polarity>();
+        Phase phase                       = cml::various::get_enum_incorrect_value<Phase>();
+        Word_length word_length           = cml::various::get_enum_incorrect_value<Word_length>();
+        Bit_significance bit_significance = cml::various::get_enum_incorrect_value<Bit_significance>();
     };
 
     struct Result
     {
-        Bus_flag bus_flag             = cml::various::enum_incorrect_value<Bus_flag>();
+        Bus_flag bus_flag             = cml::various::get_enum_incorrect_value<Bus_flag>();
         uint32_t data_length_in_words = 0;
     };
 
@@ -229,10 +229,10 @@ public:
             enable  = SPI_CR1_CRCEN
         };
 
-        Clock_prescaler clock_prescaler = cml::various::enum_incorrect_value<Clock_prescaler>();
-        Wiring wiring                   = cml::various::enum_incorrect_value<Wiring>();
-        NSS_management nss_management   = cml::various::enum_incorrect_value<NSS_management>();
-        Crc crc                         = cml::various::enum_incorrect_value<Crc>();
+        Clock_prescaler clock_prescaler = cml::various::get_enum_incorrect_value<Clock_prescaler>();
+        Wiring wiring                   = cml::various::get_enum_incorrect_value<Wiring>();
+        NSS_management nss_management   = cml::various::get_enum_incorrect_value<NSS_management>();
+        Crc crc                         = cml::various::get_enum_incorrect_value<Crc>();
     };
 
 public:
@@ -352,9 +352,9 @@ public:
             enable  = SPI_CR1_CRCEN,
         };
 
-        Clock_prescaler clock_prescaler = cml::various::enum_incorrect_value<Clock_prescaler>();
-        Wiring wiring                   = cml::various::enum_incorrect_value<Wiring>();
-        Crc crc                         = cml::various::enum_incorrect_value<Crc>();
+        Clock_prescaler clock_prescaler = cml::various::get_enum_incorrect_value<Clock_prescaler>();
+        Wiring wiring                   = cml::various::get_enum_incorrect_value<Wiring>();
+        Crc crc                         = cml::various::get_enum_incorrect_value<Crc>();
     };
 
 public:

@@ -81,9 +81,9 @@ public:
     public:
         struct Config
         {
-            Mode mode   = cml::various::enum_incorrect_value<Mode>();
-            Pull pull   = cml::various::enum_incorrect_value<Pull>();
-            Speed speed = cml::various::enum_incorrect_value<Speed>();
+            Mode mode   = cml::various::get_enum_incorrect_value<Mode>();
+            Pull pull   = cml::various::get_enum_incorrect_value<Pull>();
+            Speed speed = cml::various::get_enum_incorrect_value<Speed>();
         };
 
         class Pin : private cml::Non_copyable
@@ -274,9 +274,9 @@ public:
     public:
         struct Config
         {
-            Mode mode   = cml::various::enum_incorrect_value<Mode>();
-            Pull pull   = cml::various::enum_incorrect_value<Pull>();
-            Speed speed = cml::various::enum_incorrect_value<Speed>();
+            Mode mode   = cml::various::get_enum_incorrect_value<Mode>();
+            Pull pull   = cml::various::get_enum_incorrect_value<Pull>();
+            Speed speed = cml::various::get_enum_incorrect_value<Speed>();
 
             uint32_t function = 0;
         };

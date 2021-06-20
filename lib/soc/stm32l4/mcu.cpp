@@ -119,31 +119,31 @@ void mcu::disable_hsi48_clock()
 
 void mcu::enable_pll(const Pll_config& a_config)
 {
-    cml_assert(various::enum_incorrect_value<Pll_config::Source>() != a_config.source);
-    cml_assert(various::enum_incorrect_value<Pll_config::M>() != a_config.m);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::Source>() != a_config.source);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::M>() != a_config.m);
 
-    cml_assert(various::enum_incorrect_value<Pll_config::PLL::R::Divider>() != a_config.pll.r.divider);
-    cml_assert(various::enum_incorrect_value<Pll_config::Output>() != a_config.pll.r.output);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::PLL::R::Divider>() != a_config.pll.r.divider);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::Output>() != a_config.pll.r.output);
 
-    cml_assert(various::enum_incorrect_value<Pll_config::PLL::Q::Divider>() != a_config.pll.q.divider);
-    cml_assert(various::enum_incorrect_value<Pll_config::Output>() != a_config.pll.q.output);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::PLL::Q::Divider>() != a_config.pll.q.divider);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::Output>() != a_config.pll.q.output);
 
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    cml_assert(various::enum_incorrect_value<Pll_config::PLL::P::Divider>() != a_config.pll.p.divider);
-    cml_assert(various::enum_incorrect_value<Pll_config::Output>() != a_config.pll.p.output);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::PLL::P::Divider>() != a_config.pll.p.divider);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::Output>() != a_config.pll.p.output);
 #endif
 
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    cml_assert(various::enum_incorrect_value<Pll_config::PLLSAI1::R::Divider>() != a_config.pllsai1.r.divider);
-    cml_assert(various::enum_incorrect_value<Pll_config::Output>() != a_config.pllsai1.r.output);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::PLLSAI1::R::Divider>() != a_config.pllsai1.r.divider);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::Output>() != a_config.pllsai1.r.output);
 
-    cml_assert(various::enum_incorrect_value<Pll_config::PLLSAI1::Q::Divider>() != a_config.pllsai1.q.divider);
-    cml_assert(various::enum_incorrect_value<Pll_config::Output>() != a_config.pllsai1.q.output);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::PLLSAI1::Q::Divider>() != a_config.pllsai1.q.divider);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::Output>() != a_config.pllsai1.q.output);
 
-    cml_assert(various::enum_incorrect_value<Pll_config::PLLSAI1::P::Divider>() != a_config.pllsai1.p.divider);
-    cml_assert(various::enum_incorrect_value<Pll_config::Output>() != a_config.pllsai1.p.output);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::PLLSAI1::P::Divider>() != a_config.pllsai1.p.divider);
+    cml_assert(various::get_enum_incorrect_value<Pll_config::Output>() != a_config.pllsai1.p.output);
 #endif
 
     cml_assert((true == is_clock_enabled(Clock::msi) && a_config.source == Pll_config::Source::msi) ||
@@ -480,9 +480,9 @@ void mcu::set_sysclk_source(Sysclk_source a_sysclk_source)
 
 void mcu::set_bus_prescalers(const Bus_prescalers& a_prescalers)
 {
-    cml_assert(a_prescalers.ahb != various::enum_incorrect_value<Bus_prescalers::AHB>());
-    cml_assert(a_prescalers.apb1 != various::enum_incorrect_value<Bus_prescalers::APB1>());
-    cml_assert(a_prescalers.apb2 != various::enum_incorrect_value<Bus_prescalers::APB2>());
+    cml_assert(a_prescalers.ahb != various::get_enum_incorrect_value<Bus_prescalers::AHB>());
+    cml_assert(a_prescalers.apb1 != various::get_enum_incorrect_value<Bus_prescalers::APB1>());
+    cml_assert(a_prescalers.apb2 != various::get_enum_incorrect_value<Bus_prescalers::APB2>());
 
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32_t>(a_prescalers.ahb));
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32_t>(a_prescalers.apb1));
