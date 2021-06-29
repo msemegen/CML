@@ -9,19 +9,20 @@ ifndef NOSILENT
 .SILENT:
 endif
 
-CML_CPP_FILES := lib/cml/debug/*.cpp                   \
-				 lib/soc/*.cpp                         \
-				 lib/soc/stm32l4/*.cpp             \
-				 lib/soc/stm32l4/peripherals/*.cpp
+CML_CPP_FILES := lib/cml/debug/*.cpp                 \
+				 lib/soc/*.cpp                       \
+				 lib/soc/m4/stm32l4/*.cpp            \
+				 lib/soc/m4/stm32l4/peripherals/*.cpp
 
-CML_HPP_FILES := lib/cml/*.hpp                         \
-				 lib/cml/debug/*.hpp                   \
-				 lib/cml/hal/*.hpp                     \
-				 lib/cml/hal/peripherals/*.hpp         \
-				 lib/cml/utils/*.hpp                   \
-				 lib/soc/*.hpp                         \
-				 lib/soc/stm32l4/*.hpp             \
-				 lib/soc/stm32l4/peripherals/*.hpp
+CML_HPP_FILES := lib/cml/*.hpp                        \
+				 lib/cml/debug/*.hpp                  \
+				 lib/cml/hal/*.hpp                    \
+				 lib/cml/hal/peripherals/*.hpp        \
+				 lib/cml/utils/*.hpp                  \
+				 lib/soc/*.hpp                        \
+				 lib/soc/m4/*.hpp                     \
+				 lib/soc/m4/stm32l4/*.hpp             \
+				 lib/soc/m4/stm32l4/peripherals/*.hpp
 
 STM32L4_TEMPLATES := templates/stm32l4/*/*/*.cpp
 

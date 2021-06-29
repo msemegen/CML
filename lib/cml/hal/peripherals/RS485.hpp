@@ -8,14 +8,14 @@
  */
 
 #ifdef STM32L4
-#include <soc/stm32l4/peripherals/RS485.hpp>
+#include <soc/m4/stm32l4/peripherals/RS485.hpp>
 #endif // STM32L4
 
 namespace cml {
 namespace hal {
 
 #ifdef STM32L4
-using RS485 = soc::stm32l4::peripherals::RS485;
+using RS485 = soc::m4::stm32l4::peripherals::RS485;
 #endif // STM32L4
 
 } // namespace hal

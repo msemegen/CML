@@ -7,16 +7,16 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
-// cml
+// soc
 #ifdef STM32L4
-#include <soc/stm32l4/internal_flash.hpp>
+#include <soc/m4/stm32l4/internal_flash.hpp>
 #endif // STM32L4
 
 namespace cml {
 namespace hal {
 
 #ifdef STM32L4
-using internal_flash = soc::stm32l4::internal_flash;
+using internal_flash = soc::m4::stm32l4::internal_flash;
 #endif // STM32L4
 
 } // namespace hal

@@ -8,7 +8,7 @@
  */
 
 #ifdef STM32L4
-#include <soc/stm32l4/peripherals/IWDG.hpp>
+#include <soc/m4/stm32l4/peripherals/IWDG.hpp>
 #endif // STM32L4
 
 namespace cml {
@@ -16,7 +16,7 @@ namespace hal {
 namespace peripherals {
 
 #ifdef STM32L4
-using IWDG = soc::stm32l4::peripherals::IWDG;
+using IWDG = soc::m4::stm32l4::peripherals::IWDG;
 #endif // STM32L4
 
 } // namespace peripherals

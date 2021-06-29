@@ -8,7 +8,7 @@
  */
 
 #ifdef STM32L4
-#include <soc/stm32l4/peripherals/USART.hpp>
+#include <soc/m4/stm32l4/peripherals/USART.hpp>
 #endif // STM32L4
 
 namespace cml {
@@ -16,8 +16,7 @@ namespace hal {
 namespace peripherals {
 
 #ifdef STM32L4
-using USART                    = soc::stm32l4::peripherals::USART;
-template<typename T> using rcc = soc::stm32l4::rcc<T>;
+using USART = soc::m4::stm32l4::peripherals::USART;
 #endif // STM32L4
 
 } // namespace peripherals

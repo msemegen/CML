@@ -8,7 +8,7 @@
  */
 
 #ifdef STM32L4
-#include <soc/stm32l4/peripherals/SPI.hpp>
+#include <soc/m4/stm32l4/peripherals/SPI.hpp>
 #endif // STM32L4
 
 namespace cml {
@@ -16,9 +16,9 @@ namespace hal {
 namespace peripherals {
 
 #ifdef STM32L4
-using SPI_base   = soc::stm32l4::peripherals::SPI_base;
-using SPI_master = soc::stm32l4::peripherals::SPI_master;
-using SPI_slave  = soc::stm32l4::peripherals::SPI_slave;
+using SPI_base   = soc::m4::stm32l4::peripherals::SPI_base;
+using SPI_master = soc::m4::stm32l4::peripherals::SPI_master;
+using SPI_slave  = soc::m4::stm32l4::peripherals::SPI_slave;
 #endif // STM32L4
 
 } // namespace peripherals
