@@ -17,6 +17,7 @@
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
+#include <cml/hal/rcc.hpp>
 #include <cml/hal/system_timer.hpp>
 #include <cml/utils/delay.hpp>
 
@@ -55,7 +56,7 @@ int main()
 
     Systick systick;
 
-    systick.enable((mcu::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
+    systick.enable((rcc<mcu>::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
     systick.register_tick_callback({ system_timer_update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });
@@ -63,20 +64,20 @@ int main()
 
     printf("Sysclk source: ");
 
-    mcu::Sysclk_source sysclk_source = mcu::get_sysclk_source();
+    rcc<mcu>::Sysclk_source sysclk_source = rcc<mcu>::get_sysclk_source();
     switch (sysclk_source)
     {
-        case mcu::Sysclk_source::msi: {
+        case rcc<mcu>::Sysclk_source::msi: {
             printf("MSI\n");
         }
         break;
 
-        case mcu::Sysclk_source::hsi: {
+        case rcc<mcu>::Sysclk_source::hsi: {
             printf("HSI\n");
         }
         break;
 
-        case mcu::Sysclk_source::pll: {
+        case rcc<mcu>::Sysclk_source::pll: {
             printf("PLL\n");
         }
         break;
@@ -84,17 +85,17 @@ int main()
 
     printf("Clock frequency: ");
 
-    if (mcu::get_sysclk_frequency_hz() >= 1000000u)
+    if (rcc<mcu>::get_sysclk_frequency_hz() >= 1000000u)
     {
-        printf("%lu MHz\n", mcu::get_sysclk_frequency_hz() / 1000000u);
+        printf("%lu MHz\n", rcc<mcu>::get_sysclk_frequency_hz() / 1000000u);
     }
-    else if (mcu::get_sysclk_frequency_hz() >= 1000u)
+    else if (rcc<mcu>::get_sysclk_frequency_hz() >= 1000u)
     {
-        printf("%lu kHz\n", mcu::get_sysclk_frequency_hz() / 1000u);
+        printf("%lu kHz\n", rcc<mcu>::get_sysclk_frequency_hz() / 1000u);
     }
     else
     {
-        printf("%lu Hz\n", mcu::get_sysclk_frequency_hz());
+        printf("%lu Hz\n", rcc<mcu>::get_sysclk_frequency_hz());
     }
 
     uint32_t i = 0;

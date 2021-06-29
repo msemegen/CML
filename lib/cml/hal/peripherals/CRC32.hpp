@@ -8,7 +8,7 @@
  */
 
 #ifdef STM32L4
-#include <soc/stm32l4/peripherals/crc32.hpp>
+#include <soc/m4/stm32l4/peripherals/crc32.hpp>
 #endif // STM32L4
 
 namespace cml {
@@ -16,7 +16,7 @@ namespace hal {
 namespace peripherals {
 
 #ifdef STM32L4
-using CRC32 = soc::stm32l4::peripherals::CRC32;
+using CRC32 = soc::m4::stm32l4::peripherals::CRC32;
 #endif // STM32L4
 
 } // namespace peripherals

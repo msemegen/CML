@@ -43,7 +43,7 @@ int main()
 
     Systick systick;
 
-    systick.enable((mcu::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
+    systick.enable((rcc<mcu>::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
     systick.register_tick_callback({ system_timer_update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });

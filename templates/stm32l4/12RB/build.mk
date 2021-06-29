@@ -27,7 +27,7 @@ STARTUP_DEBUG   := $(addprefix $(OUTDIR_DEBUG)/, $(notdir $(patsubst %.s, %.o,$(
 STARTUP_RELEASE := $(addprefix $(OUTDIR_RELEASE)/, $(notdir $(patsubst %.s, %.o,$(STARTUP_FILE))))
 
 MAIN_LDFLAGS_COMMON  = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -nostartfiles --specs=nano.specs
-MAIN_LDFLAGS_COMMON  +=-T$(LD_PATH)/STM32L412KBUx_FLASH.ld -lgcc -fno-exceptions -fno-rtti -Wl,--gc-sections
+MAIN_LDFLAGS_COMMON  +=-T$(LD_PATH)/STM32L412RBTxP_FLASH.ld -lgcc -fno-exceptions -fno-rtti -Wl,--gc-sections
 MAIN_LDFLAGS_RELEASE = $(MAIN_LDFLAGS_COMMON) -Wl,-Map=$(OUTDIR)/$(OUTPUT_NAME).map,-cref
 MAIN_LDFLAGS_DEBUG   = $(MAIN_LDFLAGS_COMMON) -Wl,-Map=$(OUTDIR)/$(OUTPUT_NAME)_d.map,-cref
 

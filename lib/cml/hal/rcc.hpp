@@ -8,14 +8,14 @@
  */
 
 #ifdef STM32L4
-#include <soc/stm32l4/rcc.hpp>
+#include <soc/m4/stm32l4/rcc.hpp>
 #endif // STM32L4
 
 namespace cml {
 namespace hal {
 
 #ifdef STM32L4
-template<typename T> using rcc = soc::stm32l4::rcc<T>;
+template<typename T> using rcc = soc::m4::stm32l4::rcc<T>;
 #endif // STM32L4
 
 } // namespace hal
