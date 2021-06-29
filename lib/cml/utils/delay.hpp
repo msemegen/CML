@@ -12,7 +12,7 @@
 #include <cml/various.hpp>
 
 #ifdef STM32L4
-#include <soc/stm32l4/misc.hpp>
+#include <soc/m4/stm32l4/misc.hpp>
 #endif // STM32L4
 
 namespace cml {
@@ -46,7 +46,7 @@ public:
     inline static void us(uint32_t a_time)
     {
 #ifdef STM32L4
-        soc::stm32l4::misc::delay_us(a_time);
+        soc::m4::stm32l4::misc::delay_us(a_time);
 #endif // STM32L4
     }
 };
