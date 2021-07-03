@@ -25,10 +25,6 @@ namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 class CRC32 : private cml::Non_copyable
 {
 public:
@@ -56,8 +52,6 @@ public:
     uint32_t calculate(const uint8_t* a_p_data, uint32_t a_data_size);
 };
 
-#endif
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4
@@ -66,10 +60,20 @@ public:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> struct rcc<peripherals::CRC32>
+template<> class rcc<peripherals::CRC32>
 {
+public:
     static void enable(bool a_enable_in_lp);
     static void disable();
+
+private:
+    rcc()           = delete;
+    rcc(const rcc&) = delete;
+    rcc(rcc&&)      = delete;
+    ~rcc()          = delete;
+
+    rcc& operator=(const rcc&) = delete;
+    rcc& operator=(rcc&&) = delete;
 };
 } // namespace stm32l4
 } // namespace m4

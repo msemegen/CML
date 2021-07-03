@@ -23,17 +23,11 @@
 
 namespace {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 using namespace soc::m4::stm32l4::peripherals;
 
 RNG::New_value_callback new_value_callback;
 
 bool created = false;
-
-#endif
 
 } // namespace
 
@@ -41,10 +35,6 @@ extern "C" {
 
 using namespace cml;
 using namespace cml::debug;
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 #define RNG_T ((RNG_TypeDef*)RNG_BASE)
 
@@ -66,8 +56,6 @@ void RNG_IRQHandler()
     NVIC_ClearPendingIRQ(RNG_IRQn);
 }
 
-#endif
-
 } // extern "C"
 
 namespace soc {
@@ -76,10 +64,6 @@ namespace stm32l4 {
 namespace peripherals {
 
 using namespace cml::utils;
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 RNG::RNG()
 {
@@ -95,7 +79,7 @@ RNG::~RNG()
 
 bool RNG::enable(uint32_t a_irq_priority, uint32_t a_timeout)
 {
-    cml_assert(rcc<mcu>::get_clk48_mux_freqency_hz() <= 48 * 1000000u);
+    cml_assert(rcc<mcu>::get_clk48_frequency_hz() <= 48 * 1000000u);
     cml_assert(a_timeout > 0);
 
     uint32_t start = system_timer::get();
@@ -162,8 +146,6 @@ void RNG::unregister_new_value_callback()
 
     new_value_callback = { nullptr, nullptr };
 }
-
-#endif
 
 } // namespace peripherals
 } // namespace stm32l4

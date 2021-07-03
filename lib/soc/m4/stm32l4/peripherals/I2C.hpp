@@ -23,10 +23,6 @@ namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 class I2C_base : private cml::Non_copyable
 {
 public:
@@ -387,7 +383,6 @@ private:
     Addres_match_callback address_match_callback;
 };
 
-#endif
 
 } // namespace peripherals
 } // namespace stm32l4
@@ -397,8 +392,9 @@ private:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> struct rcc<peripherals::I2C_base>
+template<> class rcc<peripherals::I2C_base>
 {
+public:
     enum class Clock_source : uint32_t
     {
         pclk1  = 0,
@@ -408,6 +404,15 @@ template<> struct rcc<peripherals::I2C_base>
 
     static void enable(peripherals::I2C_base::Id a_id, Clock_source a_clock_source, bool a_enable_in_lp);
     static void disable(peripherals::I2C_base::Id a_id);
+
+private:
+    rcc()           = delete;
+    rcc(const rcc&) = delete;
+    rcc(rcc&&)      = delete;
+    ~rcc()          = delete;
+
+    rcc& operator=(const rcc&) = delete;
+    rcc& operator=(rcc&&) = delete;
 };
 } // namespace stm32l4
 } // namespace m4

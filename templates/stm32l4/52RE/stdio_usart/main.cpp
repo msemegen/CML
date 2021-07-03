@@ -87,20 +87,20 @@ int main()
 
         printf("Sysclk source: ");
 
-        rcc<mcu>::Sysclk_source sysclk_source = rcc<mcu>::get_sysclk_source();
+        rcc<mcu>::SYSCLK_source sysclk_source = rcc<mcu>::get_sysclk_source();
         switch (sysclk_source)
         {
-            case rcc<mcu>::Sysclk_source::msi: {
+            case rcc<mcu>::SYSCLK_source::msi: {
                 printf("MSI\n");
             }
             break;
 
-            case rcc<mcu>::Sysclk_source::hsi: {
+            case rcc<mcu>::SYSCLK_source::hsi: {
                 printf("HSI\n");
             }
             break;
 
-            case rcc<mcu>::Sysclk_source::pll: {
+            case rcc<mcu>::SYSCLK_source::pll: {
                 printf("PLL\n");
             }
             break;

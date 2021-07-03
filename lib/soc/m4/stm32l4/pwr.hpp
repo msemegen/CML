@@ -14,6 +14,7 @@
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
+#include <cml/utils/wait_until.hpp>
 
 namespace soc {
 namespace m4 {
@@ -31,9 +32,7 @@ public:
     static void set_voltage_scaling(Voltage_scaling a_scaling)
     {
         cml::bit_flag::set(&(PWR->CR1), PWR_CR1_VOS, static_cast<uint32_t>(a_scaling));
-
-        while (true == cml::bit::is(PWR->SR2, PWR_SR2_VOSF_Pos))
-            ;
+        cml::utils::wait_until::all_bits(&(PWR->SR2), PWR_SR2_VOSF_Pos, true);
     }
 
     static Voltage_scaling get_voltage_scaling()

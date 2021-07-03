@@ -63,4 +63,6 @@ int main()
         led_pin.toggle_level();
         delay::ms(500u);
     }
+
+    return 0;
 }

@@ -31,10 +31,6 @@ namespace {
 using namespace cml;
 using namespace soc::m4::stm32l4::peripherals;
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 struct Controller
 {
     I2C_TypeDef* p_registers        = nullptr;
@@ -102,15 +98,9 @@ I2C_base::Bus_flag get_bus_status_flag_from_I2C_ISR(I2C_base::Id a_id)
     return ret;
 }
 
-#endif
-
 } // namespace
 
 extern "C" {
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 void interrupt_handler(uint32_t a_controller_index)
 {
@@ -147,8 +137,6 @@ void I2C4_EV_IRQHandler()
     interrupt_handler(3);
 }
 
-#endif
-
 } // extern "C"
 
 namespace soc {
@@ -158,10 +146,6 @@ namespace peripherals {
 
 using namespace cml;
 using namespace cml::utils;
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 void i2c_master_interrupt_handler(I2C_master* a_p_this)
 {
@@ -1075,7 +1059,6 @@ I2C_slave::Config I2C_slave::get_config() const
              static_cast<uint16_t>(get_i2c_ptr(this->id)->OAR1 & 0x7Fu) };
 }
 
-#endif
 
 } // namespace peripherals
 } // namespace stm32l4

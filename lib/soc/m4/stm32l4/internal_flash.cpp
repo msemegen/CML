@@ -25,10 +25,6 @@ namespace {
 using namespace cml;
 using namespace soc::m4::stm32l4;
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 void clear_FLASH_SR_errors()
 {
     bit_flag::set(&(FLASH->SR),
@@ -49,8 +45,6 @@ internal_flash::Result::Status_flag get_status_flag_from_FLASH_SR()
     return static_cast<internal_flash::Result::Status_flag>(SR);
 }
 
-#endif
-
 } // namespace
 
 namespace soc {
@@ -59,10 +53,6 @@ namespace stm32l4 {
 
 using namespace cml;
 using namespace cml::utils;
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 internal_flash::Result internal_flash::write_polling(uint32_t a_address,
                                                      const uint64_t* a_p_data,
@@ -347,17 +337,8 @@ internal_flash::Result internal_flash::erase_bank_polling(Bank_id, uint32_t a_ti
 void internal_flash::set_latency(Latency a_latency)
 {
     bit_flag::set(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<uint32_t>(a_latency));
-
-    while (false == bit_flag::is(FLASH->ACR, static_cast<uint32_t>(a_latency)))
-        ;
-
-    if (internal_flash::Latency::_0 != a_latency)
-    {
-        bit_flag::set(&(FLASH->ACR), FLASH_ACR_PRFTEN | FLASH_ACR_DCEN | FLASH_ACR_ICEN);
-    }
+    wait_until::all_bits(&(FLASH->ACR), static_cast<uint32_t>(a_latency), false);
 }
-
-#endif
 
 } // namespace stm32l4
 } // namespace m4

@@ -26,10 +26,6 @@
 
 namespace {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 using namespace cml;
 using namespace soc::m4::stm32l4::peripherals;
 
@@ -62,15 +58,9 @@ ADC_TypeDef* get_adc_ptr(ADC::Id a_id)
     return controllers[static_cast<uint32_t>(a_id)].p_registers;
 }
 
-#endif
-
 } // namespace
 
 extern "C" {
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 #if defined(STM32L412xx) || defined(STM32L422xx)
 void ADC1_2_IRQHandler()
@@ -95,7 +85,6 @@ void ADC1_IRQHandler()
 }
 #endif
 
-#endif
 
 } // extern "C"
 
@@ -103,10 +92,6 @@ namespace soc {
 namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 using namespace cml;
 using namespace cml::utils;
@@ -390,7 +375,6 @@ void ADC::set_resolution(Resolution a_resolution)
         bit_flag::set(&(get_adc_ptr(this->id)->CR), ADC_CR_ADSTART);
     }
 }
-#endif
 
 } // namespace peripherals
 } // namespace stm32l4

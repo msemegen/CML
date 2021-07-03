@@ -25,9 +25,6 @@ namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 class ADC : private cml::Non_copyable
 {
 public:
@@ -151,8 +148,6 @@ private:
     friend void adc_interrupt_handler(ADC* a_p_this);
 };
 
-#endif
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4
@@ -161,8 +156,9 @@ private:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> struct rcc<peripherals::ADC>
+template<> class rcc<peripherals::ADC>
 {
+public:
     enum class Clock_source
     {
         pclk,
@@ -190,7 +186,17 @@ template<> struct rcc<peripherals::ADC>
 
     static void enable(Clock_source a_source, Prescaler a_prescaler, bool a_enable_in_lp);
     static void disable();
+
+private:
+    rcc()           = delete;
+    rcc(const rcc&) = delete;
+    rcc(rcc&&)      = delete;
+    ~rcc()          = delete;
+
+    rcc& operator=(const rcc&) = delete;
+    rcc& operator=(rcc&&) = delete;
 };
+
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

@@ -32,10 +32,6 @@ using namespace cml;
 using namespace soc;
 using namespace soc::m4::stm32l4::peripherals;
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 struct Controller
 {
     USART_TypeDef* p_registers = nullptr;
@@ -94,15 +90,9 @@ void clear_USART_ISR_errors(USART::Id a_id)
     bit_flag::set(&(get_usart_ptr(a_id)->ICR), USART_ICR_PECF | USART_ICR_FECF | USART_ICR_ORECF | USART_ICR_NECF);
 }
 
-#endif
-
 } // namespace
 
 extern "C" {
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 static void interrupt_handler(uint32_t a_index)
 {
@@ -137,7 +127,6 @@ void USART3_IRQHandler()
 }
 #endif
 
-#endif
 
 } // extern "C"
 
@@ -148,10 +137,6 @@ namespace peripherals {
 
 using namespace cml;
 using namespace cml::utils;
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 void usart_interrupt_handler(USART* a_p_this)
 {
@@ -1177,7 +1162,6 @@ RS485::Stop_bits RS485::get_stop_bits() const
     return static_cast<Stop_bits>(bit_flag::get(get_usart_ptr(this->id)->CR2, USART_CR2_STOP));
 }
 
-#endif
 
 } // namespace peripherals
 } // namespace stm32l4

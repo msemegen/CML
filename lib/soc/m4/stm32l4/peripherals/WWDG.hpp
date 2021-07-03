@@ -24,10 +24,6 @@ namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 #ifdef WWDG
 #undef WWDG
 #endif
@@ -61,8 +57,6 @@ public:
 
     void feed();
 };
-
-#endif
 
 } // namespace peripherals
 } // namespace stm32l4

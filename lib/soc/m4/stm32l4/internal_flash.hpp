@@ -24,10 +24,6 @@ namespace soc {
 namespace m4 {
 namespace stm32l4 {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 class internal_flash
 {
 public:
@@ -62,7 +58,8 @@ public:
     {
         disabled     = 0x0u,
         data         = FLASH_ACR_DCEN,
-        instructions = FLASH_ACR_ICEN
+        instructions = FLASH_ACR_ICEN,
+        prefetech    = FLASH_ACR_PRFTEN
     };
 
     struct Result
@@ -87,19 +84,8 @@ public:
 public:
     static void set_cache_mode(const Cache_mode_flag& a_mode)
     {
-        cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_DCEN | FLASH_ACR_ICEN, static_cast<uint32_t>(a_mode));
-    }
-
-    void set_prefetch_settings(bool a_enable)
-    {
-        if (true == a_enable)
-        {
-            cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_PRFTEN);
-        }
-        else
-        {
-            cml::bit_flag::clear(&(FLASH->ACR), FLASH_ACR_PRFTEN);
-        }
+        cml::bit_flag::set(
+            &(FLASH->ACR), FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_ACR_PRFTEN, static_cast<uint32_t>(a_mode));
     }
 
     static Cache_mode_flag get_cache_mode()
@@ -221,8 +207,6 @@ constexpr internal_flash::Cache_mode_flag operator|=(internal_flash::Cache_mode_
     a_f1 = a_f1 | a_f2;
     return a_f1;
 }
-
-#endif
 
 } // namespace stm32l4
 } // namespace m4

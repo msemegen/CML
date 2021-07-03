@@ -25,10 +25,6 @@ namespace soc {
 namespace m4 {
 namespace stm32l4 {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 template<typename Periph_t> class rcc
 {
 private:
@@ -53,7 +49,7 @@ public:
         lsi
     };
 
-    enum class Sysclk_source : uint32_t
+    enum class SYSCLK_source : uint32_t
     {
         msi = RCC_CFGR_SW_MSI,
         hsi = RCC_CFGR_SW_HSI,
@@ -66,7 +62,7 @@ public:
         enabled
     };
 
-    enum class Clk48_mux_source : uint32_t
+    enum class CLK48_source : uint32_t
     {
         hsi48 = 0x0u,
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
@@ -77,7 +73,7 @@ public:
         msi   = RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1,
     };
 
-    enum class Msi_frequency : uint32_t
+    enum class MSI_frequency : uint32_t
     {
         _100_kHz = 0,
         _200_kHz = 1,
@@ -93,17 +89,17 @@ public:
         _48_MHz  = 11,
     };
 
-    enum class Hsi_frequency : uint32_t
+    enum class HSI_frequency : uint32_t
     {
         _16_MHz,
     };
 
-    enum class Lsi_frequency : uint32_t
+    enum class LSI_frequency : uint32_t
     {
         _32_kHz,
     };
 
-    enum class Hsi48_frequency : uint32_t
+    enum class HSI48_frequency : uint32_t
     {
         _48_MHz
     };
@@ -120,154 +116,140 @@ public:
         firewall             = RCC_CSR_FWRSTF
     };
 
-    struct Pll_config
+    enum class PLL_source : uint32_t
     {
-        enum class Source : uint32_t
-        {
-            msi = RCC_PLLCFGR_PLLSRC_MSI,
-            hsi = RCC_PLLCFGR_PLLSRC_HSI,
-        };
+        msi = RCC_PLLCFGR_PLLSRC_MSI,
+        hsi = RCC_PLLCFGR_PLLSRC_HSI,
+    };
 
-        enum class M : uint32_t
-        {
-            _1 = 0,
-            _2 = RCC_PLLCFGR_PLLM_0,
-            _3 = RCC_PLLCFGR_PLLM_1,
-            _4 = RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
-            _5 = RCC_PLLCFGR_PLLM_2,
-            _6 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_0,
-            _7 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1,
-            _8 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
-        };
+    enum class PLLM
+    {
+        _1 = 0,
+        _2 = RCC_PLLCFGR_PLLM_0,
+        _3 = RCC_PLLCFGR_PLLM_1,
+        _4 = RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
+        _5 = RCC_PLLCFGR_PLLM_2,
+        _6 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_0,
+        _7 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1,
+        _8 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
+    };
 
+    struct PLL_config
+    {
         enum class Output : uint32_t
         {
             disabled = 0x0u,
             enabled  = 0x1u,
         };
 
-        struct PLL
+        struct R
         {
-            struct R
+            enum class Divider : uint32_t
             {
-                enum class Divider : uint32_t
-                {
-                    _2 = 0,
-                    _4 = RCC_PLLCFGR_PLLR_0,
-                    _6 = RCC_PLLCFGR_PLLR_1,
-                    _8 = RCC_PLLCFGR_PLLR_0 | RCC_PLLCFGR_PLLR_1,
-                };
-
-                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-                Output output   = cml::various::get_enum_incorrect_value<Output>();
+                _2 = 0,
+                _4 = RCC_PLLCFGR_PLLR_0,
+                _6 = RCC_PLLCFGR_PLLR_1,
+                _8 = RCC_PLLCFGR_PLLR_0 | RCC_PLLCFGR_PLLR_1,
             };
 
-            struct Q
-            {
-                enum class Divider : uint32_t
-                {
-                    _2 = 0,
-                    _4 = RCC_PLLCFGR_PLLQ_0 >> RCC_PLLCFGR_PLLQ_Pos,
-                    _6 = RCC_PLLCFGR_PLLQ_1 >> RCC_PLLCFGR_PLLQ_Pos,
-                    _8 = (RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1) >> RCC_PLLCFGR_PLLQ_Pos,
-                };
-
-                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-                Output output   = cml::various::get_enum_incorrect_value<Output>();
-            };
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-            struct P
-            {
-                enum class Divider : uint32_t
-                {
-                    _7  = 0u,
-                    _17 = RCC_PLLCFGR_PLLP_Msk,
-                };
-
-                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-                Output output   = cml::various::get_enum_incorrect_value<Output>();
-            };
-#endif
-            uint32_t n = 0;
-
-            R r;
-            Q q;
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-            P p;
-#endif
+            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+            Output output   = cml::various::get_enum_incorrect_value<Output>();
         };
 
+        struct Q
+        {
+            enum class Divider : uint32_t
+            {
+                _2 = 0,
+                _4 = RCC_PLLCFGR_PLLQ_0 >> RCC_PLLCFGR_PLLQ_Pos,
+                _6 = RCC_PLLCFGR_PLLQ_1 >> RCC_PLLCFGR_PLLQ_Pos,
+                _8 = (RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1) >> RCC_PLLCFGR_PLLQ_Pos,
+            };
+
+            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+            Output output   = cml::various::get_enum_incorrect_value<Output>();
+        };
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        struct PLLSAI1
+        struct P
         {
-            struct R
+            enum class Divider : uint32_t
             {
-                enum class Divider : uint32_t
-                {
-                    _2 = 0,
-                    _4 = RCC_PLLSAI1CFGR_PLLSAI1R_0,
-                    _6 = RCC_PLLSAI1CFGR_PLLSAI1R_1,
-                    _8 = RCC_PLLSAI1CFGR_PLLSAI1R,
-                };
-
-                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-                Output output   = cml::various::get_enum_incorrect_value<Output>();
+                _7  = 0u,
+                _17 = RCC_PLLCFGR_PLLP_Msk,
             };
 
-            struct Q
-            {
-                enum class Divider : uint32_t
-                {
-                    _2 = 0,
-                    _4 = RCC_PLLSAI1CFGR_PLLSAI1Q_0,
-                    _6 = RCC_PLLSAI1CFGR_PLLSAI1Q_1,
-                    _8 = RCC_PLLSAI1CFGR_PLLSAI1Q_0 | RCC_PLLSAI1CFGR_PLLSAI1Q_1,
-                };
-
-                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-                Output output   = cml::various::get_enum_incorrect_value<Output>();
-            };
-
-            struct P
-            {
-                enum class Divider : uint32_t
-                {
-                    _7  = 0u,
-                    _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk,
-                };
-
-                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-                Output output   = cml::various::get_enum_incorrect_value<Output>();
-            };
-
-            uint32_t n = 0;
-
-            R r;
-            Q q;
-            P p;
+            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+            Output output   = cml::various::get_enum_incorrect_value<Output>();
         };
 #endif
+        uint32_t n = 0;
 
-        Source source = cml::various::get_enum_incorrect_value<Source>();
-        M m           = cml::various::get_enum_incorrect_value<M>();
-
-        PLL pll;
+        R r;
+        Q q;
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        PLLSAI1 pllsai1;
+        P p;
 #endif
     };
 
-    struct Sysclk_frequency_change_callback
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+    struct PLLSAI1_config
     {
-        using Function = void (*)(void* a_p_user_data);
+        enum class Output : uint32_t
+        {
+            disabled = 0x0u,
+            enabled  = 0x1u,
+        };
 
-        Function function = nullptr;
-        void* p_user_data = nullptr;
+        struct R
+        {
+            enum class Divider : uint32_t
+            {
+                _2 = 0,
+                _4 = RCC_PLLSAI1CFGR_PLLSAI1R_0,
+                _6 = RCC_PLLSAI1CFGR_PLLSAI1R_1,
+                _8 = RCC_PLLSAI1CFGR_PLLSAI1R,
+            };
+
+            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+            Output output   = cml::various::get_enum_incorrect_value<Output>();
+        };
+
+        struct Q
+        {
+            enum class Divider : uint32_t
+            {
+                _2 = 0,
+                _4 = RCC_PLLSAI1CFGR_PLLSAI1Q_0,
+                _6 = RCC_PLLSAI1CFGR_PLLSAI1Q_1,
+                _8 = RCC_PLLSAI1CFGR_PLLSAI1Q_0 | RCC_PLLSAI1CFGR_PLLSAI1Q_1,
+            };
+
+            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+            Output output   = cml::various::get_enum_incorrect_value<Output>();
+        };
+
+        struct P
+        {
+            enum class Divider : uint32_t
+            {
+                _7  = 0u,
+                _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk,
+            };
+
+            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+            Output output   = cml::various::get_enum_incorrect_value<Output>();
+        };
+
+        uint32_t n = 0;
+
+        R r;
+        Q q;
+        P p;
     };
+#endif
 
     struct Bus_prescalers
     {
@@ -308,25 +290,24 @@ public:
     };
 
 public:
-    static void enable_msi_clock(Msi_frequency a_freq);
-    static void enable_hsi_clock(Hsi_frequency a_freq);
-    static void enable_lsi_clock(Lsi_frequency a_freq);
-    static void enable_hsi48_clock(Hsi48_frequency a_freq);
+    static void enable_clock(Clock a_clock, MSI_frequency a_freq);
+    static void enable_clock(Clock a_clock, HSI_frequency a_freq);
+    static void enable_clock(Clock a_clock, LSI_frequency a_freq);
+    static void enable_clock(Clock a_clock, HSI48_frequency a_freq);
+    static void enable_clock(Clock a_clock, PLL_source a_source, PLLM a_m, const PLL_config& a_config);
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+    static void enable_clock(Clock a_clock,
+                             PLL_source a_source,
+                             PLLM a_m,
+                             const PLL_config& a_pll_config,
+                             const PLLSAI1_config& a_pllsai1_config);
+#endif
 
-    static void disable_msi_clock();
-    static void disable_hsi_clock();
-    static void disable_lsi_clock();
-    static void disable_hsi48_clock();
+    static void disable_clock(Clock a_clock);
 
-    static void enable_pll(const Pll_config& a_config);
-    static void disable_pll();
-
-    static void set_clk48_clock_mux_source(Clk48_mux_source a_source);
-
-    static void set_sysclk(Sysclk_source a_source,
-                           const Bus_prescalers& a_prescalers,
-                           const Sysclk_frequency_change_callback& a_pre_callback,
-                           const Sysclk_frequency_change_callback& a_post_callback);
+    static void set_clk48_source(CLK48_source a_source);
+    static void set_sysclk_source(SYSCLK_source a_source, const Bus_prescalers& a_prescalers);
 
     static void set_syscfg_mode(SYSCFG_mode a_mode)
     {
@@ -350,33 +331,27 @@ public:
     }
 
     static Bus_prescalers get_bus_prescalers();
-    static Pll_config get_pll_config();
+    static PLL_config get_pll_config();
+#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
+    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+    static PLLSAI1_config get_pllsai1_config();
+#endif
 
-    static Clk48_mux_source get_clk48_mux_source()
+    static CLK48_source get_clk48_source()
     {
-        return static_cast<Clk48_mux_source>(cml::bit_flag::get(RCC->CCIPR, RCC_CCIPR_CLK48SEL));
+        return static_cast<CLK48_source>(cml::bit_flag::get(RCC->CCIPR, RCC_CCIPR_CLK48SEL));
     }
 
-    static uint32_t get_clk48_mux_freqency_hz();
-
-    static Sysclk_source get_sysclk_source()
+    static SYSCLK_source get_sysclk_source()
     {
-        return static_cast<Sysclk_source>(cml::bit_flag::get(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
+        return static_cast<SYSCLK_source>(cml::bit_flag::get(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
+    static uint32_t get_clock_frequency_hz(Clock a_clock);
+    static uint32_t get_clk48_frequency_hz();
     static uint32_t get_sysclk_frequency_hz()
     {
         return SystemCoreClock;
-    }
-
-    static constexpr uint32_t get_hsi_frequency_hz()
-    {
-        return 16u * 1000000u;
-    }
-
-    static constexpr uint32_t get_lsi_frequency_hz()
-    {
-        return 32u * 1000;
     }
 
     static bool is_clock_enabled(Clock a_clock)
@@ -419,8 +394,13 @@ public:
     }
 
 private:
-    static void set_sysclk_source(Sysclk_source a_sysclk_source);
-    static void set_bus_prescalers(const Bus_prescalers& a_prescalers);
+    rcc()           = delete;
+    rcc(const rcc&) = delete;
+    rcc(rcc&&)      = delete;
+    ~rcc()          = delete;
+
+    rcc& operator=(const rcc&) = delete;
+    rcc& operator=(rcc&&) = delete;
 
     static uint32_t calculate_pll_r_output_frequency();
     static uint32_t calculate_pll_q_output_frequency();
@@ -429,8 +409,6 @@ private:
     static uint32_t calculate_pllsai1_q_output_frequency();
 #endif
 };
-
-#endif
 
 } // namespace stm32l4
 } // namespace m4
