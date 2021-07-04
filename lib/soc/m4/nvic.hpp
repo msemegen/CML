@@ -22,7 +22,7 @@ namespace m4 {
 class nvic
 {
 public:
-    struct NVIC_config
+    struct Config
     {
         enum class Grouping : uint32_t
         {
@@ -37,7 +37,7 @@ public:
         uint32_t base_priority = 0;
     };
 
-    static void set_config(const NVIC_config& a_config)
+    static void set_config(const Config& a_config)
     {
         NVIC_SetPriorityGrouping(static_cast<uint32_t>(a_config.grouping));
         __set_BASEPRI(a_config.base_priority);

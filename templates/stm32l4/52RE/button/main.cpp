@@ -10,6 +10,7 @@
 #include <cml/hal/EXTI.hpp>
 #include <cml/hal/Systick.hpp>
 #include <cml/hal/mcu.hpp>
+#include <cml/hal/nvic.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/rcc.hpp>
 #include <cml/hal/system_timer.hpp>
@@ -50,6 +51,8 @@ int main()
     using namespace cml::utils;
 
     Systick systick;
+
+    nvic::set_config({ nvic::Config::Grouping::_4, 10u << 4u });
 
     systick.enable((rcc<mcu>::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
     systick.register_tick_callback({ system_timer_update, nullptr });
