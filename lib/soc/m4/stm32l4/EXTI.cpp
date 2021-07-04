@@ -25,7 +25,7 @@ struct Interrupt_handler
     EXTI<GPIO>::Callback callback;
 };
 
-Interrupt_handler interrupt_handlers[16];
+Interrupt_handler interrupt_handlers[7];
 
 } // namespace
 
@@ -35,11 +35,12 @@ using namespace cml;
 
 #define EXTI_T ((EXTI_TypeDef*)EXTI_BASE)
 
-static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
+static bool interrupt_handler(uint32_t a_pr1, uint32_t a_bit_index, uint32_t a_handler_index)
 {
-    if (true == bit::is(a_pr1, a_index))
+    if (true == bit::is(a_pr1, a_bit_index))
     {
-        interrupt_handlers[a_index].callback.function(a_index, interrupt_handlers[a_index].callback.p_user_data);
+        interrupt_handlers[a_handler_index].callback.function(a_bit_index,
+                                                              interrupt_handlers[a_handler_index].callback.p_user_data);
         return true;
     }
 
@@ -48,7 +49,7 @@ static bool interrupt_handler(uint32_t a_pr1, uint32_t a_index)
 
 void EXTI0_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI_T->PR1, 0))
+    if (true == interrupt_handler(EXTI_T->PR1, 0, 0))
     {
         bit::set(&(EXTI_T->PR1), 0);
     }
@@ -56,7 +57,7 @@ void EXTI0_IRQHandler()
 
 void EXTI1_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI_T->PR1, 1))
+    if (true == interrupt_handler(EXTI_T->PR1, 1, 1))
     {
         bit::set(&(EXTI_T->PR1), 1);
     }
@@ -64,7 +65,7 @@ void EXTI1_IRQHandler()
 
 void EXTI2_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI_T->PR1, 2))
+    if (true == interrupt_handler(EXTI_T->PR1, 2, 2))
     {
         bit::set(&(EXTI_T->PR1), 2);
     }
@@ -72,7 +73,7 @@ void EXTI2_IRQHandler()
 
 void EXTI3_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI_T->PR1, 3))
+    if (true == interrupt_handler(EXTI_T->PR1, 3, 3))
     {
         bit::set(&(EXTI_T->PR1), 3);
     }
@@ -80,7 +81,7 @@ void EXTI3_IRQHandler()
 
 void EXTI4_IRQHandler()
 {
-    if (true == interrupt_handler(EXTI_T->PR1, 4))
+    if (true == interrupt_handler(EXTI_T->PR1, 4, 4))
     {
         bit::set(&(EXTI_T->PR1), 4);
     }
@@ -90,7 +91,7 @@ void EXTI9_5_IRQHandler()
 {
     for (uint32_t i = 5u; i <= 9u; i++)
     {
-        if (true == interrupt_handler(EXTI_T->PR1, i))
+        if (true == interrupt_handler(EXTI_T->PR1, i, 5))
         {
             bit::set(&(EXTI_T->PR1), i);
         }
@@ -101,7 +102,7 @@ void EXTI15_10_IRQHandler()
 {
     for (uint32_t i = 10u; i <= 15u; i++)
     {
-        if (true == interrupt_handler(EXTI_T->PR1, i))
+        if (true == interrupt_handler(EXTI_T->PR1, i, 6))
         {
             bit::set(&(EXTI_T->PR1), i);
         }

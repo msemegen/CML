@@ -68,7 +68,32 @@ public:
     void disable();
 
     void attach(const peripherals::GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigger);
+    void attach(const peripherals::GPIO::In::Pin& a_pin, Trigger_flag a_trigger)
+    {
+        this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger);
+    }
+    void attach(const peripherals::GPIO::Out::Pin& a_pin, Trigger_flag a_trigger)
+    {
+        this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger);
+    }
+    void attach(const peripherals::GPIO::Alternate_function::Pin& a_pin, Trigger_flag a_trigger)
+    {
+        this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger);
+    }
+
     void deattach(const peripherals::GPIO& a_port, uint32_t a_pin);
+    void deattach(const peripherals::GPIO::In::Pin& a_pin)
+    {
+        this->deattach(*(a_pin.get_port()), a_pin.get_id());
+    }
+    void deattach(const peripherals::GPIO::Out::Pin& a_pin)
+    {
+        this->deattach(*(a_pin.get_port()), a_pin.get_id());
+    }
+    void deattach(const peripherals::GPIO::Alternate_function::Pin& a_pin)
+    {
+        this->deattach(*(a_pin.get_port()), a_pin.get_id());
+    }
 
     Id get_id() const
     {
