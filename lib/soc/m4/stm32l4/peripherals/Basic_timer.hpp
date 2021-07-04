@@ -21,10 +21,6 @@ namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 class Basic_timer : private cml::Non_copyable
 {
 public:
@@ -82,8 +78,6 @@ private:
     friend void interrupt_handler(Basic_timer* a_p_this);
 };
 
-#endif
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4
@@ -92,10 +86,20 @@ private:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> struct rcc<peripherals::Basic_timer>
+template<> class rcc<peripherals::Basic_timer>
 {
+public:
     static void enable(peripherals::Basic_timer::Id a_id, bool a_enable_in_lp);
     static void disable(peripherals::Basic_timer::Id a_id);
+
+private:
+    rcc()           = delete;
+    rcc(const rcc&) = delete;
+    rcc(rcc&&)      = delete;
+    ~rcc()          = delete;
+
+    rcc& operator=(const rcc&) = delete;
+    rcc& operator=(rcc&&) = delete;
 };
 } // namespace stm32l4
 } // namespace m4

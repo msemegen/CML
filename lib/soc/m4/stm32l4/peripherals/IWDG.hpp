@@ -24,10 +24,6 @@ namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 #ifdef IWDG
 #undef IWDG
 #endif // IWDG
@@ -59,8 +55,6 @@ public:
     bool enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_window, uint32_t a_timeout);
     void feed();
 };
-
-#endif
 
 } // namespace peripherals
 } // namespace stm32l4

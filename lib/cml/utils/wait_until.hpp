@@ -22,14 +22,6 @@ namespace utils {
 class wait_until
 {
 public:
-    wait_until()                  = delete;
-    wait_until(wait_until&&)      = delete;
-    wait_until(const wait_until&) = delete;
-    ~wait_until()                 = delete;
-
-    wait_until& operator=(wait_until&&) = delete;
-    wait_until& operator=(const wait_until&) = delete;
-
     template<typename Register_t> static void all_bits(const Register_t* a_p_register, uint32_t a_flag, bool a_status)
     {
         while (a_status == bit_flag::is(*a_p_register, a_flag))
@@ -71,6 +63,15 @@ public:
 
         return ((false == status) && (false == timeout));
     }
+
+private:
+    wait_until()                  = delete;
+    wait_until(wait_until&&)      = delete;
+    wait_until(const wait_until&) = delete;
+    ~wait_until()                 = delete;
+
+    wait_until& operator=(wait_until&&) = delete;
+    wait_until& operator=(const wait_until&) = delete;
 };
 
 } // namespace utils

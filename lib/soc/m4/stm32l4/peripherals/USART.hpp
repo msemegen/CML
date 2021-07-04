@@ -26,10 +26,6 @@ namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 class USART : private cml::Non_copyable
 {
 public:
@@ -323,8 +319,6 @@ constexpr USART::Mode_flag operator|=(USART::Mode_flag& a_f1, USART::Mode_flag a
     return a_f1;
 }
 
-#endif
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4
@@ -333,8 +327,9 @@ constexpr USART::Mode_flag operator|=(USART::Mode_flag& a_f1, USART::Mode_flag a
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> struct rcc<peripherals::USART>
+template<> class rcc<peripherals::USART>
 {
+public:
     enum class Clock_source : uint32_t
     {
         pclk,
@@ -344,6 +339,15 @@ template<> struct rcc<peripherals::USART>
 
     static void enable(peripherals::USART::Id a_id, const Clock_source& a_clock_source, bool a_enable_in_lp);
     static void disable(peripherals::USART::Id a_id);
+
+private:
+    rcc()           = delete;
+    rcc(const rcc&) = delete;
+    rcc(rcc&&)      = delete;
+    ~rcc()          = delete;
+
+    rcc& operator=(const rcc&) = delete;
+    rcc& operator=(rcc&&) = delete;
 };
 } // namespace stm32l4
 } // namespace m4

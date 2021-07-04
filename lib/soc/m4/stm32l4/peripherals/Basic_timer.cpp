@@ -23,10 +23,6 @@ namespace {
 using namespace cml;
 using namespace soc::m4::stm32l4::peripherals;
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 struct Controller
 {
     TIM_TypeDef* p_registers    = nullptr;
@@ -44,14 +40,9 @@ TIM_TypeDef* get_timer_registers(Basic_timer::Id a_id)
     return controllers[static_cast<uint32_t>(a_id)].p_registers;
 }
 
-#endif
-
 } // namespace
 
 extern "C" {
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 void TIM6_DAC_IRQHandler()
 {
@@ -64,18 +55,12 @@ void TIM7_IRQHandler()
     interrupt_handler(controllers[1].p_timer_handle);
 }
 #endif
-
-#endif
 }
 
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 void interrupt_handler(Basic_timer* a_p_this)
 {
@@ -143,8 +128,6 @@ bool Basic_timer::is_overload_event() const
 
     return false;
 }
-
-#endif
 
 } // namespace peripherals
 } // namespace stm32l4

@@ -31,10 +31,6 @@ namespace {
 using namespace cml;
 using namespace soc::m4::stm32l4::peripherals;
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 enum class Direction_flag : uint32_t
 {
     transmit,
@@ -161,15 +157,9 @@ void clear_SPI_SR_errors(SPI_base::Id a_id)
     }
 }
 
-#endif
-
 } // namespace
 
 extern "C" {
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 void interupt_handler(uint32_t a_controller_index)
 {
@@ -201,8 +191,6 @@ void SPI3_IRQHandler()
     interupt_handler(2);
 }
 
-#endif
-
 } // extern "C"
 
 namespace soc {
@@ -212,10 +200,6 @@ namespace peripherals {
 
 using namespace cml;
 using namespace cml::utils;
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
 
 void spi_interrupt_handler(SPI_base* a_p_this)
 {
@@ -1501,8 +1485,6 @@ SPI_slave::Config SPI_slave::get_config() const
                                                                                      Config::Wiring::full_duplex),
              static_cast<Config::Crc>(bit_flag::get(get_spi_ptr(this->id)->CR1, SPI_CR1_CRCEN)) };
 }
-
-#endif
 
 } // namespace peripherals
 } // namespace stm32l4

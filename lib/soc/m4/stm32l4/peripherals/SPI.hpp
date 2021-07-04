@@ -24,10 +24,6 @@ namespace m4 {
 namespace stm32l4 {
 namespace peripherals {
 
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L432xx) || \
-    defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-
 class SPI_base : private cml::Non_copyable
 {
 public:
@@ -426,8 +422,6 @@ public:
     Config get_config() const;
 };
 
-#endif
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4
@@ -436,10 +430,20 @@ public:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> struct rcc<peripherals::SPI_base>
+template<> class rcc<peripherals::SPI_base>
 {
+public:
     static void enable(peripherals::SPI_base::Id a_id, bool a_enable_in_lp);
     static void disable(peripherals::SPI_base::Id a_id);
+
+private:
+    rcc()           = delete;
+    rcc(const rcc&) = delete;
+    rcc(rcc&&)      = delete;
+    ~rcc()          = delete;
+
+    rcc& operator=(const rcc&) = delete;
+    rcc& operator=(rcc&&) = delete;
 };
 } // namespace stm32l4
 } // namespace m4
