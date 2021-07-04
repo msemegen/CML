@@ -78,7 +78,6 @@ private:
     friend void interrupt_handler(Basic_timer* a_p_this);
 };
 
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4

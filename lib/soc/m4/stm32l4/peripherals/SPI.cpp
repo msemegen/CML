@@ -191,7 +191,6 @@ void SPI3_IRQHandler()
     interupt_handler(2);
 }
 
-
 } // extern "C"
 
 namespace soc {

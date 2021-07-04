@@ -127,7 +127,6 @@ void USART3_IRQHandler()
 }
 #endif
 
-
 } // extern "C"
 
 namespace soc {
@@ -1161,7 +1160,6 @@ RS485::Stop_bits RS485::get_stop_bits() const
 {
     return static_cast<Stop_bits>(bit_flag::get(get_usart_ptr(this->id)->CR2, USART_CR2_STOP));
 }
-
 
 } // namespace peripherals
 } // namespace stm32l4

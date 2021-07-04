@@ -85,7 +85,6 @@ void ADC1_IRQHandler()
 }
 #endif
 
-
 } // extern "C"
 
 namespace soc {

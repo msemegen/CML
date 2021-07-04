@@ -55,7 +55,6 @@ void TIM7_IRQHandler()
     interrupt_handler(controllers[1].p_timer_handle);
 }
 #endif
-
 }
 
 namespace soc {

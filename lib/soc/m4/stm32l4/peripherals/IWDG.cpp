@@ -113,7 +113,6 @@ void IWDG::feed()
 #endif // IWDG
 }
 
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4

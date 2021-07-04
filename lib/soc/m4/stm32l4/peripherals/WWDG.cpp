@@ -86,7 +86,6 @@ void WWDG::feed()
     WWDG_T->CR = reload;
 }
 
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4

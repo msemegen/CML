@@ -383,7 +383,6 @@ private:
     Addres_match_callback address_match_callback;
 };
 
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4

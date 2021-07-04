@@ -1059,7 +1059,6 @@ I2C_slave::Config I2C_slave::get_config() const
              static_cast<uint16_t>(get_i2c_ptr(this->id)->OAR1 & 0x7Fu) };
 }
 
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4

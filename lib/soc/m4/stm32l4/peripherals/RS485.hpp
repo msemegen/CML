@@ -171,7 +171,6 @@ private:
     friend void rs485_interrupt_handler(RS485* a_p_this);
 };
 
-
 } // namespace peripherals
 } // namespace stm32l4
 } // namespace m4
