@@ -79,7 +79,7 @@ int main()
 
     EXTI<GPIO> exti(EXTI<GPIO>::Id::_10_15);
     exti.enable({ exti_callback, &led_pin }, 0x1u);
-    exti.attach(gpio_port_c, 13u, EXTI<GPIO>::Trigger_flag::rising);
+    exti.attach(gpio_port_c, 13u, EXTI<GPIO>::Trigger_flag::rising, EXTI<GPIO>::Mode::interrupt);
 
     while (true)
         ;

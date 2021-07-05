@@ -146,7 +146,7 @@ void EXTI<GPIO>::disable()
     NVIC_DisableIRQ(static_cast<IRQn_Type>(this->id));
 }
 
-void EXTI<GPIO>::attach(const GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigger)
+void EXTI<GPIO>::attach(const GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigger, Mode a_mode)
 {
     volatile uint32_t* p_register = &(SYSCFG->EXTICR[a_pin / 4u]);
     uint32_t pos                  = ((static_cast<uint32_t>(a_pin) % 4u) * 4u);
@@ -166,7 +166,19 @@ void EXTI<GPIO>::attach(const GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigg
 
     bit::clear(&(EXTI_T->RTSR1), a_pin);
     bit::clear(&(EXTI_T->FTSR1), a_pin);
-    bit::set(&(EXTI_T->IMR1), a_pin);
+
+    switch (a_mode)
+    {
+        case Mode::event: {
+            bit::set(&(EXTI_T->EMR1), a_pin);
+        }
+        break;
+
+        case Mode::interrupt: {
+            bit::set(&(EXTI_T->IMR1), a_pin);
+        }
+        break;
+    }
 
     switch (a_trigger)
     {
@@ -196,6 +208,9 @@ void EXTI<GPIO>::deattach(const GPIO& a_port, uint32_t a_pin)
 
     bit::clear(&(EXTI_T->RTSR1), a_pin);
     bit::clear(&(EXTI_T->FTSR1), a_pin);
+
+    bit::clear(&(EXTI_T->EMR1), a_pin);
+    bit::clear(&(EXTI_T->IMR1), a_pin);
 
     bit_flag::clear(&(SYSCFG->EXTICR[a_pin / 4u]),
                     (static_cast<uint32_t>(a_port.get_id()) << ((static_cast<uint32_t>(a_pin) % 4u) * 4u)));

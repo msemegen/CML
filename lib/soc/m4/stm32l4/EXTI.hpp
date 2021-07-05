@@ -39,6 +39,12 @@ public:
         _10_15 = EXTI15_10_IRQn
     };
 
+    enum class Mode
+    {
+        interrupt,
+        event
+    };
+
     enum class Trigger_flag : uint32_t
     {
         rising  = 0x1,
@@ -67,18 +73,18 @@ public:
     void enable(const Callback& a_callback, uint32_t a_priority);
     void disable();
 
-    void attach(const peripherals::GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigger);
-    void attach(const peripherals::GPIO::In::Pin& a_pin, Trigger_flag a_trigger)
+    void attach(const peripherals::GPIO& a_port, uint32_t a_pin, Trigger_flag a_trigger, Mode a_mode);
+    void attach(const peripherals::GPIO::In::Pin& a_pin, Trigger_flag a_trigger, Mode a_mode)
     {
-        this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger);
+        this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger, a_mode);
     }
-    void attach(const peripherals::GPIO::Out::Pin& a_pin, Trigger_flag a_trigger)
+    void attach(const peripherals::GPIO::Out::Pin& a_pin, Trigger_flag a_trigger, Mode a_mode)
     {
-        this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger);
+        this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger, a_mode);
     }
-    void attach(const peripherals::GPIO::Alternate_function::Pin& a_pin, Trigger_flag a_trigger)
+    void attach(const peripherals::GPIO::Alternate_function::Pin& a_pin, Trigger_flag a_trigger, Mode a_mode)
     {
-        this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger);
+        this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger, a_mode);
     }
 
     void deattach(const peripherals::GPIO& a_port, uint32_t a_pin);
