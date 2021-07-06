@@ -134,6 +134,30 @@ public:
         _8 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
     };
 
+    struct MCO_config
+    {
+        enum class Source : uint32_t
+        {
+            sysclk = 0x1000000u,
+            msi    = 0x2000000u,
+            hsi    = 0x3000000u,
+            pll    = 0x5000000u,
+            lsi    = 0x6000000u
+        };
+
+        enum class Divider
+        {
+            _1  = 0x00000000u,
+            _2  = 0x10000000u,
+            _4  = 0x20000000u,
+            _8  = 0x30000000u,
+            _16 = 0x40000000u
+        };
+
+        Source source   = cml::various::get_enum_incorrect_value<Source>();
+        Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+    };
+
     struct PLL_config
     {
         enum class Output : uint32_t
@@ -305,6 +329,10 @@ public:
 #endif
 
     static void disable_clock(Clock a_clock);
+
+    static void enable_mco(const MCO_config& a_config);
+    static void disable_mco();
+    static MCO_config get_mco_config();
 
     static void set_clk48_source(CLK48_source a_source);
     static void set_sysclk_source(SYSCLK_source a_source, const Bus_prescalers& a_prescalers);

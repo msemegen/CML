@@ -109,8 +109,8 @@ void rcc<mcu>::enable_clock(Clock a_clock, PLL_source a_source, PLLM a_m, const 
     cml_assert(various::get_enum_incorrect_value<PLL_config::Output>() != a_config.p.output);
 #endif
 
-    cml_assert((true == is_clock_enabled(Clock::msi) && a_source == PLL_source::msi) ||
-               (true == is_clock_enabled(Clock::hsi) && a_source == PLL_source::hsi));
+    cml_assert((true == is_clock_enabled(Clock::msi) && PLL_source::msi == a_source) ||
+               (true == is_clock_enabled(Clock::hsi) && PLL_source::hsi == a_source));
     cml_assert(a_config.n >= 8 && a_config.n <= 86);
 
     disable_clock(Clock::pll);
@@ -215,16 +215,44 @@ void rcc<mcu>::disable_clock(Clock a_clock)
     }
 }
 
+void rcc<mcu>::enable_mco(const MCO_config& a_config)
+{
+    cml_assert(various::get_enum_incorrect_value<MCO_config::Source>() != a_config.source);
+    cml_assert(various::get_enum_incorrect_value<MCO_config::Divider>() != a_config.divider);
+
+    bit_flag::set(&(RCC->CFGR),
+                  RCC_CFGR_MCOPRE | RCC_CFGR_MCOSEL,
+                  static_cast<uint32_t>(a_config.source) | static_cast<uint32_t>(a_config.divider));
+}
+
+void rcc<mcu>::disable_mco()
+{
+    bit_flag::clear(&(RCC->CFGR), RCC_CFGR_MCOPRE | RCC_CFGR_MCOSEL);
+}
+
+rcc<mcu>::MCO_config rcc<mcu>::get_mco_config()
+{
+    uint32_t mcosel = bit_flag::get(RCC->CFGR, RCC_CFGR_MCOSEL);
+
+    if (0 != mcosel)
+    {
+        return { static_cast<MCO_config::Source>(mcosel),
+                 static_cast<MCO_config::Divider>(bit_flag::get(RCC->CFGR, RCC_CFGR_MCOPRE)) };
+    }
+
+    return MCO_config {};
+}
+
 void rcc<mcu>::set_clk48_source(CLK48_source a_source)
 {
-    cml_assert((a_source == CLK48_source::hsi48 && true == is_clock_enabled(Clock::hsi48)) ||
-               (a_source == CLK48_source::msi && true == is_clock_enabled(Clock::msi)) ||
+    cml_assert((CLK48_source::hsi48 == a_source && true == is_clock_enabled(Clock::hsi48)) ||
+               (CLK48_source::msi == a_source && true == is_clock_enabled(Clock::msi)) ||
 
-               ((a_source == CLK48_source::pll_q && true == is_clock_enabled(Clock::pll)) &&
+               ((CLK48_source::pll_q == a_source && true == is_clock_enabled(Clock::pll)) &&
                 PLL_config::Output::enabled == get_pll_config().q.output)
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-               || ((a_source == CLK48_source::pll_sai1_q && is_clock_enabled(Clock::pll)) &&
+               || ((CLK48_source::pll_sai1_q == a_source && is_clock_enabled(Clock::pll)) &&
                    PLLSAI1_config::Output::enabled == get_pllsai1_config().q.output)
 #endif
     );
@@ -234,9 +262,9 @@ void rcc<mcu>::set_clk48_source(CLK48_source a_source)
 
 void rcc<mcu>::set_sysclk_source(SYSCLK_source a_source, const Bus_prescalers& a_prescalers)
 {
-    cml_assert(a_prescalers.ahb != various::get_enum_incorrect_value<Bus_prescalers::AHB>());
-    cml_assert(a_prescalers.apb1 != various::get_enum_incorrect_value<Bus_prescalers::APB1>());
-    cml_assert(a_prescalers.apb2 != various::get_enum_incorrect_value<Bus_prescalers::APB2>());
+    cml_assert(various::get_enum_incorrect_value<Bus_prescalers::AHB>() != a_prescalers.ahb);
+    cml_assert(various::get_enum_incorrect_value<Bus_prescalers::APB1>() != a_prescalers.apb1);
+    cml_assert(various::get_enum_incorrect_value<Bus_prescalers::APB2>() != a_prescalers.apb2);
 
     uint32_t frequency_hz = 0;
 
