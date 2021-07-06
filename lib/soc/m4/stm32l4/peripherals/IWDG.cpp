@@ -11,7 +11,7 @@
 #include <soc/m4/stm32l4/peripherals/IWDG.hpp>
 
 // soc
-#include <soc/m4/mcu.hpp>
+#include <soc/m4/stm32l4/mcu.hpp>
 #include <soc/system_timer.hpp>
 
 // cml

@@ -21,7 +21,7 @@
 #include <cml/utils/wait_until.hpp>
 
 #ifdef CML_ASSERT_ENABLED
-#include <soc/m4/mcu.hpp>
+#include <soc/m4/stm32l4/mcu.hpp>
 #endif // CML_ASSERT_ENABLED
 
 namespace {

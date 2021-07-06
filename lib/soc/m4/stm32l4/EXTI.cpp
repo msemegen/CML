@@ -10,6 +10,7 @@
 
 // soc
 #include <soc/Interrupt_guard.hpp>
+#include <soc/m4/stm32l4/mcu.hpp>
 
 // cml
 #include <cml/bit.hpp>

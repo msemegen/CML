@@ -1,5 +1,5 @@
 /*
- *   Name: rcc.cpp
+ *   Name: mcu.cpp
  *
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
@@ -8,10 +8,7 @@
 #ifdef STM32L4
 
 // this
-#include <soc/m4/stm32l4/rcc.hpp>
-
-// soc
-#include <soc/m4/mcu.hpp>
+#include <soc/m4/stm32l4/mcu.hpp>
 
 // cml
 #include <cml/bit.hpp>

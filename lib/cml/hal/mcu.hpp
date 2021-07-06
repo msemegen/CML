@@ -9,14 +9,14 @@
 
 // soc
 #ifdef STM32L4
-#include <soc/m4/mcu.hpp>
+#include <soc/m4/stm32l4/mcu.hpp>
 #endif // STM32L4
 
 namespace cml {
 namespace hal {
 
 #ifdef STM32L4
-using mcu = soc::m4::mcu;
+using mcu = soc::m4::stm32l4::mcu;
 #endif
 
 } // namespace hal

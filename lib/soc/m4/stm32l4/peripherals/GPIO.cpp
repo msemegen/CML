@@ -12,15 +12,11 @@
 
 // soc
 #include <soc/Interrupt_guard.hpp>
-#include <soc/m4/mcu.hpp>
-#include <soc/m4/stm32l4/rcc.hpp>
+#include <soc/m4/stm32l4/mcu.hpp>
 
 // cml
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
-#ifdef CML_ASSERT_ENABLED
-#include <soc/m4/mcu.hpp>
-#endif // CML_ASSERT
 
 namespace {
 

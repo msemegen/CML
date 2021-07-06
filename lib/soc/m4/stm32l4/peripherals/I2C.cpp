@@ -12,8 +12,7 @@
 
 // soc
 #include <soc/Interrupt_guard.hpp>
-#include <soc/m4/mcu.hpp>
-#include <soc/m4/stm32l4/rcc.hpp>
+#include <soc/m4/stm32l4/mcu.hpp>
 #include <soc/system_timer.hpp>
 
 // cml

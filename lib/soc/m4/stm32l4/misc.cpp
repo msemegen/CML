@@ -11,8 +11,7 @@
 #include <soc/m4/stm32l4/misc.hpp>
 
 // soc
-#include <soc/m4/mcu.hpp>
-#include <soc/m4/stm32l4/rcc.hpp>
+#include <soc/m4/stm32l4/mcu.hpp>
 
 // cml
 #include <cml/debug/assertion.hpp>
