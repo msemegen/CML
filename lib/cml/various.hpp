@@ -45,4 +45,20 @@ struct various
     }
 };
 
+constexpr uint32_t operator"" _Hz(uint64_t a_value)
+{
+    return a_value;
+}
+
+constexpr uint32_t operator"" _kHz(uint64_t a_value)
+{
+    return a_value * 1000u;
+}
+
+constexpr uint32_t operator"" _MHz(uint64_t a_value)
+{
+    return a_value * 1000000u;
+}
+
+
 } // namespace cml

@@ -16,6 +16,9 @@
 #include <cml/debug/assertion.hpp>
 #include <cml/utils/wait_until.hpp>
 
+// soc
+#include <soc/m4/stm32l4/rcc.hpp>
+
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
@@ -48,6 +51,29 @@ private:
 
     pwr& operator=(const pwr&) = delete;
     pwr& operator=(pwr&&) = delete;
+};
+
+template<> class rcc<pwr>
+{
+public:
+    static void enable()
+    {
+        cml::bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_PWREN);
+    }
+
+    static void disable()
+    {
+        cml::bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_PWREN);
+    }
+
+private:
+    rcc()           = delete;
+    rcc(const rcc&) = delete;
+    rcc(rcc&&)      = delete;
+    ~rcc()          = delete;
+
+    rcc& operator=(const rcc&) = delete;
+    rcc& operator=(rcc&&) = delete;
 };
 
 } // namespace stm32l4

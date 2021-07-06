@@ -82,7 +82,7 @@ public:
     };
 
 public:
-    static void set_cache_mode(const Cache_mode_flag& a_mode)
+    static void set_cache_mode(Cache_mode_flag a_mode)
     {
         cml::bit_flag::set(
             &(FLASH->ACR), FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_ACR_PRFTEN, static_cast<uint32_t>(a_mode));

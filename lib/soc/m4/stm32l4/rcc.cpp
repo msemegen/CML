@@ -17,6 +17,7 @@
 #include <cml/bit.hpp>
 #include <cml/debug/assertion.hpp>
 #include <cml/utils/wait_until.hpp>
+#include <cml/various.hpp>
 
 namespace {
 
@@ -237,16 +238,6 @@ void rcc<mcu>::set_sysclk_source(SYSCLK_source a_source, const Bus_prescalers& a
     cml_assert(a_prescalers.apb1 != various::get_enum_incorrect_value<Bus_prescalers::APB1>());
     cml_assert(a_prescalers.apb2 != various::get_enum_incorrect_value<Bus_prescalers::APB2>());
 
-    if (false == bit_flag::is(RCC->APB1ENR1, RCC_APB1ENR1_PWREN))
-    {
-        bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_PWREN);
-    }
-
-    if (false == bit_flag::is(RCC->AHB1ENR, RCC_AHB1ENR_FLASHEN))
-    {
-        bit_flag::set(&(RCC->AHB1ENR), RCC_AHB1ENR_FLASHEN);
-    }
-
     uint32_t frequency_hz = 0;
 
     switch (a_source)
@@ -265,26 +256,19 @@ void rcc<mcu>::set_sysclk_source(SYSCLK_source a_source, const Bus_prescalers& a
 
         case SYSCLK_source::pll: {
             cml_assert(true == is_clock_enabled(Clock::pll));
-
             frequency_hz = calculate_pll_r_output_frequency();
         }
         break;
     }
 
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_SW, static_cast<uint32_t>(a_source));
-    wait_until::all_bits(&(RCC->CFGR), static_cast<uint32_t>(a_source) << RCC_CFGR_SWS_Pos, false);
+    wait_until::all_bits(&(RCC->CFGR), static_cast<uint32_t>(a_source) << RCC_CFGR_SW_Pos, false);
 
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<uint32_t>(a_prescalers.ahb));
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<uint32_t>(a_prescalers.apb1));
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<uint32_t>(a_prescalers.apb2));
 
     SystemCoreClock = frequency_hz;
-
-    if (SYSCLK_source::pll == a_source)
-    {
-        bit_flag::set(&(RCC->CFGR), RCC_CFGR_SW_PLL);
-        wait_until::all_bits(&(RCC->CFGR), RCC_CFGR_SW_PLL, false);
-    }
 }
 
 rcc<mcu>::Bus_prescalers rcc<mcu>::get_bus_prescalers()
@@ -324,9 +308,8 @@ rcc<mcu>::PLLSAI1_config rcc<mcu>::get_pllsai1_config()
 
 uint32_t rcc<mcu>::get_clock_frequency_hz(Clock a_clock)
 {
-    static constexpr uint32_t msi_frequency_hz_lut[] { 100u * 1000u,   200u * 1000u,   400u * 1000u,   800u * 1000u,
-                                                       1u * 1000000u,  2u * 1000000u,  4u * 1000000u,  8u * 1000000u,
-                                                       16u * 1000000u, 24u * 1000000u, 32u * 1000000u, 48u * 1000000u };
+    static constexpr uint32_t msi_frequency_hz_lut[] { 100_kHz, 200_kHz, 400_kHz, 800_kHz, 1_MHz,  2_MHz,
+                                                       4_MHz,   8_MHz,   16_MHz,  24_MHz,  32_MHz, 48_MHz };
 
     switch (a_clock)
     {
@@ -335,7 +318,7 @@ uint32_t rcc<mcu>::get_clock_frequency_hz(Clock a_clock)
         }
         break;
         case rcc<mcu>::Clock::hsi: {
-            return 16u * 1000000u;
+            return 16_MHz;
         }
         break;
         case rcc<mcu>::Clock::pll: {
@@ -343,11 +326,11 @@ uint32_t rcc<mcu>::get_clock_frequency_hz(Clock a_clock)
         }
         break;
         case rcc<mcu>::Clock::hsi48: {
-            return 48 * 1000000u;
+            return 48_MHz;
         }
         break;
         case rcc<mcu>::Clock::lsi: {
-            return 32u * 1000u;
+            return 32_MHz;
         }
         break;
     }
@@ -407,7 +390,7 @@ uint32_t rcc<mcu>::calculate_pll_r_output_frequency()
         break;
     }
 
-    cml_assert(pllvco >= 96 * 1000000u && pllvco <= 344 * 1000000u);
+    cml_assert(pllvco >= 96_MHz && pllvco <= 344_MHz);
 
     uint32_t pllr = ((bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLR) >> RCC_PLLCFGR_PLLR_Pos) + 1u) * 2u;
     return pllvco / pllr;
