@@ -11,9 +11,7 @@
 #include <cml/Non_copyable.hpp>
 
 // external
-#ifdef STM32L4
 #include <stm32l4xx.h>
-#endif
 
 namespace soc {
 namespace m4 {
