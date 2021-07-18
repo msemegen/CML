@@ -13,9 +13,11 @@
 
 // cml
 #include <cml/hal/Systick.hpp>
+#include <cml/hal/internal_flash.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/peripherals/GPIO.hpp>
 #include <cml/hal/peripherals/USART.hpp>
+#include <cml/hal/pwr.hpp>
 #include <cml/hal/rcc.hpp>
 #include <cml/hal/system_timer.hpp>
 
@@ -51,6 +53,24 @@ int main()
     Systick systick;
     GPIO gpio_port_a(GPIO::Id::a);
     USART iostream(USART::Id::_2);
+
+    internal_flash::set_latency(internal_flash::Latency::_4);
+    pwr::set_voltage_scaling(pwr::Voltage_scaling::_1);
+
+    rcc<mcu>::enable_clock(rcc<mcu>::Clock::hsi, rcc<mcu>::HSI_frequency::_16_MHz);
+    rcc<mcu>::enable_clock(rcc<mcu>::Clock::pll,
+                           rcc<mcu>::PLL_source::hsi,
+                           rcc<mcu>::PLLM::_2,
+                           { 20u,
+                             { rcc<mcu>::PLL_config::R::Divider::_2, rcc<mcu>::PLL_config::Output::enabled },
+                             { rcc<mcu>::PLL_config::Q::Divider::_2, rcc<mcu>::PLL_config::Output::disabled },
+                             { rcc<mcu>::PLL_config::P::Divider::_7, rcc<mcu>::PLL_config::Output::disabled } });
+
+    rcc<mcu>::set_sysclk_source(
+        rcc<mcu>::SYSCLK_source::pll,
+        { rcc<mcu>::Bus_prescalers::AHB::_1, rcc<mcu>::Bus_prescalers::APB1::_1, rcc<mcu>::Bus_prescalers::APB2::_1 });
+
+    rcc<mcu>::disable_clock(rcc<mcu>::Clock::msi);
 
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });

@@ -37,6 +37,7 @@ public:
         void* p_user_data = nullptr;
     };
 
+public:
     void enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_priority);
     void disable();
 

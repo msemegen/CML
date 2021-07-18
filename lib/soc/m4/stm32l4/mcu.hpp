@@ -15,6 +15,7 @@
 
 // cml
 #include <cml/bit_flag.hpp>
+#include <cml/debug/assertion.hpp>
 #include <cml/various.hpp>
 
 namespace soc {
@@ -41,21 +42,6 @@ public:
     {
         const uint8_t serial_number[12] = { 0 };
         const uint32_t type             = 0;
-    };
-
-    struct NVIC_config
-    {
-        enum class Grouping : uint32_t
-        {
-            _0 = 0x7,
-            _1 = 0x6,
-            _2 = 0x5,
-            _3 = 0x4,
-            _4 = 0x3,
-        };
-
-        Grouping grouping      = cml::various::get_enum_incorrect_value<Grouping>();
-        uint32_t base_priority = 0;
     };
 
 public:
@@ -109,12 +95,6 @@ public:
         cml::bit_flag::set(&(SCB->CPACR), ((3u << 10u * 2u) | (3u << 11u * 2u)), static_cast<uint32_t>(a_mode));
     }
 
-    static void set_nvic_config(const NVIC_config& a_config)
-    {
-        NVIC_SetPriorityGrouping(static_cast<uint32_t>(a_config.grouping));
-        __set_BASEPRI(a_config.base_priority);
-    }
-
     static DWT_mode get_dwt_mode()
     {
         return static_cast<DWT_mode>(cml::bit_flag::is(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
@@ -124,11 +104,6 @@ public:
     static FPU_mode get_fpu_mode()
     {
         return static_cast<FPU_mode>(SCB->CPACR);
-    }
-
-    static NVIC_config get_nvic_config()
-    {
-        return { static_cast<NVIC_config::Grouping>(NVIC_GetPriorityGrouping()), __get_BASEPRI() };
     }
 
 private:
@@ -541,7 +516,6 @@ private:
     static uint32_t calculate_pllsai1_q_output_frequency();
 #endif
 };
-
 
 } // namespace stm32l4
 } // namespace m4

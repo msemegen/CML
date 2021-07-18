@@ -6,16 +6,17 @@
 #
 
 INCLUDE_PATH     := $(ROOT)/                                                \
+                    $(CML_ROOT)/                                            \
                     $(CML_ROOT)/lib/                                        \
                     $(CML_ROOT)/externals/CMSIS/Include/                    \
                     $(CML_ROOT)/externals/CMSIS/Device/ST/STM32L4xx/Include/
 
-C_SOURCE_PATHS   := $(C_SOURCE_PATHS)                               \
-                    $(CML_ROOT)/lib/                                \
+C_SOURCE_PATHS   := $(CML_ROOT)/lib/                                \
                     $(ROOT)/../                                     \
                     $(CML_ROOT)/externals/CMSIS/Device/ST/STM32L4xx/
 
 CPP_SOURCE_PATHS := $(ROOT)/                                   \
+                    $(CML_ROOT)/modules/CLI/                   \
                     $(CML_ROOT)/lib/cml                        \
                     $(CML_ROOT)/lib/cml/hal/                   \
                     $(CML_ROOT)/lib/cml/utils/                 \

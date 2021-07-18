@@ -63,6 +63,7 @@ void Systick::enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_p
 void Systick::disable()
 {
     SysTick->CTRL = 0;
+    p_systick     = nullptr;
 }
 
 void Systick::register_tick_callback(const Tick_callback& a_callback)
