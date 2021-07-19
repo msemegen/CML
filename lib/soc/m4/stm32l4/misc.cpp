@@ -24,12 +24,12 @@ using namespace cml;
 
 void misc::delay_us(uint32_t a_time)
 {
-    cml_assert(mcu::DWT_mode::enabled == mcu::get_dwt_mode());
-    cml_assert(rcc<mcu>::get_sysclk_frequency_hz() >= 1000000u);
+    cml_assert(mcu::DWT_mode::enabled == mcu::get_DWT_mode());
+    cml_assert(rcc<mcu>::get_SYSCLK_frequency_Hz() >= 1000000u);
     cml_assert(a_time > 0);
 
     DWT->CYCCNT        = 0;
-    const uint32_t max = DWT->CYCCNT + (rcc<mcu>::get_sysclk_frequency_hz() / 1000000u * (a_time - 1));
+    const uint32_t max = DWT->CYCCNT + (rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000000u * (a_time - 1));
     while (DWT->CYCCNT < max)
         ;
 }

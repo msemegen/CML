@@ -57,7 +57,7 @@ IWDG::~IWDG()
 bool IWDG::enable(Prescaler a_prescaler, uint16_t a_reload, const Window& a_window, uint32_t a_timeout)
 {
     cml_assert((true == a_window.enable && a_window.value <= 0xFFFu) || (false == a_window.enable));
-    cml_assert(true == rcc<mcu>::is_clock_enabled(rcc<mcu>::Clock::lsi));
+    cml_assert(true == rcc<mcu>::is_clock_enabled(rcc<mcu>::Clock::LSI));
     cml_assert(a_reload <= 0xFFFu);
     cml_assert(a_timeout > 0);
 

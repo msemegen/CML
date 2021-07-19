@@ -78,7 +78,7 @@ RNG::~RNG()
 
 bool RNG::enable(uint32_t a_irq_priority, uint32_t a_timeout)
 {
-    cml_assert(rcc<mcu>::get_clk48_frequency_hz() <= 48 * 1000000u);
+    cml_assert(rcc<mcu>::get_CLK48_frequency_Hz() <= 48 * 1000000u);
     cml_assert(a_timeout > 0);
 
     uint32_t start = system_timer::get();

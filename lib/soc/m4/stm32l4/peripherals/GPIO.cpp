@@ -538,7 +538,7 @@ void rcc<GPIO>::disable(GPIO::Id a_id)
 
 void EXTI<GPIO>::enable(const Callback& a_callback, uint32_t a_priority)
 {
-    cml_assert(rcc<mcu>::SYSCFG_mode::enabled == rcc<mcu>::get_syscfg_mode());
+    cml_assert(rcc<mcu>::SYSCFG_mode::enabled == rcc<mcu>::get_SYSCFG_mode());
 
     NVIC_SetPriority(static_cast<IRQn_Type>(this->id), a_priority);
     NVIC_EnableIRQ(static_cast<IRQn_Type>(this->id));

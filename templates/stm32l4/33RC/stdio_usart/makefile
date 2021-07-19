@@ -15,6 +15,7 @@ CML_ROOT     := $(ROOT)/../../../..
 LIBRARIES    := $(ROOT)/libraries
 OUTPUT_NAME  := $(PROJECT_NAME)
 
+MCU_ARCH   := ARM_CORTEX_M4
 MCU_FAMILY := STM32L4
 MCU_TYPE   := STM32L433xx
 

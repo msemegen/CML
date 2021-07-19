@@ -57,25 +57,25 @@ int main()
     internal_flash::set_latency(internal_flash::Latency::_4);
     pwr::set_voltage_scaling(pwr::Voltage_scaling::_1);
 
-    rcc<mcu>::enable_clock(rcc<mcu>::Clock::hsi, rcc<mcu>::HSI_frequency::_16_MHz);
-    rcc<mcu>::enable_clock(rcc<mcu>::Clock::pll,
-                           rcc<mcu>::PLL_source::hsi,
+    rcc<mcu>::enable_clock(rcc<mcu>::Clock::HSI, rcc<mcu>::HSI_frequency::_16_MHz);
+    rcc<mcu>::enable_clock(rcc<mcu>::Clock::PLL,
+                           rcc<mcu>::PLL_source::HSI,
                            rcc<mcu>::PLLM::_2,
                            { 20u,
                              { rcc<mcu>::PLL_config::R::Divider::_2, rcc<mcu>::PLL_config::Output::enabled },
                              { rcc<mcu>::PLL_config::Q::Divider::_2, rcc<mcu>::PLL_config::Output::disabled },
                              { rcc<mcu>::PLL_config::P::Divider::_7, rcc<mcu>::PLL_config::Output::disabled } });
 
-    rcc<mcu>::set_sysclk_source(
-        rcc<mcu>::SYSCLK_source::pll,
+    rcc<mcu>::set_SYSCLK_source(
+        rcc<mcu>::SYSCLK_source::PLL,
         { rcc<mcu>::Bus_prescalers::AHB::_1, rcc<mcu>::Bus_prescalers::APB1::_1, rcc<mcu>::Bus_prescalers::APB2::_1 });
 
-    rcc<mcu>::disable_clock(rcc<mcu>::Clock::msi);
+    rcc<mcu>::disable_clock(rcc<mcu>::Clock::MSI);
 
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });
 
-    systick.enable((rcc<mcu>::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
+    systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
     systick.register_tick_callback({ system_timer_update, nullptr });
 
     rcc<GPIO>::enable(GPIO::Id::a, false);
@@ -91,7 +91,7 @@ int main()
     gpio_port_a.p_alternate_function->enable(3u, usart_pin_config);
 
     bool iostream_ready = iostream.enable({ 115200,
-                                            rcc<mcu>::get_sysclk_frequency_hz(),
+                                            rcc<mcu>::get_SYSCLK_frequency_Hz(),
                                             USART::Oversampling::_16,
                                             USART::Stop_bits::_1,
                                             USART::Flow_control_flag::none,
@@ -107,20 +107,20 @@ int main()
 
         printf("Sysclk source: ");
 
-        rcc<mcu>::SYSCLK_source sysclk_source = rcc<mcu>::get_sysclk_source();
+        rcc<mcu>::SYSCLK_source sysclk_source = rcc<mcu>::get_SYSCLK_source();
         switch (sysclk_source)
         {
-            case rcc<mcu>::SYSCLK_source::msi: {
+            case rcc<mcu>::SYSCLK_source::MSI: {
                 printf("MSI\n");
             }
             break;
 
-            case rcc<mcu>::SYSCLK_source::hsi: {
+            case rcc<mcu>::SYSCLK_source::HSI: {
                 printf("HSI\n");
             }
             break;
 
-            case rcc<mcu>::SYSCLK_source::pll: {
+            case rcc<mcu>::SYSCLK_source::PLL: {
                 printf("PLL\n");
             }
             break;
@@ -128,17 +128,17 @@ int main()
 
         printf("Clock frequency: ");
 
-        if (rcc<mcu>::get_sysclk_frequency_hz() >= 1000000u)
+        if (rcc<mcu>::get_SYSCLK_frequency_Hz() >= 1000000u)
         {
-            printf("%lu MHz\n", rcc<mcu>::get_sysclk_frequency_hz() / 1000000u);
+            printf("%lu MHz\n", rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000000u);
         }
-        else if (rcc<mcu>::get_sysclk_frequency_hz() >= 1000u)
+        else if (rcc<mcu>::get_SYSCLK_frequency_Hz() >= 1000u)
         {
-            printf("%lu kHz\n", rcc<mcu>::get_sysclk_frequency_hz() / 1000u);
+            printf("%lu kHz\n", rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u);
         }
         else
         {
-            printf("%lu Hz\n", rcc<mcu>::get_sysclk_frequency_hz());
+            printf("%lu Hz\n", rcc<mcu>::get_SYSCLK_frequency_Hz());
         }
     }
 

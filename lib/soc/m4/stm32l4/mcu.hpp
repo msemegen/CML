@@ -72,7 +72,7 @@ public:
                  DBGMCU->IDCODE };
     }
 
-    static void set_dwt_mode(DWT_mode a_mode)
+    static void set_DWT_mode(DWT_mode a_mode)
     {
         switch (a_mode)
         {
@@ -90,18 +90,18 @@ public:
         }
     }
 
-    static void set_fpu_mode(FPU_mode a_mode)
+    static void set_FPU_mode(FPU_mode a_mode)
     {
         cml::bit_flag::set(&(SCB->CPACR), ((3u << 10u * 2u) | (3u << 11u * 2u)), static_cast<uint32_t>(a_mode));
     }
 
-    static DWT_mode get_dwt_mode()
+    static DWT_mode get_DWT_mode()
     {
         return static_cast<DWT_mode>(cml::bit_flag::is(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
                                      cml::bit_flag::is(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk));
     }
 
-    static FPU_mode get_fpu_mode()
+    static FPU_mode get_FPU_mode()
     {
         return static_cast<FPU_mode>(SCB->CPACR);
     }
@@ -121,18 +121,18 @@ template<> class rcc<mcu>
 public:
     enum class Clock : uint32_t
     {
-        msi = RCC_CR_MSION,
-        hsi = RCC_CR_HSION,
-        pll = RCC_CR_PLLON,
-        hsi48,
-        lsi
+        MSI = RCC_CR_MSION,
+        HSI = RCC_CR_HSION,
+        PLL = RCC_CR_PLLON,
+        HSI48,
+        LSI
     };
 
     enum class SYSCLK_source : uint32_t
     {
-        msi = RCC_CFGR_SW_MSI,
-        hsi = RCC_CFGR_SW_HSI,
-        pll = RCC_CFGR_SW_PLL,
+        MSI = RCC_CFGR_SW_MSI,
+        HSI = RCC_CFGR_SW_HSI,
+        PLL = RCC_CFGR_SW_PLL,
     };
 
     enum class SYSCFG_mode : uint32_t
@@ -143,13 +143,13 @@ public:
 
     enum class CLK48_source : uint32_t
     {
-        hsi48 = 0x0u,
+        HSI48 = 0x0u,
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        pll_sai1_q = RCC_CCIPR_CLK48SEL_0,
+        PLL_SAI1_Q = RCC_CCIPR_CLK48SEL_0,
 #endif
-        pll_q = RCC_CCIPR_CLK48SEL_1,
-        msi   = RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1,
+        PLL_Q = RCC_CCIPR_CLK48SEL_1,
+        MSI   = RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1,
     };
 
     enum class MSI_frequency : uint32_t
@@ -197,8 +197,8 @@ public:
 
     enum class PLL_source : uint32_t
     {
-        msi = RCC_PLLCFGR_PLLSRC_MSI,
-        hsi = RCC_PLLCFGR_PLLSRC_HSI,
+        MSI = RCC_PLLCFGR_PLLSRC_MSI,
+        HSI = RCC_PLLCFGR_PLLSRC_HSI,
     };
 
     enum class PLLM
@@ -217,11 +217,11 @@ public:
     {
         enum class Source : uint32_t
         {
-            sysclk = 0x1000000u,
-            msi    = 0x2000000u,
-            hsi    = 0x3000000u,
-            pll    = 0x5000000u,
-            lsi    = 0x6000000u
+            SYSCLK = 0x1000000u,
+            MSI    = 0x2000000u,
+            HSI    = 0x3000000u,
+            PLL    = 0x5000000u,
+            LSI    = 0x6000000u
         };
 
         enum class Divider
@@ -409,14 +409,14 @@ public:
 
     static void disable_clock(Clock a_clock);
 
-    static void enable_mco(const MCO_config& a_config);
-    static void disable_mco();
-    static MCO_config get_mco_config();
+    static void enable_MCO(const MCO_config& a_config);
+    static void disable_MCO();
+    static MCO_config get_MCO_config();
 
-    static void set_clk48_source(CLK48_source a_source);
-    static void set_sysclk_source(SYSCLK_source a_source, const Bus_prescalers& a_prescalers);
+    static void set_CLK48_source(CLK48_source a_source);
+    static void set_SYSCLK_source(SYSCLK_source a_source, const Bus_prescalers& a_prescalers);
 
-    static void set_syscfg_mode(SYSCFG_mode a_mode)
+    static void set_SYSCFG_mode(SYSCFG_mode a_mode)
     {
         switch (a_mode)
         {
@@ -432,73 +432,34 @@ public:
         }
     }
 
-    static SYSCFG_mode get_syscfg_mode()
+    static SYSCFG_mode get_SYSCFG_mode()
     {
         return static_cast<SYSCFG_mode>(cml::bit_flag::is(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN));
     }
 
     static Bus_prescalers get_bus_prescalers();
-    static PLL_config get_pll_config();
+    static PLL_config get_PLL_config();
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    static PLLSAI1_config get_pllsai1_config();
+    static PLLSAI1_config get_PLLSAI1_config();
 #endif
 
-    static CLK48_source get_clk48_source()
+    static CLK48_source get_CLK48_source()
     {
         return static_cast<CLK48_source>(cml::bit_flag::get(RCC->CCIPR, RCC_CCIPR_CLK48SEL));
     }
 
-    static SYSCLK_source get_sysclk_source()
+    static SYSCLK_source get_SYSCLK_source()
     {
         return static_cast<SYSCLK_source>(cml::bit_flag::get(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
     }
 
-    static uint32_t get_clock_frequency_hz(Clock a_clock);
-    static uint32_t get_clk48_frequency_hz();
-    static uint32_t get_sysclk_frequency_hz()
-    {
-        return SystemCoreClock;
-    }
+    static uint32_t get_clock_frequency_Hz(Clock a_clock);
+    static uint32_t get_CLK48_frequency_Hz();
+    static uint32_t get_SYSCLK_frequency_Hz();
 
-    static bool is_clock_enabled(Clock a_clock)
-    {
-        switch (a_clock)
-        {
-            case Clock::msi:
-            case Clock::hsi:
-            case Clock::pll: {
-                return cml::bit_flag::is(RCC->CR, static_cast<uint32_t>(a_clock));
-            }
-            break;
-
-            case Clock::lsi: {
-                return cml::bit_flag::is(RCC->CSR, RCC_CSR_LSION);
-            }
-            break;
-
-            case Clock::hsi48: {
-                return cml::bit_flag::is(RCC->CRRCR, RCC_CRRCR_HSI48ON);
-            }
-            break;
-        }
-
-        return false;
-    }
-
-    static Reset_source get_reset_source()
-    {
-        uint32_t flag = cml::bit_flag::get(RCC->CSR, 0xFB000000u);
-
-        if (flag == 0x0u)
-        {
-            flag = RCC_CSR_PINRSTF;
-        }
-
-        cml::bit_flag::set(&(RCC->CSR), RCC_CSR_RMVF);
-
-        return static_cast<Reset_source>(flag);
-    }
+    static bool is_clock_enabled(Clock a_clock);
+    static Reset_source get_reset_source();
 
 private:
     rcc()           = delete;
@@ -509,11 +470,11 @@ private:
     rcc& operator=(const rcc&) = delete;
     rcc& operator=(rcc&&) = delete;
 
-    static uint32_t calculate_pll_r_output_frequency();
-    static uint32_t calculate_pll_q_output_frequency();
+    static uint32_t calculate_PLL_R_output_frequency();
+    static uint32_t calculate_PLL_Q_output_frequency();
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
     defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    static uint32_t calculate_pllsai1_q_output_frequency();
+    static uint32_t calculate_PLLSAI1_Q_output_frequency();
 #endif
 };
 

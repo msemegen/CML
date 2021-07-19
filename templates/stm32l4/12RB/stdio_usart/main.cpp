@@ -50,7 +50,7 @@ int main()
 
     Systick systick;
 
-    systick.enable((rcc<mcu>::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
+    systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
     systick.register_tick_callback({ system_timer_update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });
@@ -74,7 +74,7 @@ int main()
 
     rcc<USART>::enable(USART::Id::_2, rcc<USART>::Clock_source::sysclk, false);
     bool iostream_ready = iostream.enable({ 115200,
-                                            rcc<mcu>::get_sysclk_frequency_hz(),
+                                            rcc<mcu>::get_SYSCLK_frequency_Hz(),
                                             USART::Oversampling::_16,
                                             USART::Stop_bits::_1,
                                             USART::Flow_control_flag::none,
@@ -90,20 +90,20 @@ int main()
 
         printf("Sysclk source: ");
 
-        rcc<mcu>::SYSCLK_source sysclk_source = rcc<mcu>::get_sysclk_source();
+        rcc<mcu>::SYSCLK_source sysclk_source = rcc<mcu>::get_SYSCLK_source();
         switch (sysclk_source)
         {
-            case rcc<mcu>::SYSCLK_source::msi: {
+            case rcc<mcu>::SYSCLK_source::MSI: {
                 printf("MSI\n");
             }
             break;
 
-            case rcc<mcu>::SYSCLK_source::hsi: {
+            case rcc<mcu>::SYSCLK_source::HSI: {
                 printf("HSI\n");
             }
             break;
 
-            case rcc<mcu>::SYSCLK_source::pll: {
+            case rcc<mcu>::SYSCLK_source::PLL: {
                 printf("PLL\n");
             }
             break;
@@ -111,17 +111,17 @@ int main()
 
         printf("Clock frequency: ");
 
-        if (rcc<mcu>::get_sysclk_frequency_hz() >= 1000000u)
+        if (rcc<mcu>::get_SYSCLK_frequency_Hz() >= 1000000u)
         {
-            printf("%lu MHz\n", rcc<mcu>::get_sysclk_frequency_hz() / 1000000u);
+            printf("%lu MHz\n", rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000000u);
         }
-        else if (rcc<mcu>::get_sysclk_frequency_hz() >= 1000u)
+        else if (rcc<mcu>::get_SYSCLK_frequency_Hz() >= 1000u)
         {
-            printf("%lu kHz\n", rcc<mcu>::get_sysclk_frequency_hz() / 1000u);
+            printf("%lu kHz\n", rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u);
         }
         else
         {
-            printf("%lu Hz\n", rcc<mcu>::get_sysclk_frequency_hz());
+            printf("%lu Hz\n", rcc<mcu>::get_SYSCLK_frequency_Hz());
         }
     }
 

@@ -58,7 +58,7 @@ public:
 
     static void set_mode(Mode a_mode)
     {
-        static uint32_t primask = 0;
+        static uint32_t primask = __get_PRIMASK();
 
         switch (a_mode)
         {
@@ -73,6 +73,11 @@ public:
             }
             break;
         }
+    }
+
+    static void system_reset()
+    {
+        NVIC_SystemReset();
     }
 
     static Config get_config()

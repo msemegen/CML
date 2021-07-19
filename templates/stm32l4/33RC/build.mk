@@ -10,7 +10,7 @@ INCLUDE_PATH := $(INCLUDE_PATH) $(ROOT)
 CFLAGS := $(addprefix -I, $(INCLUDE_PATH)) --specs=nano.specs
 CFLAGS += -Wall -Wno-strict-aliasing -I. -c -fno-common -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -ffast-math -ffunction-sections -fdata-sections -fsingle-precision-constant
-CFLAGS += -D$(MCU_FAMILY) -D$(MCU_TYPE) -DARM_MATH_CM4 -DARM_MATH_ROUNDING -D__FPU_PRESENT
+CFLAGS += -D$(MCU_FAMILY) -D$(MCU_TYPE) -D$(MCU_ARCH) -DARM_MATH_CM4 -DARM_MATH_ROUNDING -D__FPU_PRESENT
 
 CPPFLAGS := $(CFLAGS)
 CPPFLAGS += -std=c++17 -fno-exceptions -fno-rtti -fno-use-cxa-atexit -fno-threadsafe-statics

@@ -54,7 +54,7 @@ int main()
 
     nvic::set_config({ nvic::Config::Grouping::_4, 0x7u });
 
-    systick.enable((rcc<mcu>::get_sysclk_frequency_hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
+    systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
     systick.register_tick_callback({ system_timer_update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });
@@ -75,7 +75,7 @@ int main()
 
     gpio_port_c.p_in->enable(13u, GPIO::Pull::down);
 
-    rcc<mcu>::set_syscfg_mode(rcc<mcu>::SYSCFG_mode::enabled);
+    rcc<mcu>::set_SYSCFG_mode(rcc<mcu>::SYSCFG_mode::enabled);
 
     EXTI<GPIO> exti(EXTI<GPIO>::Id::_10_15);
     exti.enable({ exti_callback, &led_pin }, 0x6u);

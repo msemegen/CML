@@ -290,7 +290,7 @@ void I2C_master::enable(const Config& a_config, uint32_t a_irq_priority)
     cml_assert(various::get_enum_incorrect_value<Config::Crc>() != a_config.crc);
 
     cml_assert((Config::Fast_plus::enabled == a_config.fast_plus &&
-                rcc<mcu>::SYSCFG_mode::enabled == rcc<mcu>::get_syscfg_mode()) ||
+                rcc<mcu>::SYSCFG_mode::enabled == rcc<mcu>::get_SYSCFG_mode()) ||
                Config::Fast_plus::disabled == a_config.fast_plus);
     cml_assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_i2c_slave_handle &&
                nullptr == controllers[static_cast<uint32_t>(this->id)].p_i2c_master_handle);
@@ -726,7 +726,7 @@ void I2C_slave::enable(const Config& a_config, uint32_t a_irq_priority)
     cml_assert(a_config.address <= 0x7F);
 
     cml_assert((Config::Fast_plus::enabled == a_config.fast_plus &&
-                rcc<mcu>::SYSCFG_mode::enabled == rcc<mcu>::get_syscfg_mode()) ||
+                rcc<mcu>::SYSCFG_mode::enabled == rcc<mcu>::get_SYSCFG_mode()) ||
                Config::Fast_plus::disabled == a_config.fast_plus);
     cml_assert(nullptr == controllers[static_cast<uint32_t>(this->id)].p_i2c_slave_handle &&
                nullptr == controllers[static_cast<uint32_t>(this->id)].p_i2c_master_handle);

@@ -8,12 +8,12 @@
 // this
 #include <soc/Systick.hpp>
 
+// soc
+#include <soc/Interrupt_guard.hpp>
+
 // cml
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
-
-// soc
-#include <soc/Interrupt_guard.hpp>
 
 namespace {
 
