@@ -24,7 +24,6 @@ class Interrupt_guard : private cml::Non_copyable
 {
 public:
     Interrupt_guard()
-        : primask(__get_PRIMASK())
     {
 #ifdef ARM_CORTEX_M4
         m4::nvic::set_mode(m4::nvic::Mode::disabled);
@@ -41,9 +40,6 @@ public:
         static_assert(false, "Not implemented architecture");
 #endif
     }
-
-private:
-    uint32_t primask;
 };
 
 } // namespace soc
