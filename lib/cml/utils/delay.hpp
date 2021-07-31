@@ -8,6 +8,7 @@
  */
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/hal/system_timer.hpp>
 #include <cml/various.hpp>
 
@@ -18,17 +19,9 @@
 namespace cml {
 namespace utils {
 
-class delay
+class delay : private cml::Non_constructible
 {
 public:
-    delay()             = delete;
-    delay(delay&&)      = delete;
-    delay(const delay&) = delete;
-    ~delay()            = delete;
-
-    delay& operator=(delay&&) = delete;
-    delay& operator=(const delay&) = delete;
-
     static void s(uint32_t a_time)
     {
         uint32_t start = hal::system_timer::get();

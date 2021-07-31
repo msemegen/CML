@@ -10,20 +10,16 @@
 // std
 #include <cstdint>
 
+// cml
+#include <cml/Non_constructible.hpp>
+
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
 
-class misc
+class misc : private cml::Non_constructible
 {
 public:
-    misc()            = delete;
-    misc(misc&&)      = delete;
-    misc(const misc&) = delete;
-
-    misc& operator=(misc&&) = delete;
-    misc& operator=(const misc&) = delete;
-
     static void delay_us(uint32_t a_time);
 };
 

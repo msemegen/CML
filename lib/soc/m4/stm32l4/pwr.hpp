@@ -11,6 +11,7 @@
 #include <stm32l4xx.h>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
@@ -23,7 +24,7 @@ namespace soc {
 namespace m4 {
 namespace stm32l4 {
 
-class pwr
+class pwr : private cml::Non_constructible
 {
 public:
     enum class Voltage_scaling : uint32_t
@@ -42,18 +43,9 @@ public:
     {
         return static_cast<Voltage_scaling>(cml::bit_flag::get(PWR->CR1, PWR_CR1_VOS));
     }
-
-private:
-    pwr()           = delete;
-    pwr(const pwr&) = delete;
-    pwr(pwr&&)      = delete;
-    ~pwr()          = delete;
-
-    pwr& operator=(const pwr&) = delete;
-    pwr& operator=(pwr&&) = delete;
 };
 
-template<> class rcc<pwr>
+template<> class rcc<pwr> : private cml::Non_constructible
 {
 public:
     static void enable()
@@ -65,15 +57,6 @@ public:
     {
         cml::bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_PWREN);
     }
-
-private:
-    rcc()           = delete;
-    rcc(const rcc&) = delete;
-    rcc(rcc&&)      = delete;
-    ~rcc()          = delete;
-
-    rcc& operator=(const rcc&) = delete;
-    rcc& operator=(rcc&&) = delete;
 };
 
 } // namespace stm32l4

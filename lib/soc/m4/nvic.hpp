@@ -18,12 +18,13 @@
 // cml
 #include <cml/bit.hpp>
 #include <cml/debug/assertion.hpp>
+#include <cml/Non_constructible.hpp>
 #include <cml/various.hpp>
 
 namespace soc {
 namespace m4 {
 
-class nvic
+class nvic : private cml::Non_constructible
 {
 public:
     enum class Mode
@@ -92,15 +93,6 @@ public:
 
         return static_cast<Mode>(cml::bit::is(cpsr, 0x7u));
     }
-
-private:
-    nvic()            = delete;
-    nvic(const nvic&) = delete;
-    nvic(nvic&&)      = delete;
-    ~nvic()           = delete;
-
-    nvic& operator=(const nvic&) = delete;
-    nvic& operator=(nvic&&) = delete;
 };
 
 } // namespace m4

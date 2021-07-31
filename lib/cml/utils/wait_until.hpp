@@ -11,6 +11,7 @@
 #include <cstdint>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/hal/system_timer.hpp>
@@ -19,7 +20,7 @@
 namespace cml {
 namespace utils {
 
-class wait_until
+class wait_until : private cml::Non_constructible
 {
 public:
     template<typename Register_t> static void all_bits(const Register_t* a_p_register, uint32_t a_flag, bool a_status)
@@ -63,15 +64,6 @@ public:
 
         return ((false == status) && (false == timeout));
     }
-
-private:
-    wait_until()                  = delete;
-    wait_until(wait_until&&)      = delete;
-    wait_until(const wait_until&) = delete;
-    ~wait_until()                 = delete;
-
-    wait_until& operator=(wait_until&&) = delete;
-    wait_until& operator=(const wait_until&) = delete;
 };
 
 } // namespace utils

@@ -12,20 +12,16 @@
 #include <limits>
 #include <type_traits>
 
+// cml
+#include <cml/Non_constructible.hpp>
+
 #define unused(x) ((void)(x))
 
 namespace cml {
 
-struct various
+class various : private Non_constructible
 {
-    various()               = delete;
-    various(various&&)      = delete;
-    various(const various&) = delete;
-    ~various()              = delete;
-
-    various& operator=(various&&) = delete;
-    various& operator=(const various&) = delete;
-
+public:
     static uint32_t time_diff(uint32_t a_left, uint32_t a_right)
     {
         if (a_left < a_right)
@@ -45,6 +41,8 @@ struct various
     }
 };
 
+} // namespace cml
+
 constexpr uint32_t operator"" _Hz(uint64_t a_value)
 {
     return a_value;
@@ -59,6 +57,3 @@ constexpr uint32_t operator"" _MHz(uint64_t a_value)
 {
     return a_value * 1000000u;
 }
-
-
-} // namespace cml

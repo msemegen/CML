@@ -10,11 +10,15 @@
 // std
 #include <cstdint>
 
+// cml
+#include <cml/Non_constructible.hpp>
+
 namespace cml {
 namespace debug {
 
-struct assertion
+class assertion : private cml::Non_constructible
 {
+public:
     struct Halt_hadler
     {
         using Function = void (*)(void* a_p_user_data);
@@ -37,14 +41,6 @@ struct assertion
     static void register_halt(const Halt_hadler& a_handler);
     static void register_print(const Print_handler& a_handler);
     static void trap(const char* a_p_file, uint32_t a_line, const char* a_p_expression);
-
-    assertion()                 = delete;
-    assertion(const assertion&) = delete;
-    assertion(assertion&&)      = delete;
-    ~assertion()                = default;
-
-    assertion& operator=(const assertion&) = delete;
-    assertion& operator=(assertion&&) = delete;
 };
 
 } // namespace debug

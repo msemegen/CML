@@ -14,9 +14,11 @@
 #include <stm32l4xx.h>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
+#include <cml/hal/Interrupt_guard.hpp>
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
 
@@ -24,7 +26,7 @@ namespace soc {
 namespace m4 {
 namespace stm32l4 {
 
-class internal_flash
+class internal_flash : private cml::Non_constructible
 {
 public:
     enum
@@ -126,6 +128,8 @@ private:
 
             if (true == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK))
             {
+                Interrupt_guard interrupt_guard;
+
                 FLASH->KEYR = 0x45670123u;
                 FLASH->KEYR = 0xCDEF89ABu;
             }
@@ -139,13 +143,15 @@ private:
 
             if (true == this->unlocked && true == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK))
             {
+                Interrupt_guard interrupt_guard;
+
                 FLASH->KEYR = 0x45670123u;
                 FLASH->KEYR = 0xCDEF89ABu;
             }
 
             this->unlocked = false == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
         }
-
+         
         ~Unlock_guard()
         {
             cml::bit_flag::set(&(FLASH->CR), FLASH_CR_LOCK);
@@ -178,15 +184,6 @@ private:
     private:
         const Cache_mode_flag cache_mode;
     };
-
-private:
-    internal_flash()                      = delete;
-    internal_flash(const internal_flash&) = delete;
-    internal_flash(internal_flash&&)      = delete;
-    ~internal_flash()                     = delete;
-
-    internal_flash& operator=(const internal_flash&) = delete;
-    internal_flash& operator=(internal_flash&&) = delete;
 };
 
 constexpr internal_flash::Cache_mode_flag operator|(internal_flash::Cache_mode_flag a_f1,

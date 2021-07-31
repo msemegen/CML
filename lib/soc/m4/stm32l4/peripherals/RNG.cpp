@@ -19,6 +19,7 @@
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 #include <cml/utils/wait_until.hpp>
+#include <cml/various.hpp>
 
 namespace {
 
@@ -78,7 +79,7 @@ RNG::~RNG()
 
 bool RNG::enable(uint32_t a_irq_priority, uint32_t a_timeout)
 {
-    cml_assert(rcc<mcu>::get_CLK48_frequency_Hz() <= 48 * 1000000u);
+    cml_assert(rcc<mcu>::get_CLK48_frequency_Hz() <= 48_MHz);
     cml_assert(a_timeout > 0);
 
     uint32_t start = system_timer::get();

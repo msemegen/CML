@@ -10,19 +10,14 @@
 // std
 #include <cstdint>
 
+// cml
+#include <cml/Non_constructible.hpp>
+
 namespace cml {
 
-class bit
+class bit : private Non_constructible
 {
 public:
-    bit()           = delete;
-    bit(bit&&)      = delete;
-    bit(const bit&) = delete;
-    ~bit()          = delete;
-
-    bit& operator=(bit&&) = delete;
-    bit& operator=(const bit&) = delete;
-
     template<typename Register_t> constexpr static bool is(Register_t a_register, uint8_t a_index)
     {
         const Register_t flag = static_cast<Register_t>(0x1u) << a_index;

@@ -14,6 +14,7 @@
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 #include <cml/various.hpp>
@@ -22,7 +23,7 @@ namespace soc {
 namespace m4 {
 namespace stm32l4 {
 
-class mcu
+class mcu : private cml::Non_constructible
 {
 public:
     enum class FPU_mode : uint32_t
@@ -462,13 +463,6 @@ public:
     static Reset_source get_reset_source();
 
 private:
-    rcc()           = delete;
-    rcc(const rcc&) = delete;
-    rcc(rcc&&)      = delete;
-    ~rcc()          = delete;
-
-    rcc& operator=(const rcc&) = delete;
-    rcc& operator=(rcc&&) = delete;
 
     static uint32_t calculate_PLL_R_output_frequency();
     static uint32_t calculate_PLL_Q_output_frequency();
