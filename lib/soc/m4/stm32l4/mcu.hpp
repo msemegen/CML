@@ -106,18 +106,9 @@ public:
     {
         return static_cast<FPU_mode>(SCB->CPACR);
     }
-
-private:
-    mcu()           = delete;
-    mcu(const mcu&) = delete;
-    mcu(mcu&&)      = delete;
-    ~mcu()          = delete;
-
-    mcu& operator=(const mcu&) = delete;
-    mcu& operator=(mcu&&) = delete;
 };
 
-template<> class rcc<mcu>
+template<> class rcc<mcu> : private cml::Non_constructible
 {
 public:
     enum class Clock : uint32_t

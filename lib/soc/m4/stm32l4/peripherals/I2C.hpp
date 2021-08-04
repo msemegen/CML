@@ -15,6 +15,7 @@
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/various.hpp>
 
@@ -391,7 +392,7 @@ private:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> class rcc<peripherals::I2C_base>
+template<> class rcc<peripherals::I2C_base> : private cml::Non_constructible
 {
 public:
     enum class Clock_source : uint32_t
@@ -403,15 +404,6 @@ public:
 
     static void enable(peripherals::I2C_base::Id a_id, Clock_source a_clock_source, bool a_enable_in_lp);
     static void disable(peripherals::I2C_base::Id a_id);
-
-private:
-    rcc()           = delete;
-    rcc(const rcc&) = delete;
-    rcc(rcc&&)      = delete;
-    ~rcc()          = delete;
-
-    rcc& operator=(const rcc&) = delete;
-    rcc& operator=(rcc&&) = delete;
 };
 } // namespace stm32l4
 } // namespace m4

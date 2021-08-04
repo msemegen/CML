@@ -18,6 +18,7 @@
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/bit.hpp>
 #include <cml/debug/assertion.hpp>
@@ -433,7 +434,8 @@ public:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> class rcc<peripherals::GPIO>
+
+template<> class rcc<peripherals::GPIO> : private cml::Non_constructible
 {
 public:
     static void enable(peripherals::GPIO::Id a_id, bool a_enable_in_lp);

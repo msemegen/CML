@@ -18,6 +18,7 @@
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/various.hpp>
 
@@ -327,7 +328,8 @@ constexpr USART::Mode_flag operator|=(USART::Mode_flag& a_f1, USART::Mode_flag a
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> class rcc<peripherals::USART>
+
+template<> class rcc<peripherals::USART> : private cml::Non_constructible
 {
 public:
     enum class Clock_source : uint32_t
@@ -339,15 +341,6 @@ public:
 
     static void enable(peripherals::USART::Id a_id, const Clock_source& a_clock_source, bool a_enable_in_lp);
     static void disable(peripherals::USART::Id a_id);
-
-private:
-    rcc()           = delete;
-    rcc(const rcc&) = delete;
-    rcc(rcc&&)      = delete;
-    ~rcc()          = delete;
-
-    rcc& operator=(const rcc&) = delete;
-    rcc& operator=(rcc&&) = delete;
 };
 } // namespace stm32l4
 } // namespace m4

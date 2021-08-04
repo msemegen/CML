@@ -17,6 +17,7 @@
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/bit_flag.hpp>
 
@@ -60,7 +61,8 @@ public:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> class rcc<peripherals::CRC32>
+
+template<> class rcc<peripherals::CRC32> : private cml::Non_constructible
 {
 public:
     static void enable(bool a_enable_in_lp);

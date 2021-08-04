@@ -14,6 +14,7 @@
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
 
 namespace soc {
@@ -86,20 +87,12 @@ private:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> class rcc<peripherals::Basic_timer>
+
+template<> class rcc<peripherals::Basic_timer> : private cml::Non_constructible
 {
 public:
     static void enable(peripherals::Basic_timer::Id a_id, bool a_enable_in_lp);
     static void disable(peripherals::Basic_timer::Id a_id);
-
-private:
-    rcc()           = delete;
-    rcc(const rcc&) = delete;
-    rcc(rcc&&)      = delete;
-    ~rcc()          = delete;
-
-    rcc& operator=(const rcc&) = delete;
-    rcc& operator=(rcc&&) = delete;
 };
 } // namespace stm32l4
 } // namespace m4

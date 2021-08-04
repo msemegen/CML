@@ -17,6 +17,7 @@
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/various.hpp>
 
@@ -156,7 +157,8 @@ private:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> class rcc<peripherals::ADC>
+
+template<> class rcc<peripherals::ADC> : private cml::Non_constructible
 {
 public:
     enum class Clock_source
@@ -186,15 +188,6 @@ public:
 
     static void enable(Clock_source a_source, Prescaler a_prescaler, bool a_enable_in_lp);
     static void disable();
-
-private:
-    rcc()           = delete;
-    rcc(const rcc&) = delete;
-    rcc(rcc&&)      = delete;
-    ~rcc()          = delete;
-
-    rcc& operator=(const rcc&) = delete;
-    rcc& operator=(rcc&&) = delete;
 };
 
 } // namespace stm32l4
