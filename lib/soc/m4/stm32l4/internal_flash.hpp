@@ -151,7 +151,7 @@ private:
 
             this->unlocked = false == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
         }
-         
+
         ~Unlock_guard()
         {
             cml::bit_flag::set(&(FLASH->CR), FLASH_CR_LOCK);

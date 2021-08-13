@@ -16,9 +16,9 @@
 #endif
 
 // cml
+#include <cml/Non_constructible.hpp>
 #include <cml/bit.hpp>
 #include <cml/debug/assertion.hpp>
-#include <cml/Non_constructible.hpp>
 #include <cml/various.hpp>
 
 namespace soc {

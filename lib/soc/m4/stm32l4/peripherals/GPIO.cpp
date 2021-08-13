@@ -637,7 +637,6 @@ void EXTI<GPIO>::deattach(const GPIO& a_port, uint32_t a_pin)
     interrupt_handlers[a_pin].callback = { nullptr, nullptr };
 }
 
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

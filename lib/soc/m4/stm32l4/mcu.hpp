@@ -111,6 +111,12 @@ public:
 template<> class rcc<mcu> : private cml::Non_constructible
 {
 public:
+    enum class SYSCFG_mode : uint32_t
+    {
+        disabled,
+        enabled
+    };
+
     enum class Clock : uint32_t
     {
         MSI = RCC_CR_MSION,
@@ -125,12 +131,6 @@ public:
         MSI = RCC_CFGR_SW_MSI,
         HSI = RCC_CFGR_SW_HSI,
         PLL = RCC_CFGR_SW_PLL,
-    };
-
-    enum class SYSCFG_mode : uint32_t
-    {
-        disabled,
-        enabled
     };
 
     enum class CLK48_source : uint32_t
@@ -207,13 +207,20 @@ public:
 
     struct MCO_config
     {
+        enum class Mode : uint32_t
+        {
+            disabled,
+            enabled
+        };
+
         enum class Source : uint32_t
         {
             SYSCLK = 0x1000000u,
             MSI    = 0x2000000u,
             HSI    = 0x3000000u,
             PLL    = 0x5000000u,
-            LSI    = 0x6000000u
+            LSI    = 0x6000000u,
+            none
         };
 
         enum class Divider
@@ -222,9 +229,11 @@ public:
             _2  = 0x10000000u,
             _4  = 0x20000000u,
             _8  = 0x30000000u,
-            _16 = 0x40000000u
+            _16 = 0x40000000u,
+            none
         };
 
+        Mode mode       = cml::various::get_enum_incorrect_value<Mode>();
         Source source   = cml::various::get_enum_incorrect_value<Source>();
         Divider divider = cml::various::get_enum_incorrect_value<Divider>();
     };
@@ -331,7 +340,7 @@ public:
             enum class Divider : uint32_t
             {
                 _7  = 0u,
-                _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk,
+                _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk
             };
 
             Divider divider = cml::various::get_enum_incorrect_value<Divider>();
@@ -401,33 +410,14 @@ public:
 
     static void disable_clock(Clock a_clock);
 
-    static void enable_MCO(const MCO_config& a_config);
-    static void disable_MCO();
-    static MCO_config get_MCO_config();
-
     static void set_CLK48_source(CLK48_source a_source);
     static void set_SYSCLK_source(SYSCLK_source a_source, const Bus_prescalers& a_prescalers);
 
-    static void set_SYSCFG_mode(SYSCFG_mode a_mode)
-    {
-        switch (a_mode)
-        {
-            case SYSCFG_mode::enabled: {
-                cml::bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
-            }
-            break;
+    static void set_MCO(const MCO_config& a_config);
+    static void set_SYSCFG_mode(SYSCFG_mode a_mode);
 
-            case SYSCFG_mode::disabled: {
-                cml::bit_flag::clear(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN);
-            }
-            break;
-        }
-    }
-
-    static SYSCFG_mode get_SYSCFG_mode()
-    {
-        return static_cast<SYSCFG_mode>(cml::bit_flag::is(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN));
-    }
+    static MCO_config get_MCO_config();
+    static SYSCFG_mode get_SYSCFG_mode();
 
     static Bus_prescalers get_bus_prescalers();
     static PLL_config get_PLL_config();
@@ -454,7 +444,6 @@ public:
     static Reset_source get_reset_source();
 
 private:
-
     static uint32_t calculate_PLL_R_output_frequency();
     static uint32_t calculate_PLL_Q_output_frequency();
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \

@@ -215,19 +215,33 @@ void rcc<mcu>::disable_clock(Clock a_clock)
     }
 }
 
-void rcc<mcu>::enable_MCO(const MCO_config& a_config)
+void rcc<mcu>::set_MCO(const MCO_config& a_config)
 {
+    cml_assert(various::get_enum_incorrect_value<MCO_config::Mode>() != a_config.mode);
     cml_assert(various::get_enum_incorrect_value<MCO_config::Source>() != a_config.source);
     cml_assert(various::get_enum_incorrect_value<MCO_config::Divider>() != a_config.divider);
 
-    bit_flag::set(&(RCC->CFGR),
-                  RCC_CFGR_MCOPRE | RCC_CFGR_MCOSEL,
-                  static_cast<uint32_t>(a_config.source) | static_cast<uint32_t>(a_config.divider));
+    if (MCO_config::Mode::enabled == a_config.mode)
+    {
+        cml_assert(MCO_config::Divider::none != a_config.divider);
+        cml_assert(MCO_config::Source::none != a_config.source);
+
+        bit_flag::set(&(RCC->CFGR),
+                      RCC_CFGR_MCOPRE | RCC_CFGR_MCOSEL,
+                      static_cast<uint32_t>(a_config.source) | static_cast<uint32_t>(a_config.divider));
+    }
+    else
+    {
+        cml_assert(MCO_config::Divider::none == a_config.divider);
+        cml_assert(MCO_config::Source::none == a_config.source);
+
+        bit_flag::clear(&(RCC->CFGR), RCC_CFGR_MCOPRE | RCC_CFGR_MCOSEL);
+    }
 }
 
-void rcc<mcu>::disable_MCO()
+void rcc<mcu>::set_SYSCFG_mode(SYSCFG_mode a_mode)
 {
-    bit_flag::clear(&(RCC->CFGR), RCC_CFGR_MCOPRE | RCC_CFGR_MCOSEL);
+    bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN, SYSCFG_mode::enabled == a_mode ? RCC_APB2ENR_SYSCFGEN : 0x0u);
 }
 
 rcc<mcu>::MCO_config rcc<mcu>::get_MCO_config()
@@ -236,11 +250,19 @@ rcc<mcu>::MCO_config rcc<mcu>::get_MCO_config()
 
     if (0 != mcosel)
     {
-        return { static_cast<MCO_config::Source>(mcosel),
-                 static_cast<MCO_config::Divider>(bit_flag::get(RCC->CFGR, RCC_CFGR_MCOPRE)) };
+        return { MCO_config::Mode::enabled,
+                 static_cast<MCO_config::Source>(mcosel),
+                 static_cast<MCO_config::Divider>(READ_BIT(RCC->CFGR, RCC_CFGR_MCOPRE)) };
     }
+    else
+    {
+        return { MCO_config::Mode::disabled, MCO_config::Source::none, MCO_config::Divider::none };
+    }
+}
 
-    return MCO_config {};
+rcc<mcu>::SYSCFG_mode rcc<mcu>::get_SYSCFG_mode()
+{
+    return static_cast<SYSCFG_mode>(bit_flag::get(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN));
 }
 
 void rcc<mcu>::set_CLK48_source(CLK48_source a_source)
