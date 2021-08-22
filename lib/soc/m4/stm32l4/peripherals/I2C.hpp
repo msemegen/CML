@@ -59,7 +59,7 @@ public:
 public:
     bool is_enabled() const;
 
-    Id get_id() const
+    Id get_Id() const
     {
         return this->id;
     }

@@ -443,7 +443,7 @@ public:
 
     static SYSCLK_source get_SYSCLK_source()
     {
-        return static_cast<SYSCLK_source>(cml::bit_flag::get(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
+        return static_cast<SYSCLK_source>(cml::bit_flag::get(RCC->CFGR, RCC_CFGR_SW) >> RCC_CFGR_SW_Pos);
     }
 
     static uint32_t get_clock_frequency_Hz(Clock a_clock);

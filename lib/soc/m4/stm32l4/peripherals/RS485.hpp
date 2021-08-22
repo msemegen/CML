@@ -156,6 +156,11 @@ public:
         return nullptr != this->bus_status_callback.function;
     }
 
+    USART::Id get_Id() const
+    {
+        return this->id;
+    }
+
 private:
     USART::Id id;
     GPIO::Out::Pin* p_flow_control_pin;

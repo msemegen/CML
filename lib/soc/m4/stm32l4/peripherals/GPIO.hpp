@@ -440,15 +440,6 @@ template<> class rcc<peripherals::GPIO> : private cml::Non_constructible
 public:
     static void enable(peripherals::GPIO::Id a_id, bool a_enable_in_lp);
     static void disable(peripherals::GPIO::Id a_id);
-
-private:
-    rcc()           = delete;
-    rcc(const rcc&) = delete;
-    rcc(rcc&&)      = delete;
-    ~rcc()          = delete;
-
-    rcc& operator=(const rcc&) = delete;
-    rcc& operator=(rcc&&) = delete;
 };
 
 template<> class EXTI<peripherals::GPIO> : private cml::Non_copyable
@@ -527,7 +518,7 @@ public:
         this->deattach(*(a_pin.get_port()), a_pin.get_id());
     }
 
-    Id get_id() const
+    Id get_Id() const
     {
         return this->id;
     }

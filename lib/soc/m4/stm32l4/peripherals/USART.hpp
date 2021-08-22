@@ -252,7 +252,7 @@ public:
         return this->frame_format;
     }
 
-    Id get_id() const
+    Id get_Id() const
     {
         return this->id;
     }
