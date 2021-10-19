@@ -19,11 +19,10 @@
 #include <cml/Non_copyable.hpp>
 
 namespace soc {
-
 class Systick : private cml::Non_copyable
 {
 public:
-    enum class Prescaler : uint32_t
+    enum class Prescaler : std::uint32_t
     {
         _1 = SysTick_CTRL_CLKSOURCE_Msk,
         _8 = 0
@@ -38,7 +37,7 @@ public:
     };
 
 public:
-    void enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_priority);
+    void enable(std::uint32_t a_start_value, Prescaler a_prescaler, std::uint32_t a_priority);
     void disable();
 
     void register_tick_callback(const Tick_callback& a_callback);
@@ -52,5 +51,4 @@ private:
 private:
     void friend systick_interrupt_handler(Systick* a_p_this);
 };
-
 } // namespace soc

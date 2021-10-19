@@ -46,7 +46,7 @@ void systick_interrupt_handler(Systick* a_p_this)
     }
 }
 
-void Systick::enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_priority)
+void Systick::enable(std::uint32_t a_start_value, Prescaler a_prescaler, std::uint32_t a_priority)
 {
     cml_assert(a_start_value > 0);
 
@@ -55,7 +55,7 @@ void Systick::enable(uint32_t a_start_value, Prescaler a_prescaler, uint32_t a_p
     SysTick->CTRL = 0;
     SysTick->LOAD = a_start_value;
     SysTick->VAL  = 0;
-    SysTick->CTRL = static_cast<uint32_t>(a_prescaler) | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
+    SysTick->CTRL = static_cast<std::uint32_t>(a_prescaler) | SysTick_CTRL_TICKINT_Msk | SysTick_CTRL_ENABLE_Msk;
 
     p_systick = this;
 }

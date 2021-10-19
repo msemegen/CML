@@ -14,12 +14,11 @@
 #include <cml/Non_constructible.hpp>
 
 namespace soc {
-
 class system_timer : private cml::Non_constructible
 {
 public:
-    static uint32_t get();
+    static std::uint32_t get();
     static void update();
+    static void update(void*);
 };
-
 } // namespace soc

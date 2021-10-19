@@ -16,13 +16,11 @@
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-
 class misc : private cml::Non_constructible
 {
 public:
-    static void delay_us(uint32_t a_time);
+    static void delay_us(std::uint32_t a_time);
 };
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

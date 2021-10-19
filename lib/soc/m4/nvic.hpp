@@ -27,7 +27,7 @@ namespace m4 {
 class nvic : private cml::Non_constructible
 {
 public:
-    enum class Mode
+    enum class Mode : std::uint32_t
     {
         disabled,
         enabled
@@ -35,7 +35,7 @@ public:
 
     struct Config
     {
-        enum class Grouping : uint32_t
+        enum class Grouping : std::uint32_t
         {
             _0 = 0x7,
             _1 = 0x6,
@@ -44,8 +44,8 @@ public:
             _4 = 0x3,
         };
 
-        Grouping grouping      = cml::various::get_enum_incorrect_value<Grouping>();
-        uint32_t base_priority = 0;
+        Grouping grouping           = cml::various::get_enum_incorrect_value<Grouping>();
+        std::uint32_t base_priority = 0;
     };
 
 public:
@@ -53,13 +53,13 @@ public:
     {
         cml_assert(cml::various::get_enum_incorrect_value<Config::Grouping>() != a_config.grouping);
 
-        NVIC_SetPriorityGrouping(static_cast<uint32_t>(a_config.grouping));
+        NVIC_SetPriorityGrouping(static_cast<std::uint32_t>(a_config.grouping));
         __set_BASEPRI(a_config.base_priority << 0x4u);
     }
 
     static void set_mode(Mode a_mode)
     {
-        static uint32_t primask = __get_PRIMASK();
+        static std::uint32_t primask = __get_PRIMASK();
 
         switch (a_mode)
         {
@@ -88,7 +88,7 @@ public:
 
     static Mode get_mode()
     {
-        uint32_t cpsr;
+        std::uint32_t cpsr;
         asm volatile(" mrs  %0, cpsr" : "=r"(cpsr) : /* no inputs */);
 
         return static_cast<Mode>(cml::bit::is(cpsr, 0x7u));

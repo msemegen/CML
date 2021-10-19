@@ -9,15 +9,13 @@
 
 // soc
 #ifdef STM32L4
-#include <soc/m4/stm32l4/internal_flash.hpp>
-#endif // STM32L4
+#include <soc/m4/stm32l4/internal_flash/internal_flash.hpp>
+#endif
 
 namespace cml {
 namespace hal {
-
 #ifdef STM32L4
 using internal_flash = soc::m4::stm32l4::internal_flash;
-#endif // STM32L4
-
+#endif
 } // namespace hal
 } // namespace cml

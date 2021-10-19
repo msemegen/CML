@@ -9,15 +9,13 @@
 
 // cml
 #ifdef STM32L4
-#include <soc/m4/stm32l4/pwr.hpp>
-#endif // STM32L4
+#include <soc/m4/stm32l4/pwr/pwr.hpp>
+#endif
 
 namespace cml {
 namespace hal {
-
 #ifdef STM32L4
 using pwr = soc::m4::stm32l4::pwr;
-#endif // STM32L4
-
+#endif
 } // namespace hal
 } // namespace cml

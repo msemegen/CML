@@ -19,7 +19,6 @@
 #include <cml/Non_copyable.hpp>
 
 namespace soc {
-
 class Interrupt_guard : private cml::Non_copyable
 {
 public:
@@ -41,5 +40,4 @@ public:
 #endif
     }
 };
-
 } // namespace soc

@@ -10,18 +10,23 @@
 
 namespace {
 
-volatile uint32_t cnt = 0;
+volatile std::uint32_t cnt = 0;
 
 } // namespace
 
 namespace soc {
 
-uint32_t system_timer::get()
+std::uint32_t system_timer::get()
 {
     return cnt;
 }
 
 void system_timer::update()
+{
+    cnt++;
+}
+
+void system_timer::update(void*)
 {
     cnt++;
 }

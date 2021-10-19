@@ -12,8 +12,6 @@
 
 namespace cml {
 namespace hal {
-
 using Interrupt_guard = soc::Interrupt_guard;
-
 } // namespace hal
 } // namespace cml

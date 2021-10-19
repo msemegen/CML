@@ -12,8 +12,6 @@
 
 namespace cml {
 namespace hal {
-
 using Systick = soc::Systick;
-
 } // namespace hal
 } // namespace cml

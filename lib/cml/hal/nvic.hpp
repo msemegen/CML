@@ -1,5 +1,12 @@
 #pragma once
 
+/*
+ *   Name: nvic.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
+
 #ifdef ARM_CORTEX_M4
 #include <soc/m4/nvic.hpp>
 #endif
