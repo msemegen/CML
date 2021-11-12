@@ -14,6 +14,7 @@
 #include <stm32l4xx.h>
 
 // soc
+#include <soc/m4/stm32l4/Factory.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -41,14 +42,17 @@ public:
         enabled = CRC_CR_REV_OUT
     };
 
-public:
-    CRC32();
     ~CRC32();
 
     void enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse);
     void disable();
 
     std::uint32_t calculate(const std::uint8_t* a_p_data, std::uint32_t a_data_size);
+
+private:
+    CRC32();
+
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
 
 template<> class rcc<CRC32> : private cml::Non_constructible
@@ -56,6 +60,15 @@ template<> class rcc<CRC32> : private cml::Non_constructible
 public:
     static void enable(bool a_enable_in_lp);
     static void disable();
+};
+
+template<> class Factory<CRC32> : private cml::Non_constructible
+{
+public:
+    static CRC32 create()
+    {
+        return CRC32();
+    }
 };
 } // namespace stm32l4
 } // namespace m4
