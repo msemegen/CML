@@ -36,24 +36,13 @@ public:
             void* p_user_data = nullptr;
         };
 
-        void register_callback(const Callback& a_callback)
+        ~TX()
         {
-            cml_assert(nullptr != a_callback.function);
-
-            Interrupt_guard guard;
-
-            this->callback = a_callback;
-            cml::bit_flag::set(&(this->p_registers->CR2), SPI_CR2_TXEIE);
+            this->unregister_callback();
         }
 
-        void unregister_callback()
-        {
-            Interrupt_guard guard;
-
-            cml::bit_flag::set(&(this->p_registers->CR2), SPI_CR2_TXEIE);
-
-            this->callback = { nullptr, nullptr };
-        }
+        void register_callback(const Callback& a_callback);
+        void unregister_callback();
 
     private:
         TX(SPI_TypeDef* a_p_registers)
@@ -78,24 +67,13 @@ public:
             void* p_user_data = nullptr;
         };
 
-        void register_callback(const Callback& a_callback)
+        ~RX()
         {
-            cml_assert(nullptr != a_callback.function);
-
-            Interrupt_guard guard;
-
-            this->callback = a_callback;
-            cml::bit_flag::set(&(this->p_registers->CR2), SPI_CR2_RXNEIE);
+            this->unregister_callback();
         }
 
-        void unregister_callback()
-        {
-            Interrupt_guard guard;
-
-            cml::bit_flag::set(&(this->p_registers->CR2), SPI_CR2_RXNEIE);
-
-            this->callback = { nullptr, nullptr };
-        }
+        void register_callback(const Callback& a_callback);
+        void unregister_callback();
 
     private:
         RX(SPI_TypeDef* a_p_registers)
@@ -111,9 +89,6 @@ public:
     };
 
 public:
-    void enable(const IRQ_config& a_irq_config);
-    void disable();
-
     TX tx;
     RX rx;
 
@@ -146,25 +121,8 @@ public:
         void* p_user_data = nullptr;
     };
 
-    void enable(const IRQ_config& a_irq_config);
-    void disable();
-
-    void register_callback(const Callback& a_callback)
-    {
-        cml_assert(nullptr != a_callback.function);
-
-        Interrupt_guard guard;
-
-        this->callback = a_callback;
-        cml::bit_flag::set(&(this->p_registers->CR2), SPI_CR2_ERRIE);
-    }
-    void unregister_callback()
-    {
-        Interrupt_guard guard;
-
-        cml::bit_flag::clear(&(this->p_registers->CR2), SPI_CR2_ERRIE);
-        this->callback = { nullptr, nullptr };
-    }
+    void register_callback(const Callback& a_callback);
+    void unregister_callback();
 
 private:
     SPI_status_interrupt(SPI_TypeDef* a_p_registers)
@@ -202,6 +160,8 @@ protected:
 template<> class Interrupt<SPI_master> : public Interrupt<SPI>
 {
 public:
+    ~Interrupt();
+
     void enable(const IRQ_config& a_irq_config);
     void disable();
 
@@ -216,14 +176,7 @@ public:
     }
 
 private:
-    Interrupt(SPI_master* a_p_SPI, IRQn_Type a_irqn)
-        : Interrupt<SPI>(static_cast<SPI_TypeDef*>(*a_p_SPI), a_irqn)
-        , p_SPI(a_p_SPI)
-    {
-    }
-
-    void set_irq_context();
-    void clear_irq_context();
+    Interrupt(SPI_master* a_p_SPI, IRQn_Type a_irqn);
 
     SPI_master* p_SPI;
 
@@ -233,6 +186,8 @@ private:
 template<> class Interrupt<SPI_slave> : private Interrupt<SPI>
 {
 public:
+    ~Interrupt();
+
     void enable(const IRQ_config& a_irq_config);
     void disable();
 
@@ -247,14 +202,7 @@ public:
     }
 
 private:
-    Interrupt(SPI_slave* a_p_SPI, IRQn_Type a_irqn)
-        : Interrupt<SPI>(static_cast<SPI_TypeDef*>(*a_p_SPI), a_irqn)
-        , p_SPI(a_p_SPI)
-    {
-    }
-
-    void set_irq_context();
-    void clear_irq_context();
+    Interrupt(SPI_slave* a_p_SPI, IRQn_Type a_irqn);
 
     SPI_slave* p_SPI;
 

@@ -23,68 +23,74 @@ namespace stm32l4 {
 template<> class Interrupt<USART> : private cml::Non_copyable
 {
 public:
-    class TX : private cml::Non_copyable
+    class Transmission : private cml::Non_copyable
     {
     public:
-        struct Callback
+        class TX : private cml::Non_copyable
         {
-            using Function = void (*)(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data);
+        public:
+            struct Callback
+            {
+                using Function = void (*)(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data);
 
-            Function function = nullptr;
-            void* p_user_data = nullptr;
+                Function function = nullptr;
+                void* p_user_data = nullptr;
+            };
+
+            void register_callback(const Callback& a_callback);
+            void unregister_callback();
+
+        private:
+            TX(USART_TypeDef* a_p_registers)
+                : p_registers(a_p_registers)
+            {
+            }
+
+            USART_TypeDef* p_registers;
+            Callback callback;
+
+            friend Transmission;
+            friend void USART_interrupt_handler(Interrupt<USART>* a_p_this);
+        };
+        class RX : private cml::Non_copyable
+        {
+        public:
+            struct Callback
+            {
+                using Function = void (*)(std::uint32_t a_data, bool a_idle, void* a_p_user_data);
+
+                Function function = nullptr;
+                void* p_user_data = nullptr;
+            };
+
+            void register_callback(const Callback& a_callback);
+            void unregister_callback();
+
+        private:
+            RX(USART_TypeDef* a_p_registers)
+                : p_registers(a_p_registers)
+            {
+            }
+
+            USART_TypeDef* p_registers;
+            Callback callback;
+
+            friend Transmission;
+            friend void USART_interrupt_handler(Interrupt<USART>* a_p_this);
         };
 
-        void register_callback(const Callback& a_callback);
-        void unregister_callback();
+        TX tx;
+        RX rx;
 
     private:
-        TX(Interrupt<USART>* a_p_owner)
-            : p_owner(a_p_owner)
+        Transmission(USART_TypeDef* a_p_registers)
+            : tx(a_p_registers)
+            , rx(a_p_registers)
         {
         }
 
-    private:
-        Interrupt<USART>* p_owner;
-        Callback callback;
-
-    public:
-        friend void usart_interrupt_handler(Interrupt<USART>* a_p_this);
-
-    private:
         friend Interrupt<USART>;
     };
-
-    class RX : private cml::Non_copyable
-    {
-    public:
-        struct Callback
-        {
-            using Function = void (*)(std::uint32_t a_data, bool a_idle, void* a_p_user_data);
-
-            Function function = nullptr;
-            void* p_user_data = nullptr;
-        };
-
-        void register_callback(const Callback& a_callback);
-        void unregister_callback();
-
-    private:
-        RX(Interrupt<USART>* a_p_owner)
-            : p_owner(a_p_owner)
-        {
-        }
-
-    private:
-        Interrupt<USART>* p_owner;
-        Callback callback;
-
-    private:
-        friend void usart_interrupt_handler(Interrupt<USART>* a_p_this);
-
-    private:
-        friend Interrupt<USART>;
-    };
-
     class Status : private cml::Non_copyable
     {
     public:
@@ -109,27 +115,20 @@ public:
         void unregister_callback();
 
     private:
-        Status(Interrupt<USART>* a_p_owner)
-            : p_owner(a_p_owner)
+        Status(USART_TypeDef* a_p_registers)
+            : p_registers(a_p_registers)
         {
         }
 
-    private:
-        Interrupt<USART>* p_owner;
+        USART_TypeDef* p_registers;
         Callback callback;
 
-    private:
-        friend void usart_interrupt_handler(Interrupt<USART>* a_p_this);
-
-    private:
         friend Interrupt<USART>;
+        friend void USART_interrupt_handler(Interrupt<USART>* a_p_this);
     };
 
 public:
-    ~Interrupt()
-    {
-        this->disable();
-    }
+    ~Interrupt();
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
@@ -144,101 +143,99 @@ public:
         return this->p_USART;
     }
 
-public:
-    TX tx;
-    RX rx;
+    Transmission transmission;
     Status status;
 
 private:
-    Interrupt(USART* a_p_USART, IRQn_Type a_irqn)
-        : tx(this)
-        , rx(this)
-        , status(this)
-        , p_USART(a_p_USART)
-        , irqn(a_irqn)
-    {
-    }
+    Interrupt(USART* a_p_USART, IRQn_Type a_irqn);
 
-    void set_irq_context();
-    void clear_irq_context();
-
-private:
     USART* p_USART;
     const IRQn_Type irqn;
 
-private:
     template<typename Periph_t, std::size_t id> friend class Factory;
 };
 
 template<> class Interrupt<RS485> : cml::Non_copyable
 {
 public:
-    class TX : private cml::Non_copyable
+    class Transmission : private cml::Non_copyable
     {
     public:
-        struct Callback
+        class TX : private cml::Non_copyable
         {
-            using Function = void (*)(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data);
+        public:
+            struct Callback
+            {
+                using Function = void (*)(volatile uint16_t* a_p_data, bool a_transfer_complete, void* a_p_user_data);
 
-            Function function = nullptr;
-            void* p_user_data = nullptr;
+                Function function = nullptr;
+                void* p_user_data = nullptr;
+            };
+
+            ~TX()
+            {
+                this->unregister_callback();
+            }
+
+            void register_callback(const Callback& a_callback, GPIO::Out::Pin* a_p_flow_control_pin);
+            void unregister_callback();
+
+        private:
+            TX(USART_TypeDef* a_p_registers)
+                : p_registers(a_p_registers)
+            {
+            }
+
+            USART_TypeDef* p_registers;
+            Callback callback;
+
+            friend Transmission;
+            friend void RS485_interrupt_handler(Interrupt<RS485>* a_p_this);
+        };
+        class RX : private cml::Non_copyable
+        {
+        public:
+            struct Callback
+            {
+                using Function = void (*)(std::uint32_t a_data, bool a_idle, void* a_p_user_data);
+
+                Function function = nullptr;
+                void* p_user_data = nullptr;
+            };
+
+            void register_callback(const Callback& a_callback, GPIO::Out::Pin* a_p_flow_control_pin);
+            void unregister_callback();
+
+            ~RX()
+            {
+                this->unregister_callback();
+            }
+
+        private:
+            RX(USART_TypeDef* a_p_registers)
+                : p_registers(a_p_registers)
+            {
+            }
+
+            USART_TypeDef* p_registers;
+            Callback callback;
+
+            friend Transmission;
+            friend void RS485_interrupt_handler(Interrupt<RS485>* a_p_this);
         };
 
-    public:
-        void register_callback(const Callback& a_callback, GPIO::Out::Pin* a_p_flow_control_pin);
-        void unregister_callback(GPIO::Out::Pin* a_p_flow_control_pin);
+        TX tx;
+        RX rx;
 
     private:
-        TX(Interrupt<RS485>* a_p_owner)
-            : p_owner(a_p_owner)
+        Transmission(USART_TypeDef* a_p_registers)
+            : tx(a_p_registers)
+            , rx(a_p_registers)
         {
         }
 
-    private:
-        Interrupt<RS485>* p_owner;
-        Callback callback;
-
-    private:
-        friend void rs485_interrupt_handler(Interrupt<RS485>* a_p_this);
-
-    private:
         friend Interrupt<RS485>;
     };
-
-    class RX : private cml::Non_copyable
-    {
-    public:
-        struct Callback
-        {
-            using Function = void (*)(std::uint32_t a_data,
-                                      bool a_idle,
-                                      void* a_p_user_data);
-
-            Function function = nullptr;
-            void* p_user_data = nullptr;
-        };
-
-    public:
-        void register_callback(const Callback& a_callback, GPIO::Out::Pin* a_p_flow_control_pin);
-        void unregister_callback(GPIO::Out::Pin* a_p_flow_control_pin);
-
-    private:
-        RX(Interrupt<RS485>* a_p_owner)
-            : p_owner(a_p_owner)
-        {
-        }
-
-    private:
-        Interrupt<RS485>* p_owner;
-        Callback callback;
-
-    private:
-        friend void rs485_interrupt_handler(Interrupt<RS485>* a_p_this);
-
-    private:
-        friend class Interrupt<RS485>;
-    };
-
     class Status : private cml::Non_copyable
     {
     public:
@@ -264,27 +261,21 @@ public:
         void unregister_callback();
 
     private:
-        Status(Interrupt<RS485>* a_p_owner)
-            : p_owner(a_p_owner)
+        Status(USART_TypeDef* a_p_registers)
+            : p_registers(a_p_registers)
         {
         }
 
     private:
+        USART_TypeDef* p_registers;
         Callback callback;
-        Interrupt<RS485>* p_owner;
 
-    private:
-        friend void rs485_interrupt_handler(Interrupt<RS485>* a_p_this);
-
-    private:
         friend class Interrupt<RS485>;
+        friend void RS485_interrupt_handler(Interrupt<RS485>* a_p_this);
     };
 
 public:
-    ~Interrupt()
-    {
-        this->disable();
-    }
+    ~Interrupt();
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
@@ -299,25 +290,12 @@ public:
         return this->p_RS485;
     }
 
-public:
-    TX tx;
-    RX rx;
+    Transmission transmission;
     Status status;
 
 private:
-    Interrupt(RS485* a_p_RS485, IRQn_Type a_irqn)
-        : tx(this)
-        , rx(this)
-        , status(this)
-        , p_RS485(a_p_RS485)
-        , irqn(a_irqn)
-    {
-    }
+    Interrupt(RS485* a_p_RS485, IRQn_Type a_irqn);
 
-    void set_irq_context();
-    void clear_irq_context();
-
-private:
     RS485* p_RS485;
     IRQn_Type irqn;
 
@@ -325,8 +303,8 @@ private:
     template<typename Periph_t, std::size_t id> friend class Factory;
 };
 
-void usart_interrupt_handler(Interrupt<USART>* a_p_this);
-void rs485_interrupt_handler(Interrupt<RS485>* a_p_this);
+void USART_interrupt_handler(Interrupt<USART>* a_p_this);
+void RS485_interrupt_handler(Interrupt<RS485>* a_p_this);
 
 constexpr Interrupt<USART>::Status::Callback::Flag operator|(Interrupt<USART>::Status::Callback::Flag a_f1,
                                                              Interrupt<USART>::Status::Callback::Flag a_f2)

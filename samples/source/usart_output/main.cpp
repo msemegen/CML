@@ -127,6 +127,12 @@ int main()
         I2C_slave i2c_slave         = Factory<I2C_slave, 2>::create();
         Interrupt<I2C_slave> i2cit2 = Factory<Interrupt<I2C_slave>, 2>::create(&i2c_slave);
 
+        //i2cit.transmission.enable({});
+
+        spi_it.enable({});
+        spi_it.transmission.rx.register_callback({});
+        spi_it.transmission.tx.register_callback({});
+
         i2cit.transmission.enable({});
         i2cit.transmission.tx.register_callback(0, 0, {});
 
@@ -143,7 +149,7 @@ int main()
         rcc<I2C, 1>::enable<rcc<I2C, 1>::Clock_source::HSI>(false);
         rcc<SPI, 1>::enable(false);
 
-        spi_it.status.enable({});
+        spi_it.enable({});
         spi_it.status.register_callback({});
 
         //soc::m4::stm32l4::Interrupt<soc::m4::stm32l4::GPIO> gpioit =

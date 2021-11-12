@@ -94,28 +94,50 @@ namespace m4 {
 namespace stm32l4 {
 using namespace cml;
 
-void Interrupt<SPI_master>::set_irq_context()
+Interrupt<SPI_master>::Interrupt(SPI_master* a_p_SPI, IRQn_Type a_irqn)
+    : Interrupt<SPI>(*a_p_SPI, a_irqn)
+    , p_SPI(a_p_SPI)
 {
-    cml_assert(nullptr == irq_context[this->p_SPI->get_idx()]);
+    cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
 
-    irq_context[this->p_SPI->get_idx()] = this;
+    irq_context[this->get_handle()->get_idx()] = this;
 }
 
-void Interrupt<SPI_master>::clear_irq_context()
+Interrupt<SPI_master>::~Interrupt()
 {
-    irq_context[this->p_SPI->get_idx()] = nullptr;
+    cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
+
+    for (std::size_t i = 0; i < std::extent<decltype(irq_context)>::value; i++)
+    {
+        if (static_cast<Interrupt<SPI>*>(this) == irq_context[i])
+        {
+            irq_context[i] = nullptr;
+            break;
+        }
+    }
 }
 
-void Interrupt<SPI_slave>::set_irq_context()
+Interrupt<SPI_slave>::Interrupt(SPI_slave* a_p_SPI, IRQn_Type a_irqn)
+    : Interrupt<SPI>(*a_p_SPI, a_irqn)
+    , p_SPI(a_p_SPI)
 {
-    cml_assert(nullptr == irq_context[this->p_SPI->get_idx()]);
+    cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
 
-    irq_context[this->p_SPI->get_idx()] = this;
+    irq_context[this->get_handle()->get_idx()] = this;
 }
 
-void Interrupt<SPI_slave>::clear_irq_context()
+Interrupt<SPI_slave>::~Interrupt()
 {
-    irq_context[this->p_SPI->get_idx()] = nullptr;
+    cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
+
+    for (std::size_t i = 0; i < std::extent<decltype(irq_context)>::value; i++)
+    {
+        if (static_cast<Interrupt<SPI>*>(this) == irq_context[i])
+        {
+            irq_context[i] = nullptr;
+            break;
+        }
+    }
 }
 
 template<> void rcc<SPI, 1>::enable(bool a_enable_in_lp)

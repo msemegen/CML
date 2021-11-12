@@ -10,6 +10,9 @@
 // this
 #include <soc/m4/stm32l4/I2C/Interrupt.hpp>
 
+// std
+#include <type_traits>
+
 // soc
 #include <soc/m4/stm32l4/I2C/common.hpp>
 
@@ -97,14 +100,12 @@ void I2C_status_interrupt::enable(const IRQ_config& a_irq_config)
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
-
-    this->set_irq_context();
 }
 void I2C_status_interrupt::disable()
 {
-    NVIC_DisableIRQ(this->irqn);
+    this->unregister_callback();
 
-    this->clear_irq_context();
+    NVIC_DisableIRQ(this->irqn);
 }
 
 void I2C_status_interrupt::register_callback(const Callback& a_callback)
@@ -131,13 +132,12 @@ void Interrupt<I2C_master>::Transmission::enable(const IRQ_config& a_irq_config)
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
-
-    this->set_irq_context();
 }
 
 void Interrupt<I2C_master>::Transmission::disable()
 {
-    this->clear_irq_context();
+    this->tx.unregister_callback();
+    this->rx.unregister_callback();
 
     NVIC_DisableIRQ(this->irqn);
 }
@@ -202,15 +202,14 @@ void Interrupt<I2C_slave>::Transmission::enable(const IRQ_config& a_irq_config)
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
-
-    this->set_irq_context();
 }
 
 void Interrupt<I2C_slave>::Transmission::disable()
 {
-    NVIC_DisableIRQ(this->irqn);
+    this->tx.unregister_callback();
+    this->rx.unregister_callback();
 
-    this->clear_irq_context();
+    NVIC_DisableIRQ(this->irqn);
 }
 
 void Interrupt<I2C_slave>::Transmission::TX::register_callback(const Callback& a_callback)

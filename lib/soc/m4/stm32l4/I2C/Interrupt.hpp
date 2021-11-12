@@ -43,6 +43,11 @@ public:
         void* p_user_data = nullptr;
     };
 
+    ~I2C_status_interrupt()
+    {
+        this->disable();
+    }
+
     void enable(const IRQ_config& a_irq_config);
     void disable();
 
@@ -55,9 +60,6 @@ private:
         , irqn(a_irqn)
     {
     }
-
-    void set_irq_context();
-    void clear_irq_context();
 
     I2C_TypeDef* p_registers;
     Callback callback;
@@ -146,6 +148,11 @@ public:
                                    const Callback& a_callback);
             void unregister_callback();
 
+            ~TX()
+            {
+                this->unregister_callback();
+            }
+
         private:
             TX(I2C_TypeDef* a_p_registers)
                 : I2C_TX_interrupt(a_p_registers)
@@ -162,6 +169,11 @@ public:
                                    const Callback& a_callback);
             void unregister_callback();
 
+            ~RX()
+            {
+                this->unregister_callback();
+            }
+
         private:
             RX(I2C_TypeDef* a_p_registers)
                 : I2C_RX_interrupt(a_p_registers)
@@ -170,6 +182,11 @@ public:
 
             friend class Transmission;
         };
+
+        ~Transmission()
+        {
+            this->disable();
+        }
 
         void enable(const IRQ_config& a_irq_config);
         void disable();
@@ -184,13 +201,12 @@ public:
         {
         }
 
-        void set_irq_context();
-        void clear_irq_context();
-
         IRQn_Type irqn;
 
         friend Interrupt<I2C_master>;
     };
+
+    ~Interrupt();
 
     I2C_master* get_handle()
     {
@@ -205,13 +221,7 @@ public:
     Transmission transmission;
 
 private:
-    Interrupt(I2C_master* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
-        : Interrupt<I2C>(static_cast<I2C_TypeDef*>(*(a_p_I2C)), a_er_irqn)
-        , transmission(static_cast<I2C_TypeDef*>(*(a_p_I2C)), a_ev_irqn)
-    {
-        this->p_tx = &(this->transmission.tx);
-        this->p_rx = &(this->transmission.rx);
-    }
+    Interrupt(I2C_master* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn);
 
     I2C_master* p_I2C;
 
@@ -230,6 +240,11 @@ public:
             void register_callback(const Callback& a_callback);
             void unregister_callback();
 
+            ~TX()
+            {
+                this->unregister_callback();
+            }
+
         private:
             TX(I2C_TypeDef* a_p_registers)
                 : I2C_TX_interrupt(a_p_registers)
@@ -244,6 +259,11 @@ public:
             void register_callback(const Callback& a_callback);
             void unregister_callback();
 
+            ~RX()
+            {
+                this->unregister_callback();
+            }
+
         private:
             RX(I2C_TypeDef* a_p_registers)
                 : I2C_RX_interrupt(a_p_registers)
@@ -252,6 +272,11 @@ public:
 
             friend class Transmission;
         };
+
+        ~Transmission()
+        {
+            this->disable();
+        }
 
         void enable(const IRQ_config& a_irq_config);
         void disable();
@@ -266,13 +291,12 @@ public:
         {
         }
 
-        void set_irq_context();
-        void clear_irq_context();
-
         IRQn_Type irqn;
 
         friend Interrupt<I2C_slave>;
     };
+
+    ~Interrupt();
 
     I2C_slave* get_handle()
     {
@@ -287,14 +311,7 @@ public:
     Transmission transmission;
 
 private:
-    Interrupt(I2C_slave* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
-        : Interrupt<I2C>(static_cast<I2C_TypeDef*>(*(a_p_I2C)), a_er_irqn)
-        , transmission(static_cast<I2C_TypeDef*>(*(a_p_I2C)), a_ev_irqn)
-        , p_I2C(a_p_I2C)
-    {
-        this->p_tx = &(this->transmission.tx);
-        this->p_rx = &(this->transmission.rx);
-    }
+    Interrupt(I2C_slave* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn);
 
     I2C_slave* p_I2C;
 

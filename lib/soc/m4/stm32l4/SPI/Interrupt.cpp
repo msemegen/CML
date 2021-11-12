@@ -92,11 +92,61 @@ void SPI_interrupt_handler(SPI_status_interrupt* a_p_this)
     }
 }
 
-void SPI_status_interrupt::enable(const IRQ_config& a_irq_config) {}
-void SPI_status_interrupt::disable() {}
+void SPI_status_interrupt::register_callback(const Callback& a_callback)
+{
+    cml_assert(nullptr != a_callback.function);
 
-void SPI_transmission_interrupt::enable(const IRQ_config& a_irq_config) {}
-void SPI_transmission_interrupt::disable() {}
+    Interrupt_guard guard;
+
+    this->callback = a_callback;
+    bit_flag::set(&(this->p_registers->CR2), SPI_CR2_ERRIE);
+}
+
+void SPI_status_interrupt::unregister_callback()
+{
+    Interrupt_guard guard;
+
+    bit_flag::clear(&(this->p_registers->CR2), SPI_CR2_ERRIE);
+    this->callback = { nullptr, nullptr };
+}
+
+void SPI_transmission_interrupt::TX::register_callback(const Callback& a_callback)
+{
+    cml_assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
+
+    this->callback = a_callback;
+    cml::bit_flag::set(&(this->p_registers->CR2), SPI_CR2_TXEIE);
+}
+
+void SPI_transmission_interrupt::TX::unregister_callback()
+{
+    Interrupt_guard guard;
+
+    cml::bit_flag::set(&(this->p_registers->CR2), SPI_CR2_TXEIE);
+
+    this->callback = { nullptr, nullptr };
+}
+
+void SPI_transmission_interrupt::RX::register_callback(const Callback& a_callback)
+{
+    cml_assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
+
+    this->callback = a_callback;
+    cml::bit_flag::set(&(this->p_registers->CR2), SPI_CR2_RXNEIE);
+}
+
+void SPI_transmission_interrupt::RX::unregister_callback()
+{
+    Interrupt_guard guard;
+
+    cml::bit_flag::set(&(this->p_registers->CR2), SPI_CR2_RXNEIE);
+
+    this->callback = { nullptr, nullptr };
+}
 
 void Interrupt<SPI_master>::enable(const IRQ_config& a_irq_config)
 {
@@ -104,15 +154,11 @@ void Interrupt<SPI_master>::enable(const IRQ_config& a_irq_config)
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
-
-    this->set_irq_context();
 }
 
 void Interrupt<SPI_master>::disable()
 {
     NVIC_DisableIRQ(this->irqn);
-
-    this->clear_irq_context();
 }
 
 void Interrupt<SPI_slave>::enable(const IRQ_config& a_irq_config)
@@ -121,15 +167,11 @@ void Interrupt<SPI_slave>::enable(const IRQ_config& a_irq_config)
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
-
-    this->set_irq_context();
 }
 
 void Interrupt<SPI_slave>::disable()
 {
     NVIC_DisableIRQ(this->irqn);
-
-    this->clear_irq_context();
 }
 } // namespace stm32l4
 } // namespace m4

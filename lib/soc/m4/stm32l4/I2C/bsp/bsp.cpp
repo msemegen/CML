@@ -6,8 +6,13 @@
  */
 
 // this
-#include <soc/m4/stm32l4/I2C/Interrupt.hpp>
 #include <soc/m4/stm32l4/I2C/bsp/bsp.hpp>
+
+// std
+#include <type_traits>
+
+// soc
+#include <soc/m4/stm32l4/I2C/Interrupt.hpp>
 
 // cml
 #include <cml/debug/assertion.hpp>
@@ -106,63 +111,57 @@ namespace m4 {
 namespace stm32l4 {
 using namespace cml;
 
-//void I2C_status_interrupt::set_irq_context()
-//{
-//    irq_context[this->p_owner->get_handle()->get_idx()] = { this, Interrupt_context::Mode::master };
-//}
-//template<> void I2C_status_interrupt::clear_irq_context()
-//{
-//    err_irq_context[this->p_owner->get_handle()->get_idx()] = {
-//        nullptr, various::get_enum_incorrect_value<Interrupt_context::Mode>()
-//    };
-//}
-//
-//template<> void I2C_status_interrupt<Interrupt<I2C_slave>>::set_irq_context()
-//{
-//    err_irq_context[this->p_owner->get_handle()->get_idx()] = { this, Interrupt_context::Mode::slave };
-//}
-//template<> void I2C_status_interrupt<Interrupt<I2C_slave>>::clear_irq_context()
-//{
-//    err_irq_context[this->p_owner->get_handle()->get_idx()] = {
-//        nullptr, various::get_enum_incorrect_value<Interrupt_context::Mode>()
-//    };
-//}
-//
-//void Interrupt<I2C_master>::Transmission::set_irq_context()
-//{
-//    ev_irq_context[this->p_owner->get_handle()->get_idx()] = { this, Interrupt_context::Mode::master };
-//}
-//void Interrupt<I2C_master>::Transmission::clear_irq_context()
-//{
-//    ev_irq_context[this->p_owner->get_handle()->get_idx()] = {
-//        nullptr, various::get_enum_incorrect_value<Interrupt_context::Mode>()
-//    };
-//}
-//
-//void Interrupt<I2C_slave>::Transmission::set_irq_context()
-//{
-//    ev_irq_context[this->p_owner->get_handle()->get_idx()] = { this, Interrupt_context::Mode::slave };
-//}
-//void Interrupt<I2C_slave>::Transmission::clear_irq_context()
-//{
-//    ev_irq_context[this->p_owner->get_handle()->get_idx()] = {
-//        nullptr, various::get_enum_incorrect_value<Interrupt_context::Mode>()
-//    };
-//}
+Interrupt<I2C_master>::Interrupt(I2C_master* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
+    : Interrupt<I2C>(*a_p_I2C, a_er_irqn)
+    , transmission(*(this->get_handle()), a_ev_irqn)
+{
+    this->p_tx = &(this->transmission.tx);
+    this->p_rx = &(this->transmission.rx);
 
-void I2C_status_interrupt::set_irq_context() {}
+    cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
 
-void I2C_status_interrupt::clear_irq_context() {}
+    irq_context[this->get_handle()->get_idx()] = this;
+}
 
-void Interrupt<I2C_master>::Transmission::set_irq_context() {}
+Interrupt<I2C_master>::~Interrupt()
+{
+    cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
 
-void Interrupt<I2C_master>::Transmission::clear_irq_context() {}
+    for (std::size_t i = 0; i < std::extent<decltype(irq_context)>::value; i++)
+    {
+        if (static_cast<Interrupt<I2C>*>(this) == irq_context[i])
+        {
+            irq_context[i] = nullptr;
+            break;
+        }
+    }
+}
 
-void Interrupt<I2C_slave>::Transmission::set_irq_context() {}
+Interrupt<I2C_slave>::Interrupt(I2C_slave* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
+    : Interrupt<I2C>(*a_p_I2C, a_er_irqn)
+    , transmission(*(this->get_handle()), a_ev_irqn)
+{
+    this->p_tx = &(this->transmission.tx);
+    this->p_rx = &(this->transmission.rx);
 
-void Interrupt<I2C_slave>::Transmission::clear_irq_context() {}
+    cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
 
+    irq_context[this->get_handle()->get_idx()] = this;
+}
 
+Interrupt<I2C_slave>::~Interrupt()
+{
+    cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
+
+    for (std::size_t i = 0; i < std::extent<decltype(irq_context)>::value; i++)
+    {
+        if (static_cast<Interrupt<I2C>*>(this) == irq_context[i])
+        {
+            irq_context[i] = nullptr;
+            break;
+        }
+    }
+}
 
 template<> template<> void rcc<I2C, 1>::enable<rcc<I2C, 1>::Clock_source::HSI>(bool a_lp_enable)
 {
