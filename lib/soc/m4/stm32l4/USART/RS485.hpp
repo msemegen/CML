@@ -8,14 +8,15 @@
  */
 
 // std
-#include <stm32l4xx.h>
+#include <cstdint>
+#include <tuple>
 
-// soc
-#include <soc/m4/stm32l4/IRQ.hpp>
-#include <soc/m4/stm32l4/USART/USART.hpp>
+// externals
+#include <stm32l4xx.h>
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/various.hpp>
 
 namespace soc {
 namespace m4 {
@@ -23,8 +24,6 @@ namespace stm32l4 {
 class RS485 : private cml::Non_copyable
 {
 public:
-    using id = USART::id;
-
     struct Enable_config
     {
         enum class Oversampling : std::uint32_t
@@ -49,24 +48,6 @@ public:
     };
 
 public:
-    RS485(Handle<USART1_BASE>)
-        : idx(0u)
-        , p_registers(USART1)
-    {
-    }
-    RS485(Handle<USART2_BASE>)
-        : idx(1u)
-        , p_registers(USART2)
-    {
-    }
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    RS485(Handle<USART3_BASE>)
-        : idx(2)
-        , p_registers(USART3)
-    {
-    }
-#endif
     ~RS485()
     {
         this->disable();
@@ -75,7 +56,7 @@ public:
     bool enable(const Enable_config& a_config, std::uint32_t a_timeout);
     void disable();
 
-    std::uint32_t get_id() const
+    std::uint32_t get_idx() const
     {
         return this->idx;
     }
@@ -91,8 +72,18 @@ public:
     }
 
 private:
-    std::uint32_t idx;
+    RS485(std::size_t a_idx, USART_TypeDef* a_p_USART)
+        : idx(a_idx)
+        , p_registers(a_p_USART)
+    {
+    }
+
+private:
+    const std::uint32_t idx;
     USART_TypeDef* p_registers;
+
+private:
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
 } // namespace stm32l4
 } // namespace m4

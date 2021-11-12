@@ -9,6 +9,7 @@
 
 // std
 #include <cstdint>
+#include <tuple>
 
 // externals
 #include <stm32l4xx.h>
@@ -60,12 +61,14 @@ public:
 public:
     Basic_timer(Handle<TIM6_BASE>)
         : idx(0u)
+        , irqn { IRQn_Type::TIM6_IRQn }
         , p_registers(TIM6)
     {
     }
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
     Basic_timer(Handle<TIM7_BASE>)
         : idx(1u)
+        , irqn { IRQn_Type::TIM7_IRQn }
         , p_registers(TIM7)
     {
     }
@@ -82,7 +85,7 @@ public:
     void start();
     void stop();
 
-    std::uint32_t get_id() const
+    std::uint32_t get_idx() const
     {
         return this->idx;
     }
@@ -98,7 +101,8 @@ public:
     }
 
 private:
-    std::uint32_t idx;
+    const std::uint32_t idx;
+    const std::tuple<IRQn_Type> irqn;
     TIM_TypeDef* p_registers;
 };
 
@@ -106,8 +110,8 @@ template<> class rcc<Basic_timer> : private cml::Non_constructible
 {
 public:
     template<std::uint32_t peripheral_base_address>
-    static void enable(Handle<peripheral_base_address>, bool a_enable_in_lp);
-    template<std::uint32_t peripheral_base_address> static void disable(Handle<peripheral_base_address>);
+    static void enable(Handle<peripheral_base_address>, bool a_enable_in_lp)                             = delete;
+    template<std::uint32_t peripheral_base_address> static void disable(Handle<peripheral_base_address>) = delete;
 };
 
 template<> void rcc<Basic_timer>::enable<TIM6_BASE>(Handle<TIM6_BASE>, bool a_enable_in_lp);

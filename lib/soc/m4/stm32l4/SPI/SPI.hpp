@@ -9,12 +9,12 @@
 
 // std
 #include <cstdint>
+#include <tuple>
 
 // external
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/Handle.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -25,22 +25,9 @@
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-class SPI_base : private cml::Non_copyable
+class SPI : private cml::Non_copyable
 {
 public:
-    struct id : cml::Non_constructible
-    {
-        constexpr static auto _1 = Handle<SPI1_BASE> {};
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        constexpr static auto _2 = Handle<SPI2_BASE> {};
-#endif
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        constexpr static auto _3 = Handle<SPI3_BASE> {};
-#endif
-    };
-
     struct Frame_format
     {
         enum class Word_length : std::uint32_t
@@ -84,62 +71,8 @@ public:
         Bit_significance bit_significance = cml::various::get_enum_incorrect_value<Bit_significance>();
     };
 
-    struct Transmit_callback
-    {
-        using Function = void (*)(volatile std::uint16_t* a_p_data,
-                                  bool a_stop,
-                                  SPI_base* a_p_this,
-                                  void* a_p_user_data);
-
-        Function function = nullptr;
-        void* p_user_data = nullptr;
-    };
-
-    struct Receive_callback
-    {
-        using Function = void (*)(std::uint16_t a_data, SPI_base* a_p_this, void* a_p_user_data);
-
-        Function function = nullptr;
-        void* p_user_data = nullptr;
-    };
-
-    struct Transmit_receive_callback
-    {
-        using Transmit_function = void (*)(volatile std::uint16_t* a_p_data,
-                                           bool a_stop,
-                                           SPI_base* a_p_this,
-                                           void* a_p_user_data);
-        using Receive_function  = void (*)(std::uint16_t a_data, SPI_base* a_p_this, void* a_p_user_data);
-
-        Transmit_function transmit = nullptr;
-        Receive_function receive   = nullptr;
-        void* p_user_data          = nullptr;
-    };
-
 public:
-    SPI_base(Handle<SPI1_BASE>)
-        : idx(0u)
-        , p_registers(SPI1)
-    {
-    }
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    SPI_base(Handle<SPI2_BASE>)
-        : idx(1u)
-        , p_registers(SPI2)
-    {
-    }
-#endif
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    SPI_base(Handle<SPI3_BASE>)
-        : idx(2u)
-        , p_registers(SPI3)
-    {
-    }
-#endif
-
-    std::uint32_t get_id() const
+    std::uint32_t get_idx() const
     {
         return this->idx;
     }
@@ -155,15 +88,20 @@ public:
     }
 
 protected:
-    std::uint32_t idx;
+    SPI(std::size_t a_idx, SPI_TypeDef* a_p_SPI)
+        : idx(a_idx)
+        , p_registers(a_p_SPI)
+    {
+    }
+
+protected:
+    const std::uint32_t idx;
     SPI_TypeDef* p_registers;
 };
 
-class SPI_master : public SPI_base
+class SPI_master : public SPI
 {
 public:
-    using id = SPI_base::id;
-
     struct Enable_config
     {
         enum class Clock_prescaler : std::uint32_t
@@ -204,25 +142,6 @@ public:
     };
 
 public:
-    SPI_master(Handle<SPI1_BASE>)
-        : SPI_base(id::_1)
-    {
-    }
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    SPI_master(Handle<SPI2_BASE>)
-        : SPI_base(id::_2)
-    {
-    }
-#endif
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    SPI_master(Handle<SPI3_BASE>)
-        : SPI_base(id::_3)
-    {
-    }
-#endif
-
     ~SPI_master()
     {
         this->disable();
@@ -233,9 +152,18 @@ public:
 
     Enable_config get_Enable_config() const;
     Frame_format get_Frame_format() const;
+
+private:
+    SPI_master(std::size_t a_idx, SPI_TypeDef* a_p_SPI)
+        : SPI(a_idx, a_p_SPI)
+    {
+    }
+
+private:
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
 
-class SPI_slave : public SPI_base
+class SPI_slave : public SPI
 {
 public:
     struct Enable_config
@@ -271,25 +199,6 @@ public:
     };
 
 public:
-    SPI_slave(Handle<SPI1_BASE>)
-        : SPI_base(id::_1)
-    {
-    }
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    SPI_slave(Handle<SPI2_BASE>)
-        : SPI_base(id::_2)
-    {
-    }
-#endif
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    SPI_slave(Handle<SPI3_BASE>)
-        : SPI_base(id::_3)
-    {
-    }
-#endif
-
     ~SPI_slave()
     {
         this->disable();
@@ -300,29 +209,23 @@ public:
 
     Enable_config get_Enable_config() const;
     Frame_format get_Frame_format() const;
+
+private:
+    SPI_slave(std::size_t a_idx, SPI_TypeDef* a_p_SPI)
+        : SPI(a_idx, a_p_SPI)
+    {
+    }
+
+private:
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
 
-template<> class rcc<SPI_base> : private cml::Non_constructible
+template<std::size_t id> class rcc<SPI, id> : private cml::Non_constructible
 {
 public:
-    template<std::uint32_t peripheral_base_address>
-    static void enable(Handle<peripheral_base_address>, bool a_enable_in_lp);
-    template<std::uint32_t peripheral_base_address> static void disable(Handle<peripheral_base_address>);
+    static void enable(bool a_enable_in_lp) = delete;
+    static void disable()                   = delete;
 };
-
-template<> void rcc<SPI_base>::enable<SPI1_BASE>(Handle<SPI1_BASE>, bool a_enable_in_lp);
-template<> void rcc<SPI_base>::disable<SPI1_BASE>(Handle<SPI1_BASE>);
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-template<> void rcc<SPI_base>::enable<SPI2_BASE>(Handle<SPI2_BASE>, bool a_enable_in_lp);
-template<> void rcc<SPI_base>::disable<SPI2_BASE>(Handle<SPI2_BASE>);
-#endif
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-template<> void rcc<SPI_base>::enable<SPI3_BASE>(Handle<SPI3_BASE>, bool a_enable_in_lp);
-template<> void rcc<SPI_base>::disable<SPI3_BASE>(Handle<SPI3_BASE>);
-#endif
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

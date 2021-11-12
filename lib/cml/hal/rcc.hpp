@@ -14,7 +14,7 @@
 namespace cml {
 namespace hal {
 #ifdef STM32L4
-template<typename Perihperal_t> using rcc = soc::m4::stm32l4::rcc<Perihperal_t>;
+template<typename Perihperal_t, std::size_t id = 255> using rcc = soc::m4::stm32l4::rcc<Perihperal_t, id>;
 #endif
 } // namespace hal
 } // namespace cml

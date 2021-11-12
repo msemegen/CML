@@ -12,9 +12,9 @@
 
 // std
 #include <cstdint>
+#include <tuple>
 
 // soc
-#include <soc/Handle.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -28,16 +28,6 @@ namespace stm32l4 {
 class USART : private cml::Non_copyable
 {
 public:
-    struct id : private cml::Non_constructible
-    {
-        constexpr static auto _1 = Handle<USART1_BASE> {};
-        constexpr static auto _2 = Handle<USART2_BASE> {};
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        constexpr static auto _3 = Handle<USART3_BASE> {};
-#endif
-    };
-
     struct Enable_config
     {
         enum class Oversampling : std::uint32_t
@@ -103,25 +93,6 @@ public:
     };
 
 public:
-    USART(Handle<USART1_BASE>)
-        : idx(0u)
-        , p_registers(USART1)
-    {
-    }
-    USART(Handle<USART2_BASE>)
-        : idx(1u)
-        , p_registers(USART2)
-    {
-    }
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    USART(Handle<USART3_BASE>)
-        : idx(2u)
-        , p_registers(USART3)
-    {
-    }
-#endif
-
     ~USART();
 
     bool enable(const Enable_config& a_config, const Frame_format& frame_format, std::uint32_t a_timeout_ms);
@@ -130,7 +101,7 @@ public:
     Enable_config get_Enable_config() const;
     Frame_format get_Frame_format() const;
 
-    std::uint32_t get_id() const
+    std::uint32_t get_idx() const
     {
         return this->idx;
     }
@@ -146,8 +117,18 @@ public:
     }
 
 private:
+    USART(std::size_t a_idx, USART_TypeDef* a_p_registers)
+        : idx(a_idx)
+        , p_registers(a_p_registers)
+    {
+    }
+
+private:
     const std::uint32_t idx;
     USART_TypeDef* p_registers;
+
+private:
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
 
 constexpr USART::Enable_config::Flow_control_flag operator|(USART::Enable_config::Flow_control_flag a_f1,
@@ -190,7 +171,7 @@ constexpr USART::Enable_config::Mode_flag operator|=(USART::Enable_config::Mode_
     return a_f1;
 }
 
-template<> class rcc<USART> : private cml::Non_constructible
+template<std::size_t id> class rcc<USART, id> : private cml::Non_constructible
 {
 public:
     enum class Clock_source : uint32_t
@@ -200,38 +181,9 @@ public:
         HSI,
     };
 
-    template<Clock_source, std::uint32_t peripheral_base_address>
-    static void enable(Handle<peripheral_base_address>, bool a_enable_in_lp);
-    template<std::uint32_t peripheral_base_address> static void disable(Handle<peripheral_base_address>);
+    template<Clock_source> static void enable(bool a_enable_in_lp) = delete;
+    static void disable()                                          = delete;
 };
-
-template<>
-void rcc<USART>::enable<rcc<USART>::Clock_source::HSI, USART1_BASE>(Handle<USART1_BASE>, bool a_enable_in_lp);
-template<>
-void rcc<USART>::enable<rcc<USART>::Clock_source::PCLK1, USART1_BASE>(Handle<USART1_BASE>, bool a_enable_in_lp);
-template<>
-void rcc<USART>::enable<rcc<USART>::Clock_source::SYSCLK, USART1_BASE>(Handle<USART1_BASE>, bool a_enable_in_lp);
-
-template<>
-void rcc<USART>::enable<rcc<USART>::Clock_source::HSI, USART2_BASE>(Handle<USART2_BASE>, bool a_enable_in_lp);
-template<>
-void rcc<USART>::enable<rcc<USART>::Clock_source::PCLK1, USART2_BASE>(Handle<USART2_BASE>, bool a_enable_in_lp);
-template<>
-void rcc<USART>::enable<rcc<USART>::Clock_source::SYSCLK, USART2_BASE>(Handle<USART2_BASE>, bool a_enable_in_lp);
-
-template<> void rcc<USART>::disable<USART1_BASE>(Handle<USART1_BASE>);
-template<> void rcc<USART>::disable<USART2_BASE>(Handle<USART2_BASE>);
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-template<>
-void rcc<USART>::enable<rcc<USART>::Clock_source::HSI, USART3_BASE>(Handle<USART3_BASE>, bool a_enable_in_lp);
-template<>
-void rcc<USART>::enable<rcc<USART>::Clock_source::PCLK1, USART3_BASE>(Handle<USART3_BASE>, bool a_enable_in_lp);
-template<>
-void rcc<USART>::enable<rcc<USART>::Clock_source::SYSCLK, USART3_BASE>(Handle<USART3_BASE>, bool a_enable_in_lp);
-template<> void rcc<USART>::disable<USART3_BASE>(Handle<USART3_BASE>);
-#endif
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

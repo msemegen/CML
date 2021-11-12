@@ -1,26 +1,23 @@
 #pragma once
 
 /*
- *   Name: IRQ.hpp
+ *   Name: Factory.hpp
  *
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
 // std
-#include <cstdint>
+#include <cstddef>
 
 // cml
-#include <cml/various.hpp>
+#include <cml/Non_constructible.hpp>
 
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-struct IRQ
+template<typename Periph_t, std::size_t id = 255u> class Factory : private cml::Non_constructible
 {
-    bool active                    = false;
-    std::uint32_t preempt_priority = 0;
-    std::uint32_t sub_priority     = 0;
 };
 } // namespace stm32l4
 } // namespace m4

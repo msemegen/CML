@@ -8,7 +8,6 @@
 #ifdef STM32L4
 
 // this
-#include <soc/m4/stm32l4/RS485/Polling.hpp>
 #include <soc/m4/stm32l4/USART/Polling.hpp>
 
 // soc
@@ -415,8 +414,7 @@ Polling<RS485>::receive(void* a_p_data, std::size_t a_data_size_in_words, std::u
     }
 
     return { bus_status, words };
-}
-
+} 
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

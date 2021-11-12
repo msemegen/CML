@@ -37,11 +37,6 @@ public:
     };
 
 public:
-    Polling(I2C_master* a_p_I2C_master)
-        : a_p_I2C(a_p_I2C_master)
-    {
-    }
-
     Result transmit(std::uint8_t a_slave_address, const void* a_p_data, std::size_t a_data_size_in_bytes);
     Result transmit(std::uint8_t a_slave_address,
                     const void* a_p_data,
@@ -53,7 +48,16 @@ public:
     receive(std::uint8_t a_slave_address, void* a_p_data, std::size_t a_data_size_in_bytes, std::uint32_t a_timeout);
 
 private:
+    Polling(I2C_master* a_p_I2C_master)
+        : a_p_I2C(a_p_I2C_master)
+    {
+    }
+
+private:
     I2C_master* a_p_I2C;
+
+private:
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
 
 template<> class Polling<I2C_slave> : private cml::Non_copyable
@@ -76,11 +80,6 @@ public:
     };
 
 public:
-    Polling(I2C_slave* a_p_I2C_slave)
-        : a_p_I2C(a_p_I2C_slave)
-    {
-    }
-
     Result transmit(const void* a_p_data, std::size_t a_data_size_in_bytes);
     Result transmit(const void* a_p_data, std::size_t a_data_size_in_bytes, std::uint32_t a_timeout);
 
@@ -88,7 +87,16 @@ public:
     Result receive(void* a_p_data, std::size_t a_data_size_in_bytes, std::uint32_t a_timeout);
 
 private:
+    Polling(I2C_slave* a_p_I2C_slave)
+        : a_p_I2C(a_p_I2C_slave)
+    {
+    }
+
+private:
     I2C_slave* a_p_I2C;
+
+private:
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
 constexpr Polling<I2C_master>::Result::Bus_flag operator|(Polling<I2C_master>::Result::Bus_flag a_f1,
                                                           Polling<I2C_master>::Result::Bus_flag a_f2)

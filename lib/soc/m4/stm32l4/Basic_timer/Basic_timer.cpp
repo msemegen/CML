@@ -82,7 +82,6 @@ template<> void rcc<Basic_timer>::disable<TIM7_BASE>(Handle<TIM7_BASE>)
     bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_TIM7SMEN_Pos);
 }
 #endif
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

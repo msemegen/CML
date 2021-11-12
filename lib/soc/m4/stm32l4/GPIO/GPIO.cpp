@@ -21,7 +21,6 @@
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-
 using namespace cml;
 
 void GPIO::In::Pin::set_pull(Pull a_pull)
@@ -365,108 +364,6 @@ void GPIO::Alternate_function::disable(std::uint32_t a_id)
 
     this->p_port->give_pin(a_id);
 }
-
-template<> void rcc<GPIO>::enable<GPIOA_BASE>(Handle<GPIOA_BASE>, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOASMEN);
-    }
-}
-
-template<> void rcc<GPIO>::enable<GPIOB_BASE>(Handle<GPIOB_BASE>, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOBSMEN);
-    }
-}
-
-template<> void rcc<GPIO>::enable<GPIOC_BASE>(Handle<GPIOC_BASE>, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOCSMEN);
-    }
-}
-
-template<> void rcc<GPIO>::enable<GPIOH_BASE>(Handle<GPIOH_BASE>, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOHSMEN);
-    }
-}
-
-template<> void rcc<GPIO>::disable<GPIOA_BASE>(Handle<GPIOA_BASE>)
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOAEN);
-    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOASMEN);
-}
-
-template<> void rcc<GPIO>::disable<GPIOB_BASE>(Handle<GPIOB_BASE>)
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOBEN);
-    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOBSMEN);
-}
-
-template<> void rcc<GPIO>::disable<GPIOC_BASE>(Handle<GPIOC_BASE>)
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOCEN);
-    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOCSMEN);
-}
-
-template<> void rcc<GPIO>::disable<GPIOH_BASE>(Handle<GPIOH_BASE>)
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOHEN);
-    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOHSMEN);
-}
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-template<> void rcc<GPIO>::enable<GPIOD_BASE>(Handle<GPIOD_BASE>, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIODSMEN);
-    }
-}
-
-template<> void rcc<GPIO>::disable<GPIOD_BASE>(Handle<GPIOD_BASE>)
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIODEN);
-    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIODSMEN);
-}
-#endif
-#if defined(STM32L431xx) || defined(STM32L433xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-template<> void rcc<GPIO>::enable<GPIOE_BASE>(Handle<GPIOE_BASE>, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOESMEN);
-    }
-}
-
-template<> void rcc<GPIO>::disable<GPIOE_BASE>(Handle<GPIOE_BASE>)
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_GPIOEEN);
-    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOESMEN);
-}
-#endif
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

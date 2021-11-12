@@ -136,59 +136,6 @@ void SPI_slave::disable()
     p_registers->CR2 = 0;
     p_registers->CR1 = 0;
 }
-
-template<> void rcc<SPI_base>::enable<SPI1_BASE>(Handle<SPI1_BASE>, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->APB2SMENR), RCC_APB2SMENR_SPI1SMEN);
-    }
-}
-
-template<> void rcc<SPI_base>::disable<SPI1_BASE>(Handle<SPI1_BASE>)
-{
-    bit_flag::clear(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN);
-    bit_flag::clear(&(RCC->APB2SMENR), RCC_APB2SMENR_SPI1SMEN);
-}
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L431xx) || defined(STM32L433xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-template<> void rcc<SPI_base>::enable<SPI2_BASE>(Handle<SPI2_BASE>, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI2SMEN);
-    }
-}
-
-template<> void rcc<SPI_base>::disable<SPI2_BASE>(Handle<SPI2_BASE>)
-{
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN);
-    bit_flag::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI2SMEN);
-}
-#endif
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-template<> void rcc<SPI_base>::enable<SPI3_BASE>(Handle<SPI3_BASE>, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI3SMEN);
-    }
-}
-
-template<> void rcc<SPI_base>::disable<SPI3_BASE>(Handle<SPI3_BASE>)
-{
-    bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN);
-    bit_flag::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI3SMEN);
-}
-#endif
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

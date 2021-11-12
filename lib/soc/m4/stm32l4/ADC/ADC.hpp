@@ -9,6 +9,7 @@
 
 // std
 #include <cstdint>
+#include <tuple>
 
 // externals
 #include <stm32l4xx.h>
@@ -53,6 +54,7 @@ public:
 public:
     ADC(Handle<ADC1_BASE>)
         : idx(0u)
+        , irqn { IRQn_Type::ADC1_IRQn }
         , p_registers(ADC1)
     {
     }
@@ -60,11 +62,11 @@ public:
 #if defined(STM32L412xx) || defined(STM32L422xx)
     ADC(Handle<ADC2_BASE>)
         : idx(1u)
+        , irqn { IRQn_Type::ADC1_2_IRQn }
         , p_registers(ADC2)
     {
     }
 #endif
-
     ~ADC();
 
     void enable(Resolution a_resolution);
@@ -79,9 +81,14 @@ public:
                  *(reinterpret_cast<const std::uint16_t*>(0x1FFF75AA)) };
     }
 
-    std::uint32_t get_id() const
+    std::uint32_t get_idx() const
     {
         return this->idx;
+    }
+
+    std::tuple<IRQn_Type> get_irqn() const
+    {
+        return this->irqn;
     }
 
     operator ADC_TypeDef*()
@@ -95,7 +102,8 @@ public:
     }
 
 private:
-    std::uint32_t idx;
+    const std::uint32_t idx;
+    const std::tuple<IRQn_Type> irqn;
     ADC_TypeDef* p_registers;
 };
 

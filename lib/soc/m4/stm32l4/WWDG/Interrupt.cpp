@@ -62,12 +62,11 @@ Interrupt<WWDG>::~Interrupt()
     p_WWDG = nullptr;
 }
 
-void Interrupt<WWDG>::enable(const IRQ& a_irq)
+void Interrupt<WWDG>::enable(const IRQ_config& a_irq_config)
 {
-    cml_assert(true == a_irq.active);
-
-    NVIC_SetPriority(IRQn_Type::WWDG_IRQn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq.preempt_priority, a_irq.sub_priority));
+    NVIC_SetPriority(
+        IRQn_Type::WWDG_IRQn,
+        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(IRQn_Type::RNG_IRQn);
 }
 
@@ -91,7 +90,6 @@ void Interrupt<WWDG>::register_callback(const Early_wakeup_callback& a_callback)
         this->early_wakeup_callback = { nullptr, nullptr };
     }
 }
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

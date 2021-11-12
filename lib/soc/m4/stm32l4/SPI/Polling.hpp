@@ -149,7 +149,6 @@ constexpr Polling<SPI_slave>::Result::Bus_flag operator|=(Polling<SPI_slave>::Re
     a_f1 = a_f1 | a_f2;
     return a_f1;
 }
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

@@ -14,12 +14,15 @@
 #include <soc/Interrupt_guard.hpp>
 
 // cml
+#include "..\RNG\Interrupt.hpp"
+
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 #include <cml/utils/delay.hpp>
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
-#include "..\RNG\Interrupt.hpp"
+#include "..\I2C\Interrupt.hpp"
+#include "..\SPI\Interrupt.hpp"
 
 namespace {
 
@@ -125,7 +128,7 @@ void Interrupt<ADC>::disable()
     bit_flag::clear(&(ADC1_COMMON->CCR), ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN);
 #endif
 
-    adcs[p_adc->get_id()] = nullptr;
+    adcs[p_adc->get_idx()] = nullptr;
 }
 
 void Interrupt<ADC>::register_callack(Mode a_mode, const Conversion_callback& a_callback)
@@ -156,10 +159,8 @@ void Interrupt<ADC>::register_callack(Mode a_mode, const Conversion_callback& a_
     }
 }
 
-void Interrupt<ADC>::enable(const IRQ& a_irq, const Channel* a_p_channels, std::size_t a_channels_count)
+void Interrupt<ADC>::enable(const IRQ_config& a_irq_config, const Channel* a_p_channels, std::size_t a_channels_count)
 {
-    cml_assert(true == a_irq.active);
-
     cml_assert(false == bit_flag::is(static_cast<ADC_TypeDef*>(*(this->p_adc))->CR, ADC_CR_ADSTART) &&
                false == bit_flag::is(static_cast<ADC_TypeDef*>(*(this->p_adc))->CR, ADC_CR_JADSTART));
 
@@ -225,13 +226,13 @@ void Interrupt<ADC>::enable(const IRQ& a_irq, const Channel* a_p_channels, std::
 #endif
     }
 
-    adcs[this->p_adc->get_id()] = this;
+    adcs[this->p_adc->get_idx()] = this;
 
-    NVIC_SetPriority(this->irqn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq.preempt_priority, a_irq.sub_priority));
+    NVIC_SetPriority(
+        this->irqn,
+        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
 }
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

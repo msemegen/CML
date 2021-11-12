@@ -8,9 +8,7 @@
  */
 
 #ifdef STM32L4
-#include <soc/m4/stm32l4/RS485/Interrupt.hpp>
-#include <soc/m4/stm32l4/RS485/Polling.hpp>
-#include <soc/m4/stm32l4/RS485/RS485.hpp>
+#include <soc/m4/stm32l4/USART/bsp/bsp.hpp>
 #endif
 
 namespace cml {

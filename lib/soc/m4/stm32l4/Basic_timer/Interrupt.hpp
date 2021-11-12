@@ -9,7 +9,7 @@
 
 // soc
 #include <soc/m4/stm32l4/Basic_timer/Basic_timer.hpp>
-#include <soc/m4/stm32l4/IRQ.hpp>
+#include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 
 // soc
@@ -30,21 +30,17 @@ public:
     };
 
 public:
-    Interrupt(Basic_timer* a_p_timer, Handle<TIM6_BASE>)
+    Interrupt(Basic_timer* a_p_timer)
         : p_timer(a_p_timer)
-        , irqn(IRQn_Type::TIM6_DAC_IRQn)
     {
     }
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-    Interrupt(Basic_timer* a_p_timer, Handle<TIM7_BASE>)
-        : p_timer(a_p_timer)
-        , irqn(IRQn_Type::TIM7_IRQn)
-    {
-    }
-#endif
-    ~Interrupt();
 
-    void enable(const IRQ& a_irq);
+    ~Interrupt()
+    {
+        this->disable();
+    }
+
+    void enable(const IRQ_config& a_irq_config);
     void disable();
 
     void register_callback(const Overload_callback& a_callback);

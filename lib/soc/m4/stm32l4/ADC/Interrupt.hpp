@@ -13,7 +13,7 @@
 
 // soc
 #include <soc/m4/stm32l4/ADC/ADC.hpp>
-#include <soc/m4/stm32l4/IRQ.hpp>
+#include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 
 // cml
@@ -88,21 +88,18 @@ public:
         , irqn(IRQn_Type::ADC1_2_IRQn)
     {
     }
-#if defined(STM32L412xx) || defined(STM32L422xx)
-    Interrupt(ADC* a_p_adc, Handle<ADC2_BASE>)
-        : p_adc(a_p_adc)
-        , irqn(IRQn_Type::ADC1_2_IRQn)
-    {
-    }
-#endif
 
-    ~Interrupt();
+    ~Interrupt()
+    {
+        this->disable();
+    }
 
     void disable();
 
-    template<std::size_t length> void enable(const IRQ& a_irq, const std::array<Channel, length>& a_channels)
+    template<std::size_t length>
+    void enable(const IRQ_config& a_irq_config, const std::array<Channel, length>& a_channels)
     {
-        this->enable(a_irq, a_channels.data(), a_channels.size());
+        this->enable(a_irq_config, a_channels.data(), a_channels.size());
     }
 
     void register_callack(Mode a_mode, const Conversion_callback& a_callback);
@@ -118,7 +115,7 @@ public:
     }
 
 private:
-    void enable(const IRQ& a_irq, const Channel* a_p_channels, std::size_t a_channels_count);
+    void enable(const IRQ_config& a_irq_config, const Channel* a_p_channels, std::size_t a_channels_count);
 
 private:
     ADC* p_adc;

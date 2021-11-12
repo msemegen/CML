@@ -8,7 +8,7 @@
  */
 
 // soc
-#include <soc/m4/stm32l4/IRQ.hpp>
+#include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 #include <soc/m4/stm32l4/RNG/RNG.hpp>
 
@@ -31,7 +31,7 @@ public:
     Interrupt(RNG* a_p_RNG);
     ~Interrupt();
 
-    void enable(const IRQ& a_irq);
+    void enable(const IRQ_config& a_irq_config);
     void disable();
 
     void register_callback(const New_value_callback& a_callback);

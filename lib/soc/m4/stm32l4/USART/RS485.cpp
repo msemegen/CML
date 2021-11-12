@@ -8,10 +8,7 @@
 #ifdef STM32L4
 
 // this
-#include <soc/m4/stm32l4/RS485/RS485.hpp>
-
-// soc
-#include <soc/system_timer.hpp>
+#include <soc/m4/stm32l4/USART/RS485.hpp>
 
 // cml
 #include <cml/debug/assertion.hpp>
@@ -21,7 +18,6 @@
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-
 using namespace cml;
 using namespace cml::utils;
 
@@ -70,7 +66,6 @@ void RS485::disable()
     this->p_registers->CR2 = 0;
     this->p_registers->CR3 = 0;
 }
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

@@ -106,13 +106,13 @@ void EXTI15_10_IRQHandler()
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-void Interrupt<GPIO>::enable(const Callback& a_callback, const IRQ& a_irq)
+void Interrupt<GPIO>::enable(const Callback& a_callback, const IRQ_config& a_irq_config)
 {
-    cml_assert(true == a_irq.active);
     cml_assert(true == rcc<mcu>::is_SYSCFG_active());
 
-    NVIC_SetPriority(this->irqn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq.preempt_priority, a_irq.sub_priority));
+    NVIC_SetPriority(
+        this->irqn,
+        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
 
     callbacks[this->idx] = a_callback;

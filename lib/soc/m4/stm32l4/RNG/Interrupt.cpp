@@ -85,12 +85,11 @@ Interrupt<RNG>::~Interrupt()
     p_RNGs = nullptr;
 }
 
-void Interrupt<RNG>::enable(const IRQ& a_irq)
+void Interrupt<RNG>::enable(const IRQ_config& a_irq_config)
 {
-    cml_assert(true == a_irq.active);
-
-    NVIC_SetPriority(IRQn_Type::RNG_IRQn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq.preempt_priority, a_irq.sub_priority));
+    NVIC_SetPriority(
+        IRQn_Type::RNG_IRQn,
+        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(IRQn_Type::RNG_IRQn);
 }
 

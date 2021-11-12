@@ -8,7 +8,7 @@
  */
 
 #ifdef STM32L4
-#include <soc/m4/stm32l4/GPIO/GPIO.hpp>
+#include <soc/m4/stm32l4/GPIO/bsp/bsp.hpp>
 #include <soc/m4/stm32l4/GPIO/Interrupt.hpp>
 #endif
 

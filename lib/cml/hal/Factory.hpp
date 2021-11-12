@@ -1,22 +1,20 @@
 #pragma once
 
 /*
- *   Name: I2C.hpp
+ *   Name: Factory.hpp
  *
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
 #ifdef STM32L4
-#include <soc/m4/stm32l4/I2C/bsp/bsp.hpp>
+#include <soc/m4/stm32l4/Factory.hpp>
 #endif
 
 namespace cml {
 namespace hal {
 #ifdef STM32L4
-using I2C        = soc::m4::stm32l4::I2C;
-using I2C_master = soc::m4::stm32l4::I2C_master;
-using I2C_slave  = soc::m4::stm32l4::I2C_slave;
+template<typename Perihperal_t, std::size_t id = 255u> using Factory = soc::m4::stm32l4::Factory<Perihperal_t, id>;
 #endif
 } // namespace hal
 } // namespace cml

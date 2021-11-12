@@ -57,21 +57,20 @@ void basic_timer_interrupt_handler(Interrupt<Basic_timer>* a_p_this)
     static_cast<TIM_TypeDef*>(*(a_p_this->get_handle()))->SR = 0;
 }
 
-void Interrupt<Basic_timer>::enable(const IRQ& a_irq)
+void Interrupt<Basic_timer>::enable(const IRQ_config& a_irq_config)
 {
-    cml_assert(true == a_irq.active);
-
-    NVIC_SetPriority(this->irqn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq.preempt_priority, a_irq.sub_priority));
+    NVIC_SetPriority(
+        this->irqn,
+        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
 
-    timers[this->p_timer->get_id()] = this;
+    timers[this->p_timer->get_idx()] = this;
 }
 
 void Interrupt<Basic_timer>::disable()
 {
     NVIC_DisableIRQ(this->irqn);
-    timers[this->p_timer->get_id()] = nullptr;
+    timers[this->p_timer->get_idx()] = nullptr;
 }
 
 void Interrupt<Basic_timer>::register_callback(const Overload_callback& a_callback)

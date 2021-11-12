@@ -5,6 +5,8 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
+#ifdef STM32L4
+
 // this
 #include <soc/m4/stm32l4/SPI/Interrupt.hpp>
 
@@ -15,286 +17,122 @@
 // cml
 #include <cml/bit_flag.hpp>
 
-namespace {
-
-using namespace cml;
-using namespace soc::m4::stm32l4;
-
-#if defined(STM32L412xx) || defined(STM32L422xx) || defined(STM32L432xx) || defined(STM32L442xx)
-SPI_interrupt* spis[2] = { nullptr, nullptr };
-#endif
-
-#if defined(STM32L431xx) || defined(STM32L433xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-SPI_interrupt* spis[3] = { nullptr, nullptr, nullptr };
-#endif
-
-} // namespace
-
-extern "C" {
-#if defined(STM32L412xx) || defined(STM32L422xx)
-void SPI1_IRQHandler()
-{
-    cml_assert(nullptr != spis[0]);
-    spi_interrupt_handler(spis[0]);
-}
-void SPI2_IRQHandler()
-{
-    cml_assert(nullptr != spis[1]);
-    spi_interrupt_handler(spis[1]);
-}
-#endif
-
-#if defined(STM32L432xx) || defined(STM32L442xx)
-void SPI1_IRQHandler()
-{
-    cml_assert(nullptr != spis[0]);
-    spi_interrupt_handler(spis[0]);
-}
-void SPI3_IRQHandler()
-{
-    cml_assert(nullptr != spis[1]);
-    spi_interrupt_handler(spis[1]);
-}
-#endif
-
-#if defined(STM32L431xx) || defined(STM32L433xx) || defined(STM32L443xx) || defined(STM32L451xx) || \
-    defined(STM32L452xx) || defined(STM32L462xx)
-void SPI1_IRQHandler()
-{
-    cml_assert(nullptr != spis[0]);
-    spi_interrupt_handler(spis[0]);
-}
-void SPI2_IRQHandler()
-{
-    cml_assert(nullptr != spis[1]);
-    spi_interrupt_handler(spis[1]);
-}
-void SPI3_IRQHandler()
-{
-    cml_assert(nullptr != spis[2]);
-    spi_interrupt_handler(spis[2]);
-}
-#endif
-}
-
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-
 using namespace cml;
 
-void spi_interrupt_handler(SPI_interrupt* a_p_this)
+void SPI_interrupt_handler(SPI_transmission_interrupt::TX* a_p_this)
 {
-    SPI_TypeDef* p_registers = static_cast<SPI_TypeDef*>(*(a_p_this->p_SPI));
+    cml_assert(nullptr != a_p_this);
 
-    const std::uint32_t sr  = p_registers->SR;
-    const std::uint32_t cr2 = p_registers->CR2;
+    const std::uint32_t sr  = a_p_this->p_registers->SR;
+    const std::uint32_t cr2 = a_p_this->p_registers->CR2;
 
-    if (true == bit::is_any(sr, SPI_SR_FRE | SPI_SR_OVR | SPI_SR_MODF | SPI_SR_CRCERR))
+    if (true == bit_flag::is(sr, SPI_SR_TXE) && true == bit_flag::is(cr2, SPI_CR2_TXEIE) &&
+        nullptr != a_p_this->callback.function)
     {
-        if (nullptr != a_p_this->bus_status_callback.function)
+        if (static_cast<SPI_master::Frame_format::Word_length>(bit_flag::get(cr2, SPI_CR2_DS)) >
+            SPI_master::Frame_format::Word_length::_8)
         {
-            a_p_this->bus_status_callback.function(get_Bus_flag<Interrupt<SPI_master>::Bus_flag>(p_registers),
-                                                   a_p_this->p_SPI,
-                                                   a_p_this->transmit_callback.p_user_data);
+            a_p_this->callback.function(reinterpret_cast<volatile std::uint16_t*>(&(a_p_this->p_registers->DR)),
+                                        false,
+                                        a_p_this->callback.p_user_data);
+        }
+        else
+        {
+            a_p_this->callback.function(reinterpret_cast<volatile std::uint16_t*>(
+                                            reinterpret_cast<volatile std::uint8_t*>(&(a_p_this->p_registers->DR))),
+                                        false,
+                                        a_p_this->callback.p_user_data);
         }
 
-        clear_errors(p_registers);
-    }
-
-    if (nullptr != a_p_this->transmit_callback.function || nullptr != a_p_this->transmit_receive_callback.transmit)
-    {
-        if (true == bit_flag::is(sr, SPI_SR_TXE) && true == bit_flag::is(cr2, SPI_CR2_TXEIE))
+        if (false == bit_flag::is(a_p_this->p_registers->SR, SPI_SR_BSY))
         {
-            if (nullptr != a_p_this->transmit_callback.function)
-            {
-                if (static_cast<SPI_master::Frame_format::Word_length>(bit_flag::get(cr2, SPI_CR2_DS)) >
-                    SPI_master::Frame_format::Word_length::_8)
-                {
-                    a_p_this->transmit_callback.function(reinterpret_cast<volatile std::uint16_t*>(&(p_registers->DR)),
-                                                         false,
-                                                         a_p_this->p_SPI,
-                                                         a_p_this->transmit_callback.p_user_data);
-                }
-                else
-                {
-                    a_p_this->transmit_callback.function(
-                        reinterpret_cast<volatile std::uint16_t*>(
-                            reinterpret_cast<volatile std::uint8_t*>(&(p_registers->DR))),
-                        false,
-                        a_p_this->p_SPI,
-                        a_p_this->transmit_callback.p_user_data);
-                }
-            }
-
-            if (nullptr != a_p_this->transmit_receive_callback.transmit)
-            {
-                if (static_cast<SPI_master::Frame_format::Word_length>(bit_flag::get(cr2, SPI_CR2_DS)) >
-                    SPI_master::Frame_format::Word_length::_8)
-                {
-                    a_p_this->transmit_receive_callback.transmit(
-                        reinterpret_cast<volatile std::uint16_t*>(&(p_registers->DR)),
-                        false,
-                        a_p_this->p_SPI,
-                        a_p_this->transmit_receive_callback.p_user_data);
-                }
-                else
-                {
-                    a_p_this->transmit_receive_callback.transmit(
-                        reinterpret_cast<volatile std::uint16_t*>(
-                            reinterpret_cast<volatile std::uint8_t*>(&(p_registers->DR))),
-                        false,
-                        a_p_this->p_SPI,
-                        a_p_this->transmit_receive_callback.p_user_data);
-                }
-            }
-
-            if (false == bit_flag::is(p_registers->SR, SPI_SR_BSY))
-            {
-                if (nullptr != a_p_this->transmit_callback.function)
-                {
-                    a_p_this->transmit_callback.function(
-                        nullptr, true, a_p_this->p_SPI, a_p_this->transmit_callback.p_user_data);
-                }
-
-                if (nullptr != a_p_this->transmit_receive_callback.transmit)
-                {
-                    a_p_this->transmit_receive_callback.transmit(
-                        nullptr, true, a_p_this->p_SPI, a_p_this->transmit_receive_callback.p_user_data);
-                }
-            }
-        }
-    }
-
-    if (nullptr != a_p_this->receive_callback.function || nullptr != a_p_this->transmit_receive_callback.receive)
-    {
-        if (true == bit_flag::is(sr, SPI_SR_RXNE) && true == bit_flag::is(cr2, SPI_CR2_RXNEIE))
-        {
-            if (nullptr != a_p_this->receive_callback.function)
-            {
-                if (static_cast<SPI_master::Frame_format::Word_length>(bit_flag::get(cr2, SPI_CR2_DS)) >
-                    SPI_master::Frame_format::Word_length::_8)
-                {
-                    a_p_this->receive_callback.function(
-                        (*reinterpret_cast<volatile std::uint16_t*>(&(p_registers->DR))),
-                        a_p_this->p_SPI,
-                        a_p_this->receive_callback.p_user_data);
-                }
-                else
-                {
-                    a_p_this->receive_callback.function((*reinterpret_cast<volatile std::uint8_t*>(&(p_registers->DR))),
-                                                        a_p_this->p_SPI,
-                                                        a_p_this->receive_callback.p_user_data);
-                }
-            }
-
-            if (nullptr != a_p_this->transmit_receive_callback.receive)
-            {
-                if (static_cast<SPI_master::Frame_format::Word_length>(bit_flag::get(cr2, SPI_CR2_DS)) >
-                    SPI_master::Frame_format::Word_length::_8)
-                {
-                    a_p_this->transmit_receive_callback.receive(
-                        (*reinterpret_cast<volatile std::uint16_t*>(&(p_registers->DR))),
-                        a_p_this->p_SPI,
-                        a_p_this->transmit_receive_callback.p_user_data);
-                }
-                else
-                {
-                    a_p_this->transmit_receive_callback.receive(
-                        (*reinterpret_cast<volatile std::uint8_t*>(&(p_registers->DR))),
-                        a_p_this->p_SPI,
-                        a_p_this->transmit_receive_callback.p_user_data);
-                }
-            }
+            a_p_this->callback.function(nullptr, true, a_p_this->callback.p_user_data);
         }
     }
 }
-
-void SPI_interrupt::enable(const IRQ& a_irq)
+void SPI_interrupt_handler(SPI_transmission_interrupt::RX* a_p_this)
 {
-    cml_assert(true == a_irq.active);
+    cml_assert(nullptr != a_p_this);
 
-    NVIC_SetPriority(this->irqn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq.preempt_priority, a_irq.sub_priority));
+    const std::uint32_t sr  = a_p_this->p_registers->SR;
+    const std::uint32_t cr2 = a_p_this->p_registers->CR2;
+
+    if (true == bit_flag::is(sr, SPI_SR_RXNE) && true == bit_flag::is(cr2, SPI_CR2_RXNEIE) &&
+        nullptr != a_p_this->callback.function)
+    {
+        if (static_cast<SPI_master::Frame_format::Word_length>(bit_flag::get(cr2, SPI_CR2_DS)) >
+            SPI_master::Frame_format::Word_length::_8)
+        {
+            a_p_this->callback.function((*reinterpret_cast<volatile std::uint16_t*>(&(a_p_this->p_registers->DR))),
+                                        a_p_this->callback.p_user_data);
+        }
+        else
+        {
+            a_p_this->callback.function((*reinterpret_cast<volatile std::uint8_t*>(&(a_p_this->p_registers->DR))),
+                                        a_p_this->callback.p_user_data);
+        }
+    }
+}
+void SPI_interrupt_handler(SPI_status_interrupt* a_p_this)
+{
+    cml_assert(nullptr != a_p_this);
+
+    const std::uint32_t sr = a_p_this->p_registers->SR;
+
+    if (true == bit::is_any(sr, SPI_SR_FRE | SPI_SR_OVR | SPI_SR_MODF | SPI_SR_CRCERR) &&
+        nullptr != a_p_this->callback.function)
+    {
+        a_p_this->callback.function(get_Bus_flag<SPI_status_interrupt::Callback::Flag>(a_p_this->p_registers),
+                                    a_p_this->callback.p_user_data);
+
+        clear_errors(a_p_this->p_registers);
+    }
+}
+
+void SPI_status_interrupt::enable(const IRQ_config& a_irq_config) {}
+void SPI_status_interrupt::disable() {}
+
+void SPI_transmission_interrupt::enable(const IRQ_config& a_irq_config) {}
+void SPI_transmission_interrupt::disable() {}
+
+void Interrupt<SPI_master>::enable(const IRQ_config& a_irq_config)
+{
+    NVIC_SetPriority(
+        this->irqn,
+        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
 
-    spis[this->p_SPI->get_id()] = this;
+    this->set_irq_context();
 }
-void SPI_interrupt::disable()
+
+void Interrupt<SPI_master>::disable()
 {
     NVIC_DisableIRQ(this->irqn);
 
-    spis[this->p_SPI->get_id()] = nullptr;
+    this->clear_irq_context();
 }
 
-void SPI_interrupt::register_callback(const Transmit_callback& a_callback)
+void Interrupt<SPI_slave>::enable(const IRQ_config& a_irq_config)
 {
-    Interrupt_guard guard;
+    NVIC_SetPriority(
+        this->irqn,
+        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
+    NVIC_EnableIRQ(this->irqn);
 
-    if (nullptr != a_callback.function)
-    {
-        this->transmit_callback = a_callback;
-        bit_flag::set(&(static_cast<SPI_TypeDef*>(*(this->p_SPI))->CR2), SPI_CR2_TXEIE);
-    }
-    else
-    {
-        bit_flag::set(&(static_cast<SPI_TypeDef*>(*(this->p_SPI))->CR2), SPI_CR2_TXEIE);
-        this->transmit_callback = { nullptr, nullptr };
-    }
+    this->set_irq_context();
 }
 
-void SPI_interrupt::register_callback(const Receive_callback& a_callback)
+void Interrupt<SPI_slave>::disable()
 {
-    Interrupt_guard guard;
+    NVIC_DisableIRQ(this->irqn);
 
-    if (nullptr != a_callback.function)
-    {
-        this->receive_callback = a_callback;
-        bit_flag::set(&(static_cast<SPI_TypeDef*>(*(this->p_SPI))->CR2), SPI_CR2_RXNEIE);
-    }
-    else
-    {
-        bit_flag::clear(&(static_cast<SPI_TypeDef*>(*(this->p_SPI))->CR2), SPI_CR2_RXNEIE);
-        this->receive_callback = { nullptr, nullptr };
-    }
+    this->clear_irq_context();
 }
-
-void SPI_interrupt::register_callback(const Transmit_receive_callback& a_callback)
-{
-    cml_assert((nullptr == a_callback.receive && nullptr == a_callback.transmit) ||
-               (nullptr != a_callback.receive && nullptr != a_callback.transmit));
-
-    Interrupt_guard guard;
-
-    if (nullptr != a_callback.receive && nullptr != a_callback.transmit)
-    {
-        this->transmit_receive_callback = a_callback;
-        bit_flag::set(&(static_cast<SPI_TypeDef*>(*(this->p_SPI))->CR2), SPI_CR2_RXNEIE | SPI_CR2_TXEIE);
-    }
-    else
-    {
-        bit_flag::clear(&(static_cast<SPI_TypeDef*>(*(this->p_SPI))->CR2), SPI_CR2_RXNEIE | SPI_CR2_TXEIE);
-        this->transmit_receive_callback = { nullptr, nullptr, nullptr };
-    }
-}
-
-void SPI_interrupt::register_callback(const Bus_status_callback& a_callback)
-{
-    Interrupt_guard guard;
-
-    if (nullptr != a_callback.function)
-    {
-        this->bus_status_callback = a_callback;
-        bit_flag::set(&(static_cast<SPI_TypeDef*>(*(this->p_SPI))->CR2), SPI_CR2_ERRIE);
-    }
-    else
-    {
-        bit_flag::clear(&(static_cast<SPI_TypeDef*>(*(this->p_SPI))->CR2), SPI_CR2_ERRIE);
-        this->bus_status_callback = { nullptr, nullptr };
-    }
-}
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc
+
+#endif
