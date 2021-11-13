@@ -14,7 +14,7 @@
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/m4/stm32l4/rcc.hpp>
+#include <soc/m4/stm32l4/Factory.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
@@ -52,12 +52,24 @@ public:
         std::uint16_t value = 0xFFFu;
     };
 
-public:
-    IWDG();
     ~IWDG();
 
     bool enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a_window, std::uint32_t a_timeout);
     void feed();
+
+private:
+    IWDG();
+
+    template<typename Periph_t, std::size_t id> friend class Factory;
+};
+
+template<> class Factory<IWDG> : private cml::Non_constructible
+{
+public:
+    static IWDG create()
+    {
+        return IWDG();
+    }
 };
 } // namespace stm32l4
 } // namespace m4
