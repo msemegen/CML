@@ -30,7 +30,10 @@ public:
     };
 
 public:
-    ~Interrupt();
+    ~Interrupt()
+    {
+        this->disable();
+    }
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
@@ -48,7 +51,14 @@ public:
     }
 
 private:
-    Interrupt(Basic_timer* a_p_timer, IRQn_Type a_irqn);
+    Interrupt(Basic_timer* a_p_timer, IRQn_Type a_irqn)
+        : p_timer(a_p_timer)
+        , irqn(a_irqn)
+    {
+    }
+
+    void set_irq_context();
+    void clear_irq_context();
 
     Basic_timer* p_timer;
     IRQn_Type irqn;

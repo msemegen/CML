@@ -15,7 +15,6 @@
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/Handle.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -28,14 +27,6 @@ namespace stm32l4 {
 class ADC : private cml::Non_copyable
 {
 public:
-    struct id : private cml::Non_constructible
-    {
-        constexpr static auto _1 = Handle<ADC1_BASE> {};
-#if defined(STM32L412xx) || defined(STM32L422xx)
-        constexpr static auto _2 = Handle<ADC2_BASE> {};
-#endif
-    };
-
     enum class Resolution : std::uint32_t
     {
         _6_bit  = ADC_CFGR_RES_1 | ADC_CFGR_RES_0,
@@ -51,22 +42,6 @@ public:
         std::uint16_t internal_voltage_reference = 0u;
     };
 
-public:
-    ADC(Handle<ADC1_BASE>)
-        : idx(0u)
-        , irqn { IRQn_Type::ADC1_IRQn }
-        , p_registers(ADC1)
-    {
-    }
-
-#if defined(STM32L412xx) || defined(STM32L422xx)
-    ADC(Handle<ADC2_BASE>)
-        : idx(1u)
-        , irqn { IRQn_Type::ADC1_2_IRQn }
-        , p_registers(ADC2)
-    {
-    }
-#endif
     ~ADC();
 
     void enable(Resolution a_resolution);
@@ -86,11 +61,6 @@ public:
         return this->idx;
     }
 
-    std::tuple<IRQn_Type> get_irqn() const
-    {
-        return this->irqn;
-    }
-
     operator ADC_TypeDef*()
     {
         return this->p_registers;
@@ -102,70 +72,17 @@ public:
     }
 
 private:
+    ADC(std::size_t a_idx, ADC_TypeDef* a_p_registers)
+        : idx(a_idx)
+        , p_registers(a_p_registers)
+    {
+    }
+
     const std::uint32_t idx;
-    const std::tuple<IRQn_Type> irqn;
     ADC_TypeDef* p_registers;
+
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
-
-template<> class rcc<ADC> : private cml::Non_constructible
-{
-public:
-    enum class Clock_source : std::uint32_t
-    {
-        PCLK,
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-        PLLSAI1
-#endif
-    };
-
-    enum class PCLK_prescaler : std::uint32_t
-    {
-        _1 = ADC_CCR_CKMODE_0,
-        _2 = ADC_CCR_CKMODE_1,
-        _4 = ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1
-    };
-
-    enum class PLLSAI1_prescaler : std::uint32_t
-    {
-        _1 = 0x0u,
-        _2,
-        _4,
-        _6,
-        _8,
-        _10,
-        _12,
-        _16,
-        _32,
-        _64,
-        _128,
-        _256
-    };
-
-    template<Clock_source source> static void enable(PCLK_prescaler a_prescaler, bool a_enable_in_lp)
-    {
-        static_assert(Clock_source::PCLK == source);
-    }
-
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-    template<Clock_source source> static void enable(PLLSAI1_prescaler a_prescaler, bool a_enable_in_lp)
-    {
-        static_assert(Clock_source::PLLSAI1 == source);
-    }
-#endif
-
-    static void disable();
-};
-
-template<>
-void rcc<ADC>::enable<rcc<ADC>::Clock_source::PCLK>(rcc<ADC>::PCLK_prescaler a_prescaler, bool a_enable_in_lp);
-
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-template<>
-void rcc<ADC>::enable<rcc<ADC>::Clock_source::PLLSAI1>(rcc<ADC>::PLLSAI1_prescaler a_prescaler, bool a_enable_in_lp);
-#endif
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

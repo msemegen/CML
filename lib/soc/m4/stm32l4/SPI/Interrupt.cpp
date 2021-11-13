@@ -150,6 +150,8 @@ void SPI_transmission_interrupt::RX::unregister_callback()
 
 void Interrupt<SPI_master>::enable(const IRQ_config& a_irq_config)
 {
+    this->set_irq_context();
+
     NVIC_SetPriority(
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
@@ -159,6 +161,8 @@ void Interrupt<SPI_master>::enable(const IRQ_config& a_irq_config)
 void Interrupt<SPI_master>::disable()
 {
     NVIC_DisableIRQ(this->irqn);
+
+    this->clear_irq_context();
 }
 
 void Interrupt<SPI_slave>::enable(const IRQ_config& a_irq_config)

@@ -206,7 +206,23 @@ public:
         friend Interrupt<I2C_master>;
     };
 
-    ~Interrupt();
+    ~Interrupt()
+    {
+        this->disable();
+    }
+
+    void enable()
+    {
+        this->set_irq_context();
+    }
+
+    void disable()
+    {
+        this->transmission.disable();
+        this->status.disable();
+
+        this->clear_irq_context();
+    }
 
     I2C_master* get_handle()
     {
@@ -221,7 +237,16 @@ public:
     Transmission transmission;
 
 private:
-    Interrupt(I2C_master* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn);
+    Interrupt(I2C_master* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
+        : Interrupt<I2C>(*a_p_I2C, a_er_irqn)
+        , transmission(*(this->get_handle()), a_ev_irqn)
+    {
+        this->p_tx = &(this->transmission.tx);
+        this->p_rx = &(this->transmission.rx);
+    }
+
+    void set_irq_context();
+    void clear_irq_context();
 
     I2C_master* p_I2C;
 
@@ -296,7 +321,23 @@ public:
         friend Interrupt<I2C_slave>;
     };
 
-    ~Interrupt();
+    ~Interrupt()
+    {
+        this->disable();
+    }
+
+    void enable()
+    {
+        this->set_irq_context();
+    }
+
+    void disable()
+    {
+        this->transmission.disable();
+        this->status.disable();
+
+        this->clear_irq_context();
+    }
 
     I2C_slave* get_handle()
     {
@@ -311,7 +352,16 @@ public:
     Transmission transmission;
 
 private:
-    Interrupt(I2C_slave* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn);
+    Interrupt(I2C_slave* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
+        : Interrupt<I2C>(*a_p_I2C, a_er_irqn)
+        , transmission(*(this->get_handle()), a_ev_irqn)
+    {
+        this->p_tx = &(this->transmission.tx);
+        this->p_rx = &(this->transmission.rx);
+    }
+
+    void set_irq_context();
+    void clear_irq_context();
 
     I2C_slave* p_I2C;
 

@@ -74,20 +74,13 @@ public:
         Sampling_time sampling_time = cml::various::get_enum_incorrect_value<Sampling_time>();
     };
 
-    struct Conversion_callback
+    struct Callback
     {
-        using Function = void (*)(std::uint16_t a_value, bool a_series_end, ADC* a_p_this, void* a_p_user_data);
+        using Function = void (*)(std::uint16_t a_value, bool a_series_end, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
-
-public:
-    Interrupt(ADC* a_p_adc, Handle<ADC1_BASE>)
-        : p_adc(a_p_adc)
-        , irqn(IRQn_Type::ADC1_2_IRQn)
-    {
-    }
 
     ~Interrupt()
     {
@@ -102,7 +95,7 @@ public:
         this->enable(a_irq_config, a_channels.data(), a_channels.size());
     }
 
-    void register_callack(Mode a_mode, const Conversion_callback& a_callback);
+    void register_callack(Mode a_mode, const Callback& a_callback);
 
     ADC* get_handle()
     {
@@ -115,16 +108,24 @@ public:
     }
 
 private:
+    Interrupt(ADC* a_p_adc, IRQn_Type a_irqn)
+        : p_adc(a_p_adc)
+        , irqn(a_irqn)
+    {
+    }
+
     void enable(const IRQ_config& a_irq_config, const Channel* a_p_channels, std::size_t a_channels_count);
 
-private:
+    void set_irq_context();
+    void clear_irq_context();
+
     ADC* p_adc;
     IRQn_Type irqn;
 
-    Conversion_callback conversion_callback;
+    Callback callback;
 
-private:
-    friend void adc_interrupt_handler(Interrupt<ADC>* a_p_this);
+    template<typename Periph_t, std::size_t id> friend class Factory;
+    friend void ADC_interrupt_handler(Interrupt<ADC>* a_p_this);
 };
 } // namespace stm32l4
 } // namespace m4

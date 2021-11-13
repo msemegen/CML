@@ -20,8 +20,8 @@ using namespace soc::m4::stm32l4;
 
 Interrupt<Basic_timer>* irq_context[] = { nullptr
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-                                     ,
-                                     nullptr
+                                          ,
+                                          nullptr
 #endif
 };
 
@@ -48,28 +48,18 @@ namespace soc {
 namespace m4 {
 namespace stm32l4 {
 using namespace cml;
-Interrupt<Basic_timer>::Interrupt(Basic_timer* a_p_timer, IRQn_Type a_irqn)
-    : p_timer(a_p_timer)
-    , irqn(a_irqn)
+
+void Interrupt<Basic_timer>::set_irq_context()
 {
     cml_assert(nullptr == irq_context[this->p_timer->get_idx()]);
     irq_context[this->p_timer->get_idx()] = this;
 }
 
-Interrupt<Basic_timer>::~Interrupt()
+void Interrupt<Basic_timer>::clear_irq_context()
 {
     cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
 
-    this->disable();
-
-    for (std::size_t i = 0; i < std::extent<decltype(irq_context)>::value; i++)
-    {
-        if (static_cast<Interrupt<Basic_timer>*>(this) == irq_context[i])
-        {
-            irq_context[i] = nullptr;
-            break;
-        }
-    }
+    irq_context[this->p_timer->get_idx()] = nullptr;
 }
 
 template<> void rcc<Basic_timer, 6>::enable(bool a_enable_in_lp)

@@ -111,56 +111,32 @@ namespace m4 {
 namespace stm32l4 {
 using namespace cml;
 
-Interrupt<I2C_master>::Interrupt(I2C_master* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
-    : Interrupt<I2C>(*a_p_I2C, a_er_irqn)
-    , transmission(*(this->get_handle()), a_ev_irqn)
+void Interrupt<I2C_master>::set_irq_context()
 {
-    this->p_tx = &(this->transmission.tx);
-    this->p_rx = &(this->transmission.rx);
-
     cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
 
     irq_context[this->get_handle()->get_idx()] = this;
 }
 
-Interrupt<I2C_master>::~Interrupt()
+void Interrupt<I2C_master>::clear_irq_context()
 {
     cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
 
-    for (std::size_t i = 0; i < std::extent<decltype(irq_context)>::value; i++)
-    {
-        if (static_cast<Interrupt<I2C>*>(this) == irq_context[i])
-        {
-            irq_context[i] = nullptr;
-            break;
-        }
-    }
+    irq_context[this->get_handle()->get_idx()] = nullptr;
 }
 
-Interrupt<I2C_slave>::Interrupt(I2C_slave* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
-    : Interrupt<I2C>(*a_p_I2C, a_er_irqn)
-    , transmission(*(this->get_handle()), a_ev_irqn)
+void Interrupt<I2C_slave>::set_irq_context()
 {
-    this->p_tx = &(this->transmission.tx);
-    this->p_rx = &(this->transmission.rx);
-
     cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
 
     irq_context[this->get_handle()->get_idx()] = this;
 }
 
-Interrupt<I2C_slave>::~Interrupt()
+void Interrupt<I2C_slave>::clear_irq_context()
 {
     cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
 
-    for (std::size_t i = 0; i < std::extent<decltype(irq_context)>::value; i++)
-    {
-        if (static_cast<Interrupt<I2C>*>(this) == irq_context[i])
-        {
-            irq_context[i] = nullptr;
-            break;
-        }
-    }
+    irq_context[this->get_handle()->get_idx()] = nullptr;
 }
 
 template<> template<> void rcc<I2C, 1>::enable<rcc<I2C, 1>::Clock_source::HSI>(bool a_lp_enable)

@@ -160,7 +160,10 @@ protected:
 template<> class Interrupt<SPI_master> : public Interrupt<SPI>
 {
 public:
-    ~Interrupt();
+    ~Interrupt()
+    {
+        this->disable();
+    }
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
@@ -176,7 +179,14 @@ public:
     }
 
 private:
-    Interrupt(SPI_master* a_p_SPI, IRQn_Type a_irqn);
+    Interrupt(SPI_master* a_p_SPI, IRQn_Type a_irqn)
+        : Interrupt<SPI>(*a_p_SPI, a_irqn)
+        , p_SPI(a_p_SPI)
+    {
+    }
+
+    void set_irq_context();
+    void clear_irq_context();
 
     SPI_master* p_SPI;
 
@@ -186,7 +196,10 @@ private:
 template<> class Interrupt<SPI_slave> : private Interrupt<SPI>
 {
 public:
-    ~Interrupt();
+    ~Interrupt()
+    {
+        this->disable();
+    }
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
@@ -202,7 +215,14 @@ public:
     }
 
 private:
-    Interrupt(SPI_slave* a_p_SPI, IRQn_Type a_irqn);
+    Interrupt(SPI_slave* a_p_SPI, IRQn_Type a_irqn)
+        : Interrupt<SPI>(*a_p_SPI, a_irqn)
+        , p_SPI(a_p_SPI)
+    {
+    }
+
+    void set_irq_context();
+    void clear_irq_context();
 
     SPI_slave* p_SPI;
 

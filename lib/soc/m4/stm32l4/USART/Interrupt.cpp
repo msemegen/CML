@@ -79,6 +79,8 @@ void USART_interrupt_handler(Interrupt<USART>* a_p_this)
 
 void Interrupt<USART>::enable(const IRQ_config& a_irq_config)
 {
+    this->set_irq_context();
+
     NVIC_SetPriority(
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
@@ -88,6 +90,8 @@ void Interrupt<USART>::enable(const IRQ_config& a_irq_config)
 void Interrupt<USART>::disable()
 {
     NVIC_DisableIRQ(this->irqn);
+
+    this->clear_irq_context();
 }
 
 void Interrupt<USART>::Transmission::TX::register_callback(const Callback& a_callback)
@@ -215,6 +219,8 @@ void RS485_interrupt_handler(Interrupt<RS485>* a_p_this)
 
 void Interrupt<RS485>::enable(const IRQ_config& a_irq_config)
 {
+    this->set_irq_context();
+
     NVIC_SetPriority(
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
@@ -224,6 +230,8 @@ void Interrupt<RS485>::enable(const IRQ_config& a_irq_config)
 void Interrupt<RS485>::disable()
 {
     NVIC_DisableIRQ(this->irqn);
+
+    this->clear_irq_context();
 }
 
 void Interrupt<RS485>::Transmission::TX::register_callback(const Callback& a_callback,

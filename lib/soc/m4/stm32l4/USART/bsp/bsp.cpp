@@ -124,58 +124,32 @@ namespace m4 {
 namespace stm32l4 {
 using namespace cml;
 
-Interrupt<USART>::Interrupt(USART* a_p_USART, IRQn_Type a_irqn)
-    : transmission(*a_p_USART)
-    , status(*a_p_USART)
-    , p_USART(a_p_USART)
-    , irqn(a_irqn)
+void Interrupt<USART>::set_irq_context()
 {
     cml_assert(nullptr == irq_context[this->p_USART->get_idx()].p_general);
 
     irq_context[this->p_USART->get_idx()] = { this, Interrupt_context::Mode::USART };
 }
 
-Interrupt<USART>::~Interrupt()
+void Interrupt<USART>::clear_irq_context()
 {
     cml_assert(nullptr != irq_context[this->p_USART->get_idx()].p_general);
 
-    this->disable();
-
-    for (std::size_t i = 0; i < std::extent<decltype(irq_context)>::value; i++)
-    {
-        if (static_cast<Interrupt<USART>*>(this) == irq_context[i].p_USART)
-        {
-            irq_context[i].p_general = nullptr;
-            break;
-        }
-    }
+    irq_context[this->p_USART->get_idx()] = { nullptr, various::get_enum_incorrect_value<Interrupt_context::Mode>() };
 }
 
-Interrupt<RS485>::Interrupt(RS485* a_p_RS485, IRQn_Type a_irqn)
-    : transmission(*a_p_RS485)
-    , status(*a_p_RS485)
-    , p_RS485(a_p_RS485)
-    , irqn(a_irqn)
+void Interrupt<RS485>::set_irq_context()
 {
     cml_assert(nullptr == irq_context[this->p_RS485->get_idx()].p_general);
 
-    irq_context[this->p_RS485->get_idx()] = { this, Interrupt_context::Mode::USART };
+    irq_context[this->p_RS485->get_idx()] = { this, Interrupt_context::Mode::RS485 };
 }
 
-Interrupt<RS485>::~Interrupt()
+void Interrupt<RS485>::clear_irq_context()
 {
     cml_assert(nullptr != irq_context[this->p_RS485->get_idx()].p_general);
 
-    this->disable();
-
-    for (std::size_t i = 0; i < std::extent<decltype(irq_context)>::value; i++)
-    {
-        if (static_cast<Interrupt<RS485>*>(this) == irq_context[i].p_RS485)
-        {
-            irq_context[i].p_general = nullptr;
-            break;
-        }
-    }
+    irq_context[this->p_RS485->get_idx()] = { nullptr, various::get_enum_incorrect_value<Interrupt_context::Mode>() };
 }
 
 template<> template<> void rcc<USART, 1u>::enable<rcc<USART, 1u>::Clock_source::HSI>(bool a_enable_in_lp)

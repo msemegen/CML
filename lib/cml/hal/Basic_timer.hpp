@@ -8,7 +8,7 @@
  */
 
 #ifdef STM32L4
-#include <soc/m4/stm32l4/Basic_timer/Basic_timer.hpp>
+#include <soc/m4/stm32l4/Basic_timer/bsp/bsp.hpp>
 #endif
 
 namespace cml {

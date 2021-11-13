@@ -14,25 +14,18 @@
 #include <soc/Interrupt_guard.hpp>
 
 // cml
+#include "..\I2C\Interrupt.hpp"
 #include "..\RNG\Interrupt.hpp"
+#include "..\SPI\Interrupt.hpp"
 
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 #include <cml/utils/delay.hpp>
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
-#include "..\I2C\Interrupt.hpp"
-#include "..\SPI\Interrupt.hpp"
 
 namespace {
-
 using namespace soc::m4::stm32l4;
-
-Interrupt<ADC>* adcs[] = { nullptr,
-#if defined(STM32L412xx) || defined(STM32L422xx)
-                           nullptr
-#endif
-};
 
 bool is_channel(Interrupt<ADC>::Channel::Id a_type,
                 const Interrupt<ADC>::Channel* a_p_channels,
@@ -47,34 +40,7 @@ bool is_channel(Interrupt<ADC>::Channel::Id a_type,
 
     return found;
 }
-
 } // namespace
-
-extern "C" {
-
-#if defined(STM32L412xx) || defined(STM32L422xx)
-void ADC1_2_IRQHandler()
-{
-    cml_assert(nullptr != adcs[0] || nullptr != adcs[1]);
-
-    if (nullptr != adcs[0])
-    {
-        adc_interrupt_handler(adcs[0]);
-    }
-
-    if (nullptr != adcs[1])
-    {
-        adc_interrupt_handler(adcs[1]);
-    }
-}
-#else
-void ADC1_IRQHandler()
-{
-    cml_assert(nullptr != adcs[0]);
-    adc_interrupt_handler(adcs[0]);
-}
-#endif
-}
 
 namespace soc {
 namespace m4 {
@@ -83,7 +49,7 @@ namespace stm32l4 {
 using namespace cml;
 using namespace cml::utils;
 
-void adc_interrupt_handler(Interrupt<ADC>* a_p_this)
+void ADC_interrupt_handler(Interrupt<ADC>* a_p_this)
 {
     cml_assert(nullptr != a_p_this);
 
@@ -95,8 +61,7 @@ void adc_interrupt_handler(Interrupt<ADC>* a_p_this)
     {
         const bool series_end = bit_flag::is(isr, ADC_ISR_EOS);
 
-        a_p_this->conversion_callback.function(
-            p_registers->DR, series_end, a_p_this->p_adc, a_p_this->conversion_callback.p_user_data);
+        a_p_this->callback.function(p_registers->DR, series_end, a_p_this->callback.p_user_data);
 
         if (true == series_end)
         {
@@ -128,10 +93,10 @@ void Interrupt<ADC>::disable()
     bit_flag::clear(&(ADC1_COMMON->CCR), ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN);
 #endif
 
-    adcs[p_adc->get_idx()] = nullptr;
+    this->clear_irq_context();
 }
 
-void Interrupt<ADC>::register_callack(Mode a_mode, const Conversion_callback& a_callback)
+void Interrupt<ADC>::register_callack(Mode a_mode, const Callback& a_callback)
 {
     cml_assert((Mode::none != a_mode && nullptr != a_callback.function) ||
                (Mode::none == a_mode && nullptr == a_callback.function));
@@ -142,7 +107,7 @@ void Interrupt<ADC>::register_callack(Mode a_mode, const Conversion_callback& a_
 
     if (nullptr != a_callback.function)
     {
-        this->conversion_callback = a_callback;
+        this->callback = a_callback;
 
         bit_flag::set(&(p_registers->CFGR), ADC_CFGR_CONT, static_cast<uint32_t>(a_mode));
         bit_flag::set(&(p_registers->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
@@ -155,7 +120,7 @@ void Interrupt<ADC>::register_callack(Mode a_mode, const Conversion_callback& a_
         bit_flag::clear(&(p_registers->IER), ADC_IER_EOCIE | ADC_IER_EOSIE);
         bit_flag::clear(&(p_registers->CR), ADC_CR_ADSTART);
 
-        this->conversion_callback = a_callback;
+        this->callback = a_callback;
     }
 }
 
@@ -226,7 +191,7 @@ void Interrupt<ADC>::enable(const IRQ_config& a_irq_config, const Channel* a_p_c
 #endif
     }
 
-    adcs[this->p_adc->get_idx()] = this;
+    this->set_irq_context();
 
     NVIC_SetPriority(
         this->irqn,

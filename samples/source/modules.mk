@@ -22,6 +22,7 @@ CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS)                            \
                     $(CML_ROOT)/lib/soc/m4                         \
                     $(CML_ROOT)/lib/soc/m4/stm32l4                 \
                     $(CML_ROOT)/lib/soc/m4/stm32l4/ADC             \
+                    $(CML_ROOT)/lib/soc/m4/stm32l4/ADC/bsp         \
                     $(CML_ROOT)/lib/soc/m4/stm32l4/Basic_timer     \
                     $(CML_ROOT)/lib/soc/m4/stm32l4/Basic_timer/bsp \
                     $(CML_ROOT)/lib/soc/m4/stm32l4/CRC32           \

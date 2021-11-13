@@ -147,7 +147,16 @@ public:
     Status status;
 
 private:
-    Interrupt(USART* a_p_USART, IRQn_Type a_irqn);
+    Interrupt(USART* a_p_USART, IRQn_Type a_irqn)
+        : transmission(*a_p_USART)
+        , status(*a_p_USART)
+        , p_USART(a_p_USART)
+        , irqn(a_irqn)
+    {
+    }
+
+    void set_irq_context();
+    void clear_irq_context();
 
     USART* p_USART;
     const IRQn_Type irqn;
@@ -273,7 +282,10 @@ public:
     };
 
 public:
-    ~Interrupt();
+    ~Interrupt()
+    {
+        this->disable();
+    }
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
@@ -292,7 +304,16 @@ public:
     Status status;
 
 private:
-    Interrupt(RS485* a_p_RS485, IRQn_Type a_irqn);
+    Interrupt(RS485* a_p_RS485, IRQn_Type a_irqn)
+        : transmission(*a_p_RS485)
+        , status(*a_p_RS485)
+        , p_RS485(a_p_RS485)
+        , irqn(a_irqn)
+    {
+    }
+
+    void set_irq_context();
+    void clear_irq_context();
 
     RS485* p_RS485;
     IRQn_Type irqn;

@@ -94,44 +94,6 @@ void ADC::disable()
 
     bit_flag::set(&(this->p_registers->CR), ADC_CR_DEEPPWD);
 }
-
-template<>
-void rcc<ADC>::enable<rcc<ADC>::Clock_source::PCLK>(rcc<ADC>::PCLK_prescaler a_prescaler, bool a_enable_in_lp)
-{
-    bit_flag::set(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
-
-#if defined(STM32L412xx) || defined(STM32L422xx)
-    bit_flag::set(&(ADC12_COMMON->CCR), ADC_CCR_CKMODE_Msk, static_cast<std::uint32_t>(a_prescaler) << 16ul);
-#else
-    bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE_Msk, static_cast<std::uint32_t>(a_prescaler));
-#endif
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_ADCSMEN);
-    }
-}
-
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
-template<>
-void rcc<ADC>::enable<rcc<ADC>::Clock_source::PLLSAI1>(rcc<ADC>::PLLSAI1_prescaler a_prescaler, bool a_enable_in_lp)
-{
-    bit_flag::clear(&(ADC1_COMMON->CCR), ADC_CCR_CKMODE_Msk);
-    bit_flag::set(&(ADC1_COMMON->CCR), ADC_CCR_PRESC_Msk, static_cast<std::uint32_t>(a_prescaler) << 18ul);
-
-    if (true == a_enable_in_lp)
-    {
-        bit_flag::set(&(RCC->AHB2SMENR), RCC_AHB2SMENR_ADCSMEN);
-    }
-}
-#endif
-
-void rcc<ADC>::disable()
-{
-    bit_flag::clear(&(RCC->AHB2ENR), RCC_AHB2ENR_ADCEN);
-    bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_ADCSMEN);
-}
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

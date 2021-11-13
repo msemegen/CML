@@ -137,6 +137,8 @@ int main()
         i2cit.transmission.enable({});
         i2cit.transmission.tx.register_callback(0, 0, {});
 
+        i2cit.enable();
+
         i2cit2.transmission.enable({});
         i2cit2.transmission.rx.register_callback({});
         i2cit2.transmission.tx.register_callback({});

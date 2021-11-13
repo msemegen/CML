@@ -30,6 +30,8 @@ void basic_timer_interrupt_handler(Interrupt<Basic_timer>* a_p_this)
 
 void Interrupt<Basic_timer>::enable(const IRQ_config& a_irq_config)
 {
+    this->set_irq_context();
+
     NVIC_SetPriority(
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
@@ -39,6 +41,8 @@ void Interrupt<Basic_timer>::enable(const IRQ_config& a_irq_config)
 void Interrupt<Basic_timer>::disable()
 {
     NVIC_DisableIRQ(this->irqn);
+
+    this->clear_irq_context();
 }
 
 void Interrupt<Basic_timer>::register_callback(const Callback& a_callback)
