@@ -15,7 +15,6 @@
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/Handle.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -29,14 +28,6 @@ namespace stm32l4 {
 class Basic_timer : private cml::Non_copyable
 {
 public:
-    struct id : private cml::Non_constructible
-    {
-        static constexpr auto _6 = Handle<TIM6_BASE> {};
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-        static constexpr auto _7 = Handle<TIM7_BASE> {};
-#endif
-    };
-
     struct Enable_config
     {
         enum class Mode : std::uint32_t
@@ -58,21 +49,6 @@ public:
         std::uint16_t auto_reload = 0u;
     };
 
-public:
-    Basic_timer(Handle<TIM6_BASE>)
-        : idx(0u)
-        , irqn { IRQn_Type::TIM6_IRQn }
-        , p_registers(TIM6)
-    {
-    }
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-    Basic_timer(Handle<TIM7_BASE>)
-        : idx(1u)
-        , irqn { IRQn_Type::TIM7_IRQn }
-        , p_registers(TIM7)
-    {
-    }
-#endif
     ~Basic_timer()
     {
         this->stop();
@@ -101,25 +77,24 @@ public:
     }
 
 private:
+    Basic_timer(std::size_t a_idx, TIM_TypeDef* a_p_registers)
+        : idx(0u)
+        , p_registers(a_p_registers)
+    {
+    }
+
     const std::uint32_t idx;
-    const std::tuple<IRQn_Type> irqn;
     TIM_TypeDef* p_registers;
+
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
 
-template<> class rcc<Basic_timer> : private cml::Non_constructible
+template<std::size_t id> class rcc<Basic_timer, id> : private cml::Non_constructible
 {
 public:
-    template<std::uint32_t peripheral_base_address>
-    static void enable(Handle<peripheral_base_address>, bool a_enable_in_lp)                             = delete;
-    template<std::uint32_t peripheral_base_address> static void disable(Handle<peripheral_base_address>) = delete;
+    static void enable(bool a_enable_in_lp) = delete;
+    static void disable()                   = delete;
 };
-
-template<> void rcc<Basic_timer>::enable<TIM6_BASE>(Handle<TIM6_BASE>, bool a_enable_in_lp);
-template<> void rcc<Basic_timer>::disable<TIM6_BASE>(Handle<TIM6_BASE>);
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-template<> void rcc<Basic_timer>::enable<TIM7_BASE>(Handle<TIM7_BASE>, bool a_enable_in_lp);
-template<> void rcc<Basic_timer>::disable<TIM7_BASE>(Handle<TIM7_BASE>);
-#endif
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

@@ -40,7 +40,6 @@ public:
         std::size_t data_length_in_words = 0;
     };
 
-public:
     Result transmit(const void* a_p_data, std::size_t a_data_size_in_words);
     Result transmit(const void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout_ms);
 
@@ -63,7 +62,6 @@ private:
     {
     }
 
-private:
     USART* p_usart;
 
 private:
@@ -88,7 +86,6 @@ public:
         std::size_t data_length_in_words = 0;
     };
 
-public:
     Result transmit(std::uint8_t a_address, const void* a_p_data, std::size_t a_data_size_in_words);
     Result transmit(std::uint8_t a_address,
                     const void* a_p_data,
@@ -105,11 +102,9 @@ private:
     {
     }
 
-private:
     RS485* p_RS485;
     GPIO::Out::Pin* p_flow_control_pin;
 
-private:
     template<typename Periph_t, std::size_t id> friend class Factory;
 };
 

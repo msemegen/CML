@@ -24,6 +24,7 @@
 #include <cml/hal/I2C.hpp>
 #include <cml/hal/Interrupt.hpp>
 #include <cml/hal/SPI.hpp>
+#include <cml/hal/CRC32.hpp>
 
 namespace {
 using namespace cml::hal;
@@ -37,12 +38,12 @@ void assert_halt(void*)
 
 void assert_print(const char*, uint32_t, const char*, void*) {}
 
-void usart_callback(std::uint32_t a_data, bool a_idle, void* a_p_user_data)
-{
-    GPIO::Out::Pin* p_led_pin = reinterpret_cast<GPIO::Out::Pin*>(a_p_user_data);
-
-    p_led_pin->toggle_level();
-}
+//void usart_callback(std::uint32_t a_data, bool a_idle, void* a_p_user_data)
+//{
+//    GPIO::Out::Pin* p_led_pin = reinterpret_cast<GPIO::Out::Pin*>(a_p_user_data);
+//
+//    p_led_pin->toggle_level();
+//}
 } // namespace
 
 int main()
@@ -151,6 +152,11 @@ int main()
 
         spi_it.enable({});
         spi_it.status.register_callback({});
+
+        rcc<CRC32>::enable(false);
+
+        CRC32 crc32 = Factory<CRC32>::create();
+       
 
         //soc::m4::stm32l4::Interrupt<soc::m4::stm32l4::GPIO> gpioit =
         //    soc::m4::stm32l4::Factory<soc::m4::stm32l4::Interrupt<soc::m4::stm32l4::GPIO>>::create<

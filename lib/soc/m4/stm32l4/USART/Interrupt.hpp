@@ -256,7 +256,6 @@ public:
             void* p_user_data = nullptr;
         };
 
-    public:
         void register_callback(const Callback& a_callback);
         void unregister_callback();
 
@@ -266,7 +265,6 @@ public:
         {
         }
 
-    private:
         USART_TypeDef* p_registers;
         Callback callback;
 
@@ -299,7 +297,6 @@ private:
     RS485* p_RS485;
     IRQn_Type irqn;
 
-private:
     template<typename Periph_t, std::size_t id> friend class Factory;
 };
 

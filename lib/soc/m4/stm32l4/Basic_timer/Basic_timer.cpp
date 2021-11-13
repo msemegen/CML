@@ -48,40 +48,6 @@ void Basic_timer::stop()
 {
     bit_flag::clear(&(this->p_registers->CR1), TIM_CR1_CEN);
 }
-
-template<> void rcc<Basic_timer>::enable<TIM6_BASE>(Handle<TIM6_BASE>, bool a_enable_in_lp)
-{
-    bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM6EN_Pos);
-
-    if (true == a_enable_in_lp)
-    {
-        bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_TIM6SMEN_Pos);
-    }
-}
-
-template<> void rcc<Basic_timer>::disable<TIM6_BASE>(Handle<TIM6_BASE>)
-{
-    bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM6EN_Pos);
-    bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_TIM6SMEN_Pos);
-}
-
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-template<> void rcc<Basic_timer>::enable<TIM7_BASE>(Handle<TIM7_BASE>, bool a_enable_in_lp)
-{
-    bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM6EN_Pos);
-
-    if (true == a_enable_in_lp)
-    {
-        bit::set(&(RCC->APB1SMENR1), RCC_APB1SMENR1_TIM6SMEN_Pos);
-    }
-}
-
-template<> void rcc<Basic_timer>::disable<TIM7_BASE>(Handle<TIM7_BASE>)
-{
-    bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_TIM7EN_Pos);
-    bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_TIM7SMEN_Pos);
-}
-#endif
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

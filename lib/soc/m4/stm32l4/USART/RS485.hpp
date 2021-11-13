@@ -47,7 +47,6 @@ public:
         std::uint8_t address        = 0;
     };
 
-public:
     ~RS485()
     {
         this->disable();
@@ -78,11 +77,9 @@ private:
     {
     }
 
-private:
     const std::uint32_t idx;
     USART_TypeDef* p_registers;
 
-private:
     template<typename Periph_t, std::size_t id> friend class Factory;
 };
 } // namespace stm32l4

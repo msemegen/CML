@@ -92,7 +92,6 @@ public:
         Parity parity           = cml::various::get_enum_incorrect_value<Parity>();
     };
 
-public:
     ~USART();
 
     bool enable(const Enable_config& a_config, const Frame_format& frame_format, std::uint32_t a_timeout_ms);
@@ -123,11 +122,9 @@ private:
     {
     }
 
-private:
     const std::uint32_t idx;
     USART_TypeDef* p_registers;
 
-private:
     template<typename Periph_t, std::size_t id> friend class Factory;
 };
 

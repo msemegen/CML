@@ -16,35 +16,6 @@
 // soc
 #include <soc/Interrupt_guard.hpp>
 
-namespace {
-
-using namespace soc::m4::stm32l4;
-
-Interrupt<Basic_timer>* timers[] = { nullptr
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-                                     ,
-                                     nullptr
-#endif
-};
-
-} // namespace
-
-extern "C" {
-
-void TIM6_DAC_IRQHandler()
-{
-    cml_assert(nullptr != timers[0]);
-    basic_timer_interrupt_handler(timers[0]);
-}
-
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
-void TIM7_IRQHandler()
-{
-    cml_assert(nullptr != timers[1]);
-    basic_timer_interrupt_handler(timers[1]);
-}
-#endif
-}
 
 namespace soc {
 namespace m4 {
@@ -63,23 +34,19 @@ void Interrupt<Basic_timer>::enable(const IRQ_config& a_irq_config)
         this->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
     NVIC_EnableIRQ(this->irqn);
-
-    timers[this->p_timer->get_idx()] = this;
 }
 
 void Interrupt<Basic_timer>::disable()
 {
     NVIC_DisableIRQ(this->irqn);
-    timers[this->p_timer->get_idx()] = nullptr;
 }
 
-void Interrupt<Basic_timer>::register_callback(const Overload_callback& a_callback)
+void Interrupt<Basic_timer>::register_callback(const Callback& a_callback)
 {
     Interrupt_guard guard;
 
     static_cast<TIM_TypeDef*>(*(this->p_timer))->DIER = TIM_DIER_UIE;
 }
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

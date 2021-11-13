@@ -21,7 +21,7 @@ namespace stm32l4 {
 template<> class Interrupt<Basic_timer> : private cml::Non_copyable
 {
 public:
-    struct Overload_callback
+    struct Callback
     {
         using Function = void (*)(Basic_timer* p_this, void* a_p_user_data);
 
@@ -30,20 +30,12 @@ public:
     };
 
 public:
-    Interrupt(Basic_timer* a_p_timer)
-        : p_timer(a_p_timer)
-    {
-    }
-
-    ~Interrupt()
-    {
-        this->disable();
-    }
+    ~Interrupt();
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
 
-    void register_callback(const Overload_callback& a_callback);
+    void register_callback(const Callback& a_callback);
 
     Basic_timer* get_handle()
     {
@@ -56,12 +48,14 @@ public:
     }
 
 private:
+    Interrupt(Basic_timer* a_p_timer, IRQn_Type a_irqn);
+
     Basic_timer* p_timer;
     IRQn_Type irqn;
 
-    Overload_callback callback;
+    Callback callback;
 
-private:
+    template<typename Periph_t, std::size_t id> friend class Factory;
     friend void basic_timer_interrupt_handler(Interrupt<Basic_timer>* a_p_this);
 };
 } // namespace stm32l4

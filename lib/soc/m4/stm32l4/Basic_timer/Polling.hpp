@@ -12,8 +12,8 @@
 #include <soc/m4/stm32l4/Polling.hpp>
 
 // cml
-#include <cml/bit.hpp>
 #include <cml/Non_copyable.hpp>
+#include <cml/bit.hpp>
 
 namespace soc {
 namespace m4 {
@@ -21,18 +21,20 @@ namespace stm32l4 {
 template<> class Polling<Basic_timer> : private cml::Non_copyable
 {
 public:
-    Polling(Basic_timer* a_p_timer)
-        : p_timer(a_p_timer)
-    {
-    }
-
     bool is_overload() const
     {
         return cml::bit::is(static_cast<TIM_TypeDef*>(*(this->p_timer))->CNT, 31u);
     }
 
 private:
+    Polling(Basic_timer* a_p_timer)
+        : p_timer(a_p_timer)
+    {
+    }
+
     Basic_timer* p_timer;
+
+    template<typename Periph_t, std::size_t id> friend class Factory;
 };
 } // namespace stm32l4
 } // namespace m4
