@@ -39,7 +39,6 @@ public:
         std::size_t data_length_in_words = 0;
     };
 
-public:
     Polling(SPI_master* a_p_SPI_master)
         : p_SPI(a_p_SPI_master)
     {
@@ -90,7 +89,6 @@ public:
         std::size_t data_length_in_words = 0;
     };
 
-public:
     Polling(SPI_slave* p_SPI_slave)
         : p_SPI(p_SPI_slave)
     {

@@ -42,13 +42,10 @@ WWDG::~WWDG()
     created = false;
 }
 
-void WWDG::enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window, uint16_t a_irq_priority)
+void WWDG::enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window)
 {
     WWDG_T->CR  = (WWDG_CR_WDGA | a_reload);
     WWDG_T->CFR = static_cast<uint32_t>(a_prescaler) | a_window;
-
-    NVIC_SetPriority(WWDG_IRQn, a_irq_priority);
-    NVIC_EnableIRQ(WWDG_IRQn);
 
     this->reload = a_reload;
 }

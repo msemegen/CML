@@ -16,6 +16,7 @@
 // soc
 #include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
+#include <soc/m4/stm32l4/IRQ_config.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
@@ -38,10 +39,9 @@ public:
         _8 = WWDG_CFR_WDGTB_0 | WWDG_CFR_WDGTB_1
     };
 
-public:
     ~WWDG();
 
-    void enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window, uint16_t a_irq_priority);
+    void enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window);
     void feed();
 
 private:

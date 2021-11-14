@@ -30,7 +30,6 @@ public:
         void* p_user_data = nullptr;
     };
 
-public:
     ~Interrupt()
     {
         this->disable();

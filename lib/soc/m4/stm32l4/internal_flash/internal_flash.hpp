@@ -51,7 +51,6 @@ public:
         prefetech    = FLASH_ACR_PRFTEN
     };
 
-public:
     static void set_cache_mode(Cache_mode_flag a_mode)
     {
         cml::bit_flag::set(

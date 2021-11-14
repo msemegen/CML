@@ -10,7 +10,7 @@
 namespace cml {
 class Non_copyable
 {
-public:
+protected:
     Non_copyable(const Non_copyable&) = delete;
     Non_copyable& operator=(const Non_copyable&) = delete;
 

@@ -89,7 +89,6 @@ public:
         friend void SPI_interrupt_handler(SPI_transmission_interrupt::RX* a_p_this);
     };
 
-public:
     TX tx;
     RX rx;
 

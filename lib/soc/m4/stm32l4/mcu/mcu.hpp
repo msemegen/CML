@@ -39,7 +39,6 @@ public:
         const uint32_t type             = 0;
     };
 
-public:
     static void halt()
     {
         __disable_irq();
@@ -370,7 +369,6 @@ public:
         APB2 apb2 = cml::various::get_enum_incorrect_value<APB2>();
     };
 
-public:
     template<Clock clock> static void enable_clock(MSI_frequency a_freq)
     {
         static_assert(Clock::MSI == clock);

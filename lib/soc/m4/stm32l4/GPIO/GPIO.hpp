@@ -126,7 +126,6 @@ public:
 
         friend GPIO;
     };
-
     class In : private cml::Non_copyable
     {
     public:
@@ -182,7 +181,6 @@ public:
 
         friend GPIO;
     };
-
     class Analog : private cml::Non_copyable
     {
     public:
@@ -237,7 +235,6 @@ public:
 
         friend GPIO;
     };
-
     class Alternate_function : cml::Non_copyable
     {
     public:
@@ -314,7 +311,6 @@ public:
         friend GPIO;
     };
 
-public:
     ~GPIO()
     {
         this->disable();

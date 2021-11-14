@@ -8,7 +8,6 @@
  */
 
 namespace cml {
-
 class Non_constructible
 {
 protected:
@@ -19,5 +18,4 @@ protected:
     Non_constructible& operator=(const Non_constructible&) = delete;
     Non_constructible& operator=(Non_constructible&&) = delete;
 };
-
 } // namespace cml

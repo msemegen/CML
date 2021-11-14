@@ -50,7 +50,6 @@ public:
         uint32_t words     = 0;
     };
 
-public:
     static Result write(uint32_t a_address, const uint64_t* a_p_data, uint32_t a_size_in_double_words, Mode a_mode);
     static Result write(uint32_t a_address,
                         const uint64_t* a_p_data,

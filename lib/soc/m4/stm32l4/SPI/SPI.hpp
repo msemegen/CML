@@ -72,7 +72,6 @@ public:
         Bit_significance bit_significance = cml::various::get_enum_incorrect_value<Bit_significance>();
     };
 
-public:
     std::uint32_t get_idx() const
     {
         return this->idx;
@@ -95,7 +94,6 @@ protected:
     {
     }
 
-protected:
     const std::uint32_t idx;
     SPI_TypeDef* p_registers;
 };
@@ -160,7 +158,6 @@ private:
     {
     }
 
-private:
     template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
@@ -199,7 +196,6 @@ public:
         Crc crc                         = cml::various::get_enum_incorrect_value<Crc>();
     };
 
-public:
     ~SPI_slave()
     {
         this->disable();

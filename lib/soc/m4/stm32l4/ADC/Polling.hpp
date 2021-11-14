@@ -71,7 +71,6 @@ public:
         Sampling_time sampling_time = cml::various::get_enum_incorrect_value<Sampling_time>();
     };
 
-public:
     Polling(ADC* a_p_adc)
         : p_adc(a_p_adc)
     {
@@ -113,7 +112,6 @@ private:
     void read(Mode a_mode, uint16_t* a_p_buffer, std::size_t a_buffer_capacity);
     bool read(Mode a_mode, uint16_t* a_p_buffer, std::size_t a_buffer_capacity, uint32_t a_timeout);
 
-private:
     ADC* p_adc;
 };
 } // namespace stm32l4

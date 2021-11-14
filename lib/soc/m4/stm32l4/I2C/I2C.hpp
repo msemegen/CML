@@ -49,7 +49,6 @@ protected:
     {
     }
 
-protected:
     const std::uint32_t idx;
     I2C_TypeDef* p_registers;
 };

@@ -282,7 +282,6 @@ public:
         friend void RS485_interrupt_handler(Interrupt<RS485>* a_p_this);
     };
 
-public:
     ~Interrupt()
     {
         this->disable();
