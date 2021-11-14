@@ -8,6 +8,7 @@
  */
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/GPIO/GPIO.hpp>
 #include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
@@ -161,7 +162,7 @@ private:
     USART* p_USART;
     const IRQn_Type irqn;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 template<> class Interrupt<RS485> : cml::Non_copyable
@@ -318,7 +319,7 @@ private:
     RS485* p_RS485;
     IRQn_Type irqn;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 void USART_interrupt_handler(Interrupt<USART>* a_p_this);

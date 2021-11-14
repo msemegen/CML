@@ -46,9 +46,9 @@ using namespace cml;
 void WWDG_interrupt_handler(Interrupt<WWDG>* a_p_this)
 {
     cml_assert(nullptr != a_p_this);
-    cml_assert(nullptr != a_p_this->early_wakeup_callback.function);
+    cml_assert(nullptr != a_p_this->callback.function);
 
-    a_p_this->early_wakeup_callback.function(a_p_this->early_wakeup_callback.p_user_data);
+    a_p_this->callback.function(a_p_this->callback.p_user_data);
 }
 
 Interrupt<WWDG>::Interrupt()
@@ -75,20 +75,20 @@ void Interrupt<WWDG>::disable()
     NVIC_DisableIRQ(IRQn_Type::RNG_IRQn);
 }
 
-void Interrupt<WWDG>::register_callback(const Early_wakeup_callback& a_callback)
+void Interrupt<WWDG>::register_callback(const Callback& a_callback)
 {
+    cml_assert(nullptr != a_callback.function);
+
     Interrupt_guard gaurd;
 
-    if (nullptr != a_callback.function)
-    {
-        this->early_wakeup_callback = a_callback;
-        bit_flag::set(&(WWDG_T->CFR), WWDG_CFR_EWI);
-    }
-    else
-    {
-        bit_flag::clear(&(WWDG_T->CFR), WWDG_CFR_EWI);
-        this->early_wakeup_callback = { nullptr, nullptr };
-    }
+    this->callback = a_callback;
+    bit_flag::set(&(WWDG_T->CFR), WWDG_CFR_EWI);
+}
+
+void Interrupt<WWDG>::unregister_callback()
+{
+    bit_flag::clear(&(WWDG_T->CFR), WWDG_CFR_EWI);
+    this->callback = { nullptr, nullptr };
 }
 } // namespace stm32l4
 } // namespace m4

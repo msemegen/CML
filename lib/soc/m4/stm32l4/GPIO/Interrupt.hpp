@@ -11,6 +11,7 @@
 #include <cstdint>
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/GPIO/GPIO.hpp>
 #include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
@@ -102,7 +103,7 @@ private:
     std::uint32_t idx;
     IRQn_Type irqn;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 constexpr Interrupt<GPIO>::Trigger_flag operator|(Interrupt<GPIO>::Trigger_flag a_f1,

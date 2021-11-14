@@ -12,6 +12,38 @@
 #include <cml/bit_flag.hpp>
 
 namespace soc {
+using namespace soc::m4::stm32l4;
+template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_0>()
+{
+    return Interrupt<GPIO>(0, EXTI0_IRQn);
+}
+template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_1>()
+{
+    return Interrupt<GPIO>(1, EXTI1_IRQn);
+}
+template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_2>()
+{
+    return Interrupt<GPIO>(2, EXTI2_IRQn);
+}
+template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_3>()
+{
+    return Interrupt<GPIO>(3, EXTI3_IRQn);
+}
+template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_4>()
+{
+    return Interrupt<GPIO>(4, EXTI4_IRQn);
+}
+template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_5_9>()
+{
+    return Interrupt<GPIO>(5, EXTI9_5_IRQn);
+}
+template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_10_15>()
+{
+    return Interrupt<GPIO>(6, EXTI15_10_IRQn);
+}
+} // namespace soc
+
+namespace soc {
 namespace m4 {
 namespace stm32l4 {
 using namespace cml;
@@ -111,35 +143,6 @@ template<> void rcc<GPIO, 5>::disable()
     bit_flag::clear(&(RCC->AHB2SMENR), RCC_AHB2SMENR_GPIOESMEN);
 }
 #endif
-
-template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_0>()
-{
-    return Interrupt<GPIO>(0, EXTI0_IRQn);
-}
-template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_1>()
-{
-    return Interrupt<GPIO>(1, EXTI1_IRQn);
-}
-template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_2>()
-{
-    return Interrupt<GPIO>(2, EXTI2_IRQn);
-}
-template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_3>()
-{
-    return Interrupt<GPIO>(3, EXTI3_IRQn);
-}
-template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_4>()
-{
-    return Interrupt<GPIO>(4, EXTI4_IRQn);
-} 
-template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_5_9>()
-{
-    return Interrupt<GPIO>(5, EXTI9_5_IRQn);
-}
-template<> Interrupt<GPIO> Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_10_15>()
-{
-    return Interrupt<GPIO>(6, EXTI15_10_IRQn);
-}
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

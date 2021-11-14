@@ -8,6 +8,7 @@
  */
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 #include <soc/m4/stm32l4/WWDG/WWDG.hpp>
@@ -21,7 +22,7 @@ namespace stm32l4 {
 template<> class Interrupt<WWDG> : private cml::Non_copyable
 {
 public:
-    struct Early_wakeup_callback
+    struct Callback
     {
         using Function = void (*)(void* a_p_user_data);
 
@@ -36,14 +37,26 @@ public:
     void enable(const IRQ_config& a_irq_config);
     void disable();
 
-    void register_callback(const Early_wakeup_callback& a_callback);
+    void register_callback(const Callback& a_callback);
+    void unregister_callback();
 
 private:
-    Early_wakeup_callback early_wakeup_callback;
+    Callback callback;
 
-private:
     friend void WWDG_interrupt_handler(Interrupt<WWDG>* a_p_this);
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 } // namespace stm32l4
 } // namespace m4
+} // namespace soc
+
+namespace soc {
+template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::WWDG>> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::Interrupt<m4::stm32l4::WWDG> create()
+    {
+        return m4::stm32l4::Interrupt<m4::stm32l4::WWDG>();
+    }
+};
 } // namespace soc

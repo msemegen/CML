@@ -11,10 +11,10 @@
 #include <stm32l4xx.h>
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/ADC/ADC.hpp>
 #include <soc/m4/stm32l4/ADC/Interrupt.hpp>
 #include <soc/m4/stm32l4/ADC/Polling.hpp>
-#include <soc/m4/stm32l4/Factory.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
@@ -73,31 +73,6 @@ public:
     static void disable();
 };
 
-template<> class Factory<ADC, 1u> : private cml::Non_constructible
-{
-public:
-    static ADC create()
-    {
-        return ADC(0, ADC1);
-    }
-};
-template<> class Factory<Polling<ADC>, 1u> : private cml::Non_constructible
-{
-public:
-    static Polling<ADC> create(ADC* a_p_ADC)
-    {
-        return Polling<ADC>(a_p_ADC);
-    }
-};
-template<> class Factory<Interrupt<ADC>, 1u> : private cml::Non_constructible
-{
-public:
-    static Interrupt<ADC> create(ADC* a_p_ADC)
-    {
-        return Interrupt<ADC>(a_p_ADC, IRQn_Type::ADC1_IRQn);
-    }
-};
-
 template<>
 void rcc<ADC>::enable<rcc<ADC>::Clock_source::PCLK>(rcc<ADC>::PCLK_prescaler a_prescaler, bool a_enable_in_lp);
 
@@ -106,33 +81,60 @@ void rcc<ADC>::enable<rcc<ADC>::Clock_source::PCLK>(rcc<ADC>::PCLK_prescaler a_p
 template<>
 void rcc<ADC>::enable<rcc<ADC>::Clock_source::PLLSAI1>(rcc<ADC>::PLLSAI1_prescaler a_prescaler, bool a_enable_in_lp);
 #endif
-
-#if defined(STM32L412xx) || defined(STM32L422xx)
-template<> class Factory<ADC, 2u> : private cml::Non_constructible
-{
-public:
-    static ADC create()
-    {
-        return ADC(1, ADC2);
-    }
-};
-template<> class Factory<Polling<ADC>, 2u> : private cml::Non_constructible
-{
-public:
-    static Polling<ADC> create(ADC* a_p_ADC)
-    {
-        return Polling<ADC>(a_p_ADC);
-    }
-};
-template<> class Factory<Interrupt<ADC>, 2u> : private cml::Non_constructible
-{
-public:
-    static Interrupt<ADC> create(ADC* a_p_ADC)
-    {
-        return Interrupt<ADC>(a_p_ADC, IRQn_Type::ADC1_2_IRQn);
-    }
-};
-#endif
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc
+
+namespace soc {
+template<> class Factory<m4::stm32l4::ADC, 1u> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::ADC create()
+    {
+        return m4::stm32l4::ADC(0, ADC1);
+    }
+};
+template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::ADC>, 1u> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::Polling<m4::stm32l4::ADC> create(m4::stm32l4::ADC* a_p_ADC)
+    {
+        return m4::stm32l4::Polling<m4::stm32l4::ADC>(a_p_ADC);
+    }
+};
+template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::ADC>, 1u> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::Interrupt<m4::stm32l4::ADC> create(m4::stm32l4::ADC* a_p_ADC)
+    {
+        return m4::stm32l4::Interrupt<m4::stm32l4::ADC>(a_p_ADC, IRQn_Type::ADC1_IRQn);
+    }
+};
+
+#if defined(STM32L412xx) || defined(STM32L422xx)
+template<> class Factory<m4::stm32l4::ADC, 2u> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::ADC create()
+    {
+        return m4::stm32l4::ADC(1, ADC2);
+    }
+};
+template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::ADC>, 2u> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::Polling<m4::stm32l4::ADC> create(m4::stm32l4::ADC* a_p_ADC)
+    {
+        return m4::stm32l4::Polling<m4::stm32l4::ADC>(a_p_ADC);
+    }
+};
+template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::ADC>, 2u> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::Interrupt<m4::stm32l4::ADC> create(m4::stm32l4::ADC* a_p_ADC)
+    {
+        return m4::stm32l4::Interrupt<m4::stm32l4::ADC>(a_p_ADC, IRQn_Type::ADC1_2_IRQn);
+    }
+};
+#endif
+}

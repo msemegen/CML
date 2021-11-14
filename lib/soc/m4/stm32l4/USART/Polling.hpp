@@ -11,6 +11,7 @@
 #include <cstddef>
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/GPIO/GPIO.hpp>
 #include <soc/m4/stm32l4/Polling.hpp>
 #include <soc/m4/stm32l4/USART/RS485.hpp>
@@ -65,7 +66,7 @@ private:
     USART* p_usart;
 
 private:
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 template<> class Polling<RS485> : private cml::Non_copyable
@@ -105,7 +106,7 @@ private:
     RS485* p_RS485;
     GPIO::Out::Pin* p_flow_control_pin;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 constexpr Polling<USART>::Result::Bus_status_flag operator|(Polling<USART>::Result::Bus_status_flag a_f1,

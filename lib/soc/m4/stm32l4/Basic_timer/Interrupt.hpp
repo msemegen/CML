@@ -8,6 +8,7 @@
  */
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/Basic_timer/Basic_timer.hpp>
 #include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
@@ -65,7 +66,7 @@ private:
 
     Callback callback;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
     friend void basic_timer_interrupt_handler(Interrupt<Basic_timer>* a_p_this);
 };
 } // namespace stm32l4

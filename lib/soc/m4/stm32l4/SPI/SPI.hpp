@@ -15,6 +15,7 @@
 #include <stm32l4xx.h>
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -160,7 +161,7 @@ private:
     }
 
 private:
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 class SPI_slave : public SPI
@@ -217,7 +218,7 @@ private:
     }
 
 private:
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 template<std::size_t id> class rcc<SPI, id> : private cml::Non_constructible

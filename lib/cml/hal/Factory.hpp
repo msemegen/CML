@@ -8,13 +8,13 @@
  */
 
 #ifdef STM32L4
-#include <soc/m4/stm32l4/Factory.hpp>
+#include <soc/Factory.hpp>
 #endif
 
 namespace cml {
 namespace hal {
 #ifdef STM32L4
-template<typename Perihperal_t, std::size_t id = 255u> using Factory = soc::m4::stm32l4::Factory<Perihperal_t, id>;
+template<typename Perihperal_t, std::size_t id = 255u> using Factory = soc::Factory<Perihperal_t, id>;
 #endif
 } // namespace hal
 } // namespace cml

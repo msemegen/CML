@@ -12,6 +12,7 @@
 #include <cstdint>
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/ADC/ADC.hpp>
 #include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
@@ -124,7 +125,7 @@ private:
 
     Callback callback;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
     friend void ADC_interrupt_handler(Interrupt<ADC>* a_p_this);
 };
 } // namespace stm32l4

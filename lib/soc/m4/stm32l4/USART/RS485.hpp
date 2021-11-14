@@ -14,6 +14,9 @@
 // externals
 #include <stm32l4xx.h>
 
+// soc
+#include <soc/Factory.hpp>
+
 // cml
 #include <cml/Non_copyable.hpp>
 #include <cml/various.hpp>
@@ -80,7 +83,7 @@ private:
     const std::uint32_t idx;
     USART_TypeDef* p_registers;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 } // namespace stm32l4
 } // namespace m4

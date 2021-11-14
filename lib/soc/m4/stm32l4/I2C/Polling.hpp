@@ -8,6 +8,7 @@
  */
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/I2C/I2C.hpp>
 #include <soc/m4/stm32l4/Polling.hpp>
 
@@ -36,7 +37,6 @@ public:
         std::size_t data_length_in_bytes = 0u;
     };
 
-public:
     Result transmit(std::uint8_t a_slave_address, const void* a_p_data, std::size_t a_data_size_in_bytes);
     Result transmit(std::uint8_t a_slave_address,
                     const void* a_p_data,
@@ -53,11 +53,9 @@ private:
     {
     }
 
-private:
     I2C_master* a_p_I2C;
 
-private:
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 template<> class Polling<I2C_slave> : private cml::Non_copyable
@@ -79,7 +77,6 @@ public:
         std::size_t data_length_in_bytes = 0u;
     };
 
-public:
     Result transmit(const void* a_p_data, std::size_t a_data_size_in_bytes);
     Result transmit(const void* a_p_data, std::size_t a_data_size_in_bytes, std::uint32_t a_timeout);
 
@@ -92,11 +89,9 @@ private:
     {
     }
 
-private:
     I2C_slave* a_p_I2C;
 
-private:
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 constexpr Polling<I2C_master>::Result::Bus_flag operator|(Polling<I2C_master>::Result::Bus_flag a_f1,
                                                           Polling<I2C_master>::Result::Bus_flag a_f2)

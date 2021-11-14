@@ -14,7 +14,7 @@
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/m4/stm32l4/Factory.hpp>
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -52,7 +52,7 @@ public:
 private:
     CRC32();
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 template<> class rcc<CRC32> : private cml::Non_constructible
@@ -61,15 +61,17 @@ public:
     static void enable(bool a_enable_in_lp);
     static void disable();
 };
-
-template<> class Factory<CRC32> : private cml::Non_constructible
-{
-public:
-    static CRC32 create()
-    {
-        return CRC32();
-    }
-};
 } // namespace stm32l4
 } // namespace m4
+} // namespace soc
+
+namespace soc {
+template<> class Factory<m4::stm32l4::CRC32> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::CRC32 create()
+    {
+        return m4::stm32l4::CRC32();
+    }
+};
 } // namespace soc

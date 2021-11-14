@@ -14,6 +14,7 @@
 #include <stm32l4xx.h>
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -389,7 +390,7 @@ private:
     friend In;
     friend Analog;
     friend Alternate_function;
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 
 public:
     Out* const p_out;

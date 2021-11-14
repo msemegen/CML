@@ -8,6 +8,7 @@
  */
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/Basic_timer/Basic_timer.hpp>
 #include <soc/m4/stm32l4/Polling.hpp>
 
@@ -34,7 +35,7 @@ private:
 
     Basic_timer* p_timer;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 } // namespace stm32l4
 } // namespace m4

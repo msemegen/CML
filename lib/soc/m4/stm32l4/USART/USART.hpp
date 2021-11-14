@@ -15,6 +15,7 @@
 #include <tuple>
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -125,7 +126,7 @@ private:
     const std::uint32_t idx;
     USART_TypeDef* p_registers;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 constexpr USART::Enable_config::Flow_control_flag operator|(USART::Enable_config::Flow_control_flag a_f1,

@@ -14,8 +14,8 @@
 #include <stm32l4xx.h>
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
-#include <soc/m4/stm32l4/Factory.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
@@ -49,17 +49,19 @@ private:
 
     std::uint16_t reload;
 
-    template<typename Periph_t, std::size_t id> friend class Factory;
-};
-
-template<> class Factory<WWDG> : private cml::Non_constructible
-{
-public:
-    static WWDG create()
-    {
-        return WWDG();
-    }
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 } // namespace stm32l4
 } // namespace m4
+} // namespace soc
+
+namespace soc {
+template<> class Factory<m4::stm32l4::WWDG> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::WWDG create()
+    {
+        return m4::stm32l4::WWDG();
+    }
+};
 } // namespace soc
