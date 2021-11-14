@@ -28,14 +28,6 @@ extern void RNG_interrupt_handler();
 } // namespace soc
 #endif
 
-namespace {
-using namespace soc::m4::stm32l4;
-
-Interrupt<RNG>* p_RNGs = nullptr;
-#define RNG_T ((RNG_TypeDef*)RNG_BASE)
-
-} // namespace
-
 extern "C" {
 
 using namespace soc::m4::stm32l4;
@@ -49,12 +41,14 @@ void RNG_IRQHandler()
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-
 using namespace cml;
+
+#define RNG_T ((RNG_TypeDef*)RNG_BASE)
+Interrupt<RNG>::Callback Interrupt<RNG>::callback;
 
 void RNG_interrupt_handler()
 {
-    cml_assert(nullptr != p_RNGs);
+    cml_assert(nullptr != Interrupt<RNG>::callback.function);
 
     const std::uint32_t isr = RNG_T->SR;
     std::uint32_t value     = 0;
@@ -64,25 +58,10 @@ void RNG_interrupt_handler()
         value = RNG_T->DR;
     }
 
-    p_RNGs->new_value_callback.function(value,
-                                        bit_flag::is(isr, RNG_SR_CECS),
-                                        bit_flag::is(isr, RNG_SR_SECS),
-                                        p_RNGs->p_RNG,
-                                        p_RNGs->new_value_callback.p_user_data);
+    Interrupt<RNG>::callback.function(
+        value, bit_flag::is(isr, RNG_SR_CECS), bit_flag::is(isr, RNG_SR_SECS), Interrupt<RNG>::callback.p_user_data);
 
     NVIC_ClearPendingIRQ(RNG_IRQn);
-}
-
-Interrupt<RNG>::Interrupt(RNG* a_p_RNG)
-    : p_RNG(a_p_RNG)
-{
-    cml_assert(nullptr == p_RNG);
-    p_RNGs = this;
-}
-
-Interrupt<RNG>::~Interrupt()
-{
-    p_RNGs = nullptr;
 }
 
 void Interrupt<RNG>::enable(const IRQ_config& a_irq_config)
@@ -98,22 +77,21 @@ void Interrupt<RNG>::disable()
     NVIC_DisableIRQ(IRQn_Type::RNG_IRQn);
 }
 
-void Interrupt<RNG>::register_callback(const New_value_callback& a_callback)
+void Interrupt<RNG>::register_callback(const Callback& a_callback)
 {
+    cml_assert(nullptr != a_callback.function);
+
     Interrupt_guard guard;
 
-    if (nullptr != a_callback.function)
-    {
-        this->new_value_callback = a_callback;
-        bit_flag::set(&(RNG_T->CR), RNG_CR_IE);
-    }
-    else
-    {
-        bit_flag::clear(&(RNG_T->CR), RNG_CR_IE);
-        this->new_value_callback = { nullptr, nullptr };
-    }
+    Interrupt<RNG>::callback = a_callback;
+    bit_flag::set(&(RNG_T->CR), RNG_CR_IE);
 }
 
+void Interrupt<RNG>::unregister_callback()
+{
+    bit_flag::clear(&(RNG_T->CR), RNG_CR_IE);
+    Interrupt<RNG>::callback = { nullptr, nullptr };
+}
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

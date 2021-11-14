@@ -10,30 +10,12 @@
 #include <cml/debug/assertion.hpp>
 #include <cml/utils/wait_until.hpp>
 
-namespace {
-
-bool created = false;
-
-#define RNG_T ((RNG_TypeDef*)RNG_BASE)
-
-} // namespace
-
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
+#define RNG_T ((RNG_TypeDef*)RNG_BASE)
 
 using namespace cml::utils;
-
-Polling<RNG>::Polling()
-{
-    cml_assert(false == created);
-    created = true;
-}
-
-Polling<RNG>::~Polling()
-{
-    created = false;
-}
 
 bool Polling<RNG>::get_value(std::uint32_t* a_p_value, std::uint32_t a_timeout)
 {

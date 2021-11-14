@@ -15,6 +15,7 @@
 
 // soc
 #include <soc/m4/stm32l4/rcc.hpp>
+#include <soc/m4/stm32l4/Factory.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
@@ -38,14 +39,26 @@ public:
     };
 
 public:
-    WWDG();
     ~WWDG();
 
     void enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window, uint16_t a_irq_priority);
     void feed();
 
 private:
+    WWDG();
+
     std::uint16_t reload;
+
+    template<typename Periph_t, std::size_t id> friend class Factory;
+};
+
+template<> class Factory<WWDG> : private cml::Non_constructible
+{
+public:
+    static WWDG create()
+    {
+        return WWDG();
+    }
 };
 } // namespace stm32l4
 } // namespace m4

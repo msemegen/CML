@@ -10,8 +10,10 @@
 // externals
 #include <stm32l4xx.h>
 
+// std
+#include <cstdint>
+
 // soc
-#include <soc/Handle.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml

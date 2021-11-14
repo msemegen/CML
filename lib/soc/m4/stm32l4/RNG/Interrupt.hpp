@@ -12,39 +12,34 @@
 #include <soc/m4/stm32l4/Interrupt.hpp>
 #include <soc/m4/stm32l4/RNG/RNG.hpp>
 
+// cml
+#include <cml/Non_constructible.hpp>
+
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> class Interrupt<RNG> : private cml::Non_copyable
+template<> class Interrupt<RNG> : private cml::Non_constructible
 {
 public:
-    struct New_value_callback
+    struct Callback
     {
-        using Function =
-            void (*)(std::uint32_t a_value, bool a_clock_error, bool a_seed_error, RNG* p_rng, void* a_p_user_data);
+        using Function = void (*)(std::uint32_t a_value, bool a_clock_error, bool a_seed_error, void* a_p_user_data);
 
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
 
-public:
-    Interrupt(RNG* a_p_RNG);
-    ~Interrupt();
+    static void enable(const IRQ_config& a_irq_config);
+    static void disable();
 
-    void enable(const IRQ_config& a_irq_config);
-    void disable();
-
-    void register_callback(const New_value_callback& a_callback);
+    static void register_callback(const Callback& a_callback);
+    static void unregister_callback();
 
 private:
-    RNG* p_RNG;
+    static Callback callback;
 
-    New_value_callback new_value_callback;
-
-private:
     friend void RNG_interrupt_handler();
 };
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

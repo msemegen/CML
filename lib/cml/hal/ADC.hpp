@@ -8,9 +8,7 @@
  */
 
 #ifdef STM32L4
-#include <soc/m4/stm32l4/ADC/ADC.hpp>
-#include <soc/m4/stm32l4/ADC/Interrupt.hpp>
-#include <soc/m4/stm32l4/ADC/Polling.hpp>
+#include <soc/m4/stm32l4/ADC/bsp/bsp.hpp>
 #endif
 
 namespace cml {
