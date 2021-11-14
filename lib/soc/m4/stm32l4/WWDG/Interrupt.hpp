@@ -31,8 +31,10 @@ public:
     };
 
 public:
-    Interrupt();
-    ~Interrupt();
+    ~Interrupt()
+    {
+        this->disable();
+    }
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
@@ -41,9 +43,11 @@ public:
     void unregister_callback();
 
 private:
+    Interrupt() {}
+
     Callback callback;
 
-    friend void WWDG_interrupt_handler(Interrupt<WWDG>* a_p_this);
+    friend void WWDG_interrupt_handler();
     template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 } // namespace stm32l4

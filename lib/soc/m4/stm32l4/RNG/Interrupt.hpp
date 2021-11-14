@@ -8,17 +8,18 @@
  */
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 #include <soc/m4/stm32l4/RNG/RNG.hpp>
 
 // cml
-#include <cml/Non_constructible.hpp>
+#include <cml/Non_copyable.hpp>
 
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<> class Interrupt<RNG> : private cml::Non_constructible
+template<> class Interrupt<RNG> : private cml::Non_copyable
 {
 public:
     struct Callback
@@ -29,17 +30,31 @@ public:
         void* p_user_data = nullptr;
     };
 
-    static void enable(const IRQ_config& a_irq_config);
-    static void disable();
+    void enable(const IRQ_config& a_irq_config);
+    void disable();
 
-    static void register_callback(const Callback& a_callback);
-    static void unregister_callback();
+    void register_callback(const Callback& a_callback);
+    void unregister_callback();
 
 private:
+    Interrupt() {}
+
     static Callback callback;
 
     friend void RNG_interrupt_handler();
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 } // namespace stm32l4
 } // namespace m4
+} // namespace soc
+
+namespace soc {
+template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::RNG>> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::Interrupt<m4::stm32l4::RNG> create()
+    {
+        return m4::stm32l4::Interrupt<m4::stm32l4::RNG>();
+    }
+};
 } // namespace soc

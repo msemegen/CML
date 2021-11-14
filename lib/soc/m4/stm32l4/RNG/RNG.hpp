@@ -14,6 +14,7 @@
 #include <stm32l4xx.h>
 
 // soc
+#include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -30,13 +31,15 @@ namespace stm32l4 {
 class RNG : private cml::Non_copyable
 {
 public:
-
-public:
-    RNG();
     ~RNG();
 
     bool enable(std::uint32_t a_timeout);
     void disable();
+
+private:
+    RNG();
+
+    template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
 template<> class rcc<RNG> : private cml::Non_constructible
@@ -47,4 +50,15 @@ public:
 };
 } // namespace stm32l4
 } // namespace m4
+} // namespace soc
+
+namespace soc {
+template<> class Factory<m4::stm32l4::RNG> : private cml::Non_constructible
+{
+public:
+    static m4::stm32l4::RNG create()
+    {
+        return m4::stm32l4::RNG();
+    }
+};
 } // namespace soc

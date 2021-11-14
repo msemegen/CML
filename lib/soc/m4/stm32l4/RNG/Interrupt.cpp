@@ -17,6 +17,12 @@
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 
+namespace {
+using namespace soc::m4::stm32l4;
+
+Interrupt<RNG>* irq_context[1] = { nullptr };
+} // namespace
+
 // SIC! GCC bug?
 #ifdef __GNUC__
 namespace soc {
@@ -48,7 +54,7 @@ Interrupt<RNG>::Callback Interrupt<RNG>::callback;
 
 void RNG_interrupt_handler()
 {
-    cml_assert(nullptr != Interrupt<RNG>::callback.function);
+    cml_assert(nullptr != irq_context[0]);
 
     const std::uint32_t isr = RNG_T->SR;
     std::uint32_t value     = 0;
@@ -58,14 +64,23 @@ void RNG_interrupt_handler()
         value = RNG_T->DR;
     }
 
-    Interrupt<RNG>::callback.function(
-        value, bit_flag::is(isr, RNG_SR_CECS), bit_flag::is(isr, RNG_SR_SECS), Interrupt<RNG>::callback.p_user_data);
+    if (nullptr != irq_context[0]->callback.function)
+    {
+        irq_context[0]->callback.function(value,
+                                          bit_flag::is(isr, RNG_SR_CECS),
+                                          bit_flag::is(isr, RNG_SR_SECS),
+                                          Interrupt<RNG>::callback.p_user_data);
+    }
 
     NVIC_ClearPendingIRQ(RNG_IRQn);
 }
 
 void Interrupt<RNG>::enable(const IRQ_config& a_irq_config)
 {
+    cml_assert(nullptr == irq_context[0]);
+
+    irq_context[0] = this;
+
     NVIC_SetPriority(
         IRQn_Type::RNG_IRQn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
@@ -75,6 +90,8 @@ void Interrupt<RNG>::enable(const IRQ_config& a_irq_config)
 void Interrupt<RNG>::disable()
 {
     NVIC_DisableIRQ(IRQn_Type::RNG_IRQn);
+
+    irq_context[0] = nullptr;
 }
 
 void Interrupt<RNG>::register_callback(const Callback& a_callback)

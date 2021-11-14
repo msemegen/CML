@@ -17,11 +17,23 @@
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 
+// SIC! GCC bug?
+#ifdef __GNUC__
+namespace soc {
+namespace m4 {
+namespace stm32l4 {
+extern void WWDG_interrupt_handler();
+} // namespace stm32l4
+} // namespace m4
+} // namespace soc
+#endif
+
+
 namespace {
 
 using namespace soc::m4::stm32l4;
 
-Interrupt<WWDG>* p_WWDG = nullptr;
+Interrupt<WWDG>* irq_context[1] = { nullptr };
 
 #define WWDG_T ((WWDG_TypeDef*)WWDG_BASE)
 
@@ -33,7 +45,7 @@ using namespace soc::m4::stm32l4;
 
 void WWDG_IRQHandler()
 {
-    WWDG_interrupt_handler(p_WWDG);
+    WWDG_interrupt_handler();
 }
 }
 
@@ -43,27 +55,20 @@ namespace stm32l4 {
 
 using namespace cml;
 
-void WWDG_interrupt_handler(Interrupt<WWDG>* a_p_this)
+void WWDG_interrupt_handler()
 {
-    cml_assert(nullptr != a_p_this);
-    cml_assert(nullptr != a_p_this->callback.function);
+    cml_assert(nullptr != irq_context[0]);
 
-    a_p_this->callback.function(a_p_this->callback.p_user_data);
-}
-
-Interrupt<WWDG>::Interrupt()
-{
-    cml_assert(nullptr == p_WWDG);
-    p_WWDG = this;
-}
-
-Interrupt<WWDG>::~Interrupt()
-{
-    p_WWDG = nullptr;
+    if (nullptr != irq_context[0]->callback.function)
+    {
+        irq_context[0]->callback.function(irq_context[0]->callback.p_user_data);
+    }
 }
 
 void Interrupt<WWDG>::enable(const IRQ_config& a_irq_config)
 {
+    irq_context[0] = this;
+
     NVIC_SetPriority(
         IRQn_Type::WWDG_IRQn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
@@ -73,6 +78,8 @@ void Interrupt<WWDG>::enable(const IRQ_config& a_irq_config)
 void Interrupt<WWDG>::disable()
 {
     NVIC_DisableIRQ(IRQn_Type::RNG_IRQn);
+
+    irq_context[0] = nullptr;
 }
 
 void Interrupt<WWDG>::register_callback(const Callback& a_callback)
