@@ -37,6 +37,7 @@ bool USART::enable(const Enable_config& a_config, const Frame_format& a_frame_fo
 {
     cml_assert(0 != a_config.baud_rate);
     cml_assert(0 != a_config.clock_freq_Hz);
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
 
     cml_assert(various::get_enum_incorrect_value<Enable_config::Flow_control_flag>() != a_config.flow_control);
     cml_assert(various::get_enum_incorrect_value<Enable_config::Stop_bits>() != a_config.stop_bits);
@@ -80,6 +81,8 @@ bool USART::enable(const Enable_config& a_config, const Frame_format& a_frame_fo
 
 void USART::disable()
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
+
     this->p_registers->CR1 = 0;
     this->p_registers->CR2 = 0;
     this->p_registers->CR3 = 0;
@@ -87,11 +90,15 @@ void USART::disable()
 
 USART::Enable_config USART::get_Enable_config() const
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
+
     return Enable_config();
 }
 
 USART::Frame_format USART::get_Frame_format() const
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
+
     return Frame_format();
 }
 } // namespace stm32l4

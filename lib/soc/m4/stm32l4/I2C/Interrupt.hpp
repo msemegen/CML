@@ -10,8 +10,8 @@
 // soc
 #include <soc/Factory.hpp>
 #include <soc/Interrupt_guard.hpp>
+#include <soc/m4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/I2C/I2C.hpp>
-#include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 
 // cml

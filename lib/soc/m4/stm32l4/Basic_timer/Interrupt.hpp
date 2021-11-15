@@ -9,8 +9,8 @@
 
 // soc
 #include <soc/Factory.hpp>
+#include <soc/m4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Basic_timer/Basic_timer.hpp>
-#include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 
 // soc

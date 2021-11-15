@@ -10,7 +10,7 @@
 // soc
 #include <soc/Factory.hpp>
 #include <soc/Interrupt_guard.hpp>
-#include <soc/m4/stm32l4/IRQ_config.hpp>
+#include <soc/m4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 #include <soc/m4/stm32l4/SPI/SPI.hpp>
 

@@ -19,6 +19,7 @@ CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS)                            \
                     $(CML_ROOT)/lib/cml/utils                      \
                     $(CML_ROOT)/lib/cml/debug                      \
                     $(CML_ROOT)/lib/soc                            \
+                    $(CML_ROOT)/lib/soc/Systick                    \
                     $(CML_ROOT)/lib/soc/m4                         \
                     $(CML_ROOT)/lib/soc/m4/stm32l4                 \
                     $(CML_ROOT)/lib/soc/m4/stm32l4/ADC             \

@@ -47,7 +47,7 @@ public:
     Result receive(void* a_p_data, std::size_t a_data_size_in_words);
     Result receive(void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout_ms);
 
-    USART* get_USART()
+    USART* get_handle()
     {
         return this->p_usart;
     }

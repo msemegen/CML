@@ -13,27 +13,10 @@
 // cml
 #include <cml/debug/assertion.hpp>
 
-namespace {
-bool created = false;
-} // namespace
-
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-
 using namespace cml;
-
-CRC32::CRC32()
-{
-    cml_assert(false == created);
-    created = true;
-}
-
-CRC32::~CRC32()
-{
-    this->disable();
-    created = false;
-}
 
 void CRC32::enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse)
 {
@@ -77,7 +60,6 @@ void rcc<CRC32>::disable()
     bit_flag::clear(&(RCC->AHB1ENR), RCC_AHB1ENR_CRCEN);
     bit_flag::clear(&(RCC->AHB1SMENR), RCC_AHB1SMENR_CRCSMEN);
 }
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

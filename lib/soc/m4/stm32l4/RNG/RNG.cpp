@@ -20,34 +20,17 @@
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
 
-namespace {
-
-bool created = false;
-#define RNG_T ((RNG_TypeDef*)RNG_BASE)
-
-} // namespace
-
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
+#define RNG_T ((RNG_TypeDef*)RNG_BASE)
 
 using namespace cml;
 using namespace cml::utils;
 
-RNG::RNG()
-{
-    cml_assert(false == created);
-    created = true;
-}
-
-RNG::~RNG()
-{
-    this->disable();
-    created = false;
-}
-
 bool RNG::enable(std::uint32_t a_timeout)
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
     cml_assert(rcc<mcu>::get_CLK48_frequency_Hz() <= 48_MHz);
     cml_assert(a_timeout > 0u);
 
@@ -68,6 +51,8 @@ bool RNG::enable(std::uint32_t a_timeout)
 
 void RNG::disable()
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
+
     bit_flag::clear(&(RNG_T->CR), RNG_CR_RNGEN);
     NVIC_DisableIRQ(RNG_IRQn);
 }

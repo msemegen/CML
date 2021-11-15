@@ -14,7 +14,7 @@ ROOT         := $(CURDIR)
 CML_ROOT     := $(ROOT)/../../..
 LIBRARIES    := $(ROOT)/libraries
 
-MCU_ARCH    := ARM_CORTEX_M4
+MCU_ARCH    := M4
 MCU_FAMILY  := STM32L4
 MCU_TYPE    := STM32L452xx
 MCU_MODEL   := STM32L452RE

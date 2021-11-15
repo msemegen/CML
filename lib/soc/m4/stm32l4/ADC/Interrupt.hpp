@@ -13,8 +13,8 @@
 
 // soc
 #include <soc/Factory.hpp>
+#include <soc/m4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/ADC/ADC.hpp>
-#include <soc/m4/stm32l4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 
 // cml

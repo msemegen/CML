@@ -52,13 +52,36 @@ public:
         std::uint16_t value = 0xFFFu;
     };
 
-    ~IWDG();
+    IWDG()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+    {
+    }
 
     bool enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a_window, std::uint32_t a_timeout);
     void feed();
 
+    std::uint32_t get_idx()
+    {
+        return this->idx;
+    }
+
+    operator IWDG_TypeDef*()
+    {
+        return reinterpret_cast<IWDG_TypeDef*>(IWDG_BASE);
+    }
+
+    operator const IWDG_TypeDef*() const
+    {
+        return reinterpret_cast<IWDG_TypeDef*>(IWDG_BASE);
+    }
+
 private:
-    IWDG();
+    IWDG(std::uint32_t a_idx)
+        : idx(a_idx)
+    {
+    }
+
+    std::uint32_t idx;
 
     template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
@@ -72,7 +95,7 @@ template<> class Factory<m4::stm32l4::IWDG> : private cml::Non_constructible
 public:
     static m4::stm32l4::IWDG create()
     {
-        return m4::stm32l4::IWDG();
+        return m4::stm32l4::IWDG(0);
     }
 };
 } // namespace soc

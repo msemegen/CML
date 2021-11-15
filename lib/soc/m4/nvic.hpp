@@ -23,7 +23,6 @@
 
 namespace soc {
 namespace m4 {
-
 class nvic : private cml::Non_constructible
 {
 public:
@@ -94,6 +93,5 @@ public:
         return static_cast<Mode>(cml::bit::is(cpsr, 0x7u));
     }
 };
-
 } // namespace m4
 } // namespace soc

@@ -28,19 +28,15 @@ extern void WWDG_interrupt_handler();
 } // namespace soc
 #endif
 
-
 namespace {
-
 using namespace soc::m4::stm32l4;
 
 Interrupt<WWDG>* irq_context[1] = { nullptr };
 
 #define WWDG_T ((WWDG_TypeDef*)WWDG_BASE)
-
 } // namespace
 
 extern "C" {
-
 using namespace soc::m4::stm32l4;
 
 void WWDG_IRQHandler()
@@ -67,6 +63,8 @@ void WWDG_interrupt_handler()
 
 void Interrupt<WWDG>::enable(const IRQ_config& a_irq_config)
 {
+    cml_assert(nullptr != this->p_WWDG);
+
     irq_context[0] = this;
 
     NVIC_SetPriority(
@@ -77,6 +75,8 @@ void Interrupt<WWDG>::enable(const IRQ_config& a_irq_config)
 
 void Interrupt<WWDG>::disable()
 {
+    cml_assert(nullptr != this->p_WWDG);
+
     NVIC_DisableIRQ(IRQn_Type::RNG_IRQn);
 
     irq_context[0] = nullptr;
@@ -84,6 +84,7 @@ void Interrupt<WWDG>::disable()
 
 void Interrupt<WWDG>::register_callback(const Callback& a_callback)
 {
+    cml_assert(nullptr != this->p_WWDG);
     cml_assert(nullptr != a_callback.function);
 
     Interrupt_guard gaurd;
@@ -94,6 +95,8 @@ void Interrupt<WWDG>::register_callback(const Callback& a_callback)
 
 void Interrupt<WWDG>::unregister_callback()
 {
+    cml_assert(nullptr != this->p_WWDG);
+
     bit_flag::clear(&(WWDG_T->CFR), WWDG_CFR_EWI);
     this->callback = { nullptr, nullptr };
 }

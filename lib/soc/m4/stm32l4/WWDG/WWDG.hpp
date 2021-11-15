@@ -9,6 +9,7 @@
 
 // std
 #include <cstdint>
+#include <limits>
 
 // externals
 #include <stm32l4xx.h>
@@ -16,7 +17,6 @@
 // soc
 #include <soc/Factory.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
-#include <soc/m4/stm32l4/IRQ_config.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
@@ -39,13 +39,35 @@ public:
         _8 = WWDG_CFR_WDGTB_0 | WWDG_CFR_WDGTB_1
     };
 
-    ~WWDG();
+    WWDG()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+    {
+    }
 
     void enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window);
     void feed();
 
+    std::uint32_t get_idx()
+    {
+        return this->idx;
+    }
+
+    operator WWDG_TypeDef*()
+    {
+        return reinterpret_cast<WWDG_TypeDef*>(WWDG_BASE);
+    }
+
+    operator const WWDG_TypeDef*() const
+    {
+        return reinterpret_cast<WWDG_TypeDef*>(WWDG_BASE);
+    }
+
 private:
-    WWDG();
+    WWDG(std::uint32_t a_idx)
+        : idx(a_idx)
+    {
+    }
+    std::uint32_t idx;
 
     std::uint16_t reload;
 
@@ -61,7 +83,7 @@ template<> class Factory<m4::stm32l4::WWDG> : private cml::Non_constructible
 public:
     static m4::stm32l4::WWDG create()
     {
-        return m4::stm32l4::WWDG();
+        return m4::stm32l4::WWDG(0);
     }
 };
 } // namespace soc

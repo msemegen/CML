@@ -9,6 +9,7 @@
 
 // std
 #include <cstdint>
+#include <limits>
 
 // external
 #include <stm32l4xx.h>
@@ -31,14 +32,37 @@ namespace stm32l4 {
 class RNG : private cml::Non_copyable
 {
 public:
+    RNG()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+    {
+    }
     ~RNG();
 
     bool enable(std::uint32_t a_timeout);
     void disable();
 
-private:
-    RNG();
+    std::uint32_t get_idx()
+    {
+        return this->idx;
+    }
 
+    operator RNG_TypeDef*()
+    {
+        return reinterpret_cast<RNG_TypeDef*>(RNG_BASE);
+    }
+
+    operator const RNG_TypeDef*() const
+    {
+        return reinterpret_cast<RNG_TypeDef*>(RNG_BASE);
+    }
+
+private:
+    RNG(std::uint32_t a_idx)
+        : idx(a_idx)
+    {
+    }
+
+    std::uint32_t idx;
     template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
 
@@ -58,7 +82,7 @@ template<> class Factory<m4::stm32l4::RNG> : private cml::Non_constructible
 public:
     static m4::stm32l4::RNG create()
     {
-        return m4::stm32l4::RNG();
+        return m4::stm32l4::RNG(0);
     }
 };
 } // namespace soc

@@ -9,6 +9,7 @@
 
 // std
 #include <cstdint>
+#include <limits>
 
 // externals
 #include <stm32l4xx.h>
@@ -42,15 +43,38 @@ public:
         enabled = CRC_CR_REV_OUT
     };
 
-    ~CRC32();
+    CRC32()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+    {
+    }
 
     void enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse);
     void disable();
 
     std::uint32_t calculate(const std::uint8_t* a_p_data, std::uint32_t a_data_size);
 
+    std::uint32_t get_idx()
+    {
+        return this->idx;
+    }
+
+    operator CRC_TypeDef*()
+    {
+        return CRC;
+    }
+
+    operator const CRC_TypeDef*() const
+    {
+        return CRC;
+    }
+
 private:
-    CRC32();
+    CRC32(std::uint32_t a_idx)
+        : idx(a_idx)
+    {
+    }
+
+    std::uint32_t idx;
 
     template<typename Periph_t, std::size_t id> friend class soc::Factory;
 };
@@ -71,7 +95,7 @@ template<> class Factory<m4::stm32l4::CRC32> : private cml::Non_constructible
 public:
     static m4::stm32l4::CRC32 create()
     {
-        return m4::stm32l4::CRC32();
+        return m4::stm32l4::CRC32(0);
     }
 };
 } // namespace soc

@@ -20,11 +20,13 @@
 #include <cml/utils/delay.hpp>
 
 // debug
+#include <cml/hal/CRC32.hpp>
 #include <cml/hal/DMA.hpp>
 #include <cml/hal/I2C.hpp>
 #include <cml/hal/Interrupt.hpp>
+#include <cml/hal/RNG.hpp>
 #include <cml/hal/SPI.hpp>
-#include <cml/hal/CRC32.hpp>
+#include <cml/hal/WWDG.hpp>
 
 namespace {
 using namespace cml::hal;
@@ -38,7 +40,7 @@ void assert_halt(void*)
 
 void assert_print(const char*, uint32_t, const char*, void*) {}
 
-//void usart_callback(std::uint32_t a_data, bool a_idle, void* a_p_user_data)
+// void usart_callback(std::uint32_t a_data, bool a_idle, void* a_p_user_data)
 //{
 //    GPIO::Out::Pin* p_led_pin = reinterpret_cast<GPIO::Out::Pin*>(a_p_user_data);
 //
@@ -74,9 +76,17 @@ int main()
 
     rcc<mcu>::disable_clock(rcc<mcu>::Clock::MSI);
 
-    Systick systick;
-    systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
-    systick.register_tick_callback({ system_timer::update, nullptr });
+    Systick systick                = Factory<Systick>::create();
+    Polling<Systick> systick_pl    = Factory<Polling<Systick>>::create(&systick);
+    Interrupt<Systick> systick_itr = Factory<Interrupt<Systick>>::create(&systick);
+
+    Interrupt<Systick> systick_it;
+
+    WWDG wg = Factory<WWDG>::create();
+
+    systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
+    systick_it.enable({});
+    systick_it.register_callback({ system_timer::update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });
@@ -128,7 +138,7 @@ int main()
         I2C_slave i2c_slave         = Factory<I2C_slave, 2>::create();
         Interrupt<I2C_slave> i2cit2 = Factory<Interrupt<I2C_slave>, 2>::create(&i2c_slave);
 
-        //i2cit.transmission.enable({});
+        // i2cit.transmission.enable({});
 
         spi_it.enable({});
         spi_it.transmission.rx.register_callback({});
@@ -158,9 +168,12 @@ int main()
         rcc<CRC32>::enable(false);
 
         CRC32 crc32 = Factory<CRC32>::create();
-       
+        RNG rng     = Factory<RNG>::create();
+        WWDG wwdg   = Factory<WWDG>::create();
 
-        //soc::m4::stm32l4::Interrupt<soc::m4::stm32l4::GPIO> gpioit =
+        wwdg.enable(WWDG::Prescaler::_1, 0, 0);
+
+        // soc::m4::stm32l4::Interrupt<soc::m4::stm32l4::GPIO> gpioit =
         //    soc::m4::stm32l4::Factory<soc::m4::stm32l4::Interrupt<soc::m4::stm32l4::GPIO>>::create<
         //        soc::m4::stm32l4::Interrupt<soc::m4::stm32l4::GPIO>::Id::_1>();
 

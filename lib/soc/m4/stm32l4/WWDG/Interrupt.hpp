@@ -9,7 +9,7 @@
 
 // soc
 #include <soc/Factory.hpp>
-#include <soc/m4/stm32l4/IRQ_config.hpp>
+#include <soc/m4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
 #include <soc/m4/stm32l4/WWDG/WWDG.hpp>
 
@@ -30,6 +30,11 @@ public:
         void* p_user_data = nullptr;
     };
 
+    Interrupt()
+        : p_WWDG(nullptr)
+    {
+    }
+
     ~Interrupt()
     {
         this->disable();
@@ -42,8 +47,7 @@ public:
     void unregister_callback();
 
 private:
-    Interrupt() {}
-
+    WWDG* p_WWDG;
     Callback callback;
 
     friend void WWDG_interrupt_handler();

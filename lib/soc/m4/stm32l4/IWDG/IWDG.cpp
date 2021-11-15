@@ -21,7 +21,6 @@
 #include <cml/utils/wait_until.hpp>
 
 namespace {
-
 using namespace cml;
 
 struct control_flags : private Non_constructible
@@ -31,9 +30,6 @@ struct control_flags : private Non_constructible
     static constexpr std::uint32_t write_access_enable  = 0x5555u;
     static constexpr std::uint32_t write_access_disable = 0x0000u;
 };
-
-bool created = false;
-
 } // namespace
 
 namespace soc {
@@ -45,19 +41,9 @@ namespace stm32l4 {
 using namespace cml;
 using namespace cml::utils;
 
-IWDG::IWDG()
-{
-    cml_assert(false == created);
-    created = true;
-}
-
-IWDG::~IWDG()
-{
-    created = false;
-}
-
 bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a_window, std::uint32_t a_timeout)
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
     cml_assert(various::get_enum_incorrect_value<Window::Mode>() != a_window.mode);
     cml_assert((Window::Mode::enabled == a_window.mode && a_window.value <= 0xFFFu) ||
                (Window::Mode::disabled == a_window.mode));
@@ -98,9 +84,9 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
 
 void IWDG::feed()
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
     IWDG_T->KR = control_flags::reload;
 }
-
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc
