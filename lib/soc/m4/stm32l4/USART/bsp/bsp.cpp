@@ -50,10 +50,10 @@ struct Interrupt_context
     defined(STM32L462RE) || defined(STM32L462VE)
 Interrupt_context irq_context[3];
 #endif
-#if defined(STM32L412K8) || defined(STM32L412KB) || defined(STM32L412TB) || defined(STM32L422KB) || \
-    defined(STM32L422TB) || defined(STM32L431KB) || defined(STM32L431KC) || defined(STM32L432KB) || \
-    defined(STM32L432KC) || defined(STM32L442KC) || defined(STM32L412T8)
-Context irq_context[2];
+#if defined(STM32L412K8) || defined(STM32L412KB) || defined(STM32L412TB) || defined(STM32L412T8) || \
+    defined(STM32L422KB) || defined(STM32L422TB) || defined(STM32L431KB) || defined(STM32L431KC) || \
+    defined(STM32L432KB) || defined(STM32L432KC) || defined(STM32L442KC)
+Interrupt_context irq_context[2];
 #endif
 } // namespace
 
@@ -98,7 +98,15 @@ void USART2_IRQHandler()
     }
 }
 
-#if defined(STM32L412R8) || defined(STM32L412C8) || defined(STM32L412CB) || defined(STM32L412RB)
+#if defined(STM32L412R8) || defined(STM32L431CB) || defined(STM32L412C8) || defined(STM32L412CB) || \
+    defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431CC) || \
+    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
+    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
+    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
+    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
+    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
+    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
+    defined(STM32L462RE) || defined(STM32L462VE)
 void USART3_IRQHandler()
 {
     cml_assert(nullptr != irq_context[2].p_general);

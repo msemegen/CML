@@ -9,6 +9,7 @@
 
 // std
 #include <cstdint>
+#include <limits>
 
 // soc
 #include <soc/Factory.hpp>
@@ -57,9 +58,18 @@ public:
         void* p_user_data = nullptr;
     };
 
+    Interrupt()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+        , irqn(static_cast<IRQn_Type>(std::numeric_limits<int32_t>::max()))
+    {
+    }
+
     ~Interrupt()
     {
-        this->disable();
+        if (0x0 != NVIC_GetEnableIRQ(this->irqn))
+        {
+            this->disable();
+        }
     }
 
     void enable(const Callback& a_callback, const IRQ_config& a_irq_config);

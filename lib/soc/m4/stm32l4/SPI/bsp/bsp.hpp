@@ -75,14 +75,14 @@ public:
 
 #if defined(STM32L412R8) || defined(STM32L412C8) || defined(STM32L412CB) || defined(STM32L412RB) || \
     defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431KB) || defined(STM32L431KC) || \
-    defined(STM32L442KC) || defined(STM32L432KB) || defined(STM32L432KC) || defined(STM32L431CB) || \
-    defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || \
-    defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || \
-    defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || \
-    defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+    defined(STM32L442KC) || defined(STM32L432KB) || defined(STM32L431CB) || defined(STM32L431CC) || \
+    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
+    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
+    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
+    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
+    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
+    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
+    defined(STM32L462RE) || defined(STM32L462VE)
 template<> class Factory<m4::stm32l4::SPI_master, 2u> : private cml::Non_constructible
 {
 public:
@@ -135,12 +135,13 @@ public:
 #endif
 
 #if defined(STM32L431CB) || defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || \
-    defined(STM32L431VC) || defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || \
-    defined(STM32L433RC) || defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || \
-    defined(STM32L443VC) || defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || \
-    defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || \
-    defined(STM32L452CE) || defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || \
-    defined(STM32L452VE) || defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+    defined(STM32L431VC) || defined(STM32L432KC) || defined(STM32L433CB) || defined(STM32L433CC) || \
+    defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || defined(STM32L443CC) || \
+    defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || defined(STM32L451CE) || \
+    defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || \
+    defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || defined(STM32L452RE) || \
+    defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || defined(STM32L462RE) || \
+    defined(STM32L462VE)
 template<> class Factory<m4::stm32l4::SPI_master, 3u> : private cml::Non_constructible
 {
 public:
@@ -201,24 +202,25 @@ template<> void rcc<SPI, 1>::disable();
 
 #if defined(STM32L412R8) || defined(STM32L412C8) || defined(STM32L412CB) || defined(STM32L412RB) || \
     defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431KB) || defined(STM32L431KC) || \
-    defined(STM32L442KC) || defined(STM32L432KB) || defined(STM32L432KC) || defined(STM32L431CB) || \
-    defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || \
-    defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || \
-    defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || \
-    defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+    defined(STM32L442KC) || defined(STM32L432KB) || defined(STM32L431CB) || defined(STM32L431CC) || \
+    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
+    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
+    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
+    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
+    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
+    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
+    defined(STM32L462RE) || defined(STM32L462VE)
 template<> void rcc<SPI, 2u>::enable(bool a_enable_in_lp);
 template<> void rcc<SPI, 2u>::disable();
 #endif
 #if defined(STM32L431CB) || defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || \
-    defined(STM32L431VC) || defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || \
-    defined(STM32L433RC) || defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || \
-    defined(STM32L443VC) || defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || \
-    defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || \
-    defined(STM32L452CE) || defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || \
-    defined(STM32L452VE) || defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+    defined(STM32L431VC) || defined(STM32L432KC) || defined(STM32L433CB) || defined(STM32L433CC) || \
+    defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || defined(STM32L443CC) || \
+    defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || defined(STM32L451CE) || \
+    defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || \
+    defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || defined(STM32L452RE) || \
+    defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || defined(STM32L462RE) || \
+    defined(STM32L462VE)
 template<> void rcc<SPI, 3u>::enable(bool a_enable_in_lp);
 template<> void rcc<SPI, 3u>::disable();
 #endif

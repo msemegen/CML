@@ -36,7 +36,6 @@ public:
         : idx(std::numeric_limits<decltype(this->idx)>::max())
     {
     }
-    ~RNG();
 
     bool enable(std::uint32_t a_timeout);
     void disable();

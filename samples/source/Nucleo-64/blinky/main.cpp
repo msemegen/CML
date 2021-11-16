@@ -7,8 +7,8 @@
 
 // cml
 #include <cml/debug/assertion.hpp>
+#include <cml/hal/Factory.hpp>
 #include <cml/hal/GPIO.hpp>
-#include <cml/hal/IRQ.hpp>
 #include <cml/hal/Interrupt.hpp>
 #include <cml/hal/Systick.hpp>
 #include <cml/hal/mcu.hpp>
@@ -27,12 +27,6 @@ void assert_halt(void*)
         ;
 }
 
-void gpio_interrupt_callback(uint32_t a_pin, void* a_p_user_data)
-{
-    GPIO::Out::Pin* p_led_pin = static_cast<GPIO::Out::Pin*>(a_p_user_data);
-    p_led_pin->toggle_level();
-}
-
 void assert_print(const char*, uint32_t, const char*, void*) {}
 } // namespace
 
@@ -42,37 +36,32 @@ int main()
     using namespace cml::debug;
     using namespace cml::utils;
 
-    Systick systick;
+    nvic::set_config({ nvic::Config::Grouping::_4, 0x5u });
 
-    nvic::set_config({ nvic::Config::Grouping::_4, 0x7u });
+    Systick systick               = Factory<Systick>::create();
+    Interrupt<Systick> systick_it = Factory<Interrupt<Systick>>::create(&systick);
 
-    systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1, 0x9u);
-    systick.register_tick_callback({ system_timer::update, nullptr });
+    systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
+    systick_it.enable({ 0x1u, 0x1u });
+    systick_it.register_callback({ system_timer::update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });
 
-    GPIO gpio_port_a(GPIO::id::a);
-    GPIO gpio_port_c(GPIO::id::c);
+    GPIO gpio_port_a = Factory<GPIO, 1>::create();
 
-    rcc<GPIO>::enable(GPIO::id::a, false);
-    rcc<GPIO>::enable(GPIO::id::c, false);
-
+    rcc<GPIO, 1>::enable(false);
     gpio_port_a.enable();
-    gpio_port_c.enable();
 
     GPIO::Out::Pin led_pin;
     gpio_port_a.p_out->enable(5u, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
-    gpio_port_c.p_in->enable(13u, GPIO::Pull::down);
-
-    led_pin.set_level(GPIO::Level::high);
-
-    rcc<mcu>::set_SYSCFG_active(true);
-    Interrupt<GPIO> gpio_interrupt(Interrupt<GPIO>::id::_10_15);
-    gpio_interrupt.enable({ gpio_interrupt_callback, &led_pin }, { true, 0x6u, 0x0 });
-    gpio_interrupt.attach(gpio_port_c, 13u, Interrupt<GPIO>::Trigger_flag::rising, Interrupt<GPIO>::Mode::interrupt);
+    led_pin.set_level(GPIO::Level::low);
 
     while (true)
-        ;
+    {
+        led_pin.toggle_level();
+        delay::ms(500u);
+    }
+
     return 0;
 }

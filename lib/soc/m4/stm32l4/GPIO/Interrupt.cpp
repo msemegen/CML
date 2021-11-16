@@ -108,6 +108,7 @@ namespace m4 {
 namespace stm32l4 {
 void Interrupt<GPIO>::enable(const Callback& a_callback, const IRQ_config& a_irq_config)
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
     cml_assert(true == rcc<mcu>::is_SYSCFG_active());
 
     NVIC_SetPriority(
@@ -120,6 +121,8 @@ void Interrupt<GPIO>::enable(const Callback& a_callback, const IRQ_config& a_irq
 
 void Interrupt<GPIO>::disable()
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
+
     NVIC_DisableIRQ(this->irqn);
 
     callbacks[this->idx] = { nullptr, nullptr };
@@ -127,6 +130,8 @@ void Interrupt<GPIO>::disable()
 
 void Interrupt<GPIO>::attach(const GPIO& a_port, std::uint32_t a_pin, Trigger_flag a_trigger, Mode a_mode)
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
+
     volatile std::uint32_t* p_register = &(SYSCFG->EXTICR[a_pin / 4u]);
     std::uint32_t pos                  = ((static_cast<std::uint32_t>(a_pin) % 4u) * 4u);
 
@@ -183,6 +188,8 @@ void Interrupt<GPIO>::attach(const GPIO& a_port, std::uint32_t a_pin, Trigger_fl
 
 void Interrupt<GPIO>::deattach(const GPIO& a_port, std::uint32_t a_pin)
 {
+    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
+
     Interrupt_guard guard;
 
     bit::clear(&(EXTI->RTSR1), a_pin);

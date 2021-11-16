@@ -37,6 +37,7 @@ template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::USART>, 1u> : priva
 public:
     static m4::stm32l4::Interrupt<m4::stm32l4::USART> create(m4::stm32l4::USART* a_p_USART)
     {
+        cml_assert(0u == a_p_USART->get_idx());
         return m4::stm32l4::Interrupt<m4::stm32l4::USART>(a_p_USART, IRQn_Type::USART1_IRQn);
     }
 };
@@ -45,6 +46,7 @@ template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::USART>, 1u> : private
 public:
     static m4::stm32l4::Polling<m4::stm32l4::USART> create(m4::stm32l4::USART* a_p_USART)
     {
+        cml_assert(0u == a_p_USART->get_idx());
         return m4::stm32l4::Polling<m4::stm32l4::USART>(a_p_USART);
     }
 };

@@ -38,8 +38,8 @@ void TIM6_DAC_IRQHandler()
 #if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || defined(STM32L443xx)
 void TIM7_IRQHandler()
 {
-    cml_assert(nullptr != timers[1]);
-    basic_timer_interrupt_handler(timers[1]);
+    cml_assert(nullptr != irq_context[1]);
+    basic_timer_interrupt_handler(irq_context[1]);
 }
 #endif
 }
