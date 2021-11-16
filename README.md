@@ -1,4 +1,3 @@
-# CML
-Cortex-M Library 
+# CML - Cortex-M Library
 
-HAL for part of STM32L4 family (STM32L412xx, STM32L422xx, STM32L431xx, STM32L432xx, STM32L433xx, STM32L442xx, STM32L443xx, STM32L451xx, STM32L452xx, STM32L462xx)
+CML is a Hardware Abstraction Layer library that provides unified interface and common functionality for STM32L4 family mcus. Written in modern C++ 17 is focused on the performance and easy of use.
