@@ -1,4 +1,4 @@
-# CML
-Cortex-M Library 
+# CML - Cortex-M Library
 
-HAL for part of STM32L4 family (STM32L412xx, STM32L422xx, STM32L431xx, STM32L432xx, STM32L433xx, STM32L442xx, STM32L443xx, STM32L451xx, STM32L452xx, STM32L462xx)
+CML is an open source library that provides hardware abstraction layer for STM32L4 family microcontrollers. It supports variety of peripherals including DMA and non DMA interfaces. Portable C++ 17 ensures full portability across various of modern C++ toolchains. Consistent API design makes CML easy to use and contribute. Compile time checks with conditional compilation guarantees that used API is available for given microcontroller.
+In addition library provides several useful tools like asserts with custom print and mcu halt handlers, bit flag operations, us/ms delays etc.
