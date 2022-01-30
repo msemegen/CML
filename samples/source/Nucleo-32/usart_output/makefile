@@ -9,7 +9,7 @@ ifndef NOSILENT
 .SILENT:
 endif
 
-PROJECT_NAME := usart_output
+PROJECT_NAME := adc_temp
 ROOT         := $(CURDIR)
 CML_ROOT     := $(ROOT)/../../../..
 LIBRARIES    := $(ROOT)/libraries
@@ -20,7 +20,7 @@ MCU_TYPE    := STM32L432xx
 MCU_MODEL   := STM32L432KC
 OUTPUT_NAME := $(PROJECT_NAME)_$(MCU_MODEL)
 
-CPP_SOURCE_PATHS := $(CML_ROOT)/samples/source/Nucleo-32/usart_output
+CPP_SOURCE_PATHS := $(CML_ROOT)/samples/source/Nucleo-32/adc_temp
 
 OUTPUT_FOLDER_NAME := output
 OUTDIR         	   := $(ROOT)/$(OUTPUT_FOLDER_NAME)

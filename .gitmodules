@@ -1,0 +1,6 @@
+[submodule "templates/stm32l4/52RE/sysclk/CLI"]
+	path = templates/stm32l4/52RE/sysclk/CLI
+	url = https://github.com/msemegen/CLI
+[submodule "tests/externals/googletest"]
+	path = tests/externals/googletest
+	url = https://github.com/google/googletest.git

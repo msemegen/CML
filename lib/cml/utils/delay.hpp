@@ -9,40 +9,45 @@
 
 // cml
 #include <cml/Non_constructible.hpp>
-#include <cml/hal/system_timer.hpp>
+#include <cml/utils/ms_tick_counter.hpp>
 #include <cml/various.hpp>
 
 #ifdef STM32L4
-#include <soc/m4/stm32l4/misc.hpp>
-#endif // STM32L4
+#include <cml/hal/cycles_counter.hpp>
+#include <cml/hal/mcu.hpp>
+#include <cml/hal/rcc.hpp>
+#endif
 
 namespace cml {
 namespace utils {
-
 class delay : private cml::Non_constructible
 {
 public:
     static void s(uint32_t a_time)
     {
-        uint32_t start = hal::system_timer::get();
-        while (various::time_diff(hal::system_timer::get(), start) <= a_time * 1000u)
+        uint32_t start = ms_tick_counter::get();
+        while (various::tick_diff(ms_tick_counter::get(), start) <= a_time * 1000u)
             ;
     }
 
     static void ms(uint32_t a_time)
     {
-        uint32_t start = hal::system_timer::get();
-        while (various::time_diff(hal::system_timer::get(), start) <= a_time)
+        uint32_t start = ms_tick_counter::get();
+        while (various::tick_diff(ms_tick_counter::get(), start) <= a_time)
             ;
     }
 
+#ifdef STM32L4
     inline static void us(uint32_t a_time)
     {
-#ifdef STM32L4
-        soc::m4::stm32l4::misc::delay_us(a_time);
-#endif // STM32L4
-    }
-};
+        hal::cycles_counter::reset();
+        const std::uint32_t max =
+            hal::cycles_counter::get() + (hal::rcc<hal::mcu>::get_SYSCLK_frequency_Hz() / 1_MHz * (a_time - 1));
 
+        while (hal::cycles_counter::get() < max)
+            ;
+    }
+#endif
+};
 } // namespace utils
 } // namespace cml

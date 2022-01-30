@@ -14,7 +14,7 @@
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/nvic.hpp>
 #include <cml/hal/rcc.hpp>
-#include <cml/hal/system_timer.hpp>
+#include <cml/utils/tick_counter.hpp>
 #include <cml/utils/delay.hpp>
 
 namespace {
@@ -43,7 +43,7 @@ int main()
     
     systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
     systick_it.enable({ 0x1u, 0x1u });
-    systick_it.register_callback({ system_timer::update, nullptr });
+    systick_it.register_callback({ tick_counter::update, nullptr });
     
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });

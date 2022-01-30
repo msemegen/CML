@@ -14,7 +14,6 @@
 #include <cml/Non_constructible.hpp>
 
 namespace cml {
-
 class bit_flag : private Non_constructible
 {
 public:
@@ -45,5 +44,4 @@ public:
         (*a_p_register) &= ~a_flag;
     }
 };
-
 } // namespace cml

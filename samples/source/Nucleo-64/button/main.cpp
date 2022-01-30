@@ -7,15 +7,14 @@
 
 // cml
 #include <cml/debug/assertion.hpp>
-#include <cml/hal/Factory.hpp>
 #include <cml/hal/GPIO.hpp>
-#include <cml/hal/Interrupt.hpp>
+#include <cml/hal/Peripheral.hpp>
 #include <cml/hal/Systick.hpp>
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/nvic.hpp>
 #include <cml/hal/rcc.hpp>
-#include <cml/hal/system_timer.hpp>
 #include <cml/utils/delay.hpp>
+#include <cml/utils/ms_tick_counter.hpp>
 
 namespace {
 using namespace cml::hal;
@@ -44,18 +43,17 @@ int main()
 
     nvic::set_config({ nvic::Config::Grouping::_4, 0x5u });
 
-    Systick systick               = Factory<Systick>::create();
-    Interrupt<Systick> systick_it = Factory<Interrupt<Systick>>::create(&systick);
+    Systick systick = Peripheral<Systick>::create();
 
-    systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
-    systick_it.enable({ 0x1u, 0x1u });
-    systick_it.register_callback({ system_timer::update, nullptr });
+    systick.enable((rcc<mcu>::get_HCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
+    systick.interrupt.enable({ 0x1u, 0x1u });
+    systick.interrupt.register_callback({ ms_tick_counter::update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });
 
-    GPIO gpio_port_a = Factory<GPIO, 1>::create();
-    GPIO gpio_port_c = Factory<GPIO, 3>::create();
+    GPIO gpio_port_a = Peripheral<GPIO, 1>::create();
+    GPIO gpio_port_c = Peripheral<GPIO, 3>::create();
 
     rcc<GPIO, 1>::enable(false);
     rcc<GPIO, 3>::enable(false);
@@ -64,15 +62,15 @@ int main()
     gpio_port_c.enable();
 
     GPIO::Out::Pin led_pin;
-    gpio_port_a.p_out->enable(5u, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
-    gpio_port_c.p_in->enable(13u, GPIO::Pull::down);
+    gpio_port_a.out.enable(5u, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
+    gpio_port_c.in.enable(13u, GPIO::Pull::down);
     led_pin.set_level(GPIO::Level::high);
 
     rcc<mcu>::set_SYSCFG_active(true);
-    Interrupt<GPIO> gpio_interrupt = Factory<Interrupt<GPIO>>::create<Interrupt<GPIO>::Id::_10_15>();
+    GPIO::Interrupt gpio_interrupt { GPIO::Interrupt::Id::_10_15 };
 
     gpio_interrupt.enable({ gpio_interrupt_callback, &led_pin }, { 0x1u, 0x0 });
-    gpio_interrupt.attach(gpio_port_c, 13u, Interrupt<GPIO>::Trigger_flag::rising, Interrupt<GPIO>::Mode::interrupt);
+    gpio_interrupt.attach(gpio_port_c, 13u, GPIO::Interrupt::Trigger_flag::rising, GPIO::Interrupt::Mode::interrupt);
 
     while (true)
         ;

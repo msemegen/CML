@@ -9,18 +9,19 @@
 
 // std
 #include <cstdint>
-#include <tuple>
+#include <limits>
 
 // external
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/Factory.hpp>
+#include <soc/Peripheral.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
 #include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
+#include <cml/bit_flag.hpp>
 #include <cml/various.hpp>
 
 namespace soc {
@@ -72,9 +73,28 @@ public:
         Bit_significance bit_significance = cml::various::get_enum_incorrect_value<Bit_significance>();
     };
 
+    SPI(SPI&&)   = default;
+    SPI& operator=(SPI&&) = default;
+
+    SPI()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+        , p_registers(nullptr)
+    {
+    }
+
     std::uint32_t get_idx() const
     {
         return this->idx;
+    }
+
+    bool is_enabled() const
+    {
+        return cml::bit_flag::is(this->p_registers->CR1, SPI_CR1_SPE);
+    }
+
+    bool is_created() const
+    {
+        return std::numeric_limits<decltype(this->idx)>::max() != this->idx && nullptr != this->p_registers;
     }
 
     operator SPI_TypeDef*()
@@ -94,7 +114,7 @@ protected:
     {
     }
 
-    const std::uint32_t idx;
+    std::uint32_t idx;
     SPI_TypeDef* p_registers;
 };
 
@@ -140,10 +160,19 @@ public:
         Crc crc                         = cml::various::get_enum_incorrect_value<Crc>();
     };
 
-public:
+    SPI_master(SPI_master&&) = default;
+    SPI_master& operator=(SPI_master&&) = default;
+
+    SPI_master()
+        : SPI()
+    {
+    }
     ~SPI_master()
     {
-        this->disable();
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
     }
 
     void enable(const Enable_config& a_config, const Frame_format& a_frame_format);
@@ -158,7 +187,7 @@ private:
     {
     }
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 class SPI_slave : public SPI
@@ -196,9 +225,20 @@ public:
         Crc crc                         = cml::various::get_enum_incorrect_value<Crc>();
     };
 
+    SPI_slave(SPI_slave&&) = default;
+    SPI_slave& operator=(SPI_slave&&) = default;
+
+    SPI_slave()
+        : SPI()
+    {
+    }
+
     ~SPI_slave()
     {
-        this->disable();
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
     }
 
     void enable(const Enable_config& a_config, const Frame_format& a_frame_format);
@@ -213,8 +253,7 @@ private:
     {
     }
 
-private:
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 template<std::size_t id> class rcc<SPI, id> : private cml::Non_constructible

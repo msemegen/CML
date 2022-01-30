@@ -9,16 +9,18 @@
 
 // std
 #include <cstdint>
+#include <limits>
 
 // externals
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/Factory.hpp>
+#include <soc/Peripheral.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/bit_flag.hpp>
 #include <cml/various.hpp>
 
 namespace soc {
@@ -27,9 +29,35 @@ namespace stm32l4 {
 class I2C : private cml::Non_copyable
 {
 public:
+    I2C()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+        , p_registers(nullptr)
+    {
+    }
+
+    ~I2C()
+    {
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
+    }
+
+    void disable();
+
     std::uint32_t get_idx() const
     {
         return this->idx;
+    }
+
+    bool is_enabled() const
+    {
+        return cml::bit_flag::is(this->p_registers->CR1, I2C_CR1_PE);
+    }
+
+    bool is_created() const
+    {
+        return std::numeric_limits<decltype(this->idx)>::max() != this->idx && nullptr != this->p_registers;
     }
 
     operator I2C_TypeDef*()
@@ -82,10 +110,23 @@ public:
         std::uint32_t timings       = 0;
     };
 
-    ~I2C_master();
+    I2C_master(I2C_master&&) = default;
+    I2C_master& operator=(I2C_master&&) = default;
+
+    I2C_master()
+        : I2C()
+    {
+    }
+
+    ~I2C_master()
+    {
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
+    }
 
     void enable(const Enable_config& a_config);
-    void disable();
 
     Enable_config get_Enable_config() const;
 
@@ -95,7 +136,7 @@ private:
     {
     }
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 class I2C_slave : public I2C
@@ -129,10 +170,23 @@ public:
     };
 
 public:
-    ~I2C_slave();
+    I2C_slave(I2C_slave&&) = default;
+    I2C_slave& operator=(I2C_slave&&) = default;
+
+    I2C_slave()
+        : I2C()
+    {
+    }
+
+    ~I2C_slave()
+    {
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
+    }
 
     void enable(const Enable_config& a_config);
-    void disable();
 
     Enable_config get_Enable_config() const;
 
@@ -143,7 +197,7 @@ private:
     }
 
 private:
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 template<std::size_t id> class rcc<I2C, id> : private cml::Non_constructible

@@ -9,6 +9,7 @@
 
 // std
 #include <cstddef>
+#include <limits>
 
 // cml
 #include <cml/Non_constructible.hpp>
@@ -16,7 +17,8 @@
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-template<typename Periph_t, std::size_t id=255> class rcc : private cml::Non_constructible
+template<typename Periph_t, std::size_t id = std::numeric_limits<std::size_t>::max()> class rcc
+    : private cml::Non_constructible
 {
 };
 } // namespace stm32l4

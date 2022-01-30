@@ -12,18 +12,19 @@
 
 // soc
 #include <soc/m4/stm32l4/I2C/common.hpp>
-#include <soc/system_timer.hpp>
 
 // cml
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
+#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/various.hpp>
 
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-
 using namespace cml;
+using namespace cml::utils;
 
 Polling<I2C_master>::Result
 Polling<I2C_master>::transmit(std::uint8_t a_slave_address, const void* a_p_data, std::size_t a_data_size_in_bytes)
@@ -89,7 +90,7 @@ Polling<I2C_master>::Result Polling<I2C_master>::transmit(std::uint8_t a_slave_a
     cml_assert(a_data_size_in_bytes > 0u && a_data_size_in_bytes <= 255u);
     cml_assert(a_timeout > 0u);
 
-    std::uint32_t start = system_timer::get();
+    std::uint32_t start = ms_tick_counter::get();
 
     const std::uint32_t address_mask   = static_cast<std::uint32_t>(a_slave_address) & I2C_CR2_SADD;
     const std::uint32_t data_size_mask = static_cast<std::uint32_t>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
@@ -103,7 +104,7 @@ Polling<I2C_master>::Result Polling<I2C_master>::transmit(std::uint8_t a_slave_a
     Result::Bus_flag bus_status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(p_registers->ISR, I2C_ISR_STOPF) && false == error &&
-           a_timeout >= various::time_diff(system_timer::get(), start))
+           a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
     {
         if (true == bit_flag::is(p_registers->ISR, I2C_ISR_TXE) && bytes < a_data_size_in_bytes)
         {
@@ -201,7 +202,7 @@ Polling<I2C_master>::Result Polling<I2C_master>::receive(std::uint8_t a_slave_ad
     cml_assert(a_data_size_in_bytes > 0u && a_data_size_in_bytes <= 255u);
     cml_assert(a_timeout > 0u);
 
-    std::uint32_t start = system_timer::get();
+    std::uint32_t start = ms_tick_counter::get();
 
     const std::uint32_t address_mask   = static_cast<std::uint32_t>(a_slave_address) & I2C_CR2_SADD;
     const std::uint32_t data_size_mask = static_cast<std::uint32_t>(a_data_size_in_bytes) << I2C_CR2_NBYTES_Pos;
@@ -215,7 +216,7 @@ Polling<I2C_master>::Result Polling<I2C_master>::receive(std::uint8_t a_slave_ad
     Result::Bus_flag bus_status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(p_registers->ISR, I2C_ISR_STOPF) && false == error &&
-           a_timeout >= various::time_diff(system_timer::get(), start))
+           a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
     {
         if (true == bit_flag::is(p_registers->ISR, I2C_ISR_RXNE) && bytes < a_data_size_in_bytes)
         {
@@ -305,7 +306,7 @@ Polling<I2C_slave>::transmit(const void* a_p_data, std::size_t a_data_size_in_by
     cml_assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255u);
     cml_assert(a_timeout > 0);
 
-    std::uint32_t start = system_timer::get();
+    std::uint32_t start = ms_tick_counter::get();
 
     constexpr std::uint32_t error_mask = I2C_ISR_TIMEOUT | I2C_ISR_PECERR | I2C_ISR_OVR | I2C_ISR_ARLO | I2C_ISR_BERR;
 
@@ -317,7 +318,7 @@ Polling<I2C_slave>::transmit(const void* a_p_data, std::size_t a_data_size_in_by
 
     while ((false == bit_flag::is(p_registers->ISR, I2C_ISR_STOPF) &&
             false == bit_flag::is(p_registers->ISR, I2C_ISR_NACKF)) &&
-           false == error && a_timeout >= various::time_diff(system_timer::get(), start))
+           false == error && a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
     {
         if (true == bit_flag::is(p_registers->ISR, I2C_ISR_ADDR))
         {
@@ -408,7 +409,7 @@ Polling<I2C_slave>::receive(void* a_p_data, std::size_t a_data_size_in_bytes, st
     cml_assert(a_data_size_in_bytes > 0 && a_data_size_in_bytes <= 255u);
     cml_assert(a_timeout > 0u);
 
-    std::uint32_t start = system_timer::get();
+    std::uint32_t start = ms_tick_counter::get();
 
     I2C_TypeDef* p_registers = static_cast<I2C_TypeDef*>(*(this->a_p_I2C));
 
@@ -417,7 +418,7 @@ Polling<I2C_slave>::receive(void* a_p_data, std::size_t a_data_size_in_bytes, st
     Result::Bus_flag bus_status = Result::Bus_flag::ok;
 
     while (false == bit_flag::is(p_registers->ICR, I2C_ICR_STOPCF) && false == error &&
-           a_timeout >= various::time_diff(system_timer::get(), start))
+           a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
     {
         if (true == bit_flag::is(p_registers->ISR, I2C_ISR_ADDR))
         {

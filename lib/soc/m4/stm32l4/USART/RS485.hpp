@@ -9,16 +9,17 @@
 
 // std
 #include <cstdint>
-#include <tuple>
 
 // externals
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/Factory.hpp>
+#include <soc/m4/IRQ_config.hpp>
+#include <soc/m4/stm32l4/GPIO/GPIO.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/bit_flag.hpp>
 #include <cml/various.hpp>
 
 namespace soc {
@@ -50,9 +51,134 @@ public:
         std::uint8_t address        = 0;
     };
 
+    class Polling
+    {
+    public:
+        struct Result
+        {
+            enum class Event_flag : std::uint32_t
+            {
+                none              = 0x0,
+                framing_error     = 0x1,
+                parity_error      = 0x2,
+                overrun           = 0x4,
+                noise_detected    = 0x8,
+                idle              = 0x10u,
+                transfer_complete = 0x20u,
+                address_matched   = 0x40u
+            };
+
+            Event_flag bus_status            = cml::various::get_enum_incorrect_value<Event_flag>();
+            std::size_t data_length_in_words = 0;
+        };
+
+        Result transmit(std::uint8_t a_address,
+                        const void* a_p_data,
+                        std::size_t a_data_size_in_words,
+                        GPIO::Out::Pin* a_p_flow_control_pin);
+        Result transmit(std::uint8_t a_address,
+                        const void* a_p_data,
+                        std::size_t a_data_size_in_words,
+                        GPIO::Out::Pin* a_p_flow_control_pin,
+                        std::uint32_t a_timeout_ms);
+
+        Result receive(void* a_p_data, std::size_t a_data_size_in_words, GPIO::Out::Pin* a_p_flow_control_pin);
+        Result receive(void* a_p_data,
+                       std::size_t a_data_size_in_words,
+                       GPIO::Out::Pin* a_p_flow_control_pin,
+                       std::uint32_t a_timeout_ms);
+
+    private:
+        RS485* p_RS485;
+        friend RS485;
+    };
+    class Interrupt
+    {
+    public:
+        enum class Event_flag : std::uint32_t
+        {
+            none              = 0x0u,
+            framing_error     = 0x1u,
+            parity_error      = 0x2u,
+            overrun           = 0x4u,
+            noise_detected    = 0x8u,
+            idle              = 0x10u,
+            transfer_complete = 0x20u,
+            address_matched   = 0x40u,
+        };
+
+        struct Transmit_callback
+        {
+            using Function = void (*)(volatile uint16_t* a_p_data, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+        struct Receive_callback
+        {
+            using Function = void (*)(std::uint32_t a_data, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+        struct Event_callback
+        {
+            using Function = void (*)(Event_flag a_event, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+
+        ~Interrupt()
+        {
+            if (true == this->is_enabled())
+            {
+                this->disable();
+            }
+        }
+
+        void enable(const IRQ_config& a_config);
+        void disable();
+
+        void transmit_start(const Transmit_callback& a_callback, GPIO::Out::Pin* a_p_flow_control_pin);
+        void transmit_stop();
+
+        void receive_start(const Receive_callback& a_callback, GPIO::Out::Pin* a_p_flow_control_pin);
+        void receive_stop();
+
+        void register_Event_callback(const Event_callback& a_callback, Event_flag a_enabled_events);
+        void unregister_Event_callback();
+
+        bool is_enabled() const
+        {
+            return 0u != NVIC_GetEnableIRQ(this->p_RS485->irqn);
+        }
+
+    private:
+        void set_irq_context();
+        void clear_irq_context();
+
+        RS485* p_RS485;
+        friend class RS485;
+    };
+
+    RS485(RS485&&) = default;
+    RS485& operator=(RS485&&) = default;
+
+    RS485()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+        , p_registers(nullptr)
+        , irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
+        , enabled_interrupt_events(Interrupt::Event_flag::none)
+    {
+    }
+
     ~RS485()
     {
-        this->disable();
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
     }
 
     bool enable(const Enable_config& a_config, std::uint32_t a_timeout);
@@ -61,6 +187,16 @@ public:
     std::uint32_t get_idx() const
     {
         return this->idx;
+    }
+
+    bool is_enabled() const
+    {
+        return cml::bit_flag::is(this->p_registers->CR1, USART_CR1_UE);
+    }
+
+    bool is_created() const
+    {
+        return std::numeric_limits<decltype(this->idx)>::max() != this->idx && nullptr != this->p_registers;
     }
 
     operator USART_TypeDef*()
@@ -73,18 +209,74 @@ public:
         return this->p_registers;
     }
 
+    Polling polling;
+    Interrupt interrupt;
+
 private:
-    RS485(std::size_t a_idx, USART_TypeDef* a_p_USART)
+    RS485(std::size_t a_idx, USART_TypeDef* a_p_registers, IRQn_Type a_irqn)
         : idx(a_idx)
-        , p_registers(a_p_USART)
+        , p_registers(a_p_registers)
+        , irqn(a_irqn)
+        , enabled_interrupt_events(Interrupt::Event_flag::none)
     {
+        this->polling.p_RS485   = this;
+        this->interrupt.p_RS485 = this;
     }
 
-    const std::uint32_t idx;
+    std::uint32_t idx;
     USART_TypeDef* p_registers;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    IRQn_Type irqn;
+
+    Interrupt::Transmit_callback transmit_callback;
+    Interrupt::Receive_callback receive_callback;
+    Interrupt::Event_callback event_callback;
+    Interrupt::Event_flag enabled_interrupt_events;
+
+    friend void RS485_interrupt_handler(RS485* a_p_this);
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
+
+void RS485_interrupt_handler(RS485* a_p_this);
+
+constexpr RS485::Polling::Result::Event_flag operator|(RS485::Polling::Result::Event_flag a_f1,
+                                                       RS485::Polling::Result::Event_flag a_f2)
+{
+    return static_cast<RS485::Polling::Result::Event_flag>(static_cast<std::uint32_t>(a_f1) |
+                                                           static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr RS485::Polling::Result::Event_flag operator&(RS485::Polling::Result::Event_flag a_f1,
+                                                       RS485::Polling::Result::Event_flag a_f2)
+{
+    return static_cast<RS485::Polling::Result::Event_flag>(static_cast<std::uint32_t>(a_f1) &
+                                                           static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr RS485::Polling::Result::Event_flag operator|=(RS485::Polling::Result::Event_flag& a_f1,
+                                                        RS485::Polling::Result::Event_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
+
+constexpr RS485::Interrupt::Event_flag operator|(RS485::Interrupt::Event_flag a_f1, RS485::Interrupt::Event_flag a_f2)
+{
+    return static_cast<RS485::Interrupt::Event_flag>(static_cast<std::uint32_t>(a_f1) |
+                                                     static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr RS485::Interrupt::Event_flag operator&(RS485::Interrupt::Event_flag a_f1, RS485::Interrupt::Event_flag a_f2)
+{
+    return static_cast<RS485::Interrupt::Event_flag>(static_cast<std::uint32_t>(a_f1) &
+                                                     static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr RS485::Interrupt::Event_flag operator|=(RS485::Interrupt::Event_flag& a_f1, RS485::Interrupt::Event_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

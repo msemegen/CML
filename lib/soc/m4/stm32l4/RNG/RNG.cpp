@@ -11,22 +11,59 @@
 #include <soc/m4/stm32l4/RNG/RNG.hpp>
 
 // soc
+#include <soc/Interrupt_guard.hpp>
 #include <soc/m4/stm32l4/mcu/mcu.hpp>
-#include <soc/system_timer.hpp>
 
 // cml
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
+#include <cml/utils/ms_tick_counter.hpp>
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
+
+namespace {
+using namespace soc::m4::stm32l4;
+
+RNG* irq_context[1] = { nullptr };
+} // namespace
+
+extern "C" {
+using namespace soc::m4::stm32l4;
+
+void RNG_IRQHandler()
+{
+    RNG_interrupt_handler();
+}
+}
 
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-#define RNG_T ((RNG_TypeDef*)RNG_BASE)
-
 using namespace cml;
 using namespace cml::utils;
+
+void RNG_interrupt_handler()
+{
+    cml_assert(nullptr != irq_context[0]);
+
+    const std::uint32_t isr = RNG_T->SR;
+    std::uint32_t value     = 0;
+
+    if (true == bit_flag::is(isr, RNG_SR_DRDY))
+    {
+        value = RNG_T->DR;
+    }
+
+    if (nullptr != irq_context[0]->interrupt.callback.function)
+    {
+        irq_context[0]->interrupt.callback.function(value,
+                                                    bit_flag::is(isr, RNG_SR_CECS),
+                                                    bit_flag::is(isr, RNG_SR_SECS),
+                                                    irq_context[0]->interrupt.callback.p_user_data);
+    }
+
+    NVIC_ClearPendingIRQ(RNG_IRQn);
+}
 
 bool RNG::enable(std::uint32_t a_timeout)
 {
@@ -34,7 +71,7 @@ bool RNG::enable(std::uint32_t a_timeout)
     cml_assert(rcc<mcu>::get_CLK48_frequency_Hz() <= 48_MHz);
     cml_assert(a_timeout > 0u);
 
-    uint32_t start = system_timer::get();
+    uint32_t start = ms_tick_counter::get();
 
     bit_flag::set(&(RNG_T->CR), RNG_CR_RNGEN);
 
@@ -55,6 +92,67 @@ void RNG::disable()
 
     bit_flag::clear(&(RNG_T->CR), RNG_CR_RNGEN);
     NVIC_DisableIRQ(RNG_IRQn);
+}
+
+bool RNG::Polling::get_value(std::uint32_t* a_p_value, std::uint32_t a_timeout)
+{
+    cml_assert(true == this->is_created());
+
+    cml_assert(a_timeout > 0);
+
+    bool ret = wait_until::all_bits(&(RNG_T->SR), RNG_SR_DRDY, false, ms_tick_counter::get(), a_timeout);
+
+    if (true == ret)
+    {
+        (*a_p_value) = RNG_T->DR;
+    }
+
+    return ret;
+}
+
+void RNG::Interrupt::enable(const IRQ_config& a_irq_config)
+{
+    cml_assert(true == this->is_created());
+
+    cml_assert(nullptr == irq_context[0]);
+
+    irq_context[0] = this->p_RNG;
+
+    NVIC_SetPriority(
+        IRQn_Type::RNG_IRQn,
+        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
+    NVIC_EnableIRQ(IRQn_Type::RNG_IRQn);
+}
+
+void RNG::Interrupt::disable()
+{
+    cml_assert(true == this->is_created());
+
+    NVIC_DisableIRQ(IRQn_Type::RNG_IRQn);
+    this->unregister_callback();
+
+    irq_context[0] = nullptr;
+}
+
+void RNG::Interrupt::register_callback(const Callback& a_callback)
+{
+    cml_assert(true == this->is_created());
+
+    cml_assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
+
+    this->callback = a_callback;
+
+    bit_flag::set(&(RNG_T->CR), RNG_CR_IE);
+}
+
+void RNG::Interrupt::unregister_callback()
+{
+    cml_assert(true == this->is_created());
+
+    bit_flag::clear(&(RNG_T->CR), RNG_CR_IE);
+    this->callback = { nullptr, nullptr };
 }
 
 void rcc<RNG>::enable(bool a_enable_in_lp)

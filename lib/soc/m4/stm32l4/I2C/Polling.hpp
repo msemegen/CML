@@ -8,7 +8,7 @@
  */
 
 // soc
-#include <soc/Factory.hpp>
+#include <soc/Peripheral.hpp>
 #include <soc/m4/stm32l4/I2C/I2C.hpp>
 #include <soc/m4/stm32l4/Polling.hpp>
 
@@ -55,7 +55,7 @@ private:
 
     I2C_master* a_p_I2C;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 template<> class Polling<I2C_slave> : private cml::Non_copyable
@@ -91,7 +91,7 @@ private:
 
     I2C_slave* a_p_I2C;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 constexpr Polling<I2C_master>::Result::Bus_flag operator|(Polling<I2C_master>::Result::Bus_flag a_f1,
                                                           Polling<I2C_master>::Result::Bus_flag a_f2)

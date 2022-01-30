@@ -8,8 +8,8 @@
  */
 
 // soc
-#include <soc/Factory.hpp>
 #include <soc/Interrupt_guard.hpp>
+#include <soc/Peripheral.hpp>
 #include <soc/m4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/I2C/I2C.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
@@ -251,7 +251,7 @@ private:
 
     I2C_master* p_I2C;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 template<> class Interrupt<I2C_slave> : public Interrupt<I2C>
@@ -366,7 +366,7 @@ private:
 
     I2C_slave* p_I2C;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 constexpr I2C_status_interrupt::Callback::Flag operator|(I2C_status_interrupt::Callback::Flag a_f1,

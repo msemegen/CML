@@ -14,15 +14,13 @@
 #include <cml/Non_constructible.hpp>
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
-#include <cml/hal/system_timer.hpp>
+#include <cml/utils/ms_tick_counter.hpp>
 #include <cml/various.hpp>
 
 namespace cml {
 namespace utils {
-
-class wait_until : private cml::Non_constructible
+struct wait_until : private cml::Non_constructible
 {
-public:
     template<typename Register_t> static void all_bits(const Register_t* a_p_register, uint32_t a_flag, bool a_status)
     {
         while (a_status == bit_flag::is(*a_p_register, a_flag))
@@ -37,7 +35,7 @@ public:
 
         while (true == status && false == timeout)
         {
-            timeout = a_timeout <= various::time_diff(hal::system_timer::get(), a_start);
+            timeout = a_timeout <= various::tick_diff(ms_tick_counter::get(), a_start);
             status  = bit_flag::is(*a_p_register, a_flag) == a_status;
         }
 
@@ -58,13 +56,12 @@ public:
 
         while (true == status && false == timeout)
         {
-            timeout = a_timeout <= various::time_diff(hal::system_timer::get(), a_start);
+            timeout = a_timeout <= various::tick_diff(ms_tick_counter::get(), a_start);
             status  = bit::is_any(*a_p_register, a_flag) == a_status;
         }
 
         return ((false == status) && (false == timeout));
     }
 };
-
 } // namespace utils
 } // namespace cml

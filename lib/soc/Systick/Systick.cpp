@@ -15,14 +15,30 @@
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 
+namespace {
+using namespace soc;
+
+Systick* irq_context[1] = { nullptr };
+} // namespace
+
+extern "C" {
+void SysTick_Handler()
+{
+    systick_interrupt_handler();
+}
+}
+
 namespace soc {
 using namespace cml;
+using namespace m4;
 
-Systick::~Systick()
+void systick_interrupt_handler()
 {
-    if (true == this->is_enabled())
+    cml_assert(nullptr != irq_context[0]);
+
+    if (nullptr != irq_context[0]->interrupt.callback.function)
     {
-        this->disable();
+        irq_context[0]->interrupt.callback.function(irq_context[0]->interrupt.callback.p_user_data);
     }
 }
 
@@ -49,4 +65,43 @@ bool Systick::is_enabled()
     return bit_flag::is(SysTick->CTRL, SysTick_CTRL_ENABLE_Msk);
 }
 
+#ifdef M4
+void Systick::Interrupt::enable(const IRQ_config& a_irq_config)
+{
+    cml_assert(nullptr != this->p_systick);
+    cml_assert(nullptr == irq_context[0]);
+
+    irq_context[0] = this->p_systick;
+
+    NVIC_SetPriority(
+        SysTick_IRQn,
+        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
+    NVIC_EnableIRQ(SysTick_IRQn);
+}
+#endif
+
+void Systick::Interrupt::disable()
+{
+    cml_assert(nullptr != this->p_systick);
+
+    NVIC_DisableIRQ(SysTick_IRQn);
+
+    irq_context[0] = nullptr;
+}
+
+void Systick::Interrupt::register_callback(const Callback& a_callback)
+{
+    cml_assert(nullptr != this->p_systick);
+
+    Interrupt_guard guard;
+    this->callback = a_callback;
+}
+
+void Systick::Interrupt::unregister_callback()
+{
+    cml_assert(nullptr != this->p_systick);
+
+    Interrupt_guard guard;
+    this->callback = { nullptr, nullptr };
+}
 } // namespace soc

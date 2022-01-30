@@ -20,18 +20,26 @@ using namespace cml;
 
 void CRC32::enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse)
 {
+    cml_assert(true == this->is_created());
+
     bit_flag::clear(&(CRC->CR), CRC_CR_POLYSIZE);
     bit_flag::set(&(CRC->CR), static_cast<std::uint32_t>(a_in_reverse));
     bit_flag::set(&(CRC->CR), static_cast<std::uint32_t>(a_out_reverse));
+
+    this->enabled = true;
 }
 
 void CRC32::disable()
 {
-    bit_flag::clear(&(RCC->AHB1ENR), RCC_AHB1ENR_CRCEN);
+    cml_assert(true == this->is_created());
+
+    this->enabled = false;
 }
 
 std::uint32_t CRC32::calculate(const std::uint8_t* a_p_data, std::uint32_t a_data_size)
 {
+    cml_assert(true == this->is_created());
+
     cml_assert(nullptr != a_p_data);
     cml_assert(a_data_size > 0);
 
@@ -64,4 +72,4 @@ void rcc<CRC32>::disable()
 } // namespace m4
 } // namespace soc
 
-#endif // STM32L4
+#endif

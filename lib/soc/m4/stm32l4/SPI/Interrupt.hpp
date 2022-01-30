@@ -7,8 +7,11 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
+// std
+#include <limits>
+
 // soc
-#include <soc/Factory.hpp>
+#include <soc/Peripheral.hpp>
 #include <soc/Interrupt_guard.hpp>
 #include <soc/m4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/Interrupt.hpp>
@@ -36,6 +39,14 @@ public:
             Function function = nullptr;
             void* p_user_data = nullptr;
         };
+
+        TX(TX&&)    = default;
+        TX& operator=(TX&&) = default;
+
+        TX()
+            : p_registers(nullptr)
+        {
+        }
 
         ~TX()
         {
@@ -68,6 +79,14 @@ public:
             void* p_user_data = nullptr;
         };
 
+        RX(RX&&)    = default;
+        RX& operator=(RX&&) = default;
+
+        RX()
+            : p_registers(nullptr)
+        {
+        }
+
         ~RX()
         {
             this->unregister_callback();
@@ -88,6 +107,8 @@ public:
         friend SPI_transmission_interrupt;
         friend void SPI_interrupt_handler(SPI_transmission_interrupt::RX* a_p_this);
     };
+
+    SPI_transmission_interrupt() {}
 
     TX tx;
     RX rx;
@@ -124,6 +145,13 @@ public:
     void register_callback(const Callback& a_callback);
     void unregister_callback();
 
+    SPI_status_interrupt()
+        : p_registers(nullptr)
+    {
+    }
+
+    ~SPI_status_interrupt() {}
+
 private:
     SPI_status_interrupt(SPI_TypeDef* a_p_registers)
         : p_registers(a_p_registers)
@@ -146,6 +174,11 @@ public:
     Transmission transmission;
     Status status;
 
+    Interrupt()
+        : irqn(static_cast<IRQn_Type>(std::numeric_limits<int32_t>::max()))
+    {
+    }
+
 protected:
     Interrupt(SPI_TypeDef* a_p_registers, IRQn_Type a_irqn)
         : transmission(a_p_registers)
@@ -154,19 +187,37 @@ protected:
     {
     }
 
-    IRQn_Type irqn;
+    const IRQn_Type irqn;
 };
 
 template<> class Interrupt<SPI_master> : public Interrupt<SPI>
 {
 public:
+    Interrupt()
+        : p_SPI(nullptr)
+    {
+    }
+
     ~Interrupt()
     {
-        this->disable();
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
     }
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
+
+    bool is_enabled() const
+    {
+        return 0u != NVIC_GetEnableIRQ(this->irqn);
+    }
+
+    bool is_created() const
+    {
+        return nullptr != this->p_SPI;
+    }
 
     SPI_master* get_handle()
     {
@@ -190,19 +241,37 @@ private:
 
     SPI_master* p_SPI;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 template<> class Interrupt<SPI_slave> : private Interrupt<SPI>
 {
 public:
+    Interrupt()
+        : p_SPI(nullptr)
+    {
+    }
+
     ~Interrupt()
     {
-        this->disable();
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
     }
 
     void enable(const IRQ_config& a_irq_config);
     void disable();
+
+    bool is_enabled() const
+    {
+        return 0u != NVIC_GetEnableIRQ(this->irqn);
+    }
+
+    bool is_created() const
+    {
+        return nullptr != this->p_SPI;
+    }
 
     SPI_slave* get_handle()
     {
@@ -226,7 +295,7 @@ private:
 
     SPI_slave* p_SPI;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 constexpr SPI_status_interrupt::Callback::Flag operator|(SPI_status_interrupt::Callback::Flag a_f1,

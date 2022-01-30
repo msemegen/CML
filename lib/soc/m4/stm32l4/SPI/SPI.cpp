@@ -24,6 +24,8 @@ using namespace cml::utils;
 
 void SPI_master::enable(const Enable_config& a_config, const Frame_format& a_frame_format)
 {
+    cml_assert(true == this->is_created());
+
     cml_assert(various::get_enum_incorrect_value<Enable_config::Wiring>() != a_config.wiring);
     cml_assert(various::get_enum_incorrect_value<Enable_config::Crc>() != a_config.crc);
     cml_assert(various::get_enum_incorrect_value<Enable_config::NSS_management>() != a_config.nss_management);
@@ -52,6 +54,8 @@ void SPI_master::enable(const Enable_config& a_config, const Frame_format& a_fra
 
 void SPI_master::disable()
 {
+    cml_assert(true == this->is_created());
+
     if (false == bit_flag::is(p_registers->CR1, SPI_CR1_BIDIMODE) &&
         true == bit_flag::is(p_registers->CR1, SPI_CR1_RXONLY))
     {
@@ -84,6 +88,8 @@ void SPI_master::disable()
 
 void SPI_slave::enable(const Enable_config& a_config, const Frame_format& a_frame_format)
 {
+    cml_assert(true == this->is_created());
+
     cml_assert(various::get_enum_incorrect_value<Enable_config::Wiring>() != a_config.wiring);
     cml_assert(various::get_enum_incorrect_value<Enable_config::Crc>() != a_config.crc);
     cml_assert(various::get_enum_incorrect_value<Frame_format::Bit_significance>() != a_frame_format.bit_significance);
@@ -107,6 +113,8 @@ void SPI_slave::enable(const Enable_config& a_config, const Frame_format& a_fram
 
 void SPI_slave::disable()
 {
+    cml_assert(true == this->is_created());
+
     if (false == bit_flag::is(p_registers->CR1, SPI_CR1_BIDIMODE) &&
         true == bit_flag::is(p_registers->CR1, SPI_CR1_RXONLY))
     {

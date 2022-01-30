@@ -51,6 +51,56 @@ public:
         prefetech    = FLASH_ACR_PRFTEN
     };
 
+    class polling : private cml::Non_constructible
+    {
+    public:
+        enum class Mode
+        {
+            standard,
+            fast
+        };
+
+        enum class Bank_id
+        {
+            _0
+        };
+
+        struct Result
+        {
+            enum class Status_flag : uint32_t
+            {
+                ok                          = 0x0u,
+                fast_programming_miss_error = FLASH_SR_MISERR,
+                programming_sequence_error  = FLASH_SR_PGSERR,
+                size_error                  = FLASH_SR_SIZERR,
+                page_alignment_error        = FLASH_SR_PGAERR,
+                write_protection_error      = FLASH_SR_WRPERR,
+                fast_programming_error      = FLASH_SR_FASTERR,
+                programming_error           = FLASH_SR_PROGERR,
+                locked,
+            };
+
+            Status_flag status = cml::various::get_enum_incorrect_value<Status_flag>();
+            uint32_t words     = 0;
+        };
+
+        static Result write(uint32_t a_address, const uint64_t* a_p_data, uint32_t a_size_in_double_words, Mode a_mode);
+        static Result write(uint32_t a_address,
+                            const uint64_t* a_p_data,
+                            uint32_t a_size_in_double_words,
+                            Mode a_mode,
+                            uint32_t a_timeout);
+
+        static Result read(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes);
+        static Result read(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout);
+
+        static Result erase_page(uint32_t a_page_address);
+        static Result erase_page(uint32_t a_page_address, uint32_t a_timeout);
+
+        static Result erase_bank(Bank_id a_id);
+        static Result erase_bank(Bank_id a_id, uint32_t a_timeout);
+    };
+
     static void set_cache_mode(Cache_mode_flag a_mode)
     {
         cml::bit_flag::set(
@@ -71,6 +121,11 @@ public:
     static Latency get_latency()
     {
         return static_cast<Latency>(cml::bit_flag::get(FLASH->ACR, FLASH_ACR_LATENCY));
+    }
+
+    static constexpr std::uint16_t get_size()
+    {
+        return (*reinterpret_cast<std::uint16_t*>(FLASHSIZE_BASE));
     }
 };
 

@@ -14,7 +14,7 @@
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/Factory.hpp>
+#include <soc/Peripheral.hpp>
 
 // cml
 #include <cml/Non_copyable.hpp>
@@ -65,6 +65,11 @@ public:
         return this->idx;
     }
 
+    bool is_created() const
+    {
+        return std::numeric_limits<decltype(this->idx)>::max() != this->idx;
+    }
+
     operator IWDG_TypeDef*()
     {
         return reinterpret_cast<IWDG_TypeDef*>(IWDG_BASE);
@@ -83,14 +88,14 @@ private:
 
     std::uint32_t idx;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc
 
 namespace soc {
-template<> class Factory<m4::stm32l4::IWDG> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::IWDG> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::IWDG create()

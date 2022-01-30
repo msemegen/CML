@@ -12,15 +12,18 @@
 
 // std
 #include <cstdint>
-#include <tuple>
+#include <limits>
 
 // soc
-#include <soc/Factory.hpp>
+#include <soc/Peripheral.hpp>
+#include <soc/m4/IRQ_config.hpp>
+#include <soc/m4/stm32l4/DMA.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
-#include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
+#include <cml/bit.hpp>
+#include <cml/bit_flag.hpp>
 #include <cml/various.hpp>
 
 namespace soc {
@@ -72,7 +75,6 @@ public:
         Sampling_method sampling_method = cml::various::get_enum_incorrect_value<Sampling_method>();
         Mode_flag mode                  = cml::various::get_enum_incorrect_value<Mode_flag>();
     };
-
     struct Frame_format
     {
         enum class Word_length : uint32_t
@@ -93,11 +95,122 @@ public:
         Parity parity           = cml::various::get_enum_incorrect_value<Parity>();
     };
 
+    class Polling
+    {
+    public:
+        struct Result
+        {
+            enum class Event_flag : std::uint32_t
+            {
+                none              = 0x0u,
+                framing_error     = 0x1u,
+                parity_error      = 0x2u,
+                overrun           = 0x4u,
+                noise_detected    = 0x8u,
+                idle              = 0x10u,
+                transfer_complete = 0x20u
+            };
+
+            Event_flag event_flag            = cml::various::get_enum_incorrect_value<Event_flag>();
+            std::size_t data_length_in_words = 0;
+        };
+
+        Result transmit(const void* a_p_data, std::size_t a_data_size_in_words);
+        Result transmit(const void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout_ms);
+
+        Result receive(void* a_p_data, std::size_t a_data_size_in_words);
+        Result receive(void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout_ms);
+
+    private:
+        USART* p_USART = nullptr;
+        friend class USART;
+    };
+    class Interrupt
+    {
+    public:
+        enum class Event_flag : std::uint32_t
+        {
+            none              = 0x0u,
+            framing_error     = 0x1u,
+            parity_error      = 0x2u,
+            overrun           = 0x4u,
+            noise_detected    = 0x8u,
+            idle              = 0x10u,
+            transfer_complete = 0x20u
+        };
+
+        struct Transmit_callback
+        {
+            using Function = void (*)(volatile uint16_t* a_p_data, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+        struct Receive_callback
+        {
+            using Function = void (*)(std::uint32_t a_data, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+        struct Event_callback
+        {
+            using Function = void (*)(Event_flag a_event, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+
+        ~Interrupt()
+        {
+            if (true == this->is_enabled())
+            {
+                this->disable();
+            }
+        }
+
+        void enable(const IRQ_config& a_config);
+        void disable();
+
+        void transmit_start(const Transmit_callback& a_callback);
+        void transmit_stop();
+
+        void receive_start(const Receive_callback& a_callback);
+        void receive_stop();
+
+        void register_Event_callback(const Event_callback& a_callback, Event_flag a_enabled_events);
+        void unregister_Event_callback();
+
+        bool is_enabled() const
+        {
+            return 0 != NVIC_GetEnableIRQ(this->p_USART->irqn);
+        }
+
+    private:
+        void set_irq_context();
+        void clear_irq_context();
+
+        USART* p_USART = nullptr;
+        friend class USART;
+    };
+
+    USART(USART&&) = default;
+    USART& operator=(USART&&) = default;
+
     USART()
         : idx(std::numeric_limits<decltype(this->idx)>::max())
+        , p_registers(nullptr)
+        , irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
+        , enabled_interrupt_events(Interrupt::Event_flag::none)
     {
     }
-    ~USART();
+    ~USART()
+    {
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
+    }
 
     bool enable(const Enable_config& a_config, const Frame_format& frame_format, std::uint32_t a_timeout_ms);
     void disable();
@@ -110,6 +223,16 @@ public:
         return this->idx;
     }
 
+    bool is_enabled() const
+    {
+        return cml::bit_flag::is(this->p_registers->CR1, USART_CR1_UE);
+    }
+
+    bool is_created() const
+    {
+        return std::numeric_limits<decltype(this->idx)>::max() != this->idx && nullptr != this->p_registers;
+    }
+
     operator USART_TypeDef*()
     {
         return this->p_registers;
@@ -120,17 +243,31 @@ public:
         return this->p_registers;
     }
 
+    Polling polling;
+    Interrupt interrupt;
+
 private:
-    USART(std::size_t a_idx, USART_TypeDef* a_p_registers)
+    USART(std::size_t a_idx, USART_TypeDef* a_p_registers, IRQn_Type a_irqn)
         : idx(a_idx)
         , p_registers(a_p_registers)
+        , irqn(a_irqn)
+        , enabled_interrupt_events(Interrupt::Event_flag::none)
     {
+        this->polling.p_USART   = this;
+        this->interrupt.p_USART = this;
     }
 
-    const std::uint32_t idx;
+    std::uint32_t idx;
     USART_TypeDef* p_registers;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    IRQn_Type irqn;
+    Interrupt::Transmit_callback transmit_callback;
+    Interrupt::Receive_callback receive_callback;
+    Interrupt::Event_callback event_callback;
+    Interrupt::Event_flag enabled_interrupt_events;
+
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
+    friend void USART_interrupt_handler(USART* a_p_this);
 };
 
 constexpr USART::Enable_config::Flow_control_flag operator|(USART::Enable_config::Flow_control_flag a_f1,
@@ -168,6 +305,45 @@ constexpr USART::Enable_config::Mode_flag operator&(USART::Enable_config::Mode_f
 
 constexpr USART::Enable_config::Mode_flag operator|=(USART::Enable_config::Mode_flag& a_f1,
                                                      USART::Enable_config::Mode_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
+
+constexpr USART::Polling::Result::Event_flag operator|(USART::Polling::Result::Event_flag a_f1,
+                                                       USART::Polling::Result::Event_flag a_f2)
+{
+    return static_cast<USART::Polling::Result::Event_flag>(static_cast<std::uint32_t>(a_f1) |
+                                                           static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr USART::Polling::Result::Event_flag operator&(USART::Polling::Result::Event_flag a_f1,
+                                                       USART::Polling::Result::Event_flag a_f2)
+{
+    return static_cast<USART::Polling::Result::Event_flag>(static_cast<std::uint32_t>(a_f1) &
+                                                           static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr USART::Polling::Result::Event_flag operator|=(USART::Polling::Result::Event_flag& a_f1,
+                                                        USART::Polling::Result::Event_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
+
+constexpr USART::Interrupt::Event_flag operator|(USART::Interrupt::Event_flag a_f1, USART::Interrupt::Event_flag a_f2)
+{
+    return static_cast<USART::Interrupt::Event_flag>(static_cast<std::uint32_t>(a_f1) |
+                                                     static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr USART::Interrupt::Event_flag operator&(USART::Interrupt::Event_flag a_f1, USART::Interrupt::Event_flag a_f2)
+{
+    return static_cast<USART::Interrupt::Event_flag>(static_cast<std::uint32_t>(a_f1) &
+                                                     static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr USART::Interrupt::Event_flag operator|=(USART::Interrupt::Event_flag& a_f1, USART::Interrupt::Event_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;

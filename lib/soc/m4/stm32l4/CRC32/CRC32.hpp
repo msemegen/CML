@@ -15,7 +15,7 @@
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/Factory.hpp>
+#include <soc/Peripheral.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -43,9 +43,20 @@ public:
         enabled = CRC_CR_REV_OUT
     };
 
+    CRC32(CRC32&&) = default;
+    CRC32& operator=(CRC32&&) = default;
+
     CRC32()
         : idx(std::numeric_limits<decltype(this->idx)>::max())
+        , enabled(false)
     {
+    }
+    ~CRC32()
+    {
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
     }
 
     void enable(In_data_reverse a_in_reverse, Out_data_reverse a_out_reverse);
@@ -56,6 +67,16 @@ public:
     std::uint32_t get_idx()
     {
         return this->idx;
+    }
+
+    bool is_enabled() const
+    {
+        return this->enabled;
+    }
+
+    bool is_created() const
+    {
+        return this->idx != std::numeric_limits<decltype(this->idx)>::max();
     }
 
     operator CRC_TypeDef*()
@@ -71,12 +92,14 @@ public:
 private:
     CRC32(std::uint32_t a_idx)
         : idx(a_idx)
+        , enabled(false)
     {
     }
 
     std::uint32_t idx;
+    bool enabled;
 
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 template<> class rcc<CRC32> : private cml::Non_constructible
@@ -90,7 +113,7 @@ public:
 } // namespace soc
 
 namespace soc {
-template<> class Factory<m4::stm32l4::CRC32> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::CRC32> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::CRC32 create()

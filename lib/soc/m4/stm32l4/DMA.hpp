@@ -19,53 +19,83 @@
 // cml
 #include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
+#include <cml/bit_flag.hpp>
 
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-#undef DMA1
-#undef DMA2
-
-template<typename Periph_t> class DMA_base : private cml::Non_constructible
-{
-};
-
-template<typename Periph_t = void> class DMA1 : private cml::Non_copyable
+template<typename Periph_t = void*> class DMA : private cml::Non_copyable
 {
 public:
     enum class Priority : std::uint32_t
     {
-        low       = 0x0u,
-        medium    = DMA_CCR_PL_0,
+        very_high = DMA_CCR_PL_0 | DMA_CCR_PL_1,
         high      = DMA_CCR_PL_1,
-        very_high = DMA_CCR_PL_0 | DMA_CCR_PL_1
+        medium    = DMA_CCR_PL_0,
+        low       = 0x0u
     };
-};
-
-template<typename Periph_t = void> class DMA2 : private cml::Non_copyable
-{
-public:
-    enum class Priority : std::uint32_t
+    enum class Mode : std::uint32_t
     {
-        low       = 0x0u,
-        medium    = DMA_CCR_PL_0,
-        high      = DMA_CCR_PL_1,
-        very_high = DMA_CCR_PL_0 | DMA_CCR_PL_1
+        single   = 0x0u,
+        circular = DMA_CCR_CIRC
+    };
+    enum class Event_flag : std::uint32_t
+    {
+        none              = 0x0u,
+        half_transfer     = DMA_CCR_HTIE,
+        transfer_complete = DMA_CCR_TCIE,
+        transfer_error    = DMA_CCR_TEIE
+    };
+
+    struct Callback
+    {
+        using Function = void (*)(Event_flag a_event, void* a_p_user_data);
+
+        Function function = nullptr;
+        void* p_user_data = nullptr;
     };
 };
 
-template<> class rcc<DMA1<>>
+constexpr DMA<>::Event_flag operator|(DMA<>::Event_flag a_f1, DMA<>::Event_flag a_f2)
+{
+    return static_cast<DMA<>::Event_flag>(static_cast<std::uint32_t>(a_f1) | static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr DMA<>::Event_flag operator&(DMA<>::Event_flag a_f1, DMA<>::Event_flag a_f2)
+{
+    return static_cast<DMA<>::Event_flag>(static_cast<std::uint32_t>(a_f1) & static_cast<std::uint32_t>(a_f2));
+}
+
+constexpr DMA<>::Event_flag operator|=(DMA<>::Event_flag& a_f1, DMA<>::Event_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
+
+template<> class rcc<DMA<>, 1> : private cml::Non_constructible
 {
 public:
-    void enable(bool a_enable_in_lp);
-    void disable();
+    static void enable()
+    {
+        cml::bit_flag::set(&(RCC->AHB1ENR), RCC_AHB1ENR_DMA1EN);
+    }
+    static void disable()
+    {
+        cml::bit_flag::clear(&(RCC->AHB1ENR), RCC_AHB1ENR_DMA1EN);
+    }
 };
 
-template<> class rcc<DMA2<>>
+template<> class rcc<DMA<>, 2> : private cml::Non_constructible
 {
 public:
-    void enable(bool a_enable_in_lp);
-    void disable();
+    static void enable()
+    {
+        cml::bit_flag::set(&(RCC->AHB1ENR), RCC_AHB1ENR_DMA2EN);
+    }
+    static void disable()
+    {
+        cml::bit_flag::clear(&(RCC->AHB1ENR), RCC_AHB1ENR_DMA2EN);
+    }
 };
 } // namespace stm32l4
 } // namespace m4

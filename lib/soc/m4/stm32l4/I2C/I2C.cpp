@@ -24,16 +24,20 @@ namespace m4 {
 namespace stm32l4 {
 using namespace cml;
 
-I2C_master::~I2C_master()
+void I2C::disable()
 {
-    if (true == bit_flag::is(this->p_registers->CR1, I2C_CR1_PE))
+    this->p_registers->CR1 = 0;
+
+    if (true == bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx))
     {
-        this->disable();
+        bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
 }
 
 void I2C_master::enable(const Enable_config& a_config)
 {
+    cml_assert(true == this->is_created());
+
     cml_assert(various::get_enum_incorrect_value<Enable_config::Analog_filter>() != a_config.analog_filter);
     cml_assert(various::get_enum_incorrect_value<Enable_config::Fast_plus>() != a_config.fast_plus);
     cml_assert(various::get_enum_incorrect_value<Enable_config::Crc>() != a_config.crc);
@@ -54,16 +58,6 @@ void I2C_master::enable(const Enable_config& a_config)
     }
 }
 
-void I2C_master::disable()
-{
-    this->p_registers->CR1 = 0;
-
-    if (true == bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx))
-    {
-        bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
-    }
-}
-
 I2C_master::Enable_config I2C_master::get_Enable_config() const
 {
     return { static_cast<Enable_config::Analog_filter>(false == bit_flag::is(this->p_registers->CR1, I2C_CR1_ANFOFF)),
@@ -72,16 +66,10 @@ I2C_master::Enable_config I2C_master::get_Enable_config() const
              this->p_registers->TIMINGR };
 }
 
-I2C_slave::~I2C_slave()
-{
-    if (true == bit_flag::is(this->p_registers->CR1, I2C_CR1_PE))
-    {
-        this->disable();
-    }
-}
-
 void I2C_slave::enable(const Enable_config& a_config)
 {
+    cml_assert(true == this->is_created());
+
     cml_assert(various::get_enum_incorrect_value<Enable_config::Analog_filter>() != a_config.analog_filter);
     cml_assert(various::get_enum_incorrect_value<Enable_config::Fast_plus>() != a_config.fast_plus);
     cml_assert(various::get_enum_incorrect_value<Enable_config::Crc>() != a_config.crc);
@@ -99,16 +87,6 @@ void I2C_slave::enable(const Enable_config& a_config)
     if (Enable_config::Fast_plus::enabled == a_config.fast_plus)
     {
         bit::set(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
-    }
-}
-
-void I2C_slave::disable()
-{
-    this->p_registers->CR1 = 0;
-
-    if (true == bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx))
-    {
-        bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
 }
 

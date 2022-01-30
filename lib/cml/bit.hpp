@@ -14,7 +14,6 @@
 #include <cml/Non_constructible.hpp>
 
 namespace cml {
-
 class bit : private Non_constructible
 {
 public:
@@ -44,5 +43,4 @@ public:
         (*a_p_register) ^= (static_cast<Register_t>(0x1u) << a_index);
     }
 };
-
 } // namespace cml

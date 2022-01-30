@@ -12,12 +12,12 @@
 
 // soc
 #include <soc/m4/stm32l4/mcu/mcu.hpp>
-#include <soc/system_timer.hpp>
 
 // cml
 #include <cml/Non_constructible.hpp>
 #include <cml/bit.hpp>
 #include <cml/debug/assertion.hpp>
+#include <cml/utils/ms_tick_counter.hpp>
 #include <cml/utils/wait_until.hpp>
 
 namespace {
@@ -43,6 +43,8 @@ using namespace cml::utils;
 
 bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a_window, std::uint32_t a_timeout)
 {
+    cml_assert(true == this->is_created());
+
     cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
     cml_assert(various::get_enum_incorrect_value<Window::Mode>() != a_window.mode);
     cml_assert((Window::Mode::enabled == a_window.mode && a_window.value <= 0xFFFu) ||
@@ -51,7 +53,7 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
     cml_assert(a_reload <= 0xFFFu);
     cml_assert(a_timeout > 0u);
 
-    std::uint32_t start = system_timer::get();
+    std::uint32_t start = ms_tick_counter::get();
 
     IWDG_T->KR = control_flags::enable;
     IWDG_T->KR = control_flags::write_access_enable;
@@ -62,7 +64,8 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
     if (true == ret)
     {
         IWDG_T->RLR = a_reload;
-        ret = wait_until::all_bits(&(IWDG_T->SR), IWDG_SR_RVU, true, start, a_timeout - (system_timer::get() - start));
+        ret =
+            wait_until::all_bits(&(IWDG_T->SR), IWDG_SR_RVU, true, start, a_timeout - (ms_tick_counter::get() - start));
     }
 
     if (true == ret)
@@ -71,7 +74,7 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
         {
             IWDG_T->WINR = a_window.value;
             ret          = wait_until::all_bits(
-                &(IWDG_T->SR), IWDG_SR_WVU, true, start, a_timeout - (system_timer::get() - start));
+                &(IWDG_T->SR), IWDG_SR_WVU, true, start, a_timeout - (ms_tick_counter::get() - start));
         }
         else
         {
@@ -84,7 +87,8 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
 
 void IWDG::feed()
 {
-    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
+    cml_assert(true == this->is_created());
+
     IWDG_T->KR = control_flags::reload;
 }
 } // namespace stm32l4

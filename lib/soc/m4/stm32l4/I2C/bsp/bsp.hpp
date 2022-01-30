@@ -15,15 +15,12 @@
 // externals
 #include <stm32l4xx.h>
 
-// soc
-#include <soc/Factory.hpp>
-
 // cml
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 
 namespace soc {
-template<> class Factory<m4::stm32l4::I2C_master, 1u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::I2C_master, 1u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::I2C_master create()
@@ -31,7 +28,7 @@ public:
         return m4::stm32l4::I2C_master(0, I2C1);
     }
 };
-template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::I2C_master>, 1u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Interrupt<m4::stm32l4::I2C_master>, 1u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Interrupt<m4::stm32l4::I2C_master> create(m4::stm32l4::I2C_master* a_p_SPI)
@@ -40,7 +37,7 @@ public:
             a_p_SPI, IRQn_Type::I2C1_EV_IRQn, IRQn_Type::I2C1_ER_IRQn);
     }
 };
-template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::I2C_master>, 1u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Polling<m4::stm32l4::I2C_master>, 1u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Polling<m4::stm32l4::I2C_master> create(m4::stm32l4::I2C_master* a_p_SPI)
@@ -49,7 +46,7 @@ public:
     }
 };
 
-template<> class Factory<m4::stm32l4::I2C_slave, 1u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::I2C_slave, 1u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::I2C_slave create()
@@ -57,7 +54,7 @@ public:
         return m4::stm32l4::I2C_slave(0, I2C1);
     }
 };
-template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave>, 1u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave>, 1u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave> create(m4::stm32l4::I2C_slave* a_p_SPI)
@@ -66,7 +63,7 @@ public:
             a_p_SPI, IRQn_Type::I2C1_EV_IRQn, IRQn_Type::I2C1_ER_IRQn);
     }
 };
-template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::I2C_slave>, 1u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Polling<m4::stm32l4::I2C_slave>, 1u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Polling<m4::stm32l4::I2C_slave> create(m4::stm32l4::I2C_slave* a_p_SPI)
@@ -85,7 +82,7 @@ public:
     defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
     defined(STM32L462RE) || defined(STM32L462VE)
 
-template<> class Factory<m4::stm32l4::I2C_master, 2u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::I2C_master, 2u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::I2C_master create()
@@ -93,7 +90,7 @@ public:
         return m4::stm32l4::I2C_master(1, I2C2);
     }
 };
-template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::I2C_master>, 2u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Interrupt<m4::stm32l4::I2C_master>, 2u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Interrupt<m4::stm32l4::I2C_master> create(m4::stm32l4::I2C_master* a_p_SPI)
@@ -102,7 +99,7 @@ public:
             a_p_SPI, IRQn_Type::I2C2_EV_IRQn, IRQn_Type::I2C2_ER_IRQn);
     }
 };
-template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::I2C_master>, 2u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Polling<m4::stm32l4::I2C_master>, 2u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Polling<m4::stm32l4::I2C_master> create(m4::stm32l4::I2C_master* a_p_SPI)
@@ -111,7 +108,7 @@ public:
     }
 };
 
-template<> class Factory<m4::stm32l4::I2C_slave, 2u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::I2C_slave, 2u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::I2C_slave create()
@@ -119,7 +116,7 @@ public:
         return m4::stm32l4::I2C_slave(1, I2C1);
     }
 };
-template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave>, 2u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave>, 2u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave> create(m4::stm32l4::I2C_slave* a_p_SPI)
@@ -128,7 +125,7 @@ public:
             a_p_SPI, IRQn_Type::I2C2_EV_IRQn, IRQn_Type::I2C2_ER_IRQn);
     }
 };
-template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::I2C_slave>, 2u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Polling<m4::stm32l4::I2C_slave>, 2u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Polling<m4::stm32l4::I2C_slave> create(m4::stm32l4::I2C_slave* a_p_SPI)
@@ -147,7 +144,7 @@ public:
     defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
     defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
     defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
-template<> class Factory<m4::stm32l4::I2C_master, 3u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::I2C_master, 3u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::I2C_master create()
@@ -155,7 +152,7 @@ public:
         return m4::stm32l4::I2C_master(2, I2C3);
     }
 };
-template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::I2C_master>, 3u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Interrupt<m4::stm32l4::I2C_master>, 3u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Interrupt<m4::stm32l4::I2C_master> create(m4::stm32l4::I2C_master* a_p_SPI)
@@ -164,7 +161,7 @@ public:
             a_p_SPI, IRQn_Type::I2C2_EV_IRQn, IRQn_Type::I2C2_ER_IRQn);
     }
 };
-template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::I2C_master>, 3u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Polling<m4::stm32l4::I2C_master>, 3u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Polling<m4::stm32l4::I2C_master> create(m4::stm32l4::I2C_master* a_p_SPI)
@@ -173,7 +170,7 @@ public:
     }
 };
 
-template<> class Factory<m4::stm32l4::I2C_slave, 3u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::I2C_slave, 3u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::I2C_slave create()
@@ -181,7 +178,7 @@ public:
         return m4::stm32l4::I2C_slave(2, I2C3);
     }
 };
-template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave>, 3u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave>, 3u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave> create(m4::stm32l4::I2C_slave* a_p_SPI)
@@ -190,7 +187,7 @@ public:
             a_p_SPI, IRQn_Type::I2C3_EV_IRQn, IRQn_Type::I2C3_ER_IRQn);
     }
 };
-template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::I2C_slave>, 3u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Polling<m4::stm32l4::I2C_slave>, 3u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Polling<m4::stm32l4::I2C_slave> create(m4::stm32l4::I2C_slave* a_p_SPI)
@@ -204,7 +201,7 @@ public:
     defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
     defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
     defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
-template<> class Factory<m4::stm32l4::I2C_master, 4u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::I2C_master, 4u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::I2C_master create()
@@ -212,7 +209,7 @@ public:
         return m4::stm32l4::I2C_master(3, I2C4);
     }
 };
-template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::I2C_master>, 4u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Interrupt<m4::stm32l4::I2C_master>, 4u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Interrupt<m4::stm32l4::I2C_master> create(m4::stm32l4::I2C_master* a_p_SPI)
@@ -221,7 +218,7 @@ public:
             a_p_SPI, IRQn_Type::I2C4_EV_IRQn, IRQn_Type::I2C4_ER_IRQn);
     }
 };
-template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::I2C_master>, 4u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Polling<m4::stm32l4::I2C_master>, 4u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Polling<m4::stm32l4::I2C_master> create(m4::stm32l4::I2C_master* a_p_SPI)
@@ -230,7 +227,7 @@ public:
     }
 };
 
-template<> class Factory<m4::stm32l4::I2C_slave, 4u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::I2C_slave, 4u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::I2C_slave create()
@@ -238,7 +235,7 @@ public:
         return m4::stm32l4::I2C_slave(3, I2C4);
     }
 };
-template<> class Factory<m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave>, 4u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave>, 4u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave> create(m4::stm32l4::I2C_slave* a_p_SPI)
@@ -247,7 +244,7 @@ public:
             a_p_SPI, IRQn_Type::I2C4_EV_IRQn, IRQn_Type::I2C4_ER_IRQn);
     }
 };
-template<> class Factory<m4::stm32l4::Polling<m4::stm32l4::I2C_slave>, 4u> : private cml::Non_constructible
+template<> class Peripheral<m4::stm32l4::Polling<m4::stm32l4::I2C_slave>, 4u> : private cml::Non_constructible
 {
 public:
     static m4::stm32l4::Polling<m4::stm32l4::I2C_slave> create(m4::stm32l4::I2C_slave* a_p_SPI)

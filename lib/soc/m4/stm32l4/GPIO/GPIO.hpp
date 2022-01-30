@@ -14,7 +14,8 @@
 #include <stm32l4xx.h>
 
 // soc
-#include <soc/Factory.hpp>
+#include <soc/Peripheral.hpp>
+#include <soc/m4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
@@ -311,9 +312,153 @@ public:
         friend GPIO;
     };
 
+    class Interrupt : private cml::Non_copyable
+    {
+    private:
+        template<std::uint8_t> struct H
+        {
+        };
+
+    public:
+        enum class Mode : std::uint32_t
+        {
+            interrupt,
+            event
+        };
+
+        enum class Trigger_flag : std::uint32_t
+        {
+            rising  = 0x1,
+            falling = 0x2,
+        };
+
+        struct Id
+        {
+            static H<0> _0;
+            static H<1> _1;
+            static H<2> _2;
+            static H<3> _3;
+            static H<4> _4;
+            static H<5> _5_9;
+            static H<6> _10_15;
+        };
+
+        struct Callback
+        {
+            using Function = void (*)(std::uint32_t a_pin, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+
+        Interrupt(Interrupt&&) = default;
+        Interrupt& operator=(Interrupt&&) = default;
+
+        Interrupt()
+            : idx(std::numeric_limits<decltype(this->idx)>::max())
+            , irqn(static_cast<IRQn_Type>(std::numeric_limits<int32_t>::max()))
+        {
+        }
+
+        Interrupt(H<0>)
+            : idx(0)
+            , irqn(EXTI0_IRQn)
+        {
+        }
+        Interrupt(H<1>)
+            : idx(1)
+            , irqn(EXTI1_IRQn)
+        {
+        }
+        Interrupt(H<2>)
+            : idx(2)
+            , irqn(EXTI2_IRQn)
+        {
+        }
+        Interrupt(H<3>)
+            : idx(3)
+            , irqn(EXTI3_IRQn)
+        {
+        }
+        Interrupt(H<4>)
+            : idx(4)
+            , irqn(EXTI4_IRQn)
+        {
+        }
+        Interrupt(H<5>)
+            : idx(5)
+            , irqn(EXTI9_5_IRQn)
+        {
+        }
+        Interrupt(H<6>)
+            : idx(6)
+            , irqn(EXTI15_10_IRQn)
+        {
+        }
+
+        ~Interrupt()
+        {
+            if (0x0 != NVIC_GetEnableIRQ(this->irqn))
+            {
+                this->disable();
+            }
+        }
+
+        void enable(const Callback& a_callback, const IRQ_config& a_irq_config);
+        void disable();
+
+        void attach(const GPIO& a_port, std::uint32_t a_pin, Trigger_flag a_trigger, Mode a_mode);
+        void attach(const GPIO::In::Pin& a_pin, Trigger_flag a_trigger, Mode a_mode)
+        {
+            this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger, a_mode);
+        }
+        void attach(const GPIO::Out::Pin& a_pin, Trigger_flag a_trigger, Mode a_mode)
+        {
+            this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger, a_mode);
+        }
+        void attach(const GPIO::Alternate_function::Pin& a_pin, Trigger_flag a_trigger, Mode a_mode)
+        {
+            this->attach(*(a_pin.get_port()), a_pin.get_id(), a_trigger, a_mode);
+        }
+
+        void deattach(const GPIO& a_port, std::uint32_t a_pin);
+        void deattach(const GPIO::In::Pin& a_pin)
+        {
+            this->deattach(*(a_pin.get_port()), a_pin.get_id());
+        }
+        void deattach(const GPIO::Out::Pin& a_pin)
+        {
+            this->deattach(*(a_pin.get_port()), a_pin.get_id());
+        }
+        void deattach(const GPIO::Alternate_function::Pin& a_pin)
+        {
+            this->deattach(*(a_pin.get_port()), a_pin.get_id());
+        }
+
+    private:
+        std::uint32_t idx;
+        IRQn_Type irqn;
+
+        friend GPIO;
+    };
+
+    GPIO()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+        , p_registers(nullptr)
+        , flags(0u)
+        , out(nullptr)
+        , in(nullptr)
+        , analog(nullptr)
+        , alternate_function(nullptr)
+    {
+    }
+
     ~GPIO()
     {
-        this->disable();
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
     }
 
     void enable()
@@ -341,6 +486,11 @@ public:
         return cml::bit::is(this->flags, 31u);
     }
 
+    bool is_created()
+    {
+        return std::numeric_limits<decltype(this->idx)>::max() != this->idx && nullptr != this->p_registers;
+    }
+
     explicit operator GPIO_TypeDef*()
     {
         return this->p_registers;
@@ -355,10 +505,6 @@ private:
         , in(this)
         , analog(this)
         , alternate_function(this)
-        , p_out(&(this->out))
-        , p_in(&(this->in))
-        , p_analog(&(this->analog))
-        , p_alternate_function(&(this->alternate_function))
     {
     }
 
@@ -377,22 +523,17 @@ private:
 
     std::uint32_t flags;
 
-    Out out;
-    In in;
-    Analog analog;
-    Alternate_function alternate_function;
-
     friend Out;
     friend In;
     friend Analog;
     friend Alternate_function;
-    template<typename Periph_t, std::size_t id> friend class soc::Factory;
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 
 public:
-    Out* const p_out;
-    In* const p_in;
-    Analog* const p_analog;
-    Alternate_function* const p_alternate_function;
+    Out out;
+    In in;
+    Analog analog;
+    Alternate_function alternate_function;
 };
 
 template<std::size_t id> class rcc<GPIO, id> : private cml::Non_constructible
@@ -401,6 +542,25 @@ public:
     static void enable(bool a_enable_in_lp) = delete;
     static void disable()                   = delete;
 };
+
+constexpr GPIO::Interrupt::Trigger_flag operator|(GPIO::Interrupt::Trigger_flag a_f1,
+                                                  GPIO::Interrupt::Trigger_flag a_f2)
+{
+    return static_cast<GPIO::Interrupt::Trigger_flag>(static_cast<std::uint32_t>(a_f1) |
+                                                      static_cast<std::uint32_t>(a_f2));
+}
+constexpr GPIO::Interrupt::Trigger_flag operator&(GPIO::Interrupt::Trigger_flag a_f1,
+                                                  GPIO::Interrupt::Trigger_flag a_f2)
+{
+    return static_cast<GPIO::Interrupt::Trigger_flag>(static_cast<std::uint32_t>(a_f1) &
+                                                      static_cast<std::uint32_t>(a_f2));
+}
+constexpr GPIO::Interrupt::Trigger_flag operator|=(GPIO::Interrupt::Trigger_flag& a_f1,
+                                                   GPIO::Interrupt::Trigger_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

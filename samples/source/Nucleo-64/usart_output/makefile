@@ -12,7 +12,6 @@ endif
 PROJECT_NAME := usart_output
 ROOT         := $(CURDIR)
 CML_ROOT     := $(ROOT)/../../../..
-LIBRARIES    := $(ROOT)/libraries
 
 MCU_ARCH    := M4
 MCU_FAMILY  := STM32L4

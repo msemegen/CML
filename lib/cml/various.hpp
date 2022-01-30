@@ -18,15 +18,13 @@
 #define unused(x) ((void)(x))
 
 namespace cml {
-
-class various : private Non_constructible
+struct various : private Non_constructible
 {
-public:
-    static uint32_t time_diff(uint32_t a_left, uint32_t a_right)
+    static std::uint32_t tick_diff(std::uint32_t a_left, std::uint32_t a_right)
     {
         if (a_left < a_right)
         {
-            return (std::numeric_limits<uint32_t>::max() - a_left) + 1 + a_right;
+            return (std::numeric_limits<std::uint32_t>::max() - a_left) + 1 + a_right;
         }
         else
         {
@@ -40,7 +38,6 @@ public:
         return static_cast<Type_t>(std::numeric_limits<std::underlying_type_t<Type_t>>::max());
     }
 };
-
 } // namespace cml
 
 constexpr uint32_t operator"" _Hz(uint64_t a_value)

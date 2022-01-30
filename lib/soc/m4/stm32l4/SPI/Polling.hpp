@@ -39,8 +39,11 @@ public:
         std::size_t data_length_in_words = 0;
     };
 
-    Polling(SPI_master* a_p_SPI_master)
-        : p_SPI(a_p_SPI_master)
+    Polling(Polling&&) = default;
+    Polling& operator=(Polling&&) = default;
+
+    Polling()
+        : p_SPI(nullptr)
     {
     }
 
@@ -67,8 +70,30 @@ public:
                             std::uint32_t a_timeout,
                             GPIO::Out::Pin* a_p_nss = nullptr);
 
+    bool is_created() const
+    {
+        return nullptr != this->p_SPI;
+    }
+
+    SPI* get_handle()
+    {
+        return this->p_SPI;
+    }
+
+    const SPI* get_handle() const
+    {
+        return this->p_SPI;
+    }
+
 private:
+    Polling(SPI_master* a_p_SPI_master)
+        : p_SPI(a_p_SPI_master)
+    {
+    }
+
     SPI_master* p_SPI;
+
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 template<> class Polling<SPI_slave> : private cml::Non_copyable
@@ -89,6 +114,14 @@ public:
         std::size_t data_length_in_words = 0;
     };
 
+    Polling(Polling&&) = default;
+    Polling& operator=(Polling&&) = default;
+
+    Polling()
+        : p_SPI(nullptr)
+    {
+    }
+
     Polling(SPI_slave* p_SPI_slave)
         : p_SPI(p_SPI_slave)
     {
@@ -106,8 +139,25 @@ public:
                             std::size_t a_tx_rx_data_size_in_words,
                             std::uint32_t a_timeout);
 
+    bool is_created() const
+    {
+        return nullptr != this->p_SPI;
+    }
+
+    SPI* get_handle()
+    {
+        return this->p_SPI;
+    }
+
+    const SPI* get_handle() const
+    {
+        return this->p_SPI;
+    }
+
 private:
     SPI_slave* p_SPI;
+
+    template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
 
 constexpr Polling<SPI_master>::Result::Bus_flag operator|(Polling<SPI_master>::Result::Bus_flag a_f1,

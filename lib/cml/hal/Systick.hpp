@@ -8,8 +8,6 @@
  */
 
 // soc
-#include <soc/Systick/Interrupt.hpp>
-#include <soc/Systick/Polling.hpp>
 #include <soc/Systick/Systick.hpp>
 
 namespace cml {

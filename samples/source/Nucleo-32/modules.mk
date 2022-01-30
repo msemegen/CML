@@ -14,7 +14,8 @@ C_SOURCE_PATHS   := $(CML_ROOT)/lib                                 \
                     $(ROOT)/..                                      \
                     $(CML_ROOT)/externals/CMSIS/Device/ST/STM32L4xx
 
-CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS)                            \
+CPP_SOURCE_PATHS := $(CPP_SOURCE_PATHS)
+                    $(CML_ROOT)/lib/                               \
                     $(CML_ROOT)/lib/cml/hal                        \
                     $(CML_ROOT)/lib/cml/utils                      \
                     $(CML_ROOT)/lib/cml/debug                      \
