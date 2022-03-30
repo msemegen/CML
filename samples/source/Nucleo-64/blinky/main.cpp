@@ -14,8 +14,7 @@
 #include <cml/hal/mcu.hpp>
 #include <cml/hal/nvic.hpp>
 #include <cml/hal/rcc.hpp>
-#include <cml/utils/delay.hpp>
-#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/utils/tick_counter.hpp>
 
 namespace {
 using namespace cml::hal;
@@ -40,12 +39,8 @@ int main()
 
     Systick systick = Peripheral<Systick>::create();
 
-    systick.enable((rcc<mcu>::get_HCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
-    systick.interrupt.enable({ 0x1u, 0x1u });
-    systick.interrupt.register_callback({ ms_tick_counter::update, nullptr });
-
-    assertion::register_halt({ assert_halt, nullptr });
-    assertion::register_print({ assert_print, nullptr });
+    tick_counter::enable(&systick, { 0x1u, 0x1u });
+    assertion::enable({ assert_halt, nullptr }, { assert_print, nullptr });
 
     GPIO gpio_port_a = Peripheral<GPIO, 1>::create();
 
@@ -59,7 +54,7 @@ int main()
     while (true)
     {
         led_pin.toggle_level();
-        delay::ms(500u);
+        tick_counter::delay(500_ms);
     }
 
     return 0;

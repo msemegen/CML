@@ -21,30 +21,24 @@ namespace {
 using namespace cml;
 using namespace soc::m4::stm32l4;
 
-#if defined(STM32L412T8) || defined(STM32L412K8) || defined(STM32L412KB) || defined(STM32L412TB) || \
-    defined(STM32L422KB) || defined(STM32L422TB)
+#if defined(SOC_SPI1_PRESENT) && !defined(SOC_SPI2_PRESENT) && !defined(SOC_SPI3_PRESENT)
 Interrupt<SPI>* irq_context[1];
 #endif
 
-#if defined(STM32L412R8) || defined(STM32L412C8) || defined(STM32L412CB) || defined(STM32L412RB) || \
-    defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431KB) || defined(STM32L431KC) || \
-    defined(STM32L442KC) || defined(STM32L432KB) || defined(STM32L432KC)
+#if defined(SOC_SPI1_PRESENT) && ((defined(SOC_SPI2_PRESENT) && !defined(SOC_SPI3_PRESENT)) || \
+                                  (!defined(SOC_SPI2_PRESENT) && defined(SOC_SPI3_PRESENT)))
 Interrupt<SPI>* irq_context[2];
 #endif
 
-#if defined(STM32L431CB) || defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || \
-    defined(STM32L431VC) || defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || \
-    defined(STM32L433RC) || defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || \
-    defined(STM32L443VC) || defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || \
-    defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || \
-    defined(STM32L452CE) || defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || \
-    defined(STM32L452VE) || defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_SPI1_PRESENT) && defined(SOC_SPI2_PRESENT) && defined(SOC_SPI3_PRESENT)
 Interrupt<SPI>* irq_context[3];
 #endif
 } // namespace
 
 extern "C" {
 using namespace soc::m4::stm32l4;
+
+#if defined(SOC_SPI1_PRESENT)
 void SPI1_IRQHandler()
 {
     cml_assert(nullptr != irq_context[0]);
@@ -53,16 +47,9 @@ void SPI1_IRQHandler()
     SPI_interrupt_handler(&(irq_context[0]->transmission.tx));
     SPI_interrupt_handler(&(irq_context[0]->status));
 }
-#if defined(STM32L412R8) || defined(STM32L412C8) || defined(STM32L412CB) || defined(STM32L412RB) || \
-    defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431KB) || defined(STM32L431KC) || \
-    defined(STM32L442KC) || defined(STM32L432KB) || defined(STM32L432KC) || defined(STM32L431CB) || \
-    defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || \
-    defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || \
-    defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || \
-    defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#endif
+
+#if defined(SOC_SPI2_PRESENT)
 void SPI2_IRQHandler()
 {
     cml_assert(nullptr != irq_context[1]);
@@ -72,13 +59,8 @@ void SPI2_IRQHandler()
     SPI_interrupt_handler(&(irq_context[1]->status));
 }
 #endif
-#if defined(STM32L431CB) || defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || \
-    defined(STM32L431VC) || defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || \
-    defined(STM32L433RC) || defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || \
-    defined(STM32L443VC) || defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || \
-    defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || \
-    defined(STM32L452CE) || defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || \
-    defined(STM32L452VE) || defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+
+#if defined(SOC_SPI3_PRESENT) 
 void SPI3_IRQHandler()
 {
     cml_assert(nullptr != irq_context[2]);
@@ -122,6 +104,7 @@ void Interrupt<SPI_slave>::clear_irq_context()
     irq_context[this->get_handle()->get_idx()] = nullptr;
 }
 
+#if defined(SOC_SPI1_PRESENT)
 template<> void rcc<SPI, 1>::enable(bool a_enable_in_lp)
 {
     bit_flag::set(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN);
@@ -136,18 +119,10 @@ template<> void rcc<SPI, 1>::disable()
     bit_flag::clear(&(RCC->APB2ENR), RCC_APB2ENR_SPI1EN);
     bit_flag::clear(&(RCC->APB2SMENR), RCC_APB2SMENR_SPI1SMEN);
 }
+#endif
 
-#if defined(STM32L412R8) || defined(STM32L412C8) || defined(STM32L412CB) || defined(STM32L412RB) || \
-    defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431KB) || defined(STM32L431KC) || \
-    defined(STM32L442KC) || defined(STM32L432KB) || defined(STM32L431CB) || defined(STM32L431CC) || \
-    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
-    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
-    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
-    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
-    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
-    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
-    defined(STM32L462RE) || defined(STM32L462VE)
-template<> void rcc<SPI, 2u>::enable(bool a_enable_in_lp)
+#if defined(SOC_SPI2_PRESENT) 
+template <> void rcc <SPI, 2u>::enable(bool a_enable_in_lp)
 {
     bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI2EN);
 
@@ -163,14 +138,7 @@ template<> void rcc<SPI, 2u>::disable()
 }
 #endif
 
-#if defined(STM32L431CB) || defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || \
-    defined(STM32L431VC) || defined(STM32L432KC) || defined(STM32L433CB) || defined(STM32L433CC) || \
-    defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || defined(STM32L443CC) || \
-    defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || defined(STM32L451CE) || \
-    defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || \
-    defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || defined(STM32L452RE) || \
-    defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || defined(STM32L462RE) || \
-    defined(STM32L462VE)
+#if defined(SOC_SPI3_PRESENT)
 template<> void rcc<SPI, 3u>::enable(bool a_enable_in_lp)
 {
     bit_flag::set(&(RCC->APB1ENR1), RCC_APB1ENR1_SPI3EN);
@@ -186,7 +154,9 @@ template<> void rcc<SPI, 3u>::disable()
     bit_flag::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_SPI3SMEN);
 }
 #endif
+
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc
+
 #endif

@@ -34,10 +34,8 @@ public:
         , p_request_registers(nullptr)
         , p_tx_channel_registers(nullptr)
         , tx_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
-        , tx_cselr(std::numeric_limits<std::uint32_t>::max())
         , p_rx_channel_registers(nullptr)
         , rx_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
-        , rx_cselr(std::numeric_limits<std::uint32_t>::max())
     {
     }
 
@@ -78,10 +76,10 @@ private:
         DMA_Request_TypeDef* a_p_request_registers,
         DMA_Channel_TypeDef* a_p_tx_channel_registers,
         IRQn_Type a_tx_irqn,
-        std::uint32_t a_tx_cselr,
+        const DMA<>::CSELR& a_tx_cselr,
         DMA_Channel_TypeDef* a_p_rx_channel_registers,
         IRQn_Type a_rx_irqn,
-        std::uint32_t a_rx_cselr)
+        const DMA<>::CSELR& a_rx_cselr)
         : idx(a_idx)
         , p_USART_registers(a_p_USART_registers)
         , p_request_registers(a_p_request_registers)
@@ -107,11 +105,11 @@ private:
 
     DMA_Channel_TypeDef* p_tx_channel_registers;
     IRQn_Type tx_irqn;
-    std::uint32_t tx_cselr;
+    DMA<>::CSELR tx_cselr;
 
     DMA_Channel_TypeDef* p_rx_channel_registers;
     IRQn_Type rx_irqn;
-    std::uint32_t rx_cselr;
+    DMA<>::CSELR rx_cselr;
 
     DMA<>::Callback tx_callback;
     DMA<>::Callback rx_callback;
@@ -130,10 +128,8 @@ template<> class DMA<RS485> : private cml::Non_copyable
         , p_request_registers(nullptr)
         , p_tx_channel_registers(nullptr)
         , tx_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
-        , tx_cselr(std::numeric_limits<std::uint32_t>::max())
         , p_rx_channel_registers(nullptr)
         , rx_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
-        , rx_cselr(std::numeric_limits<std::uint32_t>::max())
     {
     }
 
@@ -174,10 +170,10 @@ private:
         DMA_Request_TypeDef* a_p_request_registers,
         DMA_Channel_TypeDef* a_p_tx_channel_registers,
         IRQn_Type a_tx_irqn,
-        std::uint32_t a_tx_cselr,
+        const DMA<>::CSELR& a_tx_cselr,
         DMA_Channel_TypeDef* a_p_rx_channel_registers,
         IRQn_Type a_rx_irqn,
-        std::uint32_t a_rx_cselr)
+        const DMA<>::CSELR& a_rx_cselr)
         : idx(a_idx)
         , p_RS485_registers(a_p_RS485_registers)
         , p_request_registers(a_p_request_registers)
@@ -203,11 +199,11 @@ private:
 
     DMA_Channel_TypeDef* p_tx_channel_registers;
     IRQn_Type tx_irqn;
-    std::uint32_t tx_cselr;
+    DMA<>::CSELR tx_cselr;
 
     DMA_Channel_TypeDef* p_rx_channel_registers;
     IRQn_Type rx_irqn;
-    std::uint32_t rx_cselr;
+    DMA<>::CSELR rx_cselr;
 
     DMA<>::Callback tx_callback;
     DMA<>::Callback rx_callback;

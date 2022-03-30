@@ -39,20 +39,10 @@ struct Transfer_interrupt_context
     Mode mode = various::get_enum_incorrect_value<Mode>();
 };
 
-#if defined(STM32L412R8) || defined(STM32L431CB) || defined(STM32L412C8) || defined(STM32L412CB) || \
-    defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431CC) || \
-    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
-    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
-    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
-    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
-    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
-    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
-    defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_USART1_PRESENT) && defined(SOC_USART2_PRESENT) && defined(SOC_USART3_PRESENT)
 Transfer_interrupt_context transfer_irq_context[3];
 #endif
-#if defined(STM32L412K8) || defined(STM32L412KB) || defined(STM32L412TB) || defined(STM32L412T8) || \
-    defined(STM32L422KB) || defined(STM32L422TB) || defined(STM32L431KB) || defined(STM32L431KC) || \
-    defined(STM32L432KB) || defined(STM32L432KC) || defined(STM32L442KC)
+#if defined(SOC_USART1_PRESENT) && defined(SOC_USART2_PRESENT) && !defined(SOC_USART3_PRESENT)
 Transfer_interrupt_context transfer_irq_context[2];
 #endif
 } // namespace
@@ -60,6 +50,7 @@ Transfer_interrupt_context transfer_irq_context[2];
 extern "C" {
 using namespace soc::m4::stm32l4;
 
+#if defined(SOC_USART1_PRESENT)
 void USART1_IRQHandler()
 {
     cml_assert(nullptr != transfer_irq_context[0].p_general);
@@ -78,7 +69,9 @@ void USART1_IRQHandler()
         break;
     }
 }
+#endif
 
+#if defined(SOC_USART2_PRESENT)
 void USART2_IRQHandler()
 {
     cml_assert(nullptr != transfer_irq_context[1].p_general);
@@ -97,16 +90,9 @@ void USART2_IRQHandler()
         break;
     }
 }
+#endif
 
-#if defined(STM32L412R8) || defined(STM32L431CB) || defined(STM32L412C8) || defined(STM32L412CB) || \
-    defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431CC) || \
-    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
-    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
-    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
-    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
-    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
-    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
-    defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_USART3_PRESENT)
 void USART3_IRQHandler()
 {
     cml_assert(nullptr != transfer_irq_context[2].p_general);
@@ -165,6 +151,7 @@ void RS485::Interrupt::clear_irq_context()
     };
 }
 
+#if defined(SOC_USART1_PRESENT)
 template<> template<> void rcc<USART, 1u>::enable<rcc<USART, 1u>::Clock_source::HSI>(bool a_enable_in_lp)
 {
     bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART1SEL_0 | RCC_CCIPR_USART1SEL_1, RCC_CCIPR_USART1SEL_1);
@@ -201,7 +188,9 @@ template<> void rcc<USART, 1u>::disable()
     bit::clear(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN_Pos);
     bit::clear(&(RCC->APB2SMENR), RCC_APB2SMENR_USART1SMEN_Pos);
 }
+#endif
 
+#if defined(SOC_USART2_PRESENT)
 template<> template<> void rcc<USART, 2u>::enable<rcc<USART, 2u>::Clock_source::HSI>(bool a_enable_in_lp)
 {
     bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART2SEL_0 | RCC_CCIPR_USART2SEL_1, RCC_CCIPR_USART2SEL_1);
@@ -238,16 +227,9 @@ template<> void rcc<USART, 2u>::disable()
     bit::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN_Pos);
     bit::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_USART2SMEN_Pos);
 }
+#endif
 
-#if defined(STM32L412R8) || defined(STM32L431CB) || defined(STM32L412C8) || defined(STM32L412CB) || \
-    defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431CC) || \
-    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
-    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
-    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
-    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
-    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
-    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
-    defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_USART3_PRESENT)
 template<> template<> void rcc<USART, 3u>::enable<rcc<USART, 3u>::Clock_source::HSI>(bool a_enable_in_lp)
 {
     bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART3SEL_0 | RCC_CCIPR_USART3SEL_1, RCC_CCIPR_USART3SEL_1);

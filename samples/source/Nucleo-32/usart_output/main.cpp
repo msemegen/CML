@@ -7,10 +7,8 @@
 
 // cml
 #include <cml/debug/assertion.hpp>
-#include <cml/hal/Factory.hpp>
 #include <cml/hal/GPIO.hpp>
-#include <cml/hal/Interrupt.hpp>
-#include <cml/hal/Polling.hpp>
+#include <cml/hal/Peripheral.hpp>
 #include <cml/hal/Systick.hpp>
 #include <cml/hal/USART.hpp>
 #include <cml/hal/internal_flash.hpp>
@@ -18,8 +16,11 @@
 #include <cml/hal/nvic.hpp>
 #include <cml/hal/pwr.hpp>
 #include <cml/hal/rcc.hpp>
-#include <cml/utils/tick_counter.hpp>
 #include <cml/utils/delay.hpp>
+#include <cml/utils/ms_tick_counter.hpp>
+
+// debug
+#include <cml/hal/DMA.hpp>
 
 namespace {
 using namespace cml::hal;
@@ -66,60 +67,59 @@ int main()
     rcc<mcu>::disable_clock(rcc<mcu>::Clock::MSI);
     nvic::set_config({ nvic::Config::Grouping::_4, 0x5u });
 
-    Systick systick               = Factory<Systick>::create();
-    Interrupt<Systick> systick_it = Factory<Interrupt<Systick>>::create(&systick);
+    Systick systick = Peripheral<Systick>::create();
 
-    systick.enable((rcc<mcu>::get_SYSCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
-    systick_it.enable({ 0x1u, 0x1u });
-    systick_it.register_callback({ tick_counter::update, nullptr });
+    systick.enable((rcc<mcu>::get_HCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
+    systick.interrupt.enable({ 0x1u, 0x1u });
+    systick.interrupt.register_callback({ ms_tick_counter::update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });
 
-    GPIO gpio_port_a = Factory<GPIO, 1>::create();
-    GPIO gpio_port_b = Factory<GPIO, 2>::create();
-
+    GPIO gpio_port_a = Peripheral<GPIO, 1>::create();
+    GPIO gpio_port_b = Peripheral<GPIO, 2>::create();
     rcc<GPIO, 1>::enable(false);
     rcc<GPIO, 2>::enable(false);
+
     gpio_port_a.enable();
     gpio_port_b.enable();
 
-    gpio_port_a.p_alternate_function->enable(2u, usart_pin_config);
-    gpio_port_a.p_alternate_function->enable(3u, usart_pin_config);
+    gpio_port_a.alternate_function.enable(2u, usart_pin_config);
+    gpio_port_a.alternate_function.enable(3u, usart_pin_config);
 
-    USART usart = Factory<USART, 2>::create();
-    usart.interrupt.enable({});
-    usart.interrupt.register_RX_callback({});
-
+    USART usart2 = Peripheral<USART, 2>::create();
     rcc<USART, 2>::enable<rcc<USART, 2>::Clock_source::SYSCLK>(false);
 
-    bool usart_ready = usart.enable({ 115200u,
-                                      rcc<mcu>::get_SYSCLK_frequency_Hz(),
-                                      USART::Enable_config::Oversampling::_16,
-                                      USART::Enable_config::Stop_bits::_1,
-                                      USART::Enable_config::Flow_control_flag::none,
-                                      USART::Enable_config::Sampling_method::three_sample_bit,
-                                      USART::Enable_config::Mode_flag::tx | USART::Enable_config::Mode_flag::rx },
-                                    { USART::Frame_format::Word_length::_8_bit, USART::Frame_format::Parity::none },
-                                    10u);
+    bool usart_ready = usart2.enable({ 115200u,
+                                       rcc<mcu>::get_HCLK_frequency_Hz(),
+                                       USART::Enable_config::Oversampling::_16,
+                                       USART::Enable_config::Stop_bits::_1,
+                                       USART::Enable_config::Flow_control_flag::none,
+                                       USART::Enable_config::Sampling_method::three_sample_bit,
+                                       USART::Enable_config::Mode_flag::tx | USART::Enable_config::Mode_flag::rx },
+                                     { USART::Frame_format::Word_length::_8_bit, USART::Frame_format::Parity::none },
+                                     10u);
 
     if (true == usart_ready)
     {
         GPIO::Out::Pin led_pin;
-        gpio_port_b.p_out->enable(3u, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
-
-        Polling<USART> iostream = Factory<Polling<USART>, 2>::create(&usart);
+        gpio_port_b.out.enable(3u, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
 
         while (true)
         {
-            iostream.transmit("Hello world\n", 12u);
-            led_pin.toggle_level();
+            for (std::uint32_t i = 0; i < 10; i++)
+            {
+                usart2.polling.transmit(".", 1);
+                delay::ms(500);
+                led_pin.toggle_level();
+            }
+
+            usart2.polling.transmit("\r          \r", 12);
             delay::ms(500);
+            led_pin.toggle_level();
         }
     }
 
     while (true)
         ;
-
-    return 0;
 }

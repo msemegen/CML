@@ -1,11 +1,11 @@
-#ifdef STM32L4
-
 /*
  *   Name: USART.cpp
  *
  *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
+
+#ifdef STM32L4
 
 // this
 #include <soc/m4/stm32l4/USART/USART.hpp>
@@ -17,7 +17,7 @@
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
-#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/utils/tick_counter.hpp>
 #include <cml/utils/wait_until.hpp>
 
 namespace {
@@ -93,10 +93,9 @@ Event_flag_t get_Event_flag_and_clear(USART_TypeDef* a_p_registers, Event_flag_t
     return ret;
 }
 
-constexpr USART::Polling::Result::Event_flag all_polling_result_event_flags =
-    USART::Polling::Result::Event_flag::framing_error | USART::Polling::Result::Event_flag::idle |
-    USART::Polling::Result::Event_flag::noise_detected | USART::Polling::Result::Event_flag::overrun |
-    USART::Polling::Result::Event_flag::parity_error | USART::Polling::Result::Event_flag::transfer_complete;
+constexpr USART::Event_flag all_polling_result_event_flags =
+    USART::Event_flag::framing_error | USART::Event_flag::idle | USART::Event_flag::noise_detected |
+    USART::Event_flag::overrun | USART::Event_flag::parity_error | USART::Event_flag::transfer_complete;
 } // namespace
 
 namespace soc {
@@ -116,10 +115,10 @@ void USART_interrupt_handler(USART* a_p_this)
 
     if (nullptr != a_p_this->event_callback.function)
     {
-        USART::Interrupt::Event_flag event =
-            get_Event_flag_and_clear<USART::Interrupt::Event_flag>(p_registers, a_p_this->enabled_interrupt_events);
+        USART::Event_flag event =
+            get_Event_flag_and_clear<USART::Event_flag>(p_registers, a_p_this->enabled_interrupt_events);
 
-        if (USART::Interrupt::Event_flag::none != event)
+        if (USART::Event_flag::none != event)
         {
             a_p_this->event_callback.function(event, a_p_this->event_callback.p_user_data);
         }
@@ -142,7 +141,7 @@ void USART_interrupt_handler(USART* a_p_this)
     }
 }
 
-bool USART::enable(const Enable_config& a_config, const Frame_format& a_frame_format, std::uint32_t a_timeout_ms)
+bool USART::enable(const Enable_config& a_config, const Frame_format& a_frame_format, Milliseconds a_timeout)
 {
     cml_assert(true == this->is_created());
 
@@ -156,9 +155,9 @@ bool USART::enable(const Enable_config& a_config, const Frame_format& a_frame_fo
     cml_assert(various::get_enum_incorrect_value<Frame_format::Parity>() != a_frame_format.parity);
     cml_assert(various::get_enum_incorrect_value<Frame_format::Word_length>() != a_frame_format.word_length);
 
-    cml_assert(a_timeout_ms > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     switch (a_config.oversampling)
     {
@@ -188,7 +187,7 @@ bool USART::enable(const Enable_config& a_config, const Frame_format& a_frame_fo
         (true == bit_flag::is(this->p_registers->CR1, USART_CR1_TE) ? USART_ISR_TEACK : 0);
 
     bool ret = wait_until::all_bits(
-        &(this->p_registers->ISR), wait_flag, false, start, a_timeout_ms - (ms_tick_counter::get() - start));
+        &(this->p_registers->ISR), wait_flag, false, start, a_timeout - (tick_counter::get() - start));
 
     if (true == ret && bit_flag::is(this->p_registers->ISR, USART_ISR_IDLE))
     {
@@ -236,8 +235,8 @@ USART::Polling::Result USART::Polling::transmit(const void* a_p_data, std::size_
 
     bit_flag::set(&(p_registers->ICR), USART_ICR_TCCF);
 
-    std::size_t words        = 0;
-    bool error               = false;
+    std::size_t words = 0;
+    bool error        = false;
 
     while (false == bit_flag::is(p_registers->ISR, USART_ISR_TC) && false == error)
     {
@@ -258,29 +257,28 @@ USART::Polling::Result USART::Polling::transmit(const void* a_p_data, std::size_
         error = is_error(p_registers);
     }
 
-    return { get_Event_flag_and_clear<USART::Polling::Result::Event_flag>(p_registers, all_polling_result_event_flags),
-             words };
+    return { get_Event_flag_and_clear<USART::Event_flag>(p_registers, all_polling_result_event_flags), words };
 }
 
 USART::Polling::Result
-USART::Polling::transmit(const void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout_ms)
+USART::Polling::transmit(const void* a_p_data, std::size_t a_data_size_in_words, Milliseconds a_timeout)
 {
     cml_assert(nullptr != a_p_data);
     cml_assert(a_data_size_in_words > 0);
-    cml_assert(a_timeout_ms > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     USART_TypeDef* p_registers = static_cast<USART_TypeDef*>(*(this->p_USART));
 
     bit_flag::set(&(p_registers->ICR), USART_ICR_TCCF);
 
-    std::size_t words        = 0;
-    bool error               = false;
-    Result::Event_flag event = Result::Event_flag::none;
+    std::size_t words = 0;
+    bool error        = false;
+    Event_flag event  = Event_flag::none;
 
     while (false == bit_flag::is(p_registers->ISR, USART_ISR_TC) && false == error &&
-           a_timeout_ms < various::tick_diff(ms_tick_counter::get(), start))
+           a_timeout > tick_counter::get() - start)
     {
         if (true == bit_flag::is(p_registers->ISR, USART_ISR_TXE) && words < a_data_size_in_words)
         {
@@ -301,8 +299,7 @@ USART::Polling::transmit(const void* a_p_data, std::size_t a_data_size_in_words,
 
     if (true == error)
     {
-        event =
-            get_Event_flag_and_clear<USART::Polling::Result::Event_flag>(p_registers, all_polling_result_event_flags);
+        event = get_Event_flag_and_clear<USART::Event_flag>(p_registers, all_polling_result_event_flags);
     }
 
     return { event, words };
@@ -317,9 +314,9 @@ USART::Polling::Result USART::Polling::receive(void* a_p_data, std::size_t a_dat
 
     bit_flag::set(&(p_registers->ICR), USART_ICR_IDLECF);
 
-    std::size_t words             = 0;
-    bool error                    = false;
-    Result::Event_flag bus_status = Result::Event_flag::none;
+    std::size_t words     = 0;
+    bool error            = false;
+    Event_flag bus_status = Event_flag::none;
 
     while (false == bit_flag::is(p_registers->ISR, USART_ISR_IDLE) && false == error)
     {
@@ -350,32 +347,30 @@ USART::Polling::Result USART::Polling::receive(void* a_p_data, std::size_t a_dat
 
     if (true == error)
     {
-        bus_status =
-            get_Event_flag_and_clear<USART::Polling::Result::Event_flag>(p_registers, all_polling_result_event_flags);
+        bus_status = get_Event_flag_and_clear<USART::Event_flag>(p_registers, all_polling_result_event_flags);
     }
 
     return { bus_status, words };
 }
 
-USART::Polling::Result
-USART::Polling::receive(void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout_ms)
+USART::Polling::Result USART::Polling::receive(void* a_p_data, std::size_t a_data_size_in_words, Milliseconds a_timeout)
 {
     cml_assert(nullptr != a_p_data);
     cml_assert(a_data_size_in_words > 0);
-    cml_assert(a_timeout_ms > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     USART_TypeDef* p_registers = static_cast<USART_TypeDef*>(*(this->p_USART));
 
     bit_flag::set(&(p_registers->ICR), USART_ICR_IDLECF);
 
-    std::size_t words             = 0;
-    bool error                    = false;
-    Result::Event_flag bus_status = Result::Event_flag::none;
+    std::size_t words     = 0;
+    bool error            = false;
+    Event_flag bus_status = Event_flag::none;
 
     while (false == bit_flag::is(p_registers->ISR, USART_ISR_IDLE) && false == error &&
-           a_timeout_ms >= various::tick_diff(ms_tick_counter::get(), start))
+           a_timeout > tick_counter::get() - start)
     {
         if (true == bit_flag::is(p_registers->ISR, USART_ISR_RXNE))
         {
@@ -404,8 +399,7 @@ USART::Polling::receive(void* a_p_data, std::size_t a_data_size_in_words, std::u
 
     if (true == error)
     {
-        bus_status =
-            get_Event_flag_and_clear<USART::Polling::Result::Event_flag>(p_registers, all_polling_result_event_flags);
+        bus_status = get_Event_flag_and_clear<USART::Event_flag>(p_registers, all_polling_result_event_flags);
     }
 
     return { bus_status, words };

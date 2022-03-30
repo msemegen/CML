@@ -17,7 +17,7 @@
 #include <cml/Non_constructible.hpp>
 #include <cml/bit.hpp>
 #include <cml/debug/assertion.hpp>
-#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/utils/tick_counter.hpp>
 #include <cml/utils/wait_until.hpp>
 
 namespace {
@@ -35,13 +35,12 @@ struct control_flags : private Non_constructible
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-
 #define IWDG_T ((IWDG_TypeDef*)IWDG_BASE)
 
 using namespace cml;
 using namespace cml::utils;
 
-bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a_window, std::uint32_t a_timeout)
+bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a_window, Milliseconds a_timeout)
 {
     cml_assert(true == this->is_created());
 
@@ -51,9 +50,9 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
                (Window::Mode::disabled == a_window.mode));
     cml_assert(true == rcc<mcu>::is_clock_enabled(rcc<mcu>::Clock::LSI));
     cml_assert(a_reload <= 0xFFFu);
-    cml_assert(a_timeout > 0u);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     IWDG_T->KR = control_flags::enable;
     IWDG_T->KR = control_flags::write_access_enable;
@@ -65,7 +64,7 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
     {
         IWDG_T->RLR = a_reload;
         ret =
-            wait_until::all_bits(&(IWDG_T->SR), IWDG_SR_RVU, true, start, a_timeout - (ms_tick_counter::get() - start));
+            wait_until::all_bits(&(IWDG_T->SR), IWDG_SR_RVU, true, start, a_timeout - (tick_counter::get() - start));
     }
 
     if (true == ret)
@@ -74,7 +73,7 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
         {
             IWDG_T->WINR = a_window.value;
             ret          = wait_until::all_bits(
-                &(IWDG_T->SR), IWDG_SR_WVU, true, start, a_timeout - (ms_tick_counter::get() - start));
+                &(IWDG_T->SR), IWDG_SR_WVU, true, start, a_timeout - (tick_counter::get() - start));
         }
         else
         {

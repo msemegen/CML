@@ -17,7 +17,7 @@
 #include <soc/m4/stm32l4/pwr/pwr.hpp>
 
 // cml
-#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/utils/tick_counter.hpp>
 #include <cml/various.hpp>
 
 namespace {
@@ -70,7 +70,7 @@ public:
         this->unlocked = false == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
     }
 
-    Unlock_guard(uint32_t a_start, uint32_t a_timeout)
+    Unlock_guard(cml::Milliseconds a_start, cml::Milliseconds a_timeout)
     {
         this->unlocked = cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, a_start, a_timeout);
 
@@ -192,7 +192,7 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
                                                                const uint64_t* a_p_data,
                                                                uint32_t a_size_in_double_words,
                                                                Mode a_mode,
-                                                               uint32_t a_timeout)
+                                                               Milliseconds a_timeout)
 {
     cml_assert(a_address >= internal_flash::start_address &&
                a_address <= internal_flash::start_address + internal_flash::size_in_bytes);
@@ -200,9 +200,9 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
     cml_assert(a_size_in_double_words > 0);
     cml_assert((Mode::fast == a_mode && pwr::Voltage_scaling::_1 == pwr::get_voltage_scaling()) ||
                Mode::standard == a_mode);
-    cml_assert(a_timeout > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    uint32_t timeout_start = ms_tick_counter::get();
+    Milliseconds timeout_start = tick_counter::get();
 
     Unlock_guard guard(timeout_start, a_timeout);
     Result ret { Result::Status_flag::locked, 0 };
@@ -219,7 +219,7 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
 
                 volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_address);
                 for (; ret.words < a_size_in_double_words && false == is_FLASH_SR_error() &&
-                       a_timeout >= various::tick_diff(ms_tick_counter::get(), timeout_start);
+                       a_timeout >= tick_counter::get() - timeout_start;
                      ret.words++)
                 {
                     *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
@@ -243,7 +243,7 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
 
                 volatile uint32_t* p_address = reinterpret_cast<volatile uint32_t*>(a_address);
                 for (; ret.words < a_size_in_double_words && false == is_FLASH_SR_error() &&
-                       a_timeout >= various::tick_diff(ms_tick_counter::get(), timeout_start);
+                       a_timeout >= tick_counter::get() - timeout_start;
                      ret.words++)
                 {
                     *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
@@ -286,15 +286,15 @@ internal_flash::polling::read(uint32_t a_address, void* a_p_data, uint32_t a_siz
 }
 
 internal_flash::polling::Result
-internal_flash::polling::read(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes, uint32_t a_timeout)
+internal_flash::polling::read(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes, Milliseconds a_timeout)
 {
     cml_assert(a_address >= internal_flash::start_address &&
                a_address <= internal_flash::start_address + internal_flash::size_in_bytes);
     cml_assert(nullptr != a_p_data);
     cml_assert(a_size_in_bytes > 0 && a_size_in_bytes <= internal_flash::page_size_in_bytes);
-    cml_assert(a_timeout > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    uint32_t timeout_start = ms_tick_counter::get();
+    Milliseconds timeout_start = tick_counter::get();
 
     Unlock_guard guard(timeout_start, a_timeout);
     Result ret { Result::Status_flag::locked, 0 };
@@ -332,13 +332,14 @@ internal_flash::polling::Result internal_flash::polling::erase_page(uint32_t a_p
     return { get_status_flag_from_FLASH_SR(), 0 };
 }
 
-internal_flash::polling::Result internal_flash::polling::erase_page(uint32_t a_page_address, uint32_t a_timeout)
+internal_flash::polling::Result internal_flash::polling::erase_page(uint32_t a_page_address,
+                                                                    Milliseconds a_timeout)
 {
     cml_assert(a_page_address >= internal_flash::start_address &&
                a_page_address <= internal_flash::start_address + internal_flash::size_in_bytes);
-    cml_assert(a_timeout > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    uint32_t timeout_start = ms_tick_counter::get();
+    Milliseconds timeout_start = tick_counter::get();
     Result ret { Result::Status_flag::locked, 0 };
 
     Unlock_guard guard(timeout_start, a_timeout);
@@ -380,11 +381,11 @@ internal_flash::polling::Result internal_flash::polling::erase_bank(Bank_id)
     return { get_status_flag_from_FLASH_SR(), 0 };
 }
 
-internal_flash::polling::Result internal_flash::polling::erase_bank(Bank_id, uint32_t a_timeout)
+internal_flash::polling::Result internal_flash::polling::erase_bank(Bank_id, Milliseconds a_timeout)
 {
-    cml_assert(a_timeout > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    uint32_t timeout_start = ms_tick_counter::get();
+    Milliseconds timeout_start = tick_counter::get();
     Result ret { Result::Status_flag::locked, 0 };
 
     Unlock_guard unlock_guard(timeout_start, a_timeout);

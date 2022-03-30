@@ -15,11 +15,15 @@
 // externals
 #include <stm32l4xx.h>
 
+// soc
+#include <soc/m4/stm32l4/defs.hpp>
+
 // cml
 #include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 
 namespace soc {
+#if defined(SOC_I2C1_PRESENT)
 template<> class Peripheral<m4::stm32l4::I2C_master, 1u> : private cml::Non_constructible
 {
 public:
@@ -71,17 +75,9 @@ public:
         return m4::stm32l4::Polling<m4::stm32l4::I2C_slave>(a_p_SPI);
     }
 };
+#endif
 
-#if defined(STM32L412R8) || defined(STM32L431CB) || defined(STM32L412C8) || defined(STM32L412CB) || \
-    defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431CC) || \
-    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
-    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
-    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
-    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
-    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
-    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
-    defined(STM32L462RE) || defined(STM32L462VE)
-
+#if defined(SOC_I2C2_PRESENT)
 template<> class Peripheral<m4::stm32l4::I2C_master, 2u> : private cml::Non_constructible
 {
 public:
@@ -113,7 +109,7 @@ template<> class Peripheral<m4::stm32l4::I2C_slave, 2u> : private cml::Non_const
 public:
     static m4::stm32l4::I2C_slave create()
     {
-        return m4::stm32l4::I2C_slave(1, I2C1);
+        return m4::stm32l4::I2C_slave(1, I2C2);
     }
 };
 template<> class Peripheral<m4::stm32l4::Interrupt<m4::stm32l4::I2C_slave>, 2u> : private cml::Non_constructible
@@ -135,15 +131,7 @@ public:
 };
 #endif
 
-#if defined(STM32L412R8) || defined(STM32L412T8) || defined(STM32L431CB) || defined(STM32L412C8) || \
-    defined(STM32L412CB) || defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || \
-    defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || \
-    defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || \
-    defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || \
-    defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C3_PRESENT)
 template<> class Peripheral<m4::stm32l4::I2C_master, 3u> : private cml::Non_constructible
 {
 public:
@@ -197,10 +185,7 @@ public:
 };
 #endif
 
-#if defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C4_PRESENT)
 template<> class Peripheral<m4::stm32l4::I2C_master, 4u> : private cml::Non_constructible
 {
 public:
@@ -258,45 +243,28 @@ public:
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
+#if defined(SOC_I2C1_PRESENT)
 template<> template<> void rcc<I2C, 1>::enable<rcc<I2C, 1>::Clock_source::HSI>(bool a_lp_enable);
 template<> template<> void rcc<I2C, 1>::enable<rcc<I2C, 1>::Clock_source::PCLK1>(bool a_lp_enable);
 template<> template<> void rcc<I2C, 1>::enable<rcc<I2C, 1>::Clock_source::SYSCLK>(bool a_lp_enable);
 template<> void rcc<I2C, 1>::disable();
+#endif
 
-#if defined(STM32L412R8) || defined(STM32L431CB) || defined(STM32L412C8) || defined(STM32L412CB) || \
-    defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431CC) || \
-    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
-    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
-    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
-    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
-    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
-    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
-    defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C2_PRESENT)
 template<> template<> void rcc<I2C, 2>::enable<rcc<I2C, 2>::Clock_source::HSI>(bool a_lp_enable);
 template<> template<> void rcc<I2C, 2>::enable<rcc<I2C, 2>::Clock_source::PCLK1>(bool a_lp_enable);
 template<> template<> void rcc<I2C, 2>::enable<rcc<I2C, 2>::Clock_source::SYSCLK>(bool a_lp_enable);
 template<> void rcc<I2C, 2>::disable();
 #endif
 
-#if defined(STM32L412R8) || defined(STM32L412T8) || defined(STM32L431CB) || defined(STM32L412C8) || \
-    defined(STM32L412CB) || defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || \
-    defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || \
-    defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || \
-    defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || \
-    defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C3_PRESENT)
 template<> template<> void rcc<I2C, 3>::enable<rcc<I2C, 3>::Clock_source::HSI>(bool a_lp_enable);
 template<> template<> void rcc<I2C, 3>::enable<rcc<I2C, 3>::Clock_source::PCLK1>(bool a_lp_enable);
 template<> template<> void rcc<I2C, 3>::enable<rcc<I2C, 3>::Clock_source::SYSCLK>(bool a_lp_enable);
 template<> void rcc<I2C, 3>::disable();
 #endif
 
-#if defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C4_PRESENT)
 template<> template<> void rcc<I2C, 4>::enable<rcc<I2C, 4>::Clock_source::HSI>(bool a_lp_enable);
 template<> template<> void rcc<I2C, 4>::enable<rcc<I2C, 4>::Clock_source::PCLK1>(bool a_lp_enable);
 template<> template<> void rcc<I2C, 4>::enable<rcc<I2C, 4>::Clock_source::SYSCLK>(bool a_lp_enable);

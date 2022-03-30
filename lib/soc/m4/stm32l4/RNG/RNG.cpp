@@ -17,7 +17,7 @@
 // cml
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
-#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/utils/tick_counter.hpp>
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
 
@@ -65,13 +65,13 @@ void RNG_interrupt_handler()
     NVIC_ClearPendingIRQ(RNG_IRQn);
 }
 
-bool RNG::enable(std::uint32_t a_timeout)
+bool RNG::enable(Milliseconds a_timeout)
 {
     cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
     cml_assert(rcc<mcu>::get_CLK48_frequency_Hz() <= 48_MHz);
-    cml_assert(a_timeout > 0u);
+    cml_assert(a_timeout > 0_ms);
 
-    uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     bit_flag::set(&(RNG_T->CR), RNG_CR_RNGEN);
 
@@ -94,13 +94,13 @@ void RNG::disable()
     NVIC_DisableIRQ(RNG_IRQn);
 }
 
-bool RNG::Polling::get_value(std::uint32_t* a_p_value, std::uint32_t a_timeout)
+bool RNG::Polling::get_value(std::uint32_t* a_p_value, Milliseconds a_timeout)
 {
     cml_assert(true == this->is_created());
 
-    cml_assert(a_timeout > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    bool ret = wait_until::all_bits(&(RNG_T->SR), RNG_SR_DRDY, false, ms_tick_counter::get(), a_timeout);
+    bool ret = wait_until::all_bits(&(RNG_T->SR), RNG_SR_DRDY, false, tick_counter::get(), a_timeout);
 
     if (true == ret)
     {

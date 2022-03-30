@@ -21,8 +21,10 @@
 #include <cml/hal/nvic.hpp>
 #include <cml/hal/pwr.hpp>
 #include <cml/hal/rcc.hpp>
-#include <cml/utils/delay.hpp>
-#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/utils/tick_counter.hpp>
+
+// debug
+#include <cml/hal/DMA.hpp>
 
 namespace {
 using namespace cml::hal;
@@ -35,6 +37,16 @@ void assert_halt(void*)
 }
 
 void assert_print(const char*, uint32_t, const char*, void*) {}
+
+volatile bool b = false;
+
+void dma_callback(DMA<>::Event_flag a_event, void* a_p_user_data)
+{
+    // ADC* p_adc = reinterpret_cast<ADC*>(a_p_user_data);
+    // auto x     = 0;
+    // x          = x;
+    b = true;
+}
 } // namespace
 
 int main()
@@ -54,8 +66,7 @@ int main()
     rcc<mcu>::enable_clock<rcc<mcu>::Clock::PLL>(rcc<mcu>::PLL_source::HSI, rcc<mcu>::PLLM::_2, {
         20u, { rcc<mcu>::PLL_config::R::Divider::_2, rcc<mcu>::PLL_config::Output::enabled },
             { rcc<mcu>::PLL_config::Q::Divider::_2, rcc<mcu>::PLL_config::Output::disabled },
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLL_P_PRESENT)
         {
             rcc<mcu>::PLL_config::P::Divider::_7, rcc<mcu>::PLL_config::Output::disabled
         }
@@ -71,12 +82,8 @@ int main()
 
     Systick systick = Peripheral<Systick>::create();
 
-    systick.enable((rcc<mcu>::get_HCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
-    systick.interrupt.enable({ 0x1u, 0x1u });
-    systick.interrupt.register_callback({ ms_tick_counter::update, nullptr });
-
-    assertion::register_halt({ assert_halt, nullptr });
-    assertion::register_print({ assert_print, nullptr });
+    tick_counter::enable(&systick, { 0x1u, 0x1u });
+    assertion::enable({ assert_halt, nullptr }, { assert_print, nullptr });
 
     mcu::set_DWT_active(true);
 
@@ -106,32 +113,63 @@ int main()
         GPIO::Out::Pin led_pin;
         gpio_port_a.out.enable(5u, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
 
+        GPIO gpio_port_c = Peripheral<GPIO, 3>::create();
+        rcc<GPIO, 3>::enable(false);
+
+        gpio_port_c.analog.enable(0x0u, GPIO::Pull::none);
+
         rcc<ADC>::enable<rcc<ADC>::Clock_source::PCLK>(rcc<ADC>::PCLK_prescaler::_1, false);
         ADC adc = Peripheral<ADC, 1>::create();
 
-        adc.enable(ADC::Resolution::_12_bit, 10u);
-        adc.polling.enable(std::array {
-            ADC::Channel { ADC::Channel::Id::temperature_sensor, ADC::Channel::Sampling_time::_640_5_clock_cycles } });
+        adc.enable(
+            ADC::Resolution::_6_bit,
+            std::array {
+                ADC::Channel { ADC::Channel::Id::temperature_sensor, ADC::Channel::Sampling_time::_640_5_clock_cycles },
+                ADC::Channel { ADC::Channel::Id::_1, ADC::Channel::Sampling_time::_640_5_clock_cycles } },
+            10_ms);
+
+        rcc<DMA<>, 1>::enable();
+        DMA<ADC> adc_dma = Peripheral<ADC, 1, DMA<>, 1>::create();
+
+        std::uint16_t v[2] = { 0x0, 0x0u };
+        adc_dma.read_start<ADC::Mode::continuous>(DMA<>::Priority::low,
+                                                  DMA<>::Mode::single,
+                                                  &v,
+                                                  sizeof(v),
+                                                  IRQ_config { 0x0u, 0x0u },
+                                                  { dma_callback, &adc },
+                                                  DMA<>::Event_flag::transfer_complete);
 
         while (true)
         {
-            std::uint16_t v        = 0;
             char string_buffer[32] = { 0 };
 
-            adc.polling.read(ADC::Polling::Mode::single, &v, 1);
+            while (false == b)
+                ;
 
-            std::int32_t temp_oC = static_cast<std::int32_t>(
-                (30.0f / static_cast<float>(adc.get_calibration_data().temperature_sensor_data_2 -
-                                            adc.get_calibration_data().temperature_sensor_data_1)) *
-                    (v - adc.get_calibration_data().temperature_sensor_data_1) +
-                30.0f);
-
-            std::int32_t length =
-                std::snprintf(string_buffer, sizeof(string_buffer), "Current temperature: %ld oC\n", temp_oC);
+            std::int32_t length = std::snprintf(string_buffer, sizeof(string_buffer), "%d %d\n", v[0], v[1]);
             usart.polling.transmit(string_buffer, static_cast<std::size_t>(length));
 
-            led_pin.toggle_level();
-            delay::ms(500);
+            b = false;
+
+            // adc.polling.read<ADC::Mode::single>(&v, 1);
+
+            // std::int32_t temp_oC = static_cast<std::int32_t>(
+            //     (30.0f / static_cast<float>(adc.get_calibration_data().temperature_sensor_data_2 -
+            //                                 adc.get_calibration_data().temperature_sensor_data_1)) *
+            //         (v - adc.get_calibration_data().temperature_sensor_data_1) +
+            //     30.0f);
+            //
+            // std::int32_t length =
+            //     std::snprintf(string_buffer, sizeof(string_buffer), "Current temperature: %ld oC\n", temp_oC);
+            // usart.polling.transmit(string_buffer, static_cast<std::size_t>(length));
+
+            // std::int32_t length = std::snprintf(string_buffer, sizeof(string_buffer), "%d\n", v);
+            // usart.polling.transmit(string_buffer, static_cast<std::size_t>(length));
+
+            // led_pin.toggle_level();
+            // tick_counter::delay(500_ms);
+            b = false;
         }
     }
 

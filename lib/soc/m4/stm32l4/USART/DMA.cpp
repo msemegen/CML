@@ -16,12 +16,13 @@
 
 namespace {
 using namespace cml;
+using namespace soc::m4::stm32l4;
 
 void transmit(USART_TypeDef* a_p_USART_registers,
               DMA_Request_TypeDef* a_p_request_registers,
               DMA_Channel_TypeDef* a_p_channel_registers,
               std::uint32_t a_channel_flags,
-              std::uint32_t a_cselr,
+              const DMA<>::CSELR& a_cselr,
               const void* a_p_buffer,
               std::uint16_t a_buffer_size_in_words)
 {
@@ -34,7 +35,7 @@ void transmit(USART_TypeDef* a_p_USART_registers,
     bit_flag::set(&(a_p_USART_registers->CR3), USART_CR3_DMAT);
     bit_flag::set(&(a_p_USART_registers->ICR), USART_ICR_TCCF);
 
-    bit_flag::set(&(a_p_request_registers->CSELR), a_cselr);
+    bit_flag::set(&(a_p_request_registers->CSELR), a_cselr.clear, a_cselr.set);
     bit_flag::set(&(a_p_channel_registers->CCR), a_channel_flags | DMA_CCR_EN);
 }
 
@@ -42,7 +43,7 @@ void receive(USART_TypeDef* a_p_USART_registers,
              DMA_Request_TypeDef* a_p_request_registers,
              DMA_Channel_TypeDef* a_p_channel_registers,
              std::uint32_t a_channel_flags,
-             std::uint32_t a_cselr,
+             const DMA<>::CSELR& a_cselr,
              void* a_p_buffer,
              std::uint16_t a_buffer_size_in_words)
 {
@@ -54,7 +55,7 @@ void receive(USART_TypeDef* a_p_USART_registers,
 
     bit_flag::set(&(a_p_USART_registers->CR3), USART_CR3_DMAR);
 
-    bit_flag::set(&(a_p_request_registers->CSELR), a_cselr);
+    bit_flag::set(&(a_p_request_registers->CSELR), a_cselr.clear, a_cselr.set);
     bit_flag::set(&(a_p_channel_registers->CCR), a_channel_flags | DMA_CCR_EN);
 }
 } // namespace
@@ -109,7 +110,7 @@ void DMA<USART>::transmit_start(DMA<>::Priority a_priority,
 void DMA<USART>::transmit_stop()
 {
     bit_flag::clear(&(this->p_USART_registers->CR3), USART_CR3_DMAT);
-    bit_flag::clear(&(this->p_request_registers->CSELR), this->tx_cselr);
+    bit_flag::clear(&(this->p_request_registers->CSELR), this->tx_cselr.clear);
 
     this->p_tx_channel_registers->CCR   = 0x0u;
     this->p_tx_channel_registers->CNDTR = 0x0u;
@@ -170,7 +171,7 @@ void DMA<USART>::receive_start(DMA<>::Priority a_priority,
 void DMA<USART>::receive_stop()
 {
     bit_flag::clear(&(this->p_USART_registers->CR3), USART_CR3_DMAR);
-    bit_flag::clear(&(this->p_request_registers->CSELR), this->rx_cselr);
+    bit_flag::clear(&(this->p_request_registers->CSELR), this->rx_cselr.clear);
 
     this->p_rx_channel_registers->CCR   = 0x0u;
     this->p_rx_channel_registers->CNDTR = 0x0u;
@@ -178,12 +179,13 @@ void DMA<USART>::receive_stop()
     this->p_rx_channel_registers->CMAR  = 0x0u;
 
     NVIC_DisableIRQ(this->rx_irqn);
-    this->rx_callback = { nullptr, nullptr };
 
     if (nullptr != this->rx_callback.function)
     {
         this->clear_irq_context();
     }
+
+    this->rx_callback = { nullptr, nullptr };
 }
 
 void DMA<RS485>::transmit_start(DMA<>::Priority a_priority,
@@ -231,7 +233,7 @@ void DMA<RS485>::transmit_start(DMA<>::Priority a_priority,
 void DMA<RS485>::transmit_stop()
 {
     bit_flag::clear(&(this->p_RS485_registers->CR3), USART_CR3_DMAT);
-    bit_flag::clear(&(this->p_request_registers->CSELR), this->tx_cselr);
+    bit_flag::clear(&(this->p_request_registers->CSELR), this->tx_cselr.clear);
 
     this->p_tx_channel_registers->CCR   = 0x0u;
     this->p_tx_channel_registers->CNDTR = 0x0u;
@@ -239,12 +241,13 @@ void DMA<RS485>::transmit_stop()
     this->p_tx_channel_registers->CMAR  = 0x0u;
 
     NVIC_DisableIRQ(this->tx_irqn);
-    this->tx_callback = { nullptr, nullptr };
 
     if (nullptr != this->tx_callback.function)
     {
         this->clear_irq_context();
     }
+
+    this->tx_callback = { nullptr, nullptr };
 }
 
 void DMA<RS485>::receive_start(DMA<>::Priority a_priority,
@@ -292,7 +295,7 @@ void DMA<RS485>::receive_start(DMA<>::Priority a_priority,
 void DMA<RS485>::receive_stop()
 {
     bit_flag::clear(&(this->p_RS485_registers->CR3), USART_CR3_DMAR);
-    bit_flag::clear(&(this->p_request_registers->CSELR), this->rx_cselr);
+    bit_flag::clear(&(this->p_request_registers->CSELR), this->rx_cselr.clear);
 
     this->p_rx_channel_registers->CCR   = 0x0u;
     this->p_rx_channel_registers->CNDTR = 0x0u;
@@ -300,12 +303,13 @@ void DMA<RS485>::receive_stop()
     this->p_rx_channel_registers->CMAR  = 0x0u;
 
     NVIC_DisableIRQ(this->rx_irqn);
-    this->rx_callback = { nullptr, nullptr };
 
     if (nullptr != this->rx_callback.function)
     {
         this->clear_irq_context();
     }
+
+    this->rx_callback = { nullptr, nullptr };
 }
 } // namespace stm32l4
 } // namespace m4

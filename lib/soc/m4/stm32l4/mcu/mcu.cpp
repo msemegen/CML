@@ -31,8 +31,7 @@ uint32_t get_pll_register_config_from_factor(const Config_t& a_config, uint32_t 
             (rcc<mcu>::PLL_config::Output::enabled == a_config.output ? a_enable_flag : 0));
 }
 
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLLSAI_PRESENT)
 template<typename Config_t>
 uint32_t get_pllsai1_register_config_from_factor(const Config_t& a_config, uint32_t a_enable_flag)
 {
@@ -95,8 +94,7 @@ template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::PLL>(PLL_source a_source
     cml_assert(various::get_enum_incorrect_value<PLL_config::Q::Divider>() != a_config.q.divider);
     cml_assert(various::get_enum_incorrect_value<PLL_config::Output>() != a_config.q.output);
 
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLL_P_PRESENT)
     cml_assert(various::get_enum_incorrect_value<PLL_config::P::Divider>() != a_config.p.divider);
     cml_assert(various::get_enum_incorrect_value<PLL_config::Output>() != a_config.p.output);
 #endif
@@ -109,8 +107,7 @@ template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::PLL>(PLL_source a_source
 
     RCC->PLLCFGR = static_cast<std::uint32_t>(a_source) | static_cast<std::uint32_t>(a_m) |
                    (a_config.n << RCC_PLLCFGR_PLLN_Pos) |
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLL_P_PRESENT)
                    get_pll_register_config_from_factor(a_config.p, RCC_PLLCFGR_PLLPEN) |
 #endif
                    get_pll_register_config_from_factor(a_config.q, RCC_PLLCFGR_PLLQEN) |
@@ -120,8 +117,7 @@ template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::PLL>(PLL_source a_source
     wait_until::all_bits(&(RCC->CR), RCC_CR_PLLRDY, false);
 }
 
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLLSAI_PRESENT)
 template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::PLL>(PLL_source a_source,
                                                              PLLM a_m,
                                                              const PLL_config& a_pll_config,
@@ -185,8 +181,7 @@ void rcc<mcu>::disable_clock(Clock a_clock)
             bit_flag::clear(&(RCC->CR), RCC_CR_PLLON);
             wait_until::all_bits(&(RCC->CR), RCC_CR_PLLRDY, true);
 
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLLSAI_PRESENT)
             bit_flag::clear(&(RCC->CR), RCC_CR_PLLSAI1ON);
             wait_until::all_bits(&(RCC->CR), RCC_CR_PLLSAI1RDY, true);
 #endif
@@ -262,8 +257,7 @@ void rcc<mcu>::set_CLK48_source(CLK48_source a_source)
 
                ((CLK48_source::PLL_Q == a_source && true == is_clock_enabled(Clock::PLL)) &&
                 PLL_config::Output::enabled == get_PLL_config().q.output)
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLLSAI_PRESENT)
                || ((CLK48_source::PLL_SAI1_Q == a_source && is_clock_enabled(Clock::PLL)) &&
                    PLLSAI1_config::Output::enabled == get_PLLSAI1_config().q.output)
 #endif
@@ -327,16 +321,14 @@ rcc<mcu>::PLL_config rcc<mcu>::get_PLL_config()
               static_cast<PLL_config::Output>(bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLREN)) },
             { static_cast<PLL_config::Q::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLQ)),
               static_cast<PLL_config::Output>(bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLQEN)) },
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLL_P_PRESENT)
             { static_cast<PLL_config::P::Divider>(bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLP)),
               static_cast<PLL_config::Output>(bit_flag::is(RCC->PLLCFGR, RCC_PLLCFGR_PLLPEN)) },
 #endif
     };
 }
 
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLLSAI_PRESENT)
 rcc<mcu>::PLLSAI1_config rcc<mcu>::get_PLLSAI1_config()
 {
     return { bit_flag::get(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N),
@@ -391,8 +383,7 @@ std::uint32_t rcc<mcu>::get_CLK48_frequency_Hz()
             return get_clock_frequency_Hz(Clock::HSI48);
         }
         break;
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLLSAI_PRESENT)
         case CLK48_source::PLL_SAI1_Q: {
             return calculate_PLLSAI1_Q_output_frequency();
         }
@@ -540,8 +531,7 @@ std::uint32_t rcc<mcu>::calculate_PLL_Q_output_frequency()
     return 0;
 }
 
-#if defined(STM32L431xx) || defined(STM32L432xx) || defined(STM32L433xx) || defined(STM32L442xx) || \
-    defined(STM32L443xx) || defined(STM32L451xx) || defined(STM32L452xx) || defined(STM32L462xx)
+#if defined(SOC_PLLSAI_PRESENT)
 std::uint32_t rcc<mcu>::calculate_PLLSAI1_Q_output_frequency()
 {
     const std::uint32_t m = (bit_flag::get(RCC->PLLCFGR, RCC_PLLCFGR_PLLM) >> RCC_PLLCFGR_PLLM_Pos) + 1u;

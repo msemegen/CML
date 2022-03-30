@@ -18,20 +18,36 @@
 // soc
 #include <soc/Peripheral.hpp>
 #include <soc/m4/IRQ_config.hpp>
+#include <soc/m4/stm32l4/defs.hpp>
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Duration.hpp>
 #include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/various.hpp>
 
+#if defined(SOC_ADC1_PRESENT) && !defined(SOC_ADC2_PRESENT)
+#define ADC_COMMON_T ADC1_COMMON
+#endif
+
+#if defined(SOC_ADC1_PRESENT) && defined(SOC_ADC2_PRESENT)
+#define ADC_COMMON_T ADC12_COMMON
+#endif
+
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-class ADC : private cml::Non_copyable
+class ADC
 {
 public:
+    enum class Mode : std::uint32_t
+    {
+        single        = 0x0u,
+        continuous    = ADC_CFGR_CONT,
+        discontinuous = ADC_CFGR_DISCEN
+    };
     enum class Resolution : std::uint32_t
     {
         _6_bit  = ADC_CFGR_RES_1 | ADC_CFGR_RES_0,
@@ -40,24 +56,30 @@ public:
         _12_bit = 0u,
     };
 
-    enum class Mode : std::uint32_t
-    {
-        single     = 0x0u,
-        continuous = ADC_CFGR_CONT,
-    };
-
     struct Calibration_data
     {
         std::uint16_t temperature_sensor_data_1  = 0u;
         std::uint16_t temperature_sensor_data_2  = 0u;
         std::uint16_t internal_voltage_reference = 0u;
     };
-
     struct Channel
     {
         enum class Id : std::uint32_t
         {
             voltage_reference,
+#if defined(SOC_ADC_CHANNELS_5_6_7_8_9_10_11_12_15_16)
+            _5  = 5,
+            _6  = 6,
+            _7  = 7,
+            _8  = 8,
+            _9  = 9,
+            _10 = 10,
+            _11 = 11,
+            _12 = 12,
+            _15 = 15,
+            _16 = 16,
+#endif
+#if defined(SOC_ADC_CHANNELS_1_2_3_4_5_6_7_8_9_10_11_12_13_14_15_16)
             _1,
             _2,
             _3,
@@ -68,34 +90,46 @@ public:
             _8,
             _9,
             _10,
-#if defined(STM32L431CB) || defined(STM32L431CC) || defined(STM32L433CB) || defined(STM32L433CC) || \
-    defined(STM32L443CC) || defined(STM32L433RC) || defined(STM32L452RE) || defined(STM32L412RB) || \
-    defined(STM32L433RB) || defined(STM32L433VC) || defined(STM32L443RC) || defined(STM32L443VC) || \
-    defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || \
-    defined(STM32L452RC) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462RE) || \
-    defined(STM32L462VE) || defined(STM32L412R8) || defined(STM32L422RB)
             _11,
             _12,
             _13,
             _14,
-#if defined(STM32L433RC) || defined(STM32L452RE) || defined(STM32L412RB) || defined(STM32L433RB) || \
-    defined(STM32L433VC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451RC) || \
-    defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452RC) || \
-    defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462RE) || defined(STM32L462VE) || \
-    defined(STM32L412R8) || defined(STM32L422RB)
             _15,
-#if defined(STM32L433RB) || defined(STM32L433VC) || defined(STM32L443RC) || defined(STM32L443VC) || \
-    defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || defined(STM32L451VE) || \
-    defined(STM32L452RC) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462RE) || \
-    defined(STM32L462VE) || defined(STM32L412R8) || defined(STM32L422RB) || defined(STM32L452RE)
             _16,
 #endif
+#if defined(SOC_ADC_CHANNELS_1_2_3_4_5_6_7_8_9_10_11_12_13_15_16)
+            _1  = 1,
+            _2  = 2,
+            _3  = 3,
+            _4  = 4,
+            _5  = 5,
+            _6  = 6,
+            _7  = 7,
+            _8  = 8,
+            _9  = 9,
+            _10 = 10,
+            _11 = 11,
+            _12 = 12,
+            _13 = 13,
+            _15 = 15,
+            _16 = 16,
 #endif
+#if defined(SOC_ADC_CHANNELS_4_5_6_7_8_9_10_11_12_15_16)
+            _4  = 4,
+            _5  = 5,
+            _6  = 6,
+            _7  = 7,
+            _8  = 8,
+            _9  = 9,
+            _10 = 10,
+            _11 = 11,
+            _12 = 12,
+            _15 = 15,
+            _16 = 16,
 #endif
             temperature_sensor,
             battery_voltage,
         };
-
         enum class Sampling_time : std::uint32_t
         {
             _2_5_clock_cycles   = 0x0u,
@@ -112,88 +146,34 @@ public:
         Sampling_time sampling_time = cml::various::get_enum_incorrect_value<Sampling_time>();
     };
 
-    class Polling : private cml::Non_copyable
+    class Polling
     {
     public:
-        enum class Mode : std::uint32_t
-        {
-            single     = 0x0u,
-            continuous = ADC_CFGR_CONT
-        };
+        template<Mode mode>
+        void read(uint16_t* a_p_buffer, std::size_t a_buffer_capacity, std::size_t a_group_size) = delete;
+        template<Mode mode> bool read(uint16_t* a_p_buffer,
+                                      std::size_t a_buffer_capacity,
+                                      std::size_t a_group_size,
+                                      cml::Milliseconds a_timeout)                               = delete;
 
-        Polling(Polling&&) = default;
-        Polling& operator=(Polling&&) = default;
-
-        ~Polling()
-        {
-            if (true == this->is_enabled())
-            {
-                this->disable();
-            }
-        }
-
-        void disable();
-        void read(Mode a_mode, uint16_t* a_p_buffer, std::size_t a_buffer_capacity);
-        bool read(Mode a_mode, uint16_t* a_p_buffer, std::size_t a_buffer_capacity, uint32_t a_timeout);
-
-        template<std::size_t length> void enable(const std::array<Channel, length>& a_channels)
-        {
-            this->enable(a_channels.data(), a_channels.size());
-        }
-
-        template<std::size_t length> void read(Mode a_mode, std::array<uint16_t, length>* a_p_buffer)
-        {
-            this->read(a_mode, a_p_buffer->data(), a_p_buffer->size());
-        }
-        template<std::size_t length>
-        bool read(Mode a_mode, std::array<uint16_t, length>* a_p_buffer, uint32_t a_timeout)
-        {
-            return this->read(a_mode, a_p_buffer->data(), a_p_buffer->size(), a_timeout);
-        }
-
-        bool is_enabled()
-        {
-            return this->enabled;
-        }
-
-        bool is_created()
-        {
-            return nullptr != this->p_ADC;
-        }
+        template<Mode mode> void read(uint16_t* a_p_buffer, std::size_t a_buffer_capacity) = delete;
+        template<Mode mode>
+        bool read(uint16_t* a_p_buffer, std::size_t a_buffer_capacity, cml::Milliseconds a_timeout) = delete;
 
     private:
-        Polling()
-            : p_ADC(nullptr)
-            , enabled(false)
-        {
-        }
-
-        Polling(ADC* a_p_ADC)
-            : p_ADC(a_p_ADC)
-            , enabled(false)
-        {
-        }
-
-        void enable(const Channel* a_p_channels, std::size_t a_channels_count);
-
         ADC* p_ADC;
-        bool enabled;
-
         friend ADC;
     };
-    class Interrupt : private cml::Non_copyable
+    class Interrupt
     {
     public:
-        struct Callback
+        struct Read_callback
         {
             using Function = void (*)(std::uint16_t a_value, bool a_series_end, void* a_p_user_data);
 
             Function function = nullptr;
             void* p_user_data = nullptr;
         };
-
-        Interrupt(Interrupt&&) = default;
-        Interrupt& operator=(Interrupt&&) = default;
 
         ~Interrupt()
         {
@@ -203,71 +183,30 @@ public:
             }
         }
 
+        void enable(const IRQ_config& a_irq_config);
         void disable();
 
-        template<std::size_t length>
-        void enable(const IRQ_config& a_irq_config, const std::array<Channel, length>& a_channels)
-        {
-            this->enable(a_irq_config, a_channels.data(), a_channels.size());
-        }
-
-        void register_callack(Mode a_mode, const Callback& a_callback);
-        void unregister_callback();
+        template<Mode mode> void read_start(const Read_callback& a_callback)                           = delete;
+        template<Mode mode> void read_start(const Read_callback& a_callback, std::size_t a_group_size) = delete;
+        void read_stop();
 
         bool is_enabled() const
         {
-            return 0 != NVIC_GetEnableIRQ(this->irqn);
-        }
-
-        bool is_created() const
-        {
-            return nullptr != this->p_ADC && static_cast<IRQn_Type>(std::numeric_limits<int32_t>::max()) != this->irqn;
+            return 0 != NVIC_GetEnableIRQ(this->p_ADC->irqn);
         }
 
     private:
-        Interrupt()
-            : p_ADC(nullptr)
-            , irqn(static_cast<IRQn_Type>(std::numeric_limits<int32_t>::max()))
-        {
-        }
-
-        Interrupt(ADC* a_p_ADC, IRQn_Type a_irqn)
-            : p_ADC(a_p_ADC)
-            , irqn(a_irqn)
-        {
-        }
-
-        void enable(const IRQ_config& a_irq_config, const Channel* a_p_channels, std::size_t a_channels_count);
-
         void set_irq_context();
         void clear_irq_context();
 
         ADC* p_ADC;
-        IRQn_Type irqn;
-
-        Callback callback;
-
         friend ADC;
-        friend void ADC_interrupt_handler(ADC* a_p_this);
     };
-
-    ADC(ADC&&)   = default;
-    ADC& operator=(ADC&&) = default;
-
-    ADC()
-        : idx(std::numeric_limits<decltype(this->idx)>::max())
-        , p_registers(nullptr)
+    template<std::size_t length>
+    bool enable(Resolution a_resolution, const std::array<Channel, length>& a_channels, cml::Milliseconds a_timeout)
     {
+        return this->enable(a_resolution, a_channels.data(), a_channels.size(), a_timeout);
     }
-    ~ADC()
-    {
-        if (true == this->is_enabled())
-        {
-            this->disable();
-        }
-    }
-
-    bool enable(Resolution a_resolution, std::uint32_t a_timeout_ms);
     void disable();
 
     constexpr Calibration_data get_calibration_data() const
@@ -307,21 +246,49 @@ public:
 
 private:
     ADC(std::size_t a_idx, ADC_TypeDef* a_p_registers, IRQn_Type a_irqn)
-        : polling(this)
-        , interrupt(this, a_irqn)
-        , idx(a_idx)
+        : idx(a_idx)
         , p_registers(a_p_registers)
+        , irqn(a_irqn)
     {
+        this->polling.p_ADC   = this;
+        this->interrupt.p_ADC = this;
     }
 
-    const std::uint32_t idx;
+    bool enable(ADC::Resolution a_resolution,
+                const ADC::Channel* a_p_channels,
+                std::size_t a_channels_count,
+                cml::Milliseconds a_timeout);
+
+    std::uint32_t idx;
     ADC_TypeDef* p_registers;
 
+    IRQn_Type irqn;
+    Interrupt::Read_callback read_callback;
+
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
+    friend void ADC_interrupt_handler(ADC* a_p_this);
 };
 
-void ADC_interrupt_handler(ADC* a_p_this);
+template<> void ADC::Polling::read<ADC::Mode::single>(uint16_t* a_p_buffer, std::size_t a_buffer_capacity);
+template<> void ADC::Polling::read<ADC::Mode::continuous>(uint16_t* a_p_buffer, std::size_t a_buffer_capacity);
+template<> void ADC::Polling::read<ADC::Mode::discontinuous>(uint16_t* a_p_buffer,
+                                                             std::size_t a_buffer_capacity,
+                                                             std::size_t a_group_size);
 
+template<> bool
+ADC::Polling::read<ADC::Mode::single>(uint16_t* a_p_buffer, std::size_t a_buffer_capacity, cml::Milliseconds a_timeout);
+template<> bool ADC::Polling::read<ADC::Mode::continuous>(uint16_t* a_p_buffer,
+                                                          std::size_t a_buffer_capacity,
+                                                          cml::Milliseconds a_timeout);
+template<> bool ADC::Polling::read<ADC::Mode::discontinuous>(uint16_t* a_p_buffer,
+                                                             std::size_t a_buffer_capacity,
+                                                             std::size_t a_group_size,
+                                                             cml::Milliseconds a_timeout);
+
+template<> void ADC::Interrupt::read_start<ADC::Mode::single>(const Read_callback& a_callback);
+template<> void ADC::Interrupt::read_start<ADC::Mode::continuous>(const Read_callback& a_callback);
+template<>
+void ADC::Interrupt::read_start<ADC::Mode::discontinuous>(const Read_callback& a_callback, std::size_t a_group_size);
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

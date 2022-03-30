@@ -20,18 +20,6 @@
 namespace cml {
 struct various : private Non_constructible
 {
-    static std::uint32_t tick_diff(std::uint32_t a_left, std::uint32_t a_right)
-    {
-        if (a_left < a_right)
-        {
-            return (std::numeric_limits<std::uint32_t>::max() - a_left) + 1 + a_right;
-        }
-        else
-        {
-            return a_left - a_right;
-        }
-    }
-
     template<typename Type_t> constexpr static Type_t get_enum_incorrect_value()
     {
         static_assert(true == std::is_enum_v<Type_t>);

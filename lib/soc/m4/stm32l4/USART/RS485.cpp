@@ -15,7 +15,7 @@
 
 // cml
 #include <cml/debug/assertion.hpp>
-#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/utils/tick_counter.hpp>
 #include <cml/utils/wait_until.hpp>
 #include <cml/various.hpp>
 
@@ -92,11 +92,10 @@ Event_flag_t get_Event_flag_and_clear(USART_TypeDef* a_p_registers, Event_flag_t
     return ret;
 }
 
-constexpr RS485::Polling::Result::Event_flag all_polling_result_event_flags =
-    RS485::Polling::Result::Event_flag::framing_error | RS485::Polling::Result::Event_flag::idle |
-    RS485::Polling::Result::Event_flag::noise_detected | RS485::Polling::Result::Event_flag::overrun |
-    RS485::Polling::Result::Event_flag::parity_error | RS485::Polling::Result::Event_flag::transfer_complete |
-    RS485::Polling::Result::Event_flag::address_matched;
+constexpr RS485::Event_flag all_polling_result_event_flags =
+    RS485::Event_flag::framing_error | RS485::Event_flag::idle | RS485::Event_flag::noise_detected |
+    RS485::Event_flag::overrun | RS485::Event_flag::parity_error | RS485::Event_flag::transfer_complete |
+    RS485::Event_flag::address_matched;
 } // namespace
 
 namespace soc {
@@ -116,10 +115,10 @@ void RS485_interrupt_handler(RS485* a_p_this)
 
     if (nullptr != a_p_this->event_callback.function)
     {
-        RS485::Interrupt::Event_flag event =
-            get_Event_flag_and_clear<RS485::Interrupt::Event_flag>(p_registers, a_p_this->enabled_interrupt_events);
+        RS485::Event_flag event =
+            get_Event_flag_and_clear<RS485::Event_flag>(p_registers, a_p_this->enabled_interrupt_events);
 
-        if (RS485::Interrupt::Event_flag::none != event)
+        if (RS485::Event_flag::none != event)
         {
             a_p_this->event_callback.function(event, a_p_this->event_callback.p_user_data);
         }
@@ -142,7 +141,7 @@ void RS485_interrupt_handler(RS485* a_p_this)
     }
 }
 
-bool RS485::enable(const Enable_config& a_config, std::uint32_t a_timeout)
+bool RS485::enable(const Enable_config& a_config, Milliseconds a_timeout)
 {
     cml_assert(true == this->is_created());
 
@@ -152,9 +151,9 @@ bool RS485::enable(const Enable_config& a_config, std::uint32_t a_timeout)
     cml_assert(various::get_enum_incorrect_value<Enable_config::Stop_bits>() != a_config.stop_bits);
     cml_assert(various::get_enum_incorrect_value<Enable_config::Oversampling>() != a_config.oversampling);
 
-    cml_assert(a_timeout > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     switch (a_config.oversampling)
     {
@@ -183,7 +182,7 @@ bool RS485::enable(const Enable_config& a_config, std::uint32_t a_timeout)
                                     USART_ISR_TEACK | USART_ISR_REACK | USART_ISR_RWU | USART_ISR_IDLE,
                                     false,
                                     start,
-                                    a_timeout);
+                                    a_timeout - (tick_counter::get() - start));
 
     if (true == ret)
     {
@@ -213,9 +212,9 @@ RS485::Polling::Result RS485::Polling::transmit(std::uint8_t a_address,
 
     bit_flag::set(&(this->p_RS485->p_registers->ICR), USART_ICR_TCCF);
 
-    std::size_t words        = 0;
-    bool error               = false;
-    Result::Event_flag event = Result::Event_flag::none;
+    std::size_t words = 0;
+    bool error        = false;
+    Event_flag event  = Event_flag::none;
 
     a_p_flow_control_pin->set_level(GPIO::Level::high);
 
@@ -242,8 +241,7 @@ RS485::Polling::Result RS485::Polling::transmit(std::uint8_t a_address,
 
     if (true == error)
     {
-        event =
-            get_Event_flag_and_clear<Result::Event_flag>(this->p_RS485->p_registers, all_polling_result_event_flags);
+        event = get_Event_flag_and_clear<Event_flag>(this->p_RS485->p_registers, all_polling_result_event_flags);
     }
 
     return { event, words };
@@ -253,25 +251,25 @@ RS485::Polling::Result RS485::Polling::transmit(std::uint8_t a_address,
                                                 const void* a_p_data,
                                                 std::size_t a_data_size_in_words,
                                                 GPIO::Out::Pin* a_p_flow_control_pin,
-                                                std::uint32_t a_timeout_ms)
+                                                Milliseconds a_timeout)
 {
     cml_assert(a_address <= 0x7F);
     cml_assert(nullptr != a_p_data);
     cml_assert(a_data_size_in_words > 0);
-    cml_assert(a_timeout_ms > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     bit_flag::set(&(this->p_RS485->p_registers->ICR), USART_ICR_TCCF);
 
-    std::size_t words        = 0;
-    bool error               = false;
-    Result::Event_flag event = Result::Event_flag::none;
+    std::size_t words = 0;
+    bool error        = false;
+    Event_flag event  = Event_flag::none;
 
     a_p_flow_control_pin->set_level(GPIO::Level::high);
 
     while (false == bit_flag::is(this->p_RS485->p_registers->ISR, USART_ISR_TC) && false == error &&
-           a_timeout_ms < various::tick_diff(ms_tick_counter::get(), start))
+           a_timeout > tick_counter::get() - start)
     {
         if (true == bit_flag::is(this->p_RS485->p_registers->ISR, USART_ISR_TXE))
         {
@@ -294,8 +292,7 @@ RS485::Polling::Result RS485::Polling::transmit(std::uint8_t a_address,
 
     if (true == error)
     {
-        event =
-            get_Event_flag_and_clear<Result::Event_flag>(this->p_RS485->p_registers, all_polling_result_event_flags);
+        event = get_Event_flag_and_clear<Event_flag>(this->p_RS485->p_registers, all_polling_result_event_flags);
     }
 
     return { event, words };
@@ -309,9 +306,9 @@ RS485::Polling::receive(void* a_p_data, std::size_t a_data_size_in_words, GPIO::
 
     bit_flag::set(&(this->p_RS485->p_registers->ICR), USART_ICR_IDLECF);
 
-    std::size_t words             = 0;
-    bool error                    = false;
-    Result::Event_flag bus_status = Result::Event_flag::none;
+    std::size_t words = 0;
+    bool error        = false;
+    Event_flag event  = Event_flag::none;
 
     a_p_flow_control_pin->set_level(GPIO::Level::low);
 
@@ -343,34 +340,33 @@ RS485::Polling::receive(void* a_p_data, std::size_t a_data_size_in_words, GPIO::
 
     if (true == error)
     {
-        bus_status =
-            get_Event_flag_and_clear<Result::Event_flag>(this->p_RS485->p_registers, all_polling_result_event_flags);
+        event = get_Event_flag_and_clear<Event_flag>(this->p_RS485->p_registers, all_polling_result_event_flags);
     }
 
-    return { bus_status, words };
+    return { event, words };
 }
 
 RS485::Polling::Result RS485::Polling::receive(void* a_p_data,
                                                std::size_t a_data_size_in_words,
                                                GPIO::Out::Pin* a_p_flow_control_pin,
-                                               std::uint32_t a_timeout_ms)
+                                               Milliseconds a_timeout)
 {
     cml_assert(nullptr != a_p_data);
     cml_assert(a_data_size_in_words > 0);
-    cml_assert(a_timeout_ms > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     bit_flag::set(&(this->p_RS485->p_registers->ICR), USART_ICR_IDLECF);
 
-    std::size_t words        = 0;
-    bool error               = false;
-    Result::Event_flag event = Result::Event_flag::none;
+    std::size_t words = 0;
+    bool error        = false;
+    Event_flag event  = Event_flag::none;
 
     a_p_flow_control_pin->set_level(GPIO::Level::low);
 
     while (false == bit_flag::is(this->p_RS485->p_registers->ISR, USART_ISR_IDLE) && false == error &&
-           a_timeout_ms >= various::tick_diff(ms_tick_counter::get(), start))
+           a_timeout > tick_counter::get() - start)
     {
         if (true == bit_flag::is(this->p_RS485->p_registers->ISR, USART_ISR_RXNE))
         {
@@ -398,8 +394,7 @@ RS485::Polling::Result RS485::Polling::receive(void* a_p_data,
 
     if (true == error)
     {
-        event =
-            get_Event_flag_and_clear<Result::Event_flag>(this->p_RS485->p_registers, all_polling_result_event_flags);
+        event = get_Event_flag_and_clear<Event_flag>(this->p_RS485->p_registers, all_polling_result_event_flags);
     }
 
     return { event, words };

@@ -8,6 +8,7 @@
 #ifdef STM32L4
 
 // soc
+#include <soc/m4/stm32l4/ADC/DMA.hpp>
 #include <soc/m4/stm32l4/USART/DMA.hpp>
 
 // cml
@@ -173,6 +174,57 @@ void DMA<USART>::clear_irq_context()
 
     p_callbacks[this->idx][this->tx_irqn - DMA1_Channel1_IRQn] = nullptr;
 }
+
+void DMA<ADC>::set_irq_context()
+{
+    switch (this->idx)
+    {
+        case 0: {
+            cml_assert(nullptr == p_callbacks[this->idx][this->irqn - DMA1_Channel1_IRQn]);
+
+            p_callbacks[this->idx][this->irqn - DMA1_Channel1_IRQn] = &(this->callback);
+        }
+        break;
+        case 1: {
+            cml_assert(nullptr == p_callbacks[this->idx][this->irqn - DMA2_Channel1_IRQn]);
+
+            p_callbacks[this->idx][this->irqn - DMA2_Channel1_IRQn] = &(this->callback);
+        }
+        break;
+
+#if defined(CML_ASSERT_ENABLED)
+        default: {
+            cml_assert(false);
+        }
+#endif
+    }
+}
+
+void DMA<ADC>::clear_irq_context()
+{
+    switch (this->idx)
+    {
+        case 0: {
+            cml_assert(nullptr != p_callbacks[this->idx][this->irqn - DMA1_Channel1_IRQn]);
+
+            p_callbacks[this->idx][this->irqn - DMA1_Channel1_IRQn] = nullptr;
+        }
+        break;
+        case 1: {
+            cml_assert(nullptr == p_callbacks[this->idx][this->irqn - DMA2_Channel1_IRQn]);
+
+            p_callbacks[this->idx][this->irqn - DMA2_Channel1_IRQn] = nullptr;
+        }
+        break;
+
+#if defined(CML_ASSERT_ENABLED)
+        default: {
+            cml_assert(false);
+        }
+#endif
+    }
+}
+
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

@@ -15,7 +15,7 @@
 
 // cml
 #include <cml/bit_flag.hpp>
-#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/utils/tick_counter.hpp>
 #include <cml/utils/wait_until.hpp>
 
 namespace {
@@ -139,13 +139,14 @@ Polling<SPI_master>::transmit(const void* a_p_data, std::size_t a_data_size_in_w
 }
 Polling<SPI_master>::Result Polling<SPI_master>::transmit(const void* a_p_data,
                                                           std::size_t a_data_size_in_words,
-                                                          std::uint32_t a_timeout,
+                                                          Milliseconds a_timeout,
                                                           GPIO::Out::Pin* a_p_nss)
 {
     cml_assert(nullptr != a_p_data);
     cml_assert(a_data_size_in_words > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     SPI_TypeDef* p_registers = static_cast<SPI_TypeDef*>(*(this->p_SPI));
 
@@ -163,7 +164,7 @@ Polling<SPI_master>::Result Polling<SPI_master>::transmit(const void* a_p_data,
     std::size_t words         = 0;
     Result::Bus_flag bus_flag = Result::Bus_flag::ok;
 
-    while (true == busy && false == error && a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
+    while (true == busy && false == error && a_timeout >= tick_counter::get() - start)
     {
         if (true == bit_flag::is(p_registers->SR, SPI_SR_TXE) && words < a_data_size_in_words)
         {
@@ -292,13 +293,14 @@ Polling<SPI_master>::receive(void* a_p_data, std::size_t a_data_size_in_words, G
 
 Polling<SPI_master>::Result Polling<SPI_master>::receive(void* a_p_data,
                                                          std::size_t a_data_size_in_words,
-                                                         std::uint32_t a_timeout,
+                                                         Milliseconds a_timeout,
                                                          GPIO::Out::Pin* a_p_nss)
 {
     cml_assert(nullptr != a_p_data);
     cml_assert(a_data_size_in_words > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     SPI_TypeDef* p_registers = static_cast<SPI_TypeDef*>(*(this->p_SPI));
 
@@ -317,7 +319,7 @@ Polling<SPI_master>::Result Polling<SPI_master>::receive(void* a_p_data,
     Result::Bus_flag bus_flag = Result::Bus_flag::ok;
 
     while (false == error && words < a_data_size_in_words &&
-           a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
+           a_timeout >= tick_counter::get() - start)
     {
         if (true == transmit_enable && true == bit_flag::is(p_registers->SR, SPI_SR_TXE))
         {
@@ -478,14 +480,15 @@ Polling<SPI_master>::Result Polling<SPI_master>::transmit_receive(const void* a_
 Polling<SPI_master>::Result Polling<SPI_master>::transmit_receive(const void* a_p_tx_data,
                                                                   void* a_p_rx_data,
                                                                   std::size_t a_tx_rx_data_size_in_words,
-                                                                  std::uint32_t a_timeout,
+                                                                  Milliseconds a_timeout,
                                                                   GPIO::Out::Pin* a_p_nss)
 {
     cml_assert(nullptr != a_p_tx_data);
     cml_assert(nullptr != a_p_rx_data);
     cml_assert(a_tx_rx_data_size_in_words > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     SPI_TypeDef* p_registers = static_cast<SPI_TypeDef*>(*(this->p_SPI));
 
@@ -506,7 +509,7 @@ Polling<SPI_master>::Result Polling<SPI_master>::transmit_receive(const void* a_
     std::size_t rx_idx = 0;
 
     while (false == error && rx_idx < a_tx_rx_data_size_in_words &&
-           a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
+           a_timeout >= tick_counter::get() - start)
     {
         if (true == transmit_enable && true == bit_flag::is(p_registers->SR, SPI_SR_TXE) &&
             tx_idx < a_tx_rx_data_size_in_words)
@@ -628,12 +631,13 @@ Polling<SPI_slave>::Result Polling<SPI_slave>::transmit(const void* a_p_data, st
 }
 
 Polling<SPI_slave>::Result
-Polling<SPI_slave>::transmit(const void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout)
+Polling<SPI_slave>::transmit(const void* a_p_data, std::size_t a_data_size_in_words, Milliseconds a_timeout)
 {
     cml_assert(nullptr != a_p_data);
     cml_assert(a_data_size_in_words > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     SPI_TypeDef* p_registers = static_cast<SPI_TypeDef*>(*(this->p_SPI));
 
@@ -642,7 +646,7 @@ Polling<SPI_slave>::transmit(const void* a_p_data, std::size_t a_data_size_in_wo
     std::size_t words         = 0;
     Result::Bus_flag bus_flag = Result::Bus_flag::ok;
 
-    while (true == busy && false == error && a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
+    while (true == busy && false == error && a_timeout >= tick_counter::get() - start)
     {
         if (true == bit_flag::is(p_registers->SR, SPI_SR_TXE) && words < a_data_size_in_words)
         {
@@ -725,12 +729,13 @@ Polling<SPI_slave>::Result Polling<SPI_slave>::receive(void* a_p_data, std::size
 }
 
 Polling<SPI_slave>::Result
-Polling<SPI_slave>::receive(void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout)
+Polling<SPI_slave>::receive(void* a_p_data, std::size_t a_data_size_in_words, Milliseconds a_timeout)
 {
     cml_assert(nullptr != a_p_data);
     cml_assert(a_data_size_in_words > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     SPI_TypeDef* p_registers = static_cast<SPI_TypeDef*>(*(this->p_SPI));
 
@@ -739,7 +744,7 @@ Polling<SPI_slave>::receive(void* a_p_data, std::size_t a_data_size_in_words, st
     Result::Bus_flag bus_flag = Result::Bus_flag::ok;
 
     while (false == error && words < a_data_size_in_words &&
-           a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
+           a_timeout >= tick_counter::get() - start)
     {
         if (true == bit_flag::is(p_registers->SR, SPI_SR_RXNE))
         {
@@ -855,13 +860,14 @@ Polling<SPI_slave>::transmit_receive(const void* a_p_tx_data, void* a_p_rx_data,
 Polling<SPI_slave>::Result Polling<SPI_slave>::transmit_receive(const void* a_p_tx_data,
                                                                 void* a_p_rx_data,
                                                                 std::size_t a_tx_rx_data_size_in_words,
-                                                                std::uint32_t a_timeout)
+                                                                Milliseconds a_timeout)
 {
     cml_assert(nullptr != a_p_tx_data);
     cml_assert(nullptr != a_p_rx_data);
     cml_assert(a_tx_rx_data_size_in_words > 0);
+    cml_assert(a_timeout > 0_ms);
 
-    std::uint32_t start = ms_tick_counter::get();
+    Milliseconds start = tick_counter::get();
 
     SPI_TypeDef* p_registers = static_cast<SPI_TypeDef*>(*(this->p_SPI));
 
@@ -873,7 +879,7 @@ Polling<SPI_slave>::Result Polling<SPI_slave>::transmit_receive(const void* a_p_
     std::size_t rx_idx = 0;
 
     while (false == error && rx_idx < a_tx_rx_data_size_in_words &&
-           a_timeout >= various::tick_diff(ms_tick_counter::get(), start))
+           a_timeout >= tick_counter::get() - start)
     {
         if (true == transmit_enable && true == bit_flag::is(p_registers->SR, SPI_SR_TXE) &&
             tx_idx < a_tx_rx_data_size_in_words)

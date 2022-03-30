@@ -54,6 +54,12 @@ public:
         Function function = nullptr;
         void* p_user_data = nullptr;
     };
+
+    struct CSELR
+    {
+        std::uint32_t set   = 0x0u;
+        std::uint32_t clear = 0x0u;
+    };
 };
 
 constexpr DMA<>::Event_flag operator|(DMA<>::Event_flag a_f1, DMA<>::Event_flag a_f2)

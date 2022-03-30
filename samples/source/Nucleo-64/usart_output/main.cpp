@@ -16,10 +16,10 @@
 #include <cml/hal/nvic.hpp>
 #include <cml/hal/pwr.hpp>
 #include <cml/hal/rcc.hpp>
-#include <cml/utils/delay.hpp>
-#include <cml/utils/ms_tick_counter.hpp>
+#include <cml/utils/tick_counter.hpp>
 
 // debug
+#include <cml/hal/ADC.hpp>
 #include <cml/hal/DMA.hpp>
 
 namespace {
@@ -71,7 +71,7 @@ int main()
 
     systick.enable((rcc<mcu>::get_HCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
     systick.interrupt.enable({ 0x1u, 0x1u });
-    systick.interrupt.register_callback({ ms_tick_counter::update, nullptr });
+    systick.interrupt.register_callback({ tick_counter::update, nullptr });
 
     assertion::register_halt({ assert_halt, nullptr });
     assertion::register_print({ assert_print, nullptr });
@@ -87,6 +87,21 @@ int main()
     USART usart2 = Peripheral<USART, 2>::create();
     rcc<USART, 2>::enable<rcc<USART, 2>::Clock_source::SYSCLK>(false);
 
+    ADC adc = Peripheral<ADC, 1u>::create();
+
+    adc.enable(ADC::Resolution::_12_bit,
+               std::array { ADC::Channel { ADC::Channel::Id::temperature_sensor,
+                                           ADC::Channel::Sampling_time::_640_5_clock_cycles } },
+               10u);
+
+    std::uint16_t v = 0;
+
+    adc.polling.read<ADC::Mode::discontinuous>(&v, 1u, 1, 1_ms);
+    adc.polling.read<ADC::Mode::single>(&v, 1);
+    adc.polling.read<ADC::Mode::single>(&v, 1u, 1_s);
+
+    //adc.polling<ADC::Mode::continuous>()->read(&v, 1);
+
     bool usart_ready = usart2.enable({ 115200u,
                                        rcc<mcu>::get_HCLK_frequency_Hz(),
                                        USART::Enable_config::Oversampling::_16,
@@ -99,16 +114,21 @@ int main()
 
     if (true == usart_ready)
     {
+        GPIO::Out::Pin led_pin;
+        gpio_port_a.out.enable(5u, { GPIO::Mode::push_pull, GPIO::Pull::down, GPIO::Speed::low }, &led_pin);
+
         while (true)
         {
             for (std::uint32_t i = 0; i < 10; i++)
             {
-                usart2.polling.transmit(". ", 1);
-                delay::ms(500);
+                usart2.polling.transmit(".", 1);
+                tick_counter::delay(500_s);
+                led_pin.toggle_level();
             }
 
-            usart2.polling.transmit("\r                    \r", 22);
-            delay::ms(500);
+            usart2.polling.transmit("\r          \r", 12);
+            tick_counter::delay(500_ms);
+            led_pin.toggle_level();
         }
     }
 

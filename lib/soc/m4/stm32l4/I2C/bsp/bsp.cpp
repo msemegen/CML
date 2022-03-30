@@ -23,24 +23,17 @@ namespace {
 using namespace cml;
 using namespace soc::m4::stm32l4;
 
-#if defined(STM32L412K8) || defined(STM32L412KB) || defined(STM32L412TB) || defined(STM32L422KB) || \
-    defined(STM32L422TB) || defined(STM32L431KB) || defined(STM32L431KC) || defined(STM32L432KB) || \
-    defined(STM32L432KC) || defined(STM32L442KC)
+#if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && (!defined(SOC_I2C2_PRESENT) && !defined(SOC_I2C4_PRESENT))
 Interrupt<I2C>* irq_context[2] = { nullptr, nullptr };
 #endif
 
-#if defined(STM32L412R8) || defined(STM32L412T8) || defined(STM32L431CB) || defined(STM32L412C8) || \
-    defined(STM32L412CB) || defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || \
-    defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || \
-    defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || \
-    defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC)
+#if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && \
+    ((!defined(SOC_I2C2_PRESENT) && defined(SOC_I2C4_PRESENT) || \
+      (defined(SOC_I2C2_PRESENT) && !defined(SOC_I2C4_PRESENT))))
 Interrupt<I2C>* irq_context[3] = { nullptr, nullptr, nullptr };
 #endif
 
-#if defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && defined(SOC_I2C2_PRESENT) && defined(SOC_I2C4_PRESENT)
 Interrupt<I2C>* irq_context[4] = { nullptr, nullptr, nullptr, nullptr };
 #endif
 } // namespace
@@ -55,6 +48,7 @@ static void interrupt_handler(std::size_t a_index)
     I2C_interrupt_handler(irq_context[a_index]);
 }
 
+#if defined(SOC_I2C1_PRESENT)
 void I2C1_EV_IRQHandler()
 {
     interrupt_handler(0);
@@ -63,16 +57,8 @@ void I2C1_ER_IRQHandler()
 {
     interrupt_handler(0);
 }
-#if defined(STM32L412R8) || defined(STM32L431CB) || defined(STM32L412C8) || defined(STM32L412CB) || \
-    defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431CC) || \
-    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
-    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
-    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
-    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
-    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
-    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
-    defined(STM32L462RE) || defined(STM32L462VE)
-
+#endif
+#if defined(SOC_I2C2_PRESENT)
 void I2C2_EV_IRQHandler()
 {
     interrupt_handler(1);
@@ -83,15 +69,7 @@ void I2C2_ER_IRQHandler()
 }
 #endif
 
-#if defined(STM32L412R8) || defined(STM32L412T8) || defined(STM32L431CB) || defined(STM32L412C8) || \
-    defined(STM32L412CB) || defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || \
-    defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || \
-    defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || \
-    defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || \
-    defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C3_PRESENT)
 void I2C3_EV_IRQHandler()
 {
     interrupt_handler(2);
@@ -102,10 +80,7 @@ void I2C3_ER_IRQHandler()
 }
 #endif
 
-#if defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C4_PRESENT)
 void I2C4_EV_IRQHandler()
 {
     interrupt_handler(3);
@@ -150,6 +125,7 @@ void Interrupt<I2C_slave>::clear_irq_context()
     irq_context[this->get_handle()->get_idx()] = nullptr;
 }
 
+#if defined(SOC_I2C1_PRESENT)
 template<> template<> void rcc<I2C, 1>::enable<rcc<I2C, 1>::Clock_source::HSI>(bool a_lp_enable)
 {
     bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_I2C1SEL, RCC_CCIPR_I2C1SEL_1);
@@ -185,16 +161,9 @@ template<> void rcc<I2C, 1>::disable()
     bit_flag::clear(&(RCC->APB1ENR1), RCC_APB1ENR1_I2C1EN);
     bit_flag::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_I2C1SMEN);
 }
-#if defined(STM32L412R8) || defined(STM32L431CB) || defined(STM32L412C8) || defined(STM32L412CB) || \
-    defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || defined(STM32L431CC) || \
-    defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || defined(STM32L433CB) || \
-    defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || defined(STM32L433VC) || \
-    defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || defined(STM32L451CC) || \
-    defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || defined(STM32L451VC) || \
-    defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || defined(STM32L452RC) || \
-    defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || defined(STM32L462CE) || \
-    defined(STM32L462RE) || defined(STM32L462VE)
+#endif
 
+#if defined(SOC_I2C2_PRESENT)
 template<> template<> void rcc<I2C, 2>::enable<rcc<I2C, 2>::Clock_source::HSI>(bool a_lp_enable)
 {
     bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_I2C2SEL, RCC_CCIPR_I2C2SEL_1);
@@ -231,15 +200,7 @@ template<> void rcc<I2C, 2>::disable()
     bit_flag::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_I2C2SMEN);
 }
 #endif
-#if defined(STM32L412R8) || defined(STM32L412T8) || defined(STM32L431CB) || defined(STM32L412C8) || \
-    defined(STM32L412CB) || defined(STM32L412RB) || defined(STM32L422CB) || defined(STM32L422RB) || \
-    defined(STM32L431CC) || defined(STM32L431RB) || defined(STM32L431RC) || defined(STM32L431VC) || \
-    defined(STM32L433CB) || defined(STM32L433CC) || defined(STM32L433RB) || defined(STM32L433RC) || \
-    defined(STM32L433VC) || defined(STM32L443CC) || defined(STM32L443RC) || defined(STM32L443VC) || \
-    defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C3_PRESENT)
 template<> template<> void rcc<I2C, 3>::enable<rcc<I2C, 3>::Clock_source::HSI>(bool a_lp_enable)
 {
     bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_I2C3SEL, RCC_CCIPR_I2C3SEL_1);
@@ -276,10 +237,7 @@ template<> void rcc<I2C, 3>::disable()
     bit_flag::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_I2C3SMEN);
 }
 #endif
-#if defined(STM32L451CC) || defined(STM32L451CE) || defined(STM32L451RC) || defined(STM32L451RE) || \
-    defined(STM32L451VC) || defined(STM32L451VE) || defined(STM32L452CC) || defined(STM32L452CE) || \
-    defined(STM32L452RC) || defined(STM32L452RE) || defined(STM32L452VC) || defined(STM32L452VE) || \
-    defined(STM32L462CE) || defined(STM32L462RE) || defined(STM32L462VE)
+#if defined(SOC_I2C4_PRESENT)
 template<> template<> void rcc<I2C, 4>::enable<rcc<I2C, 4>::Clock_source::HSI>(bool a_lp_enable)
 {
     bit_flag::set(&(RCC->CCIPR2), RCC_CCIPR2_I2C4SEL, RCC_CCIPR2_I2C4SEL_1);

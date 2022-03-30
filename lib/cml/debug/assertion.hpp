@@ -38,8 +38,9 @@ public:
         void* p_user_data   = nullptr;
     };
 
-    static void register_halt(const Halt_hadler& a_handler);
-    static void register_print(const Print_handler& a_handler);
+    static void enable(const Halt_hadler& a_halt, const Print_handler& a_print);
+    static void disable();
+
     static void trap(const char* a_p_file, uint32_t a_line, const char* a_p_expression);
 };
 

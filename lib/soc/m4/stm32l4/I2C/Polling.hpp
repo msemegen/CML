@@ -13,6 +13,7 @@
 #include <soc/m4/stm32l4/Polling.hpp>
 
 // cml
+#include <cml/Duration.hpp>
 #include <cml/Non_copyable.hpp>
 
 namespace soc {
@@ -41,11 +42,13 @@ public:
     Result transmit(std::uint8_t a_slave_address,
                     const void* a_p_data,
                     std::size_t a_data_size_in_bytes,
-                    std::uint32_t a_timeout);
+                    cml::Milliseconds a_timeout);
 
     Result receive(std::uint8_t a_slave_address, void* a_p_data, std::size_t a_data_size_in_bytes);
-    Result
-    receive(std::uint8_t a_slave_address, void* a_p_data, std::size_t a_data_size_in_bytes, std::uint32_t a_timeout);
+    Result receive(std::uint8_t a_slave_address,
+                   void* a_p_data,
+                   std::size_t a_data_size_in_bytes,
+                   cml::Milliseconds a_timeout);
 
 private:
     Polling(I2C_master* a_p_I2C_master)
@@ -78,10 +81,10 @@ public:
     };
 
     Result transmit(const void* a_p_data, std::size_t a_data_size_in_bytes);
-    Result transmit(const void* a_p_data, std::size_t a_data_size_in_bytes, std::uint32_t a_timeout);
+    Result transmit(const void* a_p_data, std::size_t a_data_size_in_bytes, cml::Milliseconds a_timeout);
 
     Result receive(void* a_p_data, std::size_t a_data_size_in_bytes);
-    Result receive(void* a_p_data, std::size_t a_data_size_in_bytes, std::uint32_t a_timeout);
+    Result receive(void* a_p_data, std::size_t a_data_size_in_bytes, cml::Milliseconds a_timeout);
 
 private:
     Polling(I2C_slave* a_p_I2C_slave)

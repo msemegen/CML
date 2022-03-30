@@ -9,25 +9,24 @@
 #include <cml/debug/assertion.hpp>
 
 namespace {
-
 using namespace cml::debug;
 
 assertion::Halt_hadler halt;
 assertion::Print_handler print;
-
 } // namespace
 
 namespace cml {
 namespace debug {
-
-void assertion::register_halt(const Halt_hadler& a_handler)
+void assertion::enable(const Halt_hadler& a_halt, const Print_handler& a_print)
 {
-    halt = a_handler;
+    halt = a_halt;
+    print = a_print;
 }
 
-void assertion::register_print(const Print_handler& a_handler)
+void assertion::disable()
 {
-    print = a_handler;
+    halt  = { nullptr, nullptr };
+    print = { nullptr, nullptr };
 }
 
 void assertion::trap(const char* a_p_file, uint32_t a_line, const char* a_p_expression)
@@ -42,6 +41,5 @@ void assertion::trap(const char* a_p_file, uint32_t a_line, const char* a_p_expr
         halt.p_function(halt.p_user_data);
     }
 }
-
 } // namespace debug
 } // namespace cml

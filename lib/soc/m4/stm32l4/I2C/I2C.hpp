@@ -19,6 +19,7 @@
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Duration.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/various.hpp>
@@ -29,6 +30,16 @@ namespace stm32l4 {
 class I2C : private cml::Non_copyable
 {
 public:
+    enum class Event_flag : std::uint32_t
+    {
+        ok               = 0x0,
+        crc_error        = 0x1,
+        buffer_error     = 0x2,
+        arbitration_lost = 0x4,
+        misplaced        = 0x8,
+        nack             = 0x10,
+    };
+
     I2C()
         : idx(std::numeric_limits<decltype(this->idx)>::max())
         , p_registers(nullptr)
@@ -110,6 +121,36 @@ public:
         std::uint32_t timings       = 0;
     };
 
+    class Polling
+    {
+    public:
+        struct Result
+        {
+            Event_flag event                 = cml::various::get_enum_incorrect_value<Event_flag>();
+            std::size_t data_length_in_words = 0;
+        };
+
+        Result transmit(std::uint8_t a_slave_address, const void* a_p_data, std::size_t a_data_size_in_bytes);
+        Result transmit(std::uint8_t a_slave_address,
+                        const void* a_p_data,
+                        std::size_t a_data_size_in_bytes,
+                        cml::Milliseconds a_timeout);
+
+        Result receive(std::uint8_t a_slave_address, void* a_p_data, std::size_t a_data_size_in_bytes);
+        Result receive(std::uint8_t a_slave_address,
+                       void* a_p_data,
+                       std::size_t a_data_size_in_bytes,
+                       cml::Milliseconds a_timeout);
+
+    private:
+        I2C_master* p_I2C = nullptr;
+        friend class I2C_master;
+    };
+
+    class Interrupt
+    {
+    };
+
     I2C_master(I2C_master&&) = default;
     I2C_master& operator=(I2C_master&&) = default;
 
@@ -169,7 +210,30 @@ public:
         std::uint16_t address       = 0;
     };
 
-public:
+    class Polling
+    {
+    public:
+        struct Result
+        {
+            Event_flag event                 = cml::various::get_enum_incorrect_value<Event_flag>();
+            std::size_t data_length_in_words = 0;
+        };
+
+        Result transmit(const void* a_p_data, std::size_t a_data_size_in_bytes);
+        Result transmit(const void* a_p_data, std::size_t a_data_size_in_bytes, cml::Milliseconds a_timeout);
+
+        Result receive(void* a_p_data, std::size_t a_data_size_in_bytes);
+        Result receive(void* a_p_data, std::size_t a_data_size_in_bytes, cml::Milliseconds a_timeout);
+
+    private:
+        I2C_slave* p_I2C = nullptr;
+        friend class I2C_slave;
+    };
+
+    class Interrupt
+    {
+    };
+
     I2C_slave(I2C_slave&&) = default;
     I2C_slave& operator=(I2C_slave&&) = default;
 
@@ -213,6 +277,21 @@ public:
     template<Clock_source> static void enable(bool a_enable_in_lp) = delete;
     static void disable()                                          = delete;
 };
+
+constexpr I2C_master::Event_flag operator|(I2C_master::Event_flag a_f1, I2C_master::Event_flag a_f2)
+{
+    return static_cast<I2C_master::Event_flag>(static_cast<std::uint32_t>(a_f1) | static_cast<std::uint32_t>(a_f2));
+}
+constexpr I2C_master::Event_flag operator&(I2C_master::Event_flag a_f1, I2C_master::Event_flag a_f2)
+{
+    return static_cast<I2C_master::Event_flag>(static_cast<std::uint32_t>(a_f1) & static_cast<std::uint32_t>(a_f2));
+}
+constexpr I2C_master::Event_flag operator|=(I2C_master::Event_flag& a_f1, I2C_master::Event_flag a_f2)
+{
+    a_f1 = a_f1 | a_f2;
+    return a_f1;
+}
+
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

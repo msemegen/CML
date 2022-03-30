@@ -20,6 +20,7 @@
 #include <soc/m4/stm32l4/rcc.hpp>
 
 // cml
+#include <cml/Duration.hpp>
 #include <cml/Non_constructible.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/bit_flag.hpp>
@@ -41,7 +42,7 @@ public:
         Polling(Polling&&) = default;
         Polling& operator=(Polling&&) = default;
 
-        bool get_value(std::uint32_t* a_p_value, std::uint32_t a_timeout);
+        bool get_value(std::uint32_t* a_p_value, cml::Milliseconds a_timeout);
 
         bool is_created() const
         {
@@ -138,7 +139,7 @@ public:
         }
     }
 
-    bool enable(std::uint32_t a_timeout);
+    bool enable(cml::Milliseconds a_timeout);
     void disable();
 
     std::uint32_t get_idx()

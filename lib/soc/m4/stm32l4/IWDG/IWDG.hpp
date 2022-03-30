@@ -17,6 +17,7 @@
 #include <soc/Peripheral.hpp>
 
 // cml
+#include <cml/Duration.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/various.hpp>
 
@@ -57,7 +58,7 @@ public:
     {
     }
 
-    bool enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a_window, std::uint32_t a_timeout);
+    bool enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a_window, cml::Milliseconds a_timeout);
     void feed();
 
     std::uint32_t get_idx()

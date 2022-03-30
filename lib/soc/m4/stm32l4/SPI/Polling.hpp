@@ -9,6 +9,7 @@
 
 // std
 #include <cstddef>
+#include <cstdint>
 
 // soc
 #include <soc/m4/stm32l4/GPIO/GPIO.hpp>
@@ -16,6 +17,7 @@
 #include <soc/m4/stm32l4/SPI/SPI.hpp>
 
 // cml
+#include <cml/Duration.hpp>
 #include <cml/Non_copyable.hpp>
 
 namespace soc {
@@ -50,13 +52,13 @@ public:
     Result transmit(const void* a_p_data, std::size_t a_data_size_in_words, GPIO::Out::Pin* a_p_nss = nullptr);
     Result transmit(const void* a_p_data,
                     std::size_t a_data_size_in_words,
-                    std::uint32_t a_timeout,
+                    cml::Milliseconds a_timeout,
                     GPIO::Out::Pin* a_p_nss = nullptr);
 
     Result receive(void* a_p_data, std::size_t a_data_size_in_words, GPIO::Out::Pin* a_p_nss = nullptr);
     Result receive(void* a_p_data,
                    std::size_t a_data_size_in_words,
-                   std::uint32_t a_timeout,
+                   cml::Milliseconds a_timeout,
                    GPIO::Out::Pin* a_p_nss = nullptr);
 
     Result transmit_receive(const void* a_p_tx_data,
@@ -67,7 +69,7 @@ public:
     Result transmit_receive(const void* a_p_tx_data,
                             void* a_p_rx_data,
                             std::size_t a_tx_rx_data_size_in_words,
-                            std::uint32_t a_timeout,
+                            cml::Milliseconds a_timeout,
                             GPIO::Out::Pin* a_p_nss = nullptr);
 
     bool is_created() const
@@ -128,16 +130,16 @@ public:
     }
 
     Result transmit(const void* a_p_data, std::size_t a_data_size_in_words);
-    Result transmit(const void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout);
+    Result transmit(const void* a_p_data, std::size_t a_data_size_in_words, cml::Milliseconds a_timeout);
 
     Result receive(void* a_p_data, std::size_t a_data_size_in_words);
-    Result receive(void* a_p_data, std::size_t a_data_size_in_words, std::uint32_t a_timeout);
+    Result receive(void* a_p_data, std::size_t a_data_size_in_words, cml::Milliseconds a_timeout);
 
     Result transmit_receive(const void* a_p_tx_data, void* a_p_rx_data, std::size_t a_tx_rx_data_size_in_words);
     Result transmit_receive(const void* a_p_tx_data,
                             void* a_p_rx_data,
                             std::size_t a_tx_rx_data_size_in_words,
-                            std::uint32_t a_timeout);
+                            cml::Milliseconds a_timeout);
 
     bool is_created() const
     {

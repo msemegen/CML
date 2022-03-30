@@ -18,6 +18,7 @@
 #include <soc/m4/stm32l4/GPIO/GPIO.hpp>
 
 // cml
+#include <cml/Duration.hpp>
 #include <cml/Non_copyable.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/various.hpp>
@@ -28,6 +29,18 @@ namespace stm32l4 {
 class RS485 : private cml::Non_copyable
 {
 public:
+    enum class Event_flag : std::uint32_t
+    {
+        none              = 0x0u,
+        framing_error     = 0x1u,
+        parity_error      = 0x2u,
+        overrun           = 0x4u,
+        noise_detected    = 0x8u,
+        idle              = 0x10u,
+        transfer_complete = 0x20u,
+        address_matched   = 0x40u,
+    };
+
     struct Enable_config
     {
         enum class Oversampling : std::uint32_t
@@ -56,18 +69,6 @@ public:
     public:
         struct Result
         {
-            enum class Event_flag : std::uint32_t
-            {
-                none              = 0x0,
-                framing_error     = 0x1,
-                parity_error      = 0x2,
-                overrun           = 0x4,
-                noise_detected    = 0x8,
-                idle              = 0x10u,
-                transfer_complete = 0x20u,
-                address_matched   = 0x40u
-            };
-
             Event_flag bus_status            = cml::various::get_enum_incorrect_value<Event_flag>();
             std::size_t data_length_in_words = 0;
         };
@@ -80,13 +81,13 @@ public:
                         const void* a_p_data,
                         std::size_t a_data_size_in_words,
                         GPIO::Out::Pin* a_p_flow_control_pin,
-                        std::uint32_t a_timeout_ms);
+                        cml::Milliseconds a_timeout);
 
         Result receive(void* a_p_data, std::size_t a_data_size_in_words, GPIO::Out::Pin* a_p_flow_control_pin);
         Result receive(void* a_p_data,
                        std::size_t a_data_size_in_words,
                        GPIO::Out::Pin* a_p_flow_control_pin,
-                       std::uint32_t a_timeout_ms);
+                       cml::Milliseconds a_timeout);
 
     private:
         RS485* p_RS485;
@@ -95,18 +96,6 @@ public:
     class Interrupt
     {
     public:
-        enum class Event_flag : std::uint32_t
-        {
-            none              = 0x0u,
-            framing_error     = 0x1u,
-            parity_error      = 0x2u,
-            overrun           = 0x4u,
-            noise_detected    = 0x8u,
-            idle              = 0x10u,
-            transfer_complete = 0x20u,
-            address_matched   = 0x40u,
-        };
-
         struct Transmit_callback
         {
             using Function = void (*)(volatile uint16_t* a_p_data, void* a_p_user_data);
@@ -169,7 +158,7 @@ public:
         : idx(std::numeric_limits<decltype(this->idx)>::max())
         , p_registers(nullptr)
         , irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
-        , enabled_interrupt_events(Interrupt::Event_flag::none)
+        , enabled_interrupt_events(Event_flag::none)
     {
     }
 
@@ -181,7 +170,7 @@ public:
         }
     }
 
-    bool enable(const Enable_config& a_config, std::uint32_t a_timeout);
+    bool enable(const Enable_config& a_config, cml::Milliseconds a_timeout);
     void disable();
 
     std::uint32_t get_idx() const
@@ -217,7 +206,7 @@ private:
         : idx(a_idx)
         , p_registers(a_p_registers)
         , irqn(a_irqn)
-        , enabled_interrupt_events(Interrupt::Event_flag::none)
+        , enabled_interrupt_events(Event_flag::none)
     {
         this->polling.p_RS485   = this;
         this->interrupt.p_RS485 = this;
@@ -231,7 +220,7 @@ private:
     Interrupt::Transmit_callback transmit_callback;
     Interrupt::Receive_callback receive_callback;
     Interrupt::Event_callback event_callback;
-    Interrupt::Event_flag enabled_interrupt_events;
+    Event_flag enabled_interrupt_events;
 
     friend void RS485_interrupt_handler(RS485* a_p_this);
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
@@ -239,40 +228,17 @@ private:
 
 void RS485_interrupt_handler(RS485* a_p_this);
 
-constexpr RS485::Polling::Result::Event_flag operator|(RS485::Polling::Result::Event_flag a_f1,
-                                                       RS485::Polling::Result::Event_flag a_f2)
+constexpr RS485::Event_flag operator|(RS485::Event_flag a_f1, RS485::Event_flag a_f2)
 {
-    return static_cast<RS485::Polling::Result::Event_flag>(static_cast<std::uint32_t>(a_f1) |
-                                                           static_cast<std::uint32_t>(a_f2));
+    return static_cast<RS485::Event_flag>(static_cast<std::uint32_t>(a_f1) | static_cast<std::uint32_t>(a_f2));
 }
 
-constexpr RS485::Polling::Result::Event_flag operator&(RS485::Polling::Result::Event_flag a_f1,
-                                                       RS485::Polling::Result::Event_flag a_f2)
+constexpr RS485::Event_flag operator&(RS485::Event_flag a_f1, RS485::Event_flag a_f2)
 {
-    return static_cast<RS485::Polling::Result::Event_flag>(static_cast<std::uint32_t>(a_f1) &
-                                                           static_cast<std::uint32_t>(a_f2));
+    return static_cast<RS485::Event_flag>(static_cast<std::uint32_t>(a_f1) & static_cast<std::uint32_t>(a_f2));
 }
 
-constexpr RS485::Polling::Result::Event_flag operator|=(RS485::Polling::Result::Event_flag& a_f1,
-                                                        RS485::Polling::Result::Event_flag a_f2)
-{
-    a_f1 = a_f1 | a_f2;
-    return a_f1;
-}
-
-constexpr RS485::Interrupt::Event_flag operator|(RS485::Interrupt::Event_flag a_f1, RS485::Interrupt::Event_flag a_f2)
-{
-    return static_cast<RS485::Interrupt::Event_flag>(static_cast<std::uint32_t>(a_f1) |
-                                                     static_cast<std::uint32_t>(a_f2));
-}
-
-constexpr RS485::Interrupt::Event_flag operator&(RS485::Interrupt::Event_flag a_f1, RS485::Interrupt::Event_flag a_f2)
-{
-    return static_cast<RS485::Interrupt::Event_flag>(static_cast<std::uint32_t>(a_f1) &
-                                                     static_cast<std::uint32_t>(a_f2));
-}
-
-constexpr RS485::Interrupt::Event_flag operator|=(RS485::Interrupt::Event_flag& a_f1, RS485::Interrupt::Event_flag a_f2)
+constexpr RS485::Event_flag operator|=(RS485::Event_flag& a_f1, RS485::Event_flag a_f2)
 {
     a_f1 = a_f1 | a_f2;
     return a_f1;
