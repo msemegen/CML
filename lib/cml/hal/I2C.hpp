@@ -8,7 +8,7 @@
  */
 
 #ifdef STM32L4
-#include <soc/m4/stm32l4/I2C/bsp/bsp.hpp>
+#include <soc/m4/stm32l4/I2C/bsp.hpp>
 #endif
 
 namespace cml {

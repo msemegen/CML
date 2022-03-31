@@ -556,6 +556,33 @@ I2C_slave::Polling::receive(void* a_p_data, std::size_t a_data_size_in_bytes, Mi
 
     return { event, bytes };
 }
+
+void I2C::Interrupt::enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config)
+{
+    NVIC_SetPriority(
+        this->p_I2C->ev_irqn,
+                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
+                                         a_irq_transceiving_config.preempt_priority,
+                                         a_irq_transceiving_config.sub_priority));
+    NVIC_EnableIRQ(this->p_I2C->ev_irqn);
+
+    NVIC_SetPriority(
+        this->p_I2C->er_irqn,
+                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
+                                         a_irq_event_config.preempt_priority,
+                                         a_irq_event_config.sub_priority));
+    NVIC_EnableIRQ(this->p_I2C->er_irqn);
+}
+
+void I2C::Interrupt::disable()
+{
+    this->transmit_stop();
+    this->receive_stop();
+    this->event_listening_stop();
+
+    NVIC_DisableIRQ(this->p_I2C->ev_irqn);
+    NVIC_DisableIRQ(this->p_I2C->er_irqn);
+}
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

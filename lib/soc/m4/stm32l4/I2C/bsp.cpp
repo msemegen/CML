@@ -6,7 +6,7 @@
  */
 
 // this
-#include <soc/m4/stm32l4/I2C/bsp/bsp.hpp>
+#include <soc/m4/stm32l4/I2C/bsp.hpp>
 
 // std
 #include <type_traits>

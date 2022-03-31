@@ -163,8 +163,8 @@ public:
         void receive_start(const Receive_callback& a_callback);
         void receive_stop();
 
-        void register_Event_callback(const Event_callback& a_callback, Event_flag a_enabled_events);
-        void unregister_Event_callback();
+        void event_listening_start(const Event_callback& a_callback, Event_flag a_enabled_events);
+        void event_listening_stop();
 
         bool is_enabled() const
         {

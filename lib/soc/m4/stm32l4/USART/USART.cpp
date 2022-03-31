@@ -450,7 +450,7 @@ void USART::Interrupt::receive_start(const Receive_callback& a_callback)
     bit_flag::set(&(static_cast<USART_TypeDef*>(*(this->p_USART))->CR1), USART_CR1_RXNEIE);
 }
 
-void USART::Interrupt::register_Event_callback(const Event_callback& a_callback, Event_flag a_enabled_events)
+void USART::Interrupt::event_listening_start(const Event_callback& a_callback, Event_flag a_enabled_events)
 {
     cml_assert(nullptr != a_callback.function);
 
@@ -504,7 +504,7 @@ void USART::Interrupt::receive_stop()
     this->p_USART->receive_callback = { nullptr, nullptr };
 }
 
-void USART::Interrupt::unregister_Event_callback()
+void USART::Interrupt::event_listening_stop()
 {
     Interrupt_guard guard;
 
