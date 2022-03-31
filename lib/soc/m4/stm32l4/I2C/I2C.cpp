@@ -11,6 +11,7 @@
 #include <soc/m4/stm32l4/I2C/I2C.hpp>
 
 // soc
+#include <soc/Interrupt_guard.hpp>
 #include <soc/m4/stm32l4/mcu/mcu.hpp>
 
 // cml
@@ -61,16 +62,6 @@ template<typename Event_flag_t> Event_flag_t get_Event_flag(I2C_TypeDef* p_regis
     return ret;
 }
 
-void I2C::disable()
-{
-    this->p_registers->CR1 = 0;
-
-    if (true == bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx))
-    {
-        bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
-    }
-}
-
 void I2C_master::enable(const Enable_config& a_config)
 {
     cml_assert(true == this->is_created());
@@ -92,6 +83,16 @@ void I2C_master::enable(const Enable_config& a_config)
     if (Enable_config::Fast_plus::enabled == a_config.fast_plus)
     {
         bit::set(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
+    }
+}
+
+void I2C_master::disable()
+{
+    this->p_registers->CR1 = 0;
+
+    if (true == bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx))
+    {
+        bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
 }
 
@@ -320,6 +321,59 @@ I2C_master::Polling::Result I2C_master::Polling::receive(std::uint8_t a_slave_ad
     return { event, bytes };
 }
 
+bool I2C_master::Polling::is_connected(std::uint8_t a_slave_address)
+{
+    return false;
+}
+
+bool I2C_master::Polling::is_connected(std::uint8_t a_slave_address, Milliseconds a_timeout)
+{
+    return false;
+}
+
+void I2C_master::Interrupt::enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config)
+{
+    NVIC_SetPriority(this->p_I2C->ev_irqn,
+                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
+                                         a_irq_transceiving_config.preempt_priority,
+                                         a_irq_transceiving_config.sub_priority));
+    NVIC_EnableIRQ(this->p_I2C->ev_irqn);
+
+    NVIC_SetPriority(this->p_I2C->er_irqn,
+                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
+                                         a_irq_event_config.preempt_priority,
+                                         a_irq_event_config.sub_priority));
+    NVIC_EnableIRQ(this->p_I2C->er_irqn);
+}
+
+void I2C_master::Interrupt::disable()
+{
+    this->transmit_stop();
+    this->receive_stop();
+    this->event_listening_stop();
+
+    NVIC_DisableIRQ(this->p_I2C->ev_irqn);
+    NVIC_DisableIRQ(this->p_I2C->er_irqn);
+}
+
+void I2C_master::Interrupt::transmit_start(std::uint8_t a_slave_address, const Transmit_callback& a_callback) {}
+
+void I2C_master::Interrupt::transmit_stop() {}
+
+void I2C_master::Interrupt::receive_start(std::uint8_t a_slave_address, const Receive_callback& a_callback) {}
+
+void I2C_master::Interrupt::receive_stop() {}
+
+void I2C_master::Interrupt::event_listening_start(std::uint8_t a_slave_address, const Event_callback& a_callback) {}
+
+void I2C_master::Interrupt::event_listening_stop() {}
+
+void I2C_master::Interrupt::slave_discovery_start(std::uint8_t a_slave_address,
+                                                  const Slave_discovery_callback& a_callback)
+{
+}
+void I2C_master::Interrupt::slave_discovery_stop() {}
+
 void I2C_slave::enable(const Enable_config& a_config)
 {
     cml_assert(true == this->is_created());
@@ -341,6 +395,16 @@ void I2C_slave::enable(const Enable_config& a_config)
     if (Enable_config::Fast_plus::enabled == a_config.fast_plus)
     {
         bit::set(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
+    }
+}
+
+void I2C_slave::disable()
+{
+    this->p_registers->CR1 = 0;
+
+    if (true == bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx))
+    {
+        bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
 }
 
@@ -557,24 +621,22 @@ I2C_slave::Polling::receive(void* a_p_data, std::size_t a_data_size_in_bytes, Mi
     return { event, bytes };
 }
 
-void I2C::Interrupt::enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config)
+void I2C_slave::Interrupt::enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config)
 {
-    NVIC_SetPriority(
-        this->p_I2C->ev_irqn,
+    NVIC_SetPriority(this->p_I2C->ev_irqn,
                      NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
                                          a_irq_transceiving_config.preempt_priority,
                                          a_irq_transceiving_config.sub_priority));
     NVIC_EnableIRQ(this->p_I2C->ev_irqn);
 
-    NVIC_SetPriority(
-        this->p_I2C->er_irqn,
+    NVIC_SetPriority(this->p_I2C->er_irqn,
                      NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
                                          a_irq_event_config.preempt_priority,
                                          a_irq_event_config.sub_priority));
     NVIC_EnableIRQ(this->p_I2C->er_irqn);
 }
 
-void I2C::Interrupt::disable()
+void I2C_slave::Interrupt::disable()
 {
     this->transmit_stop();
     this->receive_stop();
@@ -582,6 +644,31 @@ void I2C::Interrupt::disable()
 
     NVIC_DisableIRQ(this->p_I2C->ev_irqn);
     NVIC_DisableIRQ(this->p_I2C->er_irqn);
+}
+
+void I2C_slave::Interrupt::transmit_start(const Transmit_callback& a_callback) {}
+void I2C_slave::Interrupt::transmit_stop() {}
+
+void I2C_slave::Interrupt::receive_start(const Receive_callback& a_callback) {}
+void I2C_slave::Interrupt::receive_stop() {}
+
+void I2C_slave::Interrupt::event_listening_start(const Event_callback& a_callback)
+{
+    cml_assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
+
+    this->p_I2C->event_callback = a_callback;
+    cml::bit_flag::set(&(this->p_I2C->p_registers->CR1), I2C_CR1_NACKIE | I2C_CR1_ERRIE);
+}
+
+void I2C_slave::Interrupt::event_listening_stop()
+{
+    Interrupt_guard guard;
+
+    cml::bit_flag::clear(&(this->p_I2C->p_registers->CR1), I2C_CR1_NACKIE | I2C_CR1_ERRIE);
+
+    this->p_I2C->event_callback = { nullptr, nullptr };
 }
 } // namespace stm32l4
 } // namespace m4
