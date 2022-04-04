@@ -26,11 +26,11 @@ namespace stm32l4 {
 class mcu : private cml::Non_constructible
 {
 public:
-    enum class FPU_mode : uint32_t
+    enum class FPU_mode : std::uint32_t
     {
-        disabled               = 0x0u,
-        privileged_access_only = 0xAu << 20u,
-        enabled                = 0xFu << 20u,
+        disabled               = 0x000000u,
+        privileged_access_only = 0xA00000u,
+        enabled                = 0xF00000u,
     };
 
     enum class Package : std::uint32_t
@@ -46,7 +46,7 @@ public:
         WLCSP49  = 0xCu,
         UFBGA64  = 0xDu,
         UFBGA100 = 0xEu,
-#if defined(STM32L41xx) || defined(STM32L422xx)
+#if defined(SOC_PACKAGE_WITH_EXTERNAL_SMPS_PRESENT)
         WLCSP36_with_external_SMPS = 0xFu,
         LQFP64_with_external_SMPS  = 0x16u
 #endif
@@ -54,8 +54,8 @@ public:
 
     struct Id
     {
-        const uint8_t serial_number[12] = { 0 };
-        const uint32_t type             = 0;
+        std::uint8_t serial_number[12] = { 0 };
+        std::uint32_t type             = 0;
     };
 
     static void halt()
@@ -69,7 +69,7 @@ public:
 
     static Id get_id()
     {
-        const uint8_t* p_id_location = reinterpret_cast<uint8_t*>(UID_BASE);
+        const std::uint8_t* p_id_location = reinterpret_cast<std::uint8_t*>(UID_BASE);
 
         return { { p_id_location[0],
                    p_id_location[1],
@@ -115,7 +115,6 @@ public:
         return static_cast<Package>(*(reinterpret_cast<std::uint32_t*>(PACKAGE_BASE)));
     }
 };
-
 template<> class rcc<mcu> : private cml::Non_constructible
 {
 public:

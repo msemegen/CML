@@ -22,6 +22,8 @@ Systick* irq_context[1] = { nullptr };
 } // namespace
 
 extern "C" {
+using namespace soc;
+
 void SysTick_Handler()
 {
     systick_interrupt_handler();
@@ -36,9 +38,9 @@ void systick_interrupt_handler()
 {
     cml_assert(nullptr != irq_context[0]);
 
-    if (nullptr != irq_context[0]->interrupt.callback.function)
+    if (nullptr != irq_context[0]->callback.function)
     {
-        irq_context[0]->interrupt.callback.function(irq_context[0]->interrupt.callback.p_user_data);
+        irq_context[0]->callback.function(irq_context[0]->callback.p_user_data);
     }
 }
 
@@ -94,7 +96,7 @@ void Systick::Interrupt::register_callback(const Callback& a_callback)
     cml_assert(nullptr != this->p_systick);
 
     Interrupt_guard guard;
-    this->callback = a_callback;
+    this->p_systick->callback = a_callback;
 }
 
 void Systick::Interrupt::unregister_callback()
@@ -102,6 +104,6 @@ void Systick::Interrupt::unregister_callback()
     cml_assert(nullptr != this->p_systick);
 
     Interrupt_guard guard;
-    this->callback = { nullptr, nullptr };
+    this->p_systick->callback = { nullptr, nullptr };
 }
 } // namespace soc

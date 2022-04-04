@@ -27,8 +27,6 @@
 #include <cml/Non_copyable.hpp>
 
 namespace soc {
-void systick_interrupt_handler();
-
 class Systick : private cml::Non_copyable
 {
 public:
@@ -38,33 +36,19 @@ public:
         _8 = 0
     };
 
-    class Polling : private cml::Non_copyable
+    class Polling
     {
     public:
-        Polling(Polling&&) = default;
-        Polling& operator=(Polling&&) = default;
-
         std::uint32_t get_value() const
         {
             return static_cast<SysTick_Type*>(*(this->p_systick))->VAL;
         }
 
     private:
-        Polling()
-            : p_systick(nullptr)
-        {
-        }
-
-        Polling(Systick* a_p_systick)
-            : p_systick(a_p_systick)
-        {
-        }
-
-        Systick* p_systick;
-
+        Systick* p_systick = nullptr;
         friend Systick;
     };
-    class Interrupt : private cml::Non_copyable
+    class Interrupt
     {
     public:
         struct Callback
@@ -75,32 +59,15 @@ public:
             void* p_user_data = nullptr;
         };
 
-        Interrupt(Interrupt&&) = default;
-        Interrupt& operator=(Interrupt&&) = default;
-
 #ifdef M4
         void enable(const m4::IRQ_config& a_irq_config);
-#endif
         void disable();
-
+#endif
         void register_callback(const Callback& a_callback);
         void unregister_callback();
 
     private:
-        Interrupt()
-            : p_systick(nullptr)
-        {
-        }
-
-        Interrupt(Systick* a_p_systick)
-            : p_systick(a_p_systick)
-        {
-        }
-
-        Systick* p_systick;
-        Callback callback;
-
-        void friend soc::systick_interrupt_handler();
+        Systick* p_systick = nullptr;
         friend Systick;
     };
 
@@ -108,9 +75,7 @@ public:
     Systick& operator=(Systick&&) = default;
 
     Systick()
-        : polling(nullptr)
-        , interrupt(nullptr)
-        , idx(std::numeric_limits<decltype(this->idx)>::max())
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
     {
     }
     ~Systick()
@@ -146,16 +111,19 @@ public:
 
 private:
     Systick(std::uint32_t a_idx)
-        : polling(this)
-        , interrupt(this)
-        , idx(a_idx)
+        : idx(a_idx)
     {
+        this->polling.p_systick   = this;
+        this->interrupt.p_systick = this;
     }
 
     std::uint32_t idx;
+    Interrupt::Callback callback;
 
     template<typename Periph_t, std::size_t periph_id> friend class soc::Peripheral;
+    friend void systick_interrupt_handler();
 };
+void systick_interrupt_handler();
 
 template<std::size_t id> class Peripheral<Systick, id> : private cml::Non_constructible
 {

@@ -305,9 +305,10 @@ void ADC::Interrupt::enable(const IRQ_config& a_irq_config)
 
 void ADC::Interrupt::disable()
 {
-    NVIC_DisableIRQ(this->p_ADC->irqn);
+    this->read_stop();
     this->clear_irq_context();
-    this->p_ADC->read_callback = { nullptr, nullptr };
+
+    NVIC_DisableIRQ(this->p_ADC->irqn);
 }
 
 template<> void ADC::Interrupt::read_start<ADC::Mode::single>(const Read_callback& a_callback)

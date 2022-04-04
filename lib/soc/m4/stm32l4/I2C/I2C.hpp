@@ -22,6 +22,7 @@
 // cml
 #include <cml/Duration.hpp>
 #include <cml/Non_copyable.hpp>
+#include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/various.hpp>
 
@@ -34,6 +35,8 @@ class I2C : private cml::Non_constructible
 class I2C_master
 {
 public:
+    template<typename Config_t> Config_t get_config() const = delete;
+
     enum class Event_flag : std::uint32_t
     {
         ok               = 0x0,
@@ -188,8 +191,6 @@ public:
     void enable(const Enable_config& a_config);
     void disable();
 
-    Enable_config get_Enable_config() const;
-
     std::uint32_t get_idx() const
     {
         return this->idx;
@@ -243,6 +244,8 @@ private:
 class I2C_slave
 {
 public:
+    template<typename Config_t> Config_t get_config() const = delete;
+
     enum class Event_flag : std::uint32_t
     {
         ok               = 0x0,
@@ -431,6 +434,24 @@ private:
 
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
+
+template<> inline I2C_master::Enable_config I2C_master::get_config<I2C_master::Enable_config>() const
+{
+    return { static_cast<Enable_config::Analog_filter>(false ==
+                                                       cml::bit_flag::is(this->p_registers->CR1, I2C_CR1_ANFOFF)),
+             static_cast<Enable_config::Fast_plus>(cml::bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx)),
+             static_cast<Enable_config::Crc>(cml::bit_flag::is(this->p_registers->CR1, I2C_CR1_PECEN)),
+             this->p_registers->TIMINGR };
+}
+
+template<> inline I2C_slave::Enable_config I2C_slave::get_config<I2C_slave::Enable_config>() const
+{
+    return { static_cast<Enable_config::Analog_filter>(false ==
+                                                       cml::bit_flag::is(this->p_registers->CR1, I2C_CR1_ANFOFF)),
+             static_cast<Enable_config::Fast_plus>(cml::bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx)),
+             static_cast<Enable_config::Crc>(cml::bit_flag::is(this->p_registers->CR1, I2C_CR1_PECEN)),
+             this->p_registers->TIMINGR };
+}
 
 template<std::size_t id> class rcc<I2C, id> : private cml::Non_constructible
 {

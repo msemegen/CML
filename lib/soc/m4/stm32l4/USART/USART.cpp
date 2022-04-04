@@ -141,7 +141,7 @@ void USART_interrupt_handler(USART* a_p_this)
     }
 }
 
-bool USART::enable(const Enable_config& a_config, const Frame_format& a_frame_format, Milliseconds a_timeout)
+bool USART::enable(const Enable_config& a_config, const Frame_config& a_frame_format, Milliseconds a_timeout)
 {
     cml_assert(true == this->is_created());
 
@@ -152,8 +152,8 @@ bool USART::enable(const Enable_config& a_config, const Frame_format& a_frame_fo
     cml_assert(various::get_enum_incorrect_value<Enable_config::Stop_bits>() != a_config.stop_bits);
     cml_assert(various::get_enum_incorrect_value<Enable_config::Sampling_method>() != a_config.sampling_method);
 
-    cml_assert(various::get_enum_incorrect_value<Frame_format::Parity>() != a_frame_format.parity);
-    cml_assert(various::get_enum_incorrect_value<Frame_format::Word_length>() != a_frame_format.word_length);
+    cml_assert(various::get_enum_incorrect_value<Frame_config::Parity>() != a_frame_format.parity);
+    cml_assert(various::get_enum_incorrect_value<Frame_config::Word_length>() != a_frame_format.word_length);
 
     cml_assert(a_timeout > 0_ms);
 
@@ -209,21 +209,6 @@ void USART::disable()
     this->p_registers->CR1 = 0;
     this->p_registers->CR2 = 0;
     this->p_registers->CR3 = 0;
-}
-
-USART::Enable_config USART::get_Enable_config() const
-{
-    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx && nullptr != this->p_registers);
-
-    return Enable_config();
-}
-
-USART::Frame_format USART::get_Frame_format() const
-{
-    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx && nullptr != this->p_registers);
-
-    return { static_cast<Frame_format::Word_length>(bit_flag::get(this->p_registers->CR1, USART_CR1_M0 | USART_CR1_M1)),
-             static_cast<Frame_format::Parity>(bit_flag::get(this->p_registers->CR1, USART_CR1_PCE | USART_CR1_PS)) };
 }
 
 USART::Polling::Result USART::Polling::transmit(const void* a_p_data, std::size_t a_data_size_in_words)
@@ -407,22 +392,27 @@ USART::Polling::Result USART::Polling::receive(void* a_p_data, std::size_t a_dat
 
 void USART::Interrupt::enable(const IRQ_config& a_irq_config)
 {
+    cml_assert(various::get_enum_incorrect_value<IRQ_config::Mode>() != a_irq_config.mode);
+
     this->set_irq_context();
 
-    NVIC_SetPriority(
-        this->p_USART->irqn,
-        NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
-    NVIC_EnableIRQ(this->p_USART->irqn);
+    if (IRQ_config::Mode::enabled == a_irq_config.mode)
+    {
+        NVIC_SetPriority(
+            this->p_USART->irqn,
+            NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
+        NVIC_EnableIRQ(this->p_USART->irqn);
+    }
 }
 
 void USART::Interrupt::disable()
 {
-    NVIC_DisableIRQ(this->p_USART->irqn);
-
     this->transmit_stop();
     this->receive_stop();
 
     this->clear_irq_context();
+
+    NVIC_DisableIRQ(this->p_USART->irqn);
 }
 
 void USART::Interrupt::transmit_start(const Transmit_callback& a_callback)

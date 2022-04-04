@@ -25,6 +25,7 @@
 
 // debug
 #include <cml/hal/DMA.hpp>
+#include <cml/hal/I2C.hpp>
 
 namespace {
 using namespace cml::hal;
@@ -82,7 +83,7 @@ int main()
 
     Systick systick = Peripheral<Systick>::create();
 
-    tick_counter::enable(&systick, { 0x1u, 0x1u });
+    tick_counter::enable(&systick, { IRQ_config::Mode::enabled, 0x1u, 0x1u });
     assertion::enable({ assert_halt, nullptr }, { assert_print, nullptr });
 
     mcu::set_DWT_active(true);
@@ -105,7 +106,7 @@ int main()
                                       USART::Enable_config::Flow_control_flag::none,
                                       USART::Enable_config::Sampling_method::three_sample_bit,
                                       USART::Enable_config::Mode_flag::tx | USART::Enable_config::Mode_flag::rx },
-                                    { USART::Frame_format::Word_length::_8_bit, USART::Frame_format::Parity::none },
+                                    { USART::Frame_config::Word_length::_8_bit, USART::Frame_config::Parity::none },
                                     10u);
 
     if (true == usart_ready)
@@ -136,7 +137,7 @@ int main()
                                                   DMA<>::Mode::single,
                                                   &v,
                                                   sizeof(v),
-                                                  IRQ_config { 0x0u, 0x0u },
+                                                  IRQ_config { IRQ_config::Mode::enabled, 0x0u, 0x0u },
                                                   { dma_callback, &adc },
                                                   DMA<>::Event_flag::transfer_complete);
 
