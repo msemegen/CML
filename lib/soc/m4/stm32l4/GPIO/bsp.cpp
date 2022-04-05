@@ -5,6 +5,8 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
+#ifdef STM32L4
+
 // this
 #include <soc/m4/stm32l4/GPIO/bsp.hpp>
 
@@ -120,3 +122,5 @@ template<> void rcc<GPIO, 8>::disable()
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc
+
+#endif

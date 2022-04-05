@@ -7,11 +7,11 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
-// externals
-#include <stm32l4xx.h>
-
 // std
 #include <cstdint>
+
+// externals
+#include <stm32l4xx.h>
 
 // cml
 #include <cml/Non_constructible.hpp>

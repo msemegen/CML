@@ -5,6 +5,8 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
+#ifdef STM32L4
+
 // this
 #include <soc/m4/stm32l4/I2C/bsp.hpp>
 
@@ -17,8 +19,6 @@
 // cml
 #include <cml/debug/assertion.hpp>
 
-#ifdef STM32L4
-
 namespace {
 using namespace cml;
 using namespace soc::m4::stm32l4;
@@ -26,13 +26,11 @@ using namespace soc::m4::stm32l4;
 #if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && (!defined(SOC_I2C2_PRESENT) && !defined(SOC_I2C4_PRESENT))
 Interrupt<I2C>* irq_context[2] = { nullptr, nullptr };
 #endif
-
-#if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && \
+#if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) &&    \
     ((!defined(SOC_I2C2_PRESENT) && defined(SOC_I2C4_PRESENT) || \
       (defined(SOC_I2C2_PRESENT) && !defined(SOC_I2C4_PRESENT))))
 Interrupt<I2C>* irq_context[3] = { nullptr, nullptr, nullptr };
 #endif
-
 #if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && defined(SOC_I2C2_PRESENT) && defined(SOC_I2C4_PRESENT)
 Interrupt<I2C>* irq_context[4] = { nullptr, nullptr, nullptr, nullptr };
 #endif
@@ -68,7 +66,6 @@ void I2C2_ER_IRQHandler()
     interrupt_handler(1);
 }
 #endif
-
 #if defined(SOC_I2C3_PRESENT)
 void I2C3_EV_IRQHandler()
 {
@@ -79,7 +76,6 @@ void I2C3_ER_IRQHandler()
     interrupt_handler(2);
 }
 #endif
-
 #if defined(SOC_I2C4_PRESENT)
 void I2C4_EV_IRQHandler()
 {
@@ -162,7 +158,6 @@ template<> void rcc<I2C, 1>::disable()
     bit_flag::clear(&(RCC->APB1SMENR1), RCC_APB1SMENR1_I2C1SMEN);
 }
 #endif
-
 #if defined(SOC_I2C2_PRESENT)
 template<> template<> void rcc<I2C, 2>::enable<rcc<I2C, 2>::Clock_source::HSI>(bool a_lp_enable)
 {
