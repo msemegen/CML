@@ -9,7 +9,9 @@
 #include <soc/Systick/Systick.hpp>
 
 // soc
-#include <soc/Interrupt_guard.hpp>
+#ifdef M4
+#include <soc/m4/Interrupt_guard.hpp>
+#endif
 
 // cml
 #include <cml/bit_flag.hpp>

@@ -156,7 +156,7 @@ public:
             }
         }
 
-        void enable(const IRQ_config& a_config);
+        void enable(const m4::IRQ_config& a_config);
         void disable();
 
         void transmit_start(const Transmit_callback& a_callback);

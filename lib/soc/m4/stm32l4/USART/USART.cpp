@@ -11,7 +11,7 @@
 #include <soc/m4/stm32l4/USART/USART.hpp>
 
 // soc
-#include <soc/Interrupt_guard.hpp>
+#include <soc/m4/Interrupt_guard.hpp>
 
 // cml
 #include <cml/bit.hpp>
@@ -199,8 +199,6 @@ bool USART::enable(const Enable_config& a_config, const Frame_config& a_frame_fo
 
 void USART::disable()
 {
-    cml_assert(true == this->is_created());
-
     if (true == this->interrupt.is_enabled())
     {
         this->disable();

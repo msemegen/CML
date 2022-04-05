@@ -8,10 +8,10 @@
  */
 
 // soc
-#include <soc/Interrupt_guard.hpp>
+#include <soc/m4/Interrupt_guard.hpp>
 
 namespace cml {
 namespace hal {
-using Interrupt_guard = soc::Interrupt_guard;
+using Interrupt_guard = soc::m4::Interrupt_guard;
 } // namespace hal
 } // namespace cml
