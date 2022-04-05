@@ -11,7 +11,7 @@
 #include <soc/m4/stm32l4/Basic_timer/Basic_timer.hpp>
 
 // soc
-#include <soc/Interrupt_guard.hpp>
+#include <soc/m4/Interrupt_guard.hpp>
 
 // cml
 #include <cml/bit.hpp>

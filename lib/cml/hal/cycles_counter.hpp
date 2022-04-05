@@ -7,14 +7,14 @@
  *   Licensed under the MIT license. See LICENSE file in the project root for details.
  */
 
-#ifdef STM32L4
-#include <soc/m4/stm32l4/cycles_counter.hpp>
+#ifdef M4
+#include <soc/m4/cycles_counter.hpp>
 #endif
 
 namespace cml {
 namespace hal {
-#ifdef STM32L4
-using cycles_counter = soc::m4::stm32l4::cycles_counter;
+#ifdef M4
+using cycles_counter = soc::m4::cycles_counter;
 #endif
 } // namespace hal
 } // namespace cml

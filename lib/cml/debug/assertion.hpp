@@ -15,7 +15,6 @@
 
 namespace cml {
 namespace debug {
-
 class assertion : private cml::Non_constructible
 {
 public:
@@ -43,7 +42,6 @@ public:
 
     static void trap(const char* a_p_file, uint32_t a_line, const char* a_p_expression);
 };
-
 } // namespace debug
 } // namespace cml
 

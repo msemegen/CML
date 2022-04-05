@@ -11,11 +11,10 @@
 #include <soc/m4/stm32l4/I2C/I2C.hpp>
 
 // soc
-#include <soc/Interrupt_guard.hpp>
+#include <soc/m4/Interrupt_guard.hpp>
 #include <soc/m4/stm32l4/mcu/mcu.hpp>
 
 // cml
-#include <cml/bit.hpp>
 #include <cml/bit_flag.hpp>
 #include <cml/debug/assertion.hpp>
 #include <cml/utils/tick_counter.hpp>
@@ -94,14 +93,6 @@ void I2C_master::disable()
     {
         bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
-}
-
-I2C_master::Enable_config I2C_master::get_Enable_config() const
-{
-    return { static_cast<Enable_config::Analog_filter>(false == bit_flag::is(this->p_registers->CR1, I2C_CR1_ANFOFF)),
-             static_cast<Enable_config::Fast_plus>(bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx)),
-             static_cast<Enable_config::Crc>(bit_flag::is(this->p_registers->CR1, I2C_CR1_PECEN)),
-             this->p_registers->TIMINGR };
 }
 
 I2C_master::Polling::Result
@@ -333,17 +324,28 @@ bool I2C_master::Polling::is_connected(std::uint8_t a_slave_address, Millisecond
 
 void I2C_master::Interrupt::enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config)
 {
-    NVIC_SetPriority(this->p_I2C->ev_irqn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
-                                         a_irq_transceiving_config.preempt_priority,
-                                         a_irq_transceiving_config.sub_priority));
-    NVIC_EnableIRQ(this->p_I2C->ev_irqn);
+    cml_assert(various::get_enum_incorrect_value<IRQ_config::Mode>() != a_irq_transceiving_config.mode);
+    cml_assert(various::get_enum_incorrect_value<IRQ_config::Mode>() != a_irq_event_config.mode);
 
-    NVIC_SetPriority(this->p_I2C->er_irqn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
-                                         a_irq_event_config.preempt_priority,
-                                         a_irq_event_config.sub_priority));
-    NVIC_EnableIRQ(this->p_I2C->er_irqn);
+    this->set_irq_context();
+
+    if (IRQ_config::Mode::enabled == a_irq_transceiving_config.mode)
+    {
+        NVIC_SetPriority(this->p_I2C->ev_irqn,
+                         NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
+                                             a_irq_transceiving_config.preempt_priority,
+                                             a_irq_transceiving_config.sub_priority));
+        NVIC_EnableIRQ(this->p_I2C->ev_irqn);
+    }
+
+    if (IRQ_config::Mode::enabled == a_irq_event_config.mode)
+    {
+        NVIC_SetPriority(this->p_I2C->er_irqn,
+                         NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
+                                             a_irq_event_config.preempt_priority,
+                                             a_irq_event_config.sub_priority));
+        NVIC_EnableIRQ(this->p_I2C->er_irqn);
+    }
 }
 
 void I2C_master::Interrupt::disable()
@@ -351,6 +353,8 @@ void I2C_master::Interrupt::disable()
     this->transmit_stop();
     this->receive_stop();
     this->event_listening_stop();
+
+    this->clear_irq_context();
 
     NVIC_DisableIRQ(this->p_I2C->ev_irqn);
     NVIC_DisableIRQ(this->p_I2C->er_irqn);
@@ -623,17 +627,26 @@ I2C_slave::Polling::receive(void* a_p_data, std::size_t a_data_size_in_bytes, Mi
 
 void I2C_slave::Interrupt::enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config)
 {
-    NVIC_SetPriority(this->p_I2C->ev_irqn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
-                                         a_irq_transceiving_config.preempt_priority,
-                                         a_irq_transceiving_config.sub_priority));
-    NVIC_EnableIRQ(this->p_I2C->ev_irqn);
+    cml_assert(various::get_enum_incorrect_value<IRQ_config::Mode>() != a_irq_transceiving_config.mode);
+    cml_assert(various::get_enum_incorrect_value<IRQ_config::Mode>() != a_irq_event_config.mode);
 
-    NVIC_SetPriority(this->p_I2C->er_irqn,
-                     NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
-                                         a_irq_event_config.preempt_priority,
-                                         a_irq_event_config.sub_priority));
-    NVIC_EnableIRQ(this->p_I2C->er_irqn);
+    if (IRQ_config::Mode::enabled == a_irq_transceiving_config.mode)
+    {
+        NVIC_SetPriority(this->p_I2C->ev_irqn,
+                         NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
+                                             a_irq_transceiving_config.preempt_priority,
+                                             a_irq_transceiving_config.sub_priority));
+        NVIC_EnableIRQ(this->p_I2C->ev_irqn);
+    }
+
+    if (IRQ_config::Mode::enabled == a_irq_event_config.mode)
+    {
+        NVIC_SetPriority(this->p_I2C->er_irqn,
+                         NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
+                                             a_irq_event_config.preempt_priority,
+                                             a_irq_event_config.sub_priority));
+        NVIC_EnableIRQ(this->p_I2C->er_irqn);
+    }
 }
 
 void I2C_slave::Interrupt::disable()

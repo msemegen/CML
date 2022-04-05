@@ -8,7 +8,7 @@
  */
 
 // soc
-#include <soc/Interrupt_guard.hpp>
+#include <soc/m4/Interrupt_guard.hpp>
 #include <soc/Peripheral.hpp>
 #include <soc/m4/IRQ_config.hpp>
 #include <soc/m4/stm32l4/I2C/I2C.hpp>

@@ -9,7 +9,6 @@
 
 // std
 #include <cstdint>
-#include <ratio>
 #include <type_traits>
 
 namespace cml {

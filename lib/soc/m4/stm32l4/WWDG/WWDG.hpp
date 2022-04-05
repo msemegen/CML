@@ -32,7 +32,7 @@ namespace stm32l4 {
 class WWDG : private cml::Non_copyable
 {
 public:
-    enum class Prescaler : uint32_t
+    enum class Prescaler : std::uint32_t
     {
         _1 = 0,
         _2 = WWDG_CFR_WDGTB_0,
@@ -101,7 +101,7 @@ public:
     {
     }
 
-    void enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window);
+    void enable(Prescaler a_prescaler, std::uint16_t a_reload, std::uint16_t a_window);
     void feed();
 
     std::uint32_t get_idx()

@@ -11,33 +11,25 @@
 #include <cstdint>
 
 // soc
-#ifdef M4
 #include <soc/m4/nvic.hpp>
-#endif
 
 // cml
 #include <cml/Non_copyable.hpp>
 
 namespace soc {
+namespace m4 {
 class Interrupt_guard : private cml::Non_copyable
 {
 public:
     Interrupt_guard()
     {
-#ifdef M4
         m4::nvic::set_mode(m4::nvic::Mode::disabled);
-#else
-        static_assert(false, "Not implemented architecture");
-#endif
     }
 
     ~Interrupt_guard()
     {
-#ifdef M4
         m4::nvic::set_mode(m4::nvic::Mode::enabled);
-#else
-        static_assert(false, "Not implemented architecture");
-#endif
     }
 };
+} // namespace m4
 } // namespace soc

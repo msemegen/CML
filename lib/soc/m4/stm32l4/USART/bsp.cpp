@@ -154,7 +154,7 @@ void RS485::Interrupt::clear_irq_context()
 #if defined(SOC_USART1_PRESENT)
 template<> template<> void rcc<USART, 1u>::enable<rcc<USART, 1u>::Clock_source::HSI>(bool a_enable_in_lp)
 {
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART1SEL_0 | RCC_CCIPR_USART1SEL_1, RCC_CCIPR_USART1SEL_1);
+    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART1SEL, RCC_CCIPR_USART1SEL_1);
     bit::set(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN_Pos);
 
     if (true == a_enable_in_lp)
@@ -174,7 +174,7 @@ template<> template<> void rcc<USART, 1u>::enable<rcc<USART, 1u>::Clock_source::
 }
 template<> template<> void rcc<USART, 1u>::enable<rcc<USART, 1u>::Clock_source::SYSCLK>(bool a_enable_in_lp)
 {
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART1SEL_0 | RCC_CCIPR_USART1SEL_1, RCC_CCIPR_USART1SEL_0);
+    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART1SEL, RCC_CCIPR_USART1SEL_0);
     bit::set(&(RCC->APB2ENR), RCC_APB2ENR_USART1EN_Pos);
 
     if (true == a_enable_in_lp)
@@ -193,7 +193,7 @@ template<> void rcc<USART, 1u>::disable()
 #if defined(SOC_USART2_PRESENT)
 template<> template<> void rcc<USART, 2u>::enable<rcc<USART, 2u>::Clock_source::HSI>(bool a_enable_in_lp)
 {
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART2SEL_0 | RCC_CCIPR_USART2SEL_1, RCC_CCIPR_USART2SEL_1);
+    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART2SEL, RCC_CCIPR_USART2SEL_1);
     bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN_Pos);
 
     if (true == a_enable_in_lp)
@@ -203,7 +203,7 @@ template<> template<> void rcc<USART, 2u>::enable<rcc<USART, 2u>::Clock_source::
 }
 template<> template<> void rcc<USART, 2u>::enable<rcc<USART, 2u>::Clock_source::PCLK1>(bool a_enable_in_lp)
 {
-    bit_flag::clear(&(RCC->CCIPR), RCC_CCIPR_USART2SEL_0 | RCC_CCIPR_USART2SEL_1);
+    bit_flag::clear(&(RCC->CCIPR), RCC_CCIPR_USART2SEL);
     bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN_Pos);
 
     if (true == a_enable_in_lp)
@@ -213,7 +213,7 @@ template<> template<> void rcc<USART, 2u>::enable<rcc<USART, 2u>::Clock_source::
 }
 template<> template<> void rcc<USART, 2u>::enable<rcc<USART, 2u>::Clock_source::SYSCLK>(bool a_enable_in_lp)
 {
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART2SEL_0 | RCC_CCIPR_USART2SEL_1, RCC_CCIPR_USART2SEL_0);
+    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART2SEL, RCC_CCIPR_USART2SEL_0);
     bit::set(&(RCC->APB1ENR1), RCC_APB1ENR1_USART2EN_Pos);
 
     if (true == a_enable_in_lp)
@@ -232,7 +232,7 @@ template<> void rcc<USART, 2u>::disable()
 #if defined(SOC_USART3_PRESENT)
 template<> template<> void rcc<USART, 3u>::enable<rcc<USART, 3u>::Clock_source::HSI>(bool a_enable_in_lp)
 {
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART3SEL_0 | RCC_CCIPR_USART3SEL_1, RCC_CCIPR_USART3SEL_1);
+    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART3SEL, RCC_CCIPR_USART3SEL_1);
     bit::set(&(RCC->APB2ENR), RCC_APB1ENR1_USART3EN_Pos);
 
     if (true == a_enable_in_lp)
@@ -242,7 +242,7 @@ template<> template<> void rcc<USART, 3u>::enable<rcc<USART, 3u>::Clock_source::
 }
 template<> template<> void rcc<USART, 3u>::enable<rcc<USART, 3u>::Clock_source::PCLK1>(bool a_enable_in_lp)
 {
-    bit_flag::clear(&(RCC->CCIPR), RCC_CCIPR_USART3SEL_0 | RCC_CCIPR_USART3SEL_1);
+    bit_flag::clear(&(RCC->CCIPR), RCC_CCIPR_USART3SEL);
     bit::set(&(RCC->APB2ENR), RCC_APB1ENR1_USART3EN_Pos);
 
     if (true == a_enable_in_lp)
@@ -252,7 +252,7 @@ template<> template<> void rcc<USART, 3u>::enable<rcc<USART, 3u>::Clock_source::
 }
 template<> template<> void rcc<USART, 3u>::enable<rcc<USART, 3u>::Clock_source::SYSCLK>(bool a_enable_in_lp)
 {
-    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART3SEL_0 | RCC_CCIPR_USART3SEL_1, RCC_CCIPR_USART3SEL_0);
+    bit_flag::set(&(RCC->CCIPR), RCC_CCIPR_USART3SEL, RCC_CCIPR_USART3SEL_0);
     bit::set(&(RCC->APB2ENR), RCC_APB1ENR1_USART3EN_Pos);
 
     if (true == a_enable_in_lp)
