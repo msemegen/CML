@@ -201,7 +201,7 @@ void USART::disable()
 {
     if (true == this->interrupt.is_enabled())
     {
-        this->disable();
+        this->interrupt.disable();
     }
 
     this->p_registers->CR1 = 0;

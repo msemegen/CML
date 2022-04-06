@@ -35,7 +35,7 @@ public:
         size_in_bytes      = page_size_in_bytes * 256
     };
 
-    enum class Latency : uint32_t
+    enum class Latency : std::uint32_t
     {
         _0 = FLASH_ACR_LATENCY_0WS,
         _1 = FLASH_ACR_LATENCY_1WS,
@@ -44,7 +44,7 @@ public:
         _4 = FLASH_ACR_LATENCY_4WS,
     };
 
-    enum class Cache_mode_flag : uint32_t
+    enum class Cache_mode_flag : std::uint32_t
     {
         disabled     = 0x0u,
         data         = FLASH_ACR_DCEN,
@@ -55,20 +55,20 @@ public:
     class polling : private cml::Non_constructible
     {
     public:
-        enum class Mode
+        enum class Mode : std::uint32_t
         {
             standard,
             fast
         };
 
-        enum class Bank_id
+        enum class Bank_id : std::uint32_t
         {
             _0
         };
 
         struct Result
         {
-            enum class Status_flag : uint32_t
+            enum class Status_flag : std::uint32_t
             {
                 ok                          = 0x0u,
                 fast_programming_miss_error = FLASH_SR_MISERR,
@@ -81,22 +81,26 @@ public:
                 locked,
             };
 
-            Status_flag status = cml::various::get_enum_incorrect_value<Status_flag>();
-            uint32_t words     = 0;
+            Status_flag status  = cml::various::get_enum_incorrect_value<Status_flag>();
+            std::uint32_t words = 0;
         };
 
-        static Result write(uint32_t a_address, const uint64_t* a_p_data, uint32_t a_size_in_double_words, Mode a_mode);
-        static Result write(uint32_t a_address,
-                            const uint64_t* a_p_data,
+        static Result write(std::uint32_t a_address,
+                            const std::uint64_t* a_p_data,
+                            std::uint32_t a_size_in_double_words,
+                            Mode a_mode);
+        static Result write(std::uint32_t a_address,
+                            const std::uint64_t* a_p_data,
                             uint32_t a_size_in_double_words,
                             Mode a_mode,
                             cml::Milliseconds a_timeout);
 
-        static Result read(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes);
-        static Result read(uint32_t a_address, void* a_p_data, uint32_t a_size_in_bytes, cml::Milliseconds a_timeout);
+        static Result read(std::uint32_t a_address, void* a_p_data, std::uint32_t a_size_in_bytes);
+        static Result
+        read(std::uint32_t a_address, void* a_p_data, std::uint32_t a_size_in_bytes, cml::Milliseconds a_timeout);
 
-        static Result erase_page(uint32_t a_page_address);
-        static Result erase_page(uint32_t a_page_address, cml::Milliseconds a_timeout);
+        static Result erase_page(std::uint32_t a_page_address);
+        static Result erase_page(std::uint32_t a_page_address, cml::Milliseconds a_timeout);
 
         static Result erase_bank(Bank_id a_id);
         static Result erase_bank(Bank_id a_id, cml::Milliseconds a_timeout);
@@ -105,7 +109,7 @@ public:
     static void set_cache_mode(Cache_mode_flag a_mode)
     {
         cml::bit_flag::set(
-            &(FLASH->ACR), FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_ACR_PRFTEN, static_cast<uint32_t>(a_mode));
+            &(FLASH->ACR), FLASH_ACR_DCEN | FLASH_ACR_ICEN | FLASH_ACR_PRFTEN, static_cast<std::uint32_t>(a_mode));
     }
 
     static Cache_mode_flag get_cache_mode()
@@ -115,8 +119,8 @@ public:
 
     static void set_latency(Latency a_latency)
     {
-        cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<uint32_t>(a_latency));
-        cml::utils::wait_until::all_bits(&(FLASH->ACR), static_cast<uint32_t>(a_latency), false);
+        cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<std::uint32_t>(a_latency));
+        cml::utils::wait_until::all_bits(&(FLASH->ACR), static_cast<std::uint32_t>(a_latency), false);
     }
 
     static Latency get_latency()
@@ -133,13 +137,15 @@ public:
 constexpr internal_flash::Cache_mode_flag operator|(internal_flash::Cache_mode_flag a_f1,
                                                     internal_flash::Cache_mode_flag a_f2)
 {
-    return static_cast<internal_flash::Cache_mode_flag>(static_cast<uint32_t>(a_f1) | static_cast<uint32_t>(a_f2));
+    return static_cast<internal_flash::Cache_mode_flag>(static_cast<std::uint32_t>(a_f1) |
+                                                        static_cast<std::uint32_t>(a_f2));
 }
 
 constexpr internal_flash::Cache_mode_flag operator&(internal_flash::Cache_mode_flag a_f1,
                                                     internal_flash::Cache_mode_flag a_f2)
 {
-    return static_cast<internal_flash::Cache_mode_flag>(static_cast<uint32_t>(a_f1) & static_cast<uint32_t>(a_f2));
+    return static_cast<internal_flash::Cache_mode_flag>(static_cast<std::uint32_t>(a_f1) &
+                                                        static_cast<std::uint32_t>(a_f2));
 }
 
 constexpr internal_flash::Cache_mode_flag operator|=(internal_flash::Cache_mode_flag& a_f1,

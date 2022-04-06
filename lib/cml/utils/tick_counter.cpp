@@ -37,15 +37,13 @@ void tick_counter::update(void*)
 template<> void tick_counter::enable<Systick>(Systick* a_p_timer, const IRQ_config& a_irq_config)
 {
     a_p_timer->enable((rcc<mcu>::get_HCLK_frequency_Hz() / 1000u) - 1, Systick::Prescaler::_1);
-    a_p_timer->interrupt.enable({ IRQ_config::Mode::enabled, 0x1u, 0x1u });
+    a_p_timer->interrupt.enable(a_irq_config);
     a_p_timer->interrupt.register_callback({ tick_counter::update, nullptr });
     p_timer = a_p_timer;
 }
 
 template<> void tick_counter::disable<Systick>()
 {
-    cml_assert(nullptr != p_timer);
-
     (reinterpret_cast<Systick*>(p_timer))->disable();
     p_timer = nullptr;
     cnt     = 0_ms;
