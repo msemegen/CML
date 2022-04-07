@@ -59,16 +59,16 @@ using namespace cml;
 
 void ADC::Interrupt::set_irq_context()
 {
-    cml_assert(nullptr == irq_context[this->p_ADC->get_idx()]);
+    cml_assert(nullptr == irq_context[this->p_ADC->idx]);
 
-    irq_context[this->p_ADC->get_idx()] = this->p_ADC;
+    irq_context[this->p_ADC->idx] = this->p_ADC;
 }
 
 void ADC::Interrupt::clear_irq_context()
 {
-    cml_assert(nullptr != irq_context[this->p_ADC->get_idx()]);
+    cml_assert(nullptr != irq_context[this->p_ADC->idx]);
 
-    irq_context[this->p_ADC->get_idx()] = nullptr;
+    irq_context[this->p_ADC->idx] = nullptr;
 }
 
 template<>

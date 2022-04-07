@@ -141,44 +141,44 @@ void USART_interrupt_handler(USART* a_p_this)
     }
 }
 
-bool USART::enable(const Enable_config& a_config, const Frame_config& a_frame_format, Milliseconds a_timeout)
+bool USART::enable(const Enable_config& a_enable_config, const Frame_format& a_frame_format, Milliseconds a_timeout)
 {
     cml_assert(true == this->is_created());
 
-    cml_assert(0 != a_config.baud_rate);
-    cml_assert(0 != a_config.clock_freq_Hz);
+    cml_assert(0 != a_enable_config.baud_rate);
+    cml_assert(0 != a_enable_config.clock_freq_Hz);
 
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Flow_control_flag>() != a_config.flow_control);
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Stop_bits>() != a_config.stop_bits);
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Sampling_method>() != a_config.sampling_method);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Flow_control_flag>() != a_enable_config.flow_control);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Stop_bits>() != a_enable_config.stop_bits);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Sampling_method>() != a_enable_config.sampling_method);
 
-    cml_assert(various::get_enum_incorrect_value<Frame_config::Parity>() != a_frame_format.parity);
-    cml_assert(various::get_enum_incorrect_value<Frame_config::Word_length>() != a_frame_format.word_length);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Parity>() != a_frame_format.parity);
+    cml_assert(various::get_enum_incorrect_value<Frame_format::Word_length>() != a_frame_format.word_length);
 
     cml_assert(a_timeout > 0_ms);
 
     Milliseconds start = tick_counter::get();
 
-    switch (a_config.oversampling)
+    switch (a_enable_config.oversampling)
     {
         case Enable_config::Oversampling::_16: {
-            this->p_registers->BRR = a_config.clock_freq_Hz / a_config.baud_rate;
+            this->p_registers->BRR = a_enable_config.clock_freq_Hz / a_enable_config.baud_rate;
         }
         break;
 
         case Enable_config::Oversampling::_8: {
-            const std::uint32_t usartdiv = 2 * a_config.clock_freq_Hz / a_config.baud_rate;
+            const std::uint32_t usartdiv = 2 * a_enable_config.clock_freq_Hz / a_enable_config.baud_rate;
             this->p_registers->BRR       = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
     }
 
-    this->p_registers->CR2 = static_cast<std::uint32_t>(a_config.stop_bits);
-    this->p_registers->CR3 =
-        static_cast<std::uint32_t>(a_config.flow_control) | static_cast<std::uint32_t>(a_config.sampling_method);
+    this->p_registers->CR2 = static_cast<std::uint32_t>(a_enable_config.stop_bits);
+    this->p_registers->CR3 = static_cast<std::uint32_t>(a_enable_config.flow_control) |
+                             static_cast<std::uint32_t>(a_enable_config.sampling_method);
 
-    this->p_registers->CR1 = static_cast<std::uint32_t>(a_config.oversampling) |
-                             static_cast<std::uint32_t>(a_config.mode) |
+    this->p_registers->CR1 = static_cast<std::uint32_t>(a_enable_config.oversampling) |
+                             static_cast<std::uint32_t>(a_enable_config.mode) |
                              static_cast<std::uint32_t>(a_frame_format.parity) |
                              static_cast<std::uint32_t>(a_frame_format.word_length) | USART_CR1_UE;
 
@@ -189,9 +189,15 @@ bool USART::enable(const Enable_config& a_config, const Frame_config& a_frame_fo
     bool ret = wait_until::all_bits(
         &(this->p_registers->ISR), wait_flag, false, start, a_timeout - (tick_counter::get() - start));
 
-    if (true == ret && bit_flag::is(this->p_registers->ISR, USART_ISR_IDLE))
+    if (true == ret)
     {
-        bit_flag::set(&(this->p_registers->ICR), USART_ICR_IDLECF);
+        if (true == bit_flag::is(this->p_registers->ISR, USART_ISR_IDLE))
+        {
+            bit_flag::set(&(this->p_registers->ICR), USART_ICR_IDLECF);
+        }
+
+        this->enable_config = a_enable_config;
+        this->frame_format  = a_frame_format;
     }
 
     return ret;
@@ -408,9 +414,9 @@ void USART::Interrupt::disable()
     this->transmit_stop();
     this->receive_stop();
 
-    this->clear_irq_context();
-
     NVIC_DisableIRQ(this->p_USART->irqn);
+
+    this->clear_irq_context();
 }
 
 void USART::Interrupt::transmit_start(const Transmit_callback& a_callback)

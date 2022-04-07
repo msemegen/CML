@@ -61,12 +61,12 @@ void Systick::disable()
 {
     cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
 
-    SysTick->CTRL = 0;
-}
+    if (true == this->interrupt.is_enabled())
+    {
+        this->interrupt.disable();
+    }
 
-bool Systick::is_enabled()
-{
-    return bit_flag::is(SysTick->CTRL, SysTick_CTRL_ENABLE_Msk);
+    SysTick->CTRL = 0;
 }
 
 #ifdef M4

@@ -26,7 +26,7 @@ struct cycles_counter : private cml::Non_constructible
     static void reset()
     {
 #ifdef STM32L4
-        cml_assert(true == stm32l4::mcu::is_DWT_active());
+        cml_assert(stm32l4::mcu::DWT_mode::enabled == stm32l4::mcu::get_DWT_mode());
 #endif
 
         DWT->CYCCNT = 0;
@@ -35,7 +35,7 @@ struct cycles_counter : private cml::Non_constructible
     static std::uint32_t get()
     {
 #ifdef STM32L4
-        cml_assert(true == stm32l4::mcu::is_DWT_active());
+        cml_assert(stm32l4::mcu::DWT_mode::enabled == stm32l4::mcu::get_DWT_mode());
 #endif
 
         return DWT->CYCCNT;

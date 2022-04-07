@@ -39,7 +39,7 @@
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-class ADC
+class ADC : private cml::Non_copyable
 {
 public:
     enum class Mode : std::uint32_t
@@ -202,6 +202,26 @@ public:
         ADC* p_ADC;
         friend ADC;
     };
+
+    ADC(ADC&&)   = default;
+    ADC& operator=(ADC&&) = default;
+
+    ADC()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+        , p_registers(nullptr)
+        , irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
+    {
+        this->polling.p_ADC   = nullptr;
+        this->interrupt.p_ADC = nullptr;
+    }
+    ~ADC()
+    {
+        if (true == this->is_enabled())
+        {
+            this->disable();
+        }
+    }
+
     template<std::size_t length>
     bool enable(Resolution a_resolution, const std::array<Channel, length>& a_channels, cml::Milliseconds a_timeout)
     {
@@ -214,11 +234,6 @@ public:
         return { *(reinterpret_cast<const std::uint16_t*>(0x1FFF75A8)),
                  *(reinterpret_cast<const std::uint16_t*>(0x1FFF75CA)),
                  *(reinterpret_cast<const std::uint16_t*>(0x1FFF75AA)) };
-    }
-
-    std::uint32_t get_idx() const
-    {
-        return this->idx;
     }
 
     bool is_enabled() const
@@ -268,6 +283,7 @@ private:
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
     friend void ADC_interrupt_handler(ADC* a_p_this);
 };
+void ADC_interrupt_handler(ADC* a_p_this);
 
 template<> void ADC::Polling::read<ADC::Mode::single>(uint16_t* a_p_buffer, std::size_t a_buffer_capacity);
 template<> void ADC::Polling::read<ADC::Mode::continuous>(uint16_t* a_p_buffer, std::size_t a_buffer_capacity);

@@ -25,6 +25,7 @@
 
 // cml
 #include <cml/Non_copyable.hpp>
+#include <cml/bit_flag.hpp>
 
 namespace soc {
 class Systick : private cml::Non_copyable
@@ -66,6 +67,11 @@ public:
         void register_callback(const Callback& a_callback);
         void unregister_callback();
 
+        bool is_enabled() const
+        {
+            return 0 != NVIC_GetEnableIRQ(IRQn_Type::SysTick_IRQn);
+        }
+
     private:
         Systick* p_systick = nullptr;
         friend Systick;
@@ -89,7 +95,10 @@ public:
     void enable(std::uint32_t a_start_value, Prescaler a_prescaler);
     void disable();
 
-    bool is_enabled();
+    bool is_enabled()
+    {
+        return cml::bit_flag::is(SysTick->CTRL, SysTick_CTRL_ENABLE_Msk);
+    }
 
     std::uint32_t get_idx()
     {

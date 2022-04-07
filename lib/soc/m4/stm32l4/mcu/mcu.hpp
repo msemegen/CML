@@ -32,6 +32,16 @@ public:
         privileged_access_only = 0xA00000u,
         enabled                = 0xF00000u,
     };
+    enum class DWT_mode : std::uint32_t
+    {
+        disabled,
+        enabled
+    };
+    enum class SYSCFG_mode : std::uint32_t
+    {
+        disabled,
+        enabled
+    };
 
     enum class Package : std::uint32_t
     {
@@ -87,11 +97,13 @@ public:
                  DBGMCU->IDCODE };
     }
 
-    static void set_DWT_active(bool a_active)
+    static void set_DWT_mode(DWT_mode a_mode)
     {
+        cml::bit_flag::set(&(CoreDebug->DEMCR),
+                           CoreDebug_DEMCR_TRCENA_Msk,
+                           DWT_mode::enabled == a_mode ? CoreDebug_DEMCR_TRCENA_Msk : 0x0u);
         cml::bit_flag::set(
-            &(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk, true == a_active ? CoreDebug_DEMCR_TRCENA_Msk : 0x0u);
-        cml::bit_flag::set(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk, true == a_active ? DWT_CTRL_CYCCNTENA_Msk : 0x0u);
+            &(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk, DWT_mode::enabled == a_mode ? DWT_CTRL_CYCCNTENA_Msk : 0x0u);
     }
 
     static void set_FPU_mode(FPU_mode a_mode)
@@ -99,15 +111,26 @@ public:
         cml::bit_flag::set(&(SCB->CPACR), ((3u << 10u * 2u) | (3u << 11u * 2u)), static_cast<uint32_t>(a_mode));
     }
 
-    static bool is_DWT_active()
+    static void set_SYSCFG_mode(SYSCFG_mode a_mode)
     {
-        return cml::bit_flag::is(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
-               cml::bit_flag::is(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk);
+        cml::bit_flag::set(
+            &(RCC->APB2ENR), RCC_APB2ENR_SYSCFGEN, SYSCFG_mode::enabled == a_mode ? RCC_APB2ENR_SYSCFGEN : 0x0u);
+    }
+
+    static DWT_mode get_DWT_mode()
+    {
+        return static_cast<DWT_mode>(cml::bit_flag::is(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
+                                     cml::bit_flag::is(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk));
     }
 
     static FPU_mode get_FPU_mode()
     {
         return static_cast<FPU_mode>(SCB->CPACR);
+    }
+
+    static SYSCFG_mode get_SYSCFG_mode()
+    {
+        return static_cast<SYSCFG_mode>(cml::bit_flag::is(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN));
     }
 
     constexpr Package get_package()
@@ -118,240 +141,6 @@ public:
 template<> class rcc<mcu> : private cml::Non_constructible
 {
 public:
-    enum class Clock : std::uint32_t
-    {
-        MSI = RCC_CR_MSION,
-        HSI = RCC_CR_HSION,
-        PLL = RCC_CR_PLLON,
-        HSI48,
-        LSI
-    };
-
-    enum class SYSCLK_source : std::uint32_t
-    {
-        MSI = RCC_CFGR_SW_MSI,
-        HSI = RCC_CFGR_SW_HSI,
-        PLL = RCC_CFGR_SW_PLL,
-    };
-
-    enum class CLK48_source : std::uint32_t
-    {
-        HSI48 = 0x0u,
-#if defined(SOC_PLLSAI_PRESENT)
-        PLL_SAI1_Q = RCC_CCIPR_CLK48SEL_0,
-#endif
-        PLL_Q = RCC_CCIPR_CLK48SEL_1,
-        MSI   = RCC_CCIPR_CLK48SEL_0 | RCC_CCIPR_CLK48SEL_1,
-    };
-
-    enum class MSI_frequency : std::uint32_t
-    {
-        _100_kHz = 0,
-        _200_kHz = 1,
-        _400_kHz = 2,
-        _800_kHz = 3,
-        _1_MHz   = 4,
-        _2_MHz   = 5,
-        _4_MHz   = 6,
-        _8_MHz   = 7,
-        _16_MHz  = 8,
-        _24_MHz  = 9,
-        _32_MHz  = 10,
-        _48_MHz  = 11,
-    };
-
-    enum class HSI_frequency : std::uint32_t
-    {
-        _16_MHz,
-    };
-
-    enum class LSI_frequency : std::uint32_t
-    {
-        _32_kHz,
-    };
-
-    enum class HSI48_frequency : std::uint32_t
-    {
-        _48_MHz
-    };
-
-    enum class Reset_source : std::uint32_t
-    {
-        illegal_low_power    = RCC_CSR_LPWRRSTF,
-        window_watchdog      = RCC_CSR_WWDGRSTF,
-        independent_watchdog = RCC_CSR_IWDGRSTF,
-        software             = RCC_CSR_SFTRSTF,
-        bor                  = RCC_CSR_BORRSTF,
-        pin                  = RCC_CSR_PINRSTF,
-        option_byte_loader   = RCC_CSR_OBLRSTF,
-        firewall             = RCC_CSR_FWRSTF
-    };
-
-    enum class PLL_source : std::uint32_t
-    {
-        MSI = RCC_PLLCFGR_PLLSRC_MSI,
-        HSI = RCC_PLLCFGR_PLLSRC_HSI,
-    };
-
-    enum class PLLM : std::uint32_t
-    {
-        _1 = 0,
-        _2 = RCC_PLLCFGR_PLLM_0,
-        _3 = RCC_PLLCFGR_PLLM_1,
-        _4 = RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
-        _5 = RCC_PLLCFGR_PLLM_2,
-        _6 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_0,
-        _7 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1,
-        _8 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
-    };
-
-    struct MCO_config
-    {
-        enum class Mode : std::uint32_t
-        {
-            disabled,
-            enabled
-        };
-
-        enum class Source : std::uint32_t
-        {
-            SYSCLK = 0x1000000u,
-            MSI    = 0x2000000u,
-            HSI    = 0x3000000u,
-            PLL    = 0x5000000u,
-            LSI    = 0x6000000u,
-            none
-        };
-
-        enum class Divider : std::uint32_t
-        {
-            _1  = 0x00000000u,
-            _2  = 0x10000000u,
-            _4  = 0x20000000u,
-            _8  = 0x30000000u,
-            _16 = 0x40000000u,
-            none
-        };
-
-        Mode mode       = cml::various::get_enum_incorrect_value<Mode>();
-        Source source   = cml::various::get_enum_incorrect_value<Source>();
-        Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-    };
-
-    struct PLL_config
-    {
-        enum class Output : std::uint32_t
-        {
-            disabled = 0x0u,
-            enabled  = 0x1u,
-        };
-
-        struct R
-        {
-            enum class Divider : std::uint32_t
-            {
-                _2 = 0,
-                _4 = RCC_PLLCFGR_PLLR_0,
-                _6 = RCC_PLLCFGR_PLLR_1,
-                _8 = RCC_PLLCFGR_PLLR_0 | RCC_PLLCFGR_PLLR_1,
-            };
-
-            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-            Output output   = cml::various::get_enum_incorrect_value<Output>();
-        };
-
-        struct Q
-        {
-            enum class Divider : std::uint32_t
-            {
-                _2 = 0,
-                _4 = RCC_PLLCFGR_PLLQ_0 >> RCC_PLLCFGR_PLLQ_Pos,
-                _6 = RCC_PLLCFGR_PLLQ_1 >> RCC_PLLCFGR_PLLQ_Pos,
-                _8 = (RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1) >> RCC_PLLCFGR_PLLQ_Pos,
-            };
-
-            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-            Output output   = cml::various::get_enum_incorrect_value<Output>();
-        };
-#if defined(SOC_PLL_P_PRESENT)
-        struct P
-        {
-            enum class Divider : std::uint32_t
-            {
-                _7  = 0u,
-                _17 = RCC_PLLCFGR_PLLP_Msk,
-            };
-
-            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-            Output output   = cml::various::get_enum_incorrect_value<Output>();
-        };
-#endif
-        std::uint32_t n = 0;
-
-        R r;
-        Q q;
-#if defined(SOC_PLL_P_PRESENT)
-        P p;
-#endif
-    };
-
-#if defined(SOC_PLLSAI_PRESENT)
-    struct PLLSAI1_config
-    {
-        enum class Output : std::uint32_t
-        {
-            disabled = 0x0u,
-            enabled  = 0x1u,
-        };
-
-        struct R
-        {
-            enum class Divider : std::uint32_t
-            {
-                _2 = 0,
-                _4 = RCC_PLLSAI1CFGR_PLLSAI1R_0,
-                _6 = RCC_PLLSAI1CFGR_PLLSAI1R_1,
-                _8 = RCC_PLLSAI1CFGR_PLLSAI1R,
-            };
-
-            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-            Output output   = cml::various::get_enum_incorrect_value<Output>();
-        };
-
-        struct Q
-        {
-            enum class Divider : std::uint32_t
-            {
-                _2 = 0,
-                _4 = RCC_PLLSAI1CFGR_PLLSAI1Q_0,
-                _6 = RCC_PLLSAI1CFGR_PLLSAI1Q_1,
-                _8 = RCC_PLLSAI1CFGR_PLLSAI1Q_0 | RCC_PLLSAI1CFGR_PLLSAI1Q_1,
-            };
-
-            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-            Output output   = cml::various::get_enum_incorrect_value<Output>();
-        };
-
-        struct P
-        {
-            enum class Divider : std::uint32_t
-            {
-                _7  = 0u,
-                _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk
-            };
-
-            Divider divider = cml::various::get_enum_incorrect_value<Divider>();
-            Output output   = cml::various::get_enum_incorrect_value<Output>();
-        };
-
-        std::uint32_t n = 0;
-
-        R r;
-        Q q;
-        P p;
-    };
-#endif
-
     struct Bus_prescalers
     {
         enum class AHB : std::uint32_t
@@ -390,97 +179,257 @@ public:
         APB2 apb2 = cml::various::get_enum_incorrect_value<APB2>();
     };
 
-    template<Clock clock> static void enable_clock(MSI_frequency a_freq)
+    class MSI : private cml::Non_constructible
     {
-        static_assert(Clock::MSI == clock);
-    };
+    public:
+        enum class Frequency : std::uint32_t
+        {
+            _100_kHz = 0,
+            _200_kHz = 1,
+            _400_kHz = 2,
+            _800_kHz = 3,
+            _1_MHz   = 4,
+            _2_MHz   = 5,
+            _4_MHz   = 6,
+            _8_MHz   = 7,
+            _16_MHz  = 8,
+            _24_MHz  = 9,
+            _32_MHz  = 10,
+            _48_MHz  = 11,
+        };
 
-    template<Clock clock> static void enable_clock(HSI_frequency a_freq)
-    {
-        static_assert(Clock::HSI == clock);
-    };
+        static void enable(Frequency a_frequency);
+        static void disable();
 
-    template<Clock clock> static void enable_clock(LSI_frequency a_freq)
-    {
-        static_assert(Clock::LSI == clock);
-    };
+        static bool is_enabled()
+        {
+            return cml::bit_flag::is(RCC->CR, RCC_CR_MSION);
+        }
 
-    template<Clock clock> static void enable_clock(HSI48_frequency a_freq)
-    {
-        static_assert(Clock::HSI48 == clock);
+        static std::uint32_t get_frequency_Hz();
     };
-
-    template<Clock clock> static void enable_clock(PLL_source a_source, PLLM a_m, const PLL_config& a_config)
+    class HSI16 : private cml::Non_constructible
     {
-        static_assert(Clock::PLL == clock);
-    }
+    public:
+        enum class Frequency : std::uint32_t
+        {
+            _16_MHz
+        };
+
+        static void enable(Frequency a_frequency);
+        static void disable();
+
+        static bool is_enabled()
+        {
+            return cml::bit_flag::is(RCC->CR, RCC_CR_HSION);
+        }
+
+        static std::uint32_t get_frequency_Hz();
+    };
+    class HSI48 : private cml::Non_constructible
+    {
+    public:
+
+        static bool is_enabled()
+        {
+            return false;
+        }
+
+        static std::uint32_t get_frequency_Hz();
+    };
+    class PLL : private cml::Non_constructible
+    {
+    public:
+        enum class M : std::uint32_t
+        {
+            _1 = 0,
+            _2 = RCC_PLLCFGR_PLLM_0,
+            _3 = RCC_PLLCFGR_PLLM_1,
+            _4 = RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
+            _5 = RCC_PLLCFGR_PLLM_2,
+            _6 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_0,
+            _7 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1,
+            _8 = RCC_PLLCFGR_PLLM_2 | RCC_PLLCFGR_PLLM_1 | RCC_PLLCFGR_PLLM_0,
+        };
+
+        struct RQP
+        {
+            enum class Output : std::uint32_t
+            {
+                disabled = 0x0u,
+                enabled  = 0x1u,
+            };
+
+            struct R
+            {
+                enum class Divider : std::uint32_t
+                {
+                    _2 = 0,
+                    _4 = RCC_PLLCFGR_PLLR_0,
+                    _6 = RCC_PLLCFGR_PLLR_1,
+                    _8 = RCC_PLLCFGR_PLLR_0 | RCC_PLLCFGR_PLLR_1,
+                };
+
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
+            };
+
+            struct Q
+            {
+                enum class Divider : std::uint32_t
+                {
+                    _2 = 0,
+                    _4 = RCC_PLLCFGR_PLLQ_0 >> RCC_PLLCFGR_PLLQ_Pos,
+                    _6 = RCC_PLLCFGR_PLLQ_1 >> RCC_PLLCFGR_PLLQ_Pos,
+                    _8 = (RCC_PLLCFGR_PLLQ_0 | RCC_PLLCFGR_PLLQ_1) >> RCC_PLLCFGR_PLLQ_Pos,
+                };
+
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
+            };
+
+            struct P
+            {
+                enum class Divider : std::uint32_t
+                {
+                    _7  = 0u,
+                    _17 = RCC_PLLCFGR_PLLP_Msk,
+                };
+
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
+            };
+
+            std::uint32_t n = 0;
+
+            R r;
+            Q q;
+            P p;
+        };
+        struct RQPSAI1
+        {
+            enum class Output : std::uint32_t
+            {
+                disabled = 0x0u,
+                enabled  = 0x1u,
+            };
+
+            struct R
+            {
+                enum class Divider : std::uint32_t
+                {
+                    _2 = 0,
+                    _4 = RCC_PLLSAI1CFGR_PLLSAI1R_0,
+                    _6 = RCC_PLLSAI1CFGR_PLLSAI1R_1,
+                    _8 = RCC_PLLSAI1CFGR_PLLSAI1R,
+                };
+
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
+            };
+
+            struct Q
+            {
+                enum class Divider : std::uint32_t
+                {
+                    _2 = 0,
+                    _4 = RCC_PLLSAI1CFGR_PLLSAI1Q_0,
+                    _6 = RCC_PLLSAI1CFGR_PLLSAI1Q_1,
+                    _8 = RCC_PLLSAI1CFGR_PLLSAI1Q_0 | RCC_PLLSAI1CFGR_PLLSAI1Q_1,
+                };
+
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
+            };
+
+            struct P
+            {
+                enum class Divider : std::uint32_t
+                {
+                    _7  = 0u,
+                    _17 = RCC_PLLSAI1CFGR_PLLSAI1P_Msk
+                };
+
+                Divider divider = cml::various::get_enum_incorrect_value<Divider>();
+                Output output   = cml::various::get_enum_incorrect_value<Output>();
+            };
+
+            std::uint32_t n = 0;
+
+            R r;
+            Q q;
+            P p;
+        };
 
 #if defined(SOC_PLLSAI_PRESENT)
-    template<Clock clock> static void
-    enable_clock(PLL_source a_source, PLLM a_m, const PLL_config& a_pll_config, const PLLSAI1_config& a_pllsai1_config)
-    {
-        static_assert(Clock::PLL == clock);
-    }
+        template<typename Source_t> static void enable(M a_M, const RQP a_RQP, const RQPSAI1& a_RQPSAI1) = delete;
 #endif
 
-    static void disable_clock(Clock a_clock);
-
-    static void set_CLK48_source(CLK48_source a_source);
-    static void set_SYSCLK_source(SYSCLK_source a_source, const Bus_prescalers& a_prescalers);
-
-    static void set_MCO(const MCO_config& a_config);
-    static void set_SYSCFG_active(bool a_active);
-
-    static MCO_config get_MCO_config();
-    static bool is_SYSCFG_active();
-
-    static Bus_prescalers get_bus_prescalers();
-    static PLL_config get_PLL_config();
-#if defined(SOC_PLLSAI_PRESENT)
-    static PLLSAI1_config get_PLLSAI1_config();
+#if !defined(SOC_PLLSAI_PRESENT)
+        template<typename Source_t> static void enable(M a_M, const RQP a_RQP) = delete;
 #endif
+        static void disable();
 
-    static CLK48_source get_CLK48_source()
+        static bool is_enabled()
+        {
+            return cml::bit_flag::is(RCC->CR, RCC_CR_PLLON);
+        }
+
+        static std::uint32_t get_frequency_Hz();
+    };
+    class LSI : private cml::Non_constructible
     {
-        return static_cast<CLK48_source>(cml::bit_flag::get(RCC->CCIPR, RCC_CCIPR_CLK48SEL));
-    }
+    public:
+        enum class Frequency : std::uint32_t
+        {
+            _32_kHz,
+        };
 
-    static SYSCLK_source get_SYSCLK_source()
+        static void enable(Frequency a_frequency);
+        static void disable();
+
+        static bool is_enabled()
+        {
+            return cml::bit_flag::is(RCC->CSR, RCC_CSR_LSION);
+        }
+
+        static std::uint32_t get_frequency_Hz();
+    };
+    class CLK48_mux : private cml::Non_constructible
     {
-        return static_cast<SYSCLK_source>(cml::bit_flag::get(RCC->CFGR, RCC_CFGR_SWS) >> RCC_CFGR_SWS_Pos);
-    }
+    public:
+        template<typename Source_t> static void set_source() = delete;
+        static std::uint32_t get_frequency_Hz();
+    };
 
-    static std::uint32_t get_clock_frequency_Hz(Clock a_clock);
-    static std::uint32_t get_CLK48_frequency_Hz();
+    template<typename Source_t> static void set_SYSCLK_source(const Bus_prescalers& a_prescalers) = delete;
+
     static std::uint32_t get_SYSCLK_frequency_Hz();
     static std::uint32_t get_HCLK_frequency_Hz();
     static std::uint32_t get_PCLK1_frequency_Hz();
     static std::uint32_t get_PCLK2_frequency_Hz();
-
-    static bool is_clock_enabled(Clock a_clock);
-    static Reset_source get_reset_source();
-
-private:
-    static std::uint32_t calculate_PLL_R_output_frequency();
-    static std::uint32_t calculate_PLL_Q_output_frequency();
-#if defined(SOC_PLLSAI_PRESENT)
-    static std::uint32_t calculate_PLLSAI1_Q_output_frequency();
-#endif
 };
 
-template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::MSI>(MSI_frequency a_freq);
-template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::HSI>(HSI_frequency a_freq);
-template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::LSI>(LSI_frequency a_freq);
-template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::HSI48>(HSI48_frequency a_freq);
-template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::PLL>(PLL_source a_source, PLLM a_m, const PLL_config& a_config);
-
 #if defined(SOC_PLLSAI_PRESENT)
-template<> void rcc<mcu>::enable_clock<rcc<mcu>::Clock::PLL>(rcc<mcu>::PLL_source a_source,
-                                                             rcc<mcu>::PLLM a_m,
-                                                             const rcc<mcu>::PLL_config& a_pll_config,
-                                                             const rcc<mcu>::PLLSAI1_config& a_pllsai1_config);
+template<> void rcc<mcu>::PLL::enable<rcc<mcu>::MSI>(M a_M, const RQP a_RQP, const RQPSAI1& a_RQPSAI1);
+template<> void rcc<mcu>::PLL::enable<rcc<mcu>::HSI16>(M a_M, const RQP a_RQP, const RQPSAI1& a_RQPSAI1);
 #endif
 
+#if !defined(SOC_PLLSAI_PRESENT)
+template<> void rcc<mcu>::PLL::enable<rcc<mcu>::MSI>(M a_M, const RQP a_RQP);
+template<> void rcc<mcu>::PLL::enable<rcc<mcu>::HSI>(M a_M, const RQP a_RQP);
+#endif
+
+template<> void rcc<mcu>::CLK48_mux::set_source<rcc<mcu>::HSI48>();
+template<> void rcc<mcu>::CLK48_mux::set_source<rcc<mcu>::MSI>();
+template<> void rcc<mcu>::CLK48_mux::set_source<rcc<mcu>::PLL::RQP::Q>();
+#if defined(SOC_PLLSAI_PRESENT)
+template<> void rcc<mcu>::CLK48_mux::set_source<rcc<mcu>::PLL::RQPSAI1::Q>();
+#endif
+
+template<> void rcc<mcu>::set_SYSCLK_source<rcc<mcu>::MSI>(const Bus_prescalers& a_prescalers);
+template<> void rcc<mcu>::set_SYSCLK_source<rcc<mcu>::HSI16>(const Bus_prescalers& a_prescalers);
+template<> void rcc<mcu>::set_SYSCLK_source<rcc<mcu>::PLL>(const Bus_prescalers& a_prescalers);
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

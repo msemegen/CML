@@ -1,11 +1,11 @@
 #pragma once
 
 /*
-    Name: WWDG.hpp
-
-    Copyright(c) 2020 Mateusz Semegen
-    This code is licensed under MIT license (see LICENSE file for details)
-*/
+ *   Name: WWDG.hpp
+ *
+ *   Copyright (c) Mateusz Semegen and contributors. All rights reserved.
+ *   Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
 
 // std
 #include <cstdint>
@@ -51,9 +51,6 @@ public:
             void* p_user_data = nullptr;
         };
 
-        Interrupt(Interrupt&&) = default;
-        Interrupt& operator=(Interrupt&&) = default;
-
         ~Interrupt()
         {
             if (true == this->is_enabled())
@@ -79,35 +76,20 @@ public:
         }
 
     private:
-        Interrupt()
-            : p_WWDG(nullptr)
-        {
-        }
-
-        Interrupt(WWDG* a_p_WWDG)
-            : p_WWDG(a_p_WWDG)
-        {
-        }
-
         WWDG* p_WWDG;
-        Callback callback;
-
-        friend void WWDG_interrupt_handler();
         friend WWDG;
     };
 
     WWDG()
         : idx(std::numeric_limits<decltype(this->idx)>::max())
     {
+        this->interrupt.p_WWDG = nullptr;
     }
 
     void enable(Prescaler a_prescaler, std::uint16_t a_reload, std::uint16_t a_window);
     void feed();
 
-    std::uint32_t get_idx()
-    {
-        return this->idx;
-    }
+    bool is_enabled() const;
 
     operator WWDG_TypeDef*()
     {
@@ -123,19 +105,21 @@ public:
 
 private:
     WWDG(std::uint32_t a_idx)
-        : interrupt(this)
-        , idx(a_idx)
+        : idx(a_idx)
     {
+        this->interrupt.p_WWDG = this;
     }
 
     std::uint32_t idx;
 
     std::uint16_t reload;
+    Interrupt::Callback callback;
 
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
+    friend void WWDG_interrupt_handler();
 };
-
 void WWDG_interrupt_handler();
+
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

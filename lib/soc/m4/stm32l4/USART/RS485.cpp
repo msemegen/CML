@@ -141,39 +141,39 @@ void RS485_interrupt_handler(RS485* a_p_this)
     }
 }
 
-bool RS485::enable(const Enable_config& a_config, Milliseconds a_timeout)
+bool RS485::enable(const Enable_config& a_enable_config, Milliseconds a_timeout)
 {
     cml_assert(true == this->is_created());
 
-    cml_assert(0 != a_config.baud_rate);
-    cml_assert(0 != a_config.clock_freq_Hz);
+    cml_assert(0 != a_enable_config.baud_rate);
+    cml_assert(0 != a_enable_config.clock_freq_Hz);
 
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Stop_bits>() != a_config.stop_bits);
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Oversampling>() != a_config.oversampling);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Stop_bits>() != a_enable_config.stop_bits);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Oversampling>() != a_enable_config.oversampling);
 
     cml_assert(a_timeout > 0_ms);
 
     Milliseconds start = tick_counter::get();
 
-    switch (a_config.oversampling)
+    switch (a_enable_config.oversampling)
     {
         case Enable_config::Oversampling::_16: {
-            this->p_registers->BRR = a_config.clock_freq_Hz / a_config.baud_rate;
+            this->p_registers->BRR = a_enable_config.clock_freq_Hz / a_enable_config.baud_rate;
         }
         break;
 
         case Enable_config::Oversampling::_8: {
-            const std::uint32_t usartdiv = 2 * a_config.clock_freq_Hz / a_config.baud_rate;
+            const std::uint32_t usartdiv = 2 * a_enable_config.clock_freq_Hz / a_enable_config.baud_rate;
             this->p_registers->BRR       = ((usartdiv & 0xFFF0u) | ((usartdiv & 0xFu) >> 1)) & 0xFFFF;
         }
         break;
     }
 
     this->p_registers->CR3 = USART_CR3_ONEBIT;
-    this->p_registers->CR2 =
-        static_cast<std::uint32_t>(a_config.stop_bits) | (a_config.address << USART_CR2_ADD_Pos) | USART_CR2_ADDM7;
+    this->p_registers->CR2 = static_cast<std::uint32_t>(a_enable_config.stop_bits) |
+                             (a_enable_config.address << USART_CR2_ADD_Pos) | USART_CR2_ADDM7;
 
-    this->p_registers->CR1 = static_cast<std::uint32_t>(a_config.oversampling) | USART_CR1_M0 | USART_CR1_UE |
+    this->p_registers->CR1 = static_cast<std::uint32_t>(a_enable_config.oversampling) | USART_CR1_M0 | USART_CR1_UE |
                              USART_CR1_TE | USART_CR1_RE | USART_CR1_MME | USART_CR1_WAKE;
 
     this->p_registers->RQR = USART_RQR_MMRQ;
@@ -189,12 +189,17 @@ bool RS485::enable(const Enable_config& a_config, Milliseconds a_timeout)
         bit_flag::set(&(this->p_registers->ICR), USART_ICR_IDLECF);
     }
 
+    this->enable_config = a_enable_config;
+
     return ret;
 }
 
 void RS485::disable()
 {
-    cml_assert(true == this->is_created());
+    if (true == this->interrupt.is_enabled())
+    {
+        this->interrupt.disable();
+    }
 
     this->p_registers->CR1 = 0;
     this->p_registers->CR2 = 0;
@@ -412,6 +417,10 @@ void RS485::Interrupt::enable(const IRQ_config& a_irq_config)
 
 void RS485::Interrupt::disable()
 {
+    this->transmit_stop();
+    this->receive_stop();
+    this->event_listening_stop();
+
     NVIC_DisableIRQ(this->p_RS485->irqn);
 
     this->clear_irq_context();
@@ -445,7 +454,7 @@ void RS485::Interrupt::receive_start(const Receive_callback& a_callback, GPIO::O
     bit_flag::set(&(static_cast<USART_TypeDef*>(*(this->p_RS485))->CR1), USART_CR1_RXNEIE | USART_CR1_IDLEIE);
 }
 
-void RS485::Interrupt::register_Event_callback(const Event_callback& a_callback, Event_flag a_enabled_events)
+void RS485::Interrupt::event_listening_start(const Event_callback& a_callback, Event_flag a_enabled_events)
 {
     cml_assert(nullptr != a_callback.function);
 
@@ -506,7 +515,7 @@ void RS485::Interrupt::receive_stop()
     this->p_RS485->receive_callback = { nullptr, nullptr };
 }
 
-void RS485::Interrupt::unregister_Event_callback()
+void RS485::Interrupt::event_listening_stop()
 {
     Interrupt_guard guard;
 

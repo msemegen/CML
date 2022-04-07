@@ -43,9 +43,9 @@ void WWDG_interrupt_handler()
 {
     cml_assert(nullptr != irq_context[0]);
 
-    if (nullptr != irq_context[0]->interrupt.callback.function)
+    if (nullptr != irq_context[0]->callback.function)
     {
-        irq_context[0]->interrupt.callback.function(irq_context[0]->interrupt.callback.p_user_data);
+        irq_context[0]->callback.function(irq_context[0]->callback.p_user_data);
     }
 }
 
@@ -62,6 +62,11 @@ void WWDG::enable(Prescaler a_prescaler, uint16_t a_reload, uint16_t a_window)
 void WWDG::feed()
 {
     WWDG_T->CR = this->reload;
+}
+
+bool WWDG::is_enabled() const
+{
+    return bit_flag::is(WWDG_T->CR, WWDG_CR_WDGA);
 }
 
 void WWDG::Interrupt::enable(const IRQ_config& a_irq_config)
@@ -92,7 +97,7 @@ void WWDG::Interrupt::register_callback(const Callback& a_callback)
 
     Interrupt_guard gaurd;
 
-    this->callback = a_callback;
+    this->p_WWDG->callback = a_callback;
     bit_flag::set(&(WWDG_T->CFR), WWDG_CFR_EWI);
 }
 
@@ -101,7 +106,7 @@ void WWDG::Interrupt::unregister_callback()
     cml_assert(nullptr != this->p_WWDG);
 
     bit_flag::clear(&(WWDG_T->CFR), WWDG_CFR_EWI);
-    this->callback = { nullptr, nullptr };
+    this->p_WWDG->callback = { nullptr, nullptr };
 }
 } // namespace stm32l4
 } // namespace m4

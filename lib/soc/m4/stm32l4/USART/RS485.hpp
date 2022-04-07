@@ -135,8 +135,8 @@ public:
         void receive_start(const Receive_callback& a_callback, GPIO::Out::Pin* a_p_flow_control_pin);
         void receive_stop();
 
-        void register_Event_callback(const Event_callback& a_callback, Event_flag a_enabled_events);
-        void unregister_Event_callback();
+        void event_listening_start(const Event_callback& a_callback, Event_flag a_enabled_events);
+        void event_listening_stop();
 
         bool is_enabled() const
         {
@@ -170,13 +170,8 @@ public:
         }
     }
 
-    bool enable(const Enable_config& a_config, cml::Milliseconds a_timeout);
+    bool enable(const Enable_config& a_enable_config, cml::Milliseconds a_timeout);
     void disable();
-
-    std::uint32_t get_idx() const
-    {
-        return this->idx;
-    }
 
     bool is_enabled() const
     {
@@ -201,6 +196,8 @@ public:
     Polling polling;
     Interrupt interrupt;
 
+    const Enable_config* const p_enable_config = &(this->enable_config);
+
 private:
     RS485(std::size_t a_idx, USART_TypeDef* a_p_registers, IRQn_Type a_irqn)
         : idx(a_idx)
@@ -215,17 +212,17 @@ private:
     std::uint32_t idx;
     USART_TypeDef* p_registers;
 
-    IRQn_Type irqn;
+    Enable_config enable_config;
 
+    IRQn_Type irqn;
     Interrupt::Transmit_callback transmit_callback;
     Interrupt::Receive_callback receive_callback;
     Interrupt::Event_callback event_callback;
     Event_flag enabled_interrupt_events;
 
-    friend void RS485_interrupt_handler(RS485* a_p_this);
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
+    friend void RS485_interrupt_handler(RS485* a_p_this);
 };
-
 void RS485_interrupt_handler(RS485* a_p_this);
 
 constexpr RS485::Event_flag operator|(RS485::Event_flag a_f1, RS485::Event_flag a_f2)

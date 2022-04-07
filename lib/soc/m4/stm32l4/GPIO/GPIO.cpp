@@ -451,7 +451,7 @@ void GPIO::Alternate_function::disable(std::uint32_t a_id)
 void GPIO::Interrupt::enable(const Callback& a_callback, const IRQ_config& a_irq_config)
 {
     cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
-    cml_assert(true == rcc<mcu>::is_SYSCFG_active());
+    cml_assert(mcu::SYSCFG_mode::enabled == mcu::get_SYSCFG_mode());
 
     NVIC_SetPriority(
         this->irqn,

@@ -33,8 +33,6 @@ namespace stm32l4 {
 class USART : private cml::Non_copyable
 {
 public:
-    template<typename Config_t> Config_t get_config() const = delete;
-
     enum class Event_flag : std::uint32_t
     {
         none              = 0x0u,
@@ -85,7 +83,7 @@ public:
         Sampling_method sampling_method = cml::various::get_enum_incorrect_value<Sampling_method>();
         Mode_flag mode                  = cml::various::get_enum_incorrect_value<Mode_flag>();
     };
-    struct Frame_config
+    struct Frame_format
     {
         enum class Word_length : uint32_t
         {
@@ -199,13 +197,8 @@ public:
         }
     }
 
-    bool enable(const Enable_config& a_config, const Frame_config& frame_config, cml::Milliseconds a_timeout);
+    bool enable(const Enable_config& a_config, const Frame_format& frame_format, cml::Milliseconds a_timeout);
     void disable();
-
-    std::uint32_t get_idx() const
-    {
-        return this->idx;
-    }
 
     bool is_enabled() const
     {
@@ -230,6 +223,9 @@ public:
     Polling polling;
     Interrupt interrupt;
 
+    const Enable_config* const p_enable_config = &(this->enable_config);
+    const Frame_format* const p_frame_format   = &(this->frame_format);
+
 private:
     USART(std::size_t a_idx, USART_TypeDef* a_p_registers, IRQn_Type a_irqn)
         : idx(a_idx)
@@ -244,6 +240,9 @@ private:
     std::uint32_t idx;
     USART_TypeDef* p_registers;
 
+    Enable_config enable_config;
+    Frame_format frame_format;
+
     IRQn_Type irqn;
     Interrupt::Transmit_callback transmit_callback;
     Interrupt::Receive_callback receive_callback;
@@ -253,18 +252,7 @@ private:
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
     friend void USART_interrupt_handler(USART* a_p_this);
 };
-
-template<> inline USART::Enable_config USART::get_config<USART::Enable_config>() const
-{
-    return Enable_config {};
-}
-template<> inline USART::Frame_config USART::get_config<USART::Frame_config>() const
-{
-    return {
-        static_cast<Frame_config::Word_length>(cml::bit_flag::get(this->p_registers->CR1, USART_CR1_M0 | USART_CR1_M1)),
-        static_cast<Frame_config::Parity>(cml::bit_flag::get(this->p_registers->CR1, USART_CR1_PCE | USART_CR1_PS))
-    };
-}
+void USART_interrupt_handler(USART* a_p_this);
 
 constexpr USART::Enable_config::Flow_control_flag operator|(USART::Enable_config::Flow_control_flag a_f1,
                                                             USART::Enable_config::Flow_control_flag a_f2)

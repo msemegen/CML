@@ -48,7 +48,7 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
     cml_assert(various::get_enum_incorrect_value<Window::Mode>() != a_window.mode);
     cml_assert((Window::Mode::enabled == a_window.mode && a_window.value <= 0xFFFu) ||
                (Window::Mode::disabled == a_window.mode));
-    cml_assert(true == rcc<mcu>::is_clock_enabled(rcc<mcu>::Clock::LSI));
+    cml_assert(true == rcc<mcu>::LSI::is_enabled());
     cml_assert(a_reload <= 0xFFFu);
     cml_assert(a_timeout > 0_ms);
 
@@ -89,6 +89,10 @@ void IWDG::feed()
     cml_assert(true == this->is_created());
 
     IWDG_T->KR = control_flags::reload;
+}
+bool IWDG::is_enabled() const
+{
+    return 0x0u != IWDG_T->KR;
 }
 } // namespace stm32l4
 } // namespace m4

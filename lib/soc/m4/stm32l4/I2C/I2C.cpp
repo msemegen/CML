@@ -61,32 +61,41 @@ template<typename Event_flag_t> Event_flag_t get_Event_flag(I2C_TypeDef* p_regis
     return ret;
 }
 
-void I2C_master::enable(const Enable_config& a_config)
+void I2C_master::enable(const Enable_config& a_enable_config)
 {
     cml_assert(true == this->is_created());
 
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Analog_filter>() != a_config.analog_filter);
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Fast_plus>() != a_config.fast_plus);
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Crc>() != a_config.crc);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Analog_filter>() != a_enable_config.analog_filter);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Fast_plus>() != a_enable_config.fast_plus);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Crc>() != a_enable_config.crc);
 
-    cml_assert((Enable_config::Fast_plus::enabled == a_config.fast_plus && true == rcc<mcu>::is_SYSCFG_active()) ||
-               Enable_config::Fast_plus::disabled == a_config.fast_plus);
+    cml_assert((Enable_config::Fast_plus::enabled == a_enable_config.fast_plus &&
+                mcu::SYSCFG_mode::enabled == mcu::get_SYSCFG_mode()) ||
+               Enable_config::Fast_plus::disabled == a_enable_config.fast_plus);
 
     this->p_registers->CR1 = 0;
 
-    this->p_registers->TIMINGR = a_config.timings;
+    this->p_registers->TIMINGR = a_enable_config.timings;
     this->p_registers->CR2     = I2C_CR2_AUTOEND;
-    this->p_registers->CR1 = (Enable_config::Analog_filter::disabled == a_config.analog_filter ? I2C_CR1_ANFOFF : 0) |
-                             (Enable_config::Crc::enabled == a_config.crc ? I2C_CR1_PECEN : 0) | I2C_CR1_PE;
+    this->p_registers->CR1 =
+        (Enable_config::Analog_filter::disabled == a_enable_config.analog_filter ? I2C_CR1_ANFOFF : 0) |
+        (Enable_config::Crc::enabled == a_enable_config.crc ? I2C_CR1_PECEN : 0) | I2C_CR1_PE;
 
-    if (Enable_config::Fast_plus::enabled == a_config.fast_plus)
+    if (Enable_config::Fast_plus::enabled == a_enable_config.fast_plus)
     {
         bit::set(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
+
+    this->enable_config = a_enable_config;
 }
 
 void I2C_master::disable()
 {
+    if (true == this->interrupt.is_enabled())
+    {
+        this->interrupt.disable();
+    }
+
     this->p_registers->CR1 = 0;
 
     if (true == bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx))
@@ -354,10 +363,10 @@ void I2C_master::Interrupt::disable()
     this->receive_stop();
     this->event_listening_stop();
 
-    this->clear_irq_context();
-
     NVIC_DisableIRQ(this->p_I2C->ev_irqn);
     NVIC_DisableIRQ(this->p_I2C->er_irqn);
+
+    this->clear_irq_context();
 }
 
 void I2C_master::Interrupt::transmit_start(std::uint8_t a_slave_address, const Transmit_callback& a_callback) {}
@@ -378,47 +387,47 @@ void I2C_master::Interrupt::slave_discovery_start(std::uint8_t a_slave_address,
 }
 void I2C_master::Interrupt::slave_discovery_stop() {}
 
-void I2C_slave::enable(const Enable_config& a_config)
+void I2C_slave::enable(const Enable_config& a_enable_config)
 {
     cml_assert(true == this->is_created());
 
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Analog_filter>() != a_config.analog_filter);
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Fast_plus>() != a_config.fast_plus);
-    cml_assert(various::get_enum_incorrect_value<Enable_config::Crc>() != a_config.crc);
-    cml_assert(a_config.address <= 0x7Fu);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Analog_filter>() != a_enable_config.analog_filter);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Fast_plus>() != a_enable_config.fast_plus);
+    cml_assert(various::get_enum_incorrect_value<Enable_config::Crc>() != a_enable_config.crc);
+    cml_assert(a_enable_config.address <= 0x7Fu);
 
-    cml_assert((Enable_config::Fast_plus::enabled == a_config.fast_plus && true == rcc<mcu>::is_SYSCFG_active()) ||
-               Enable_config::Fast_plus::disabled == a_config.fast_plus);
+    cml_assert((Enable_config::Fast_plus::enabled == a_enable_config.fast_plus &&
+                mcu::SYSCFG_mode::enabled == mcu::get_SYSCFG_mode()) ||
+               Enable_config::Fast_plus::disabled == a_enable_config.fast_plus);
 
     this->p_registers->CR1     = 0;
-    this->p_registers->TIMINGR = a_config.timings;
-    this->p_registers->OAR1    = I2C_OAR1_OA1EN | (a_config.address);
-    this->p_registers->CR1 = (Enable_config::Analog_filter::enabled == a_config.analog_filter ? I2C_CR1_ANFOFF : 0u) |
-                             (Enable_config::Crc::enabled == a_config.crc ? I2C_CR1_PECEN : 0u) | I2C_CR1_PE;
+    this->p_registers->TIMINGR = a_enable_config.timings;
+    this->p_registers->OAR1    = I2C_OAR1_OA1EN | (a_enable_config.address);
+    this->p_registers->CR1 =
+        (Enable_config::Analog_filter::enabled == a_enable_config.analog_filter ? I2C_CR1_ANFOFF : 0u) |
+        (Enable_config::Crc::enabled == a_enable_config.crc ? I2C_CR1_PECEN : 0u) | I2C_CR1_PE;
 
-    if (Enable_config::Fast_plus::enabled == a_config.fast_plus)
+    if (Enable_config::Fast_plus::enabled == a_enable_config.fast_plus)
     {
         bit::set(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
+
+    this->enable_config = a_enable_config;
 }
 
 void I2C_slave::disable()
 {
+    if (true == this->interrupt.is_enabled())
+    {
+        this->interrupt.disable();
+    }
+
     this->p_registers->CR1 = 0;
 
     if (true == bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx))
     {
         bit::clear(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
-}
-
-I2C_slave::Enable_config I2C_slave::get_Enable_config() const
-{
-    return { static_cast<Enable_config::Analog_filter>(false == bit_flag::is(this->p_registers->CR1, I2C_CR1_ANFOFF)),
-             static_cast<Enable_config::Fast_plus>(bit::is(SYSCFG->CFGR1, SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx)),
-             static_cast<Enable_config::Crc>(bit_flag::is(this->p_registers->CR1, I2C_CR1_PECEN)),
-             this->p_registers->TIMINGR,
-             static_cast<std::uint16_t>(this->p_registers->OAR1 & 0x8000u) };
 }
 
 I2C_slave::Polling::Result I2C_slave::Polling::transmit(const void* a_p_data, std::size_t a_data_size_in_bytes)
@@ -657,6 +666,8 @@ void I2C_slave::Interrupt::disable()
 
     NVIC_DisableIRQ(this->p_I2C->ev_irqn);
     NVIC_DisableIRQ(this->p_I2C->er_irqn);
+
+    this->clear_irq_context();
 }
 
 void I2C_slave::Interrupt::transmit_start(const Transmit_callback& a_callback) {}

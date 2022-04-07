@@ -95,30 +95,30 @@ using namespace cml;
 
 void Interrupt<I2C_master>::set_irq_context()
 {
-    cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
-
-    irq_context[this->get_handle()->get_idx()] = this;
+    //cml_assert(nullptr == irq_context[this->get_handle()->idx]);
+    //
+    //irq_context[this->get_handle()->idx] = this;
 }
 
 void Interrupt<I2C_master>::clear_irq_context()
 {
-    cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
-
-    irq_context[this->get_handle()->get_idx()] = nullptr;
+    //cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
+    //
+    //irq_context[this->get_handle()->idx] = nullptr;
 }
 
 void Interrupt<I2C_slave>::set_irq_context()
 {
-    cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
+    //cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
 
-    irq_context[this->get_handle()->get_idx()] = this;
+    //irq_context[this->get_handle()->get_idx()] = this;
 }
 
 void Interrupt<I2C_slave>::clear_irq_context()
 {
-    cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
+    //cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
 
-    irq_context[this->get_handle()->get_idx()] = nullptr;
+    //irq_context[this->get_handle()->get_idx()] = nullptr;
 }
 
 #if defined(SOC_I2C1_PRESENT)

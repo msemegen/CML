@@ -54,12 +54,12 @@ void RNG_interrupt_handler()
         value = RNG_T->DR;
     }
 
-    if (nullptr != irq_context[0]->interrupt.callback.function)
+    if (nullptr != irq_context[0]->callback.function)
     {
-        irq_context[0]->interrupt.callback.function(value,
-                                                    bit_flag::is(isr, RNG_SR_CECS),
-                                                    bit_flag::is(isr, RNG_SR_SECS),
-                                                    irq_context[0]->interrupt.callback.p_user_data);
+        irq_context[0]->callback.function(value,
+                                          bit_flag::is(isr, RNG_SR_CECS),
+                                          bit_flag::is(isr, RNG_SR_SECS),
+                                          irq_context[0]->callback.p_user_data);
     }
 
     NVIC_ClearPendingIRQ(RNG_IRQn);
@@ -68,7 +68,7 @@ void RNG_interrupt_handler()
 bool RNG::enable(Milliseconds a_timeout)
 {
     cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
-    cml_assert(rcc<mcu>::get_CLK48_frequency_Hz() <= 48_MHz);
+    cml_assert(rcc<mcu>::CLK48_mux::get_frequency_Hz() <= 48_MHz);
     cml_assert(a_timeout > 0_ms);
 
     Milliseconds start = tick_counter::get();
@@ -88,10 +88,12 @@ bool RNG::enable(Milliseconds a_timeout)
 
 void RNG::disable()
 {
-    cml_assert(std::numeric_limits<decltype(this->idx)>::max() != this->idx);
+    if (true == this->interrupt.is_enabled())
+    {
+        this->interrupt.disable();
+    }
 
     bit_flag::clear(&(RNG_T->CR), RNG_CR_RNGEN);
-    NVIC_DisableIRQ(RNG_IRQn);
 }
 
 bool RNG::Polling::get_value(std::uint32_t* a_p_value, Milliseconds a_timeout)
@@ -112,8 +114,6 @@ bool RNG::Polling::get_value(std::uint32_t* a_p_value, Milliseconds a_timeout)
 
 void RNG::Interrupt::enable(const IRQ_config& a_irq_config)
 {
-    cml_assert(true == this->is_created());
-
     cml_assert(nullptr == irq_context[0]);
 
     irq_context[0] = this->p_RNG;
@@ -126,33 +126,28 @@ void RNG::Interrupt::enable(const IRQ_config& a_irq_config)
 
 void RNG::Interrupt::disable()
 {
-    cml_assert(true == this->is_created());
+    this->unregister_callback();
 
     NVIC_DisableIRQ(IRQn_Type::RNG_IRQn);
-    this->unregister_callback();
 
     irq_context[0] = nullptr;
 }
 
 void RNG::Interrupt::register_callback(const Callback& a_callback)
 {
-    cml_assert(true == this->is_created());
-
     cml_assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
 
-    this->callback = a_callback;
+    this->p_RNG->callback = a_callback;
 
     bit_flag::set(&(RNG_T->CR), RNG_CR_IE);
 }
 
 void RNG::Interrupt::unregister_callback()
 {
-    cml_assert(true == this->is_created());
-
     bit_flag::clear(&(RNG_T->CR), RNG_CR_IE);
-    this->callback = { nullptr, nullptr };
+    this->p_RNG->callback = { nullptr, nullptr };
 }
 
 void rcc<RNG>::enable(bool a_enable_in_lp)

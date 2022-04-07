@@ -137,16 +137,16 @@ void USART::Interrupt::clear_irq_context()
 
 void RS485::Interrupt::set_irq_context()
 {
-    cml_assert(nullptr == transfer_irq_context[this->p_RS485->get_idx()].p_general);
+    cml_assert(nullptr == transfer_irq_context[this->p_RS485->idx].p_general);
 
-    transfer_irq_context[this->p_RS485->get_idx()] = { this->p_RS485, Transfer_interrupt_context::Mode::RS485 };
+    transfer_irq_context[this->p_RS485->idx] = { this->p_RS485, Transfer_interrupt_context::Mode::RS485 };
 }
 
 void RS485::Interrupt::clear_irq_context()
 {
-    cml_assert(nullptr != transfer_irq_context[this->p_RS485->get_idx()].p_general);
+    cml_assert(nullptr != transfer_irq_context[this->p_RS485->idx].p_general);
 
-    transfer_irq_context[this->p_RS485->get_idx()] = {
+    transfer_irq_context[this->p_RS485->idx] = {
         nullptr, various::get_enum_incorrect_value<Transfer_interrupt_context::Mode>()
     };
 }

@@ -36,12 +36,9 @@ namespace stm32l4 {
 class RNG : private cml::Non_copyable
 {
 public:
-    class Polling : private cml::Non_copyable
+    class Polling
     {
     public:
-        Polling(Polling&&) = default;
-        Polling& operator=(Polling&&) = default;
-
         bool get_value(std::uint32_t* a_p_value, cml::Milliseconds a_timeout);
 
         bool is_created() const
@@ -50,21 +47,10 @@ public:
         }
 
     private:
-        Polling()
-            : p_RNG(nullptr)
-        {
-        }
-
-        Polling(RNG* a_p_RNG)
-            : p_RNG(a_p_RNG)
-        {
-        }
-
         RNG* p_RNG;
-
         friend RNG;
     };
-    class Interrupt : private cml::Non_copyable
+    class Interrupt
     {
     public:
         struct Callback
@@ -77,9 +63,6 @@ public:
             Function function = nullptr;
             void* p_user_data = nullptr;
         };
-
-        Interrupt(Interrupt&&) = default;
-        Interrupt& operator=(Interrupt&&) = default;
 
         ~Interrupt()
         {
@@ -100,26 +83,8 @@ public:
             return 0u != NVIC_GetEnableIRQ(IRQn_Type::RNG_IRQn);
         }
 
-        bool is_created() const
-        {
-            return nullptr != this->p_RNG;
-        }
-
     private:
-        Interrupt()
-            : p_RNG(nullptr)
-        {
-        }
-
-        Interrupt(RNG* a_p_RNG)
-            : p_RNG(a_p_RNG)
-        {
-        }
-
-        RNG* p_RNG;
-        Callback callback;
-
-        friend void RNG_interrupt_handler();
+        RNG* p_RNG = nullptr;
         friend RNG;
     };
 
@@ -129,6 +94,8 @@ public:
     RNG()
         : idx(std::numeric_limits<decltype(this->idx)>::max())
     {
+        this->polling.p_RNG   = nullptr;
+        this->interrupt.p_RNG = nullptr;
     }
 
     ~RNG()
@@ -141,11 +108,6 @@ public:
 
     bool enable(cml::Milliseconds a_timeout);
     void disable();
-
-    std::uint32_t get_idx()
-    {
-        return this->idx;
-    }
 
     bool is_enabled() const
     {
@@ -174,11 +136,18 @@ private:
     RNG(std::uint32_t a_idx)
         : idx(a_idx)
     {
+        this->polling.p_RNG   = this;
+        this->interrupt.p_RNG = this;
     }
 
     std::uint32_t idx;
+
+    Interrupt::Callback callback;
+
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
+    friend void RNG_interrupt_handler();
 };
+void RNG_interrupt_handler();
 
 template<> class rcc<RNG> : private cml::Non_constructible
 {
@@ -187,7 +156,6 @@ public:
     static void disable();
 };
 
-void RNG_interrupt_handler();
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

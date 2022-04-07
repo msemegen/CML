@@ -63,22 +63,28 @@ int main()
     internal_flash::set_latency(internal_flash::Latency::_4);
     pwr::set_voltage_scaling(pwr::Voltage_scaling::_1);
 
-    rcc<mcu>::enable_clock<rcc<mcu>::Clock::HSI>(rcc<mcu>::HSI_frequency::_16_MHz);
-    rcc<mcu>::enable_clock<rcc<mcu>::Clock::PLL>(rcc<mcu>::PLL_source::HSI, rcc<mcu>::PLLM::_2, {
-        20u, { rcc<mcu>::PLL_config::R::Divider::_2, rcc<mcu>::PLL_config::Output::enabled },
-            { rcc<mcu>::PLL_config::Q::Divider::_2, rcc<mcu>::PLL_config::Output::disabled },
-#if defined(SOC_PLL_P_PRESENT)
-        {
-            rcc<mcu>::PLL_config::P::Divider::_7, rcc<mcu>::PLL_config::Output::disabled
-        }
-#endif
-    });
-
-    rcc<mcu>::set_SYSCLK_source(
-        rcc<mcu>::SYSCLK_source::PLL,
+    //    rcc<mcu>::enable_clock<rcc<mcu>::Clock::HSI>(rcc<mcu>::HSI_frequency::_16_MHz);
+    //    rcc<mcu>::enable_clock<rcc<mcu>::Clock::PLL>(rcc<mcu>::PLL_source::HSI, rcc<mcu>::PLLM::_2, {
+    //        20u, { rcc<mcu>::PLL_config::R::Divider::_2, rcc<mcu>::PLL_config::Output::enabled },
+    //            { rcc<mcu>::PLL_config::Q::Divider::_2, rcc<mcu>::PLL_config::Output::disabled },
+    //#if defined(SOC_PLL_P_PRESENT)
+    //        {
+    //            rcc<mcu>::PLL_config::P::Divider::_7, rcc<mcu>::PLL_config::Output::disabled
+    //        }
+    //#endif
+    //    });
+    //
+    //    rcc<mcu>::set_SYSCLK_source(
+    //        rcc<mcu>::SYSCLK_source::PLL,
+    //        { rcc<mcu>::Bus_prescalers::AHB::_1, rcc<mcu>::Bus_prescalers::APB1::_1,
+    //        rcc<mcu>::Bus_prescalers::APB2::_1 });
+    //
+    //    rcc<mcu>::disable_clock(rcc<mcu>::Clock::MSI);
+    rcc<mcu>::HSI16::enable(rcc<mcu>::HSI16::Frequency::_16_MHz);
+    rcc<mcu>::set_SYSCLK_source<rcc<mcu>::HSI16>(
         { rcc<mcu>::Bus_prescalers::AHB::_1, rcc<mcu>::Bus_prescalers::APB1::_1, rcc<mcu>::Bus_prescalers::APB2::_1 });
+    rcc<mcu>::MSI::disable();
 
-    rcc<mcu>::disable_clock(rcc<mcu>::Clock::MSI);
     nvic::set_config({ nvic::Config::Grouping::_4, 0x5u });
 
     Systick systick = Peripheral<Systick>::create();
@@ -86,7 +92,7 @@ int main()
     tick_counter::enable(&systick, { IRQ_config::Mode::enabled, 0x1u, 0x1u });
     assertion::enable({ assert_halt, nullptr }, { assert_print, nullptr });
 
-    mcu::set_DWT_active(true);
+    mcu::set_DWT_mode(mcu::DWT_mode::enabled);
 
     GPIO gpio_port_a = Peripheral<GPIO, 1>::create();
     rcc<GPIO, 1>::enable(false);
@@ -106,7 +112,7 @@ int main()
                                       USART::Enable_config::Flow_control_flag::none,
                                       USART::Enable_config::Sampling_method::three_sample_bit,
                                       USART::Enable_config::Mode_flag::tx | USART::Enable_config::Mode_flag::rx },
-                                    { USART::Frame_config::Word_length::_8_bit, USART::Frame_config::Parity::none },
+                                    { USART::Frame_format::Word_length::_8_bit, USART::Frame_format::Parity::none },
                                     10u);
 
     if (true == usart_ready)
@@ -140,6 +146,8 @@ int main()
                                                   IRQ_config { IRQ_config::Mode::enabled, 0x0u, 0x0u },
                                                   { dma_callback, &adc },
                                                   DMA<>::Event_flag::transfer_complete);
+
+        // usart.get<int>();
 
         while (true)
         {

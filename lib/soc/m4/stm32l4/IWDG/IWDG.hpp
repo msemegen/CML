@@ -61,10 +61,7 @@ public:
     bool enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a_window, cml::Milliseconds a_timeout);
     void feed();
 
-    std::uint32_t get_idx()
-    {
-        return this->idx;
-    }
+    bool is_enabled() const;
 
     bool is_created() const
     {
