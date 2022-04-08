@@ -18,6 +18,14 @@ namespace debug {
 class assertion : private cml::Non_constructible
 {
 public:
+#if defined(M4)
+    enum class Trap_enter_mode : std::uint32_t
+    {
+        disabled,
+        enabled
+    };
+#endif
+
     struct Halt_hadler
     {
         using Function = void (*)(void* a_p_user_data);
@@ -37,7 +45,13 @@ public:
         void* p_user_data   = nullptr;
     };
 
-    static void enable(const Halt_hadler& a_halt, const Print_handler& a_print);
+    static void enable(const Halt_hadler& a_halt,
+                       const Print_handler& a_print
+#if defined(M4)
+                       ,
+                       Trap_enter_mode a_trap_enter_mode
+#endif
+    );
     static void disable();
 
     static void trap(const char* a_p_file, uint32_t a_line, const char* a_p_expression);

@@ -99,11 +99,20 @@ public:
 
     static void set_DWT_mode(DWT_mode a_mode)
     {
-        cml::bit_flag::set(&(CoreDebug->DEMCR),
-                           CoreDebug_DEMCR_TRCENA_Msk,
-                           DWT_mode::enabled == a_mode ? CoreDebug_DEMCR_TRCENA_Msk : 0x0u);
-        cml::bit_flag::set(
-            &(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk, DWT_mode::enabled == a_mode ? DWT_CTRL_CYCCNTENA_Msk : 0x0u);
+        switch (a_mode)
+        {
+            case DWT_mode::enabled: {
+                cml::bit_flag::set(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
+                cml::bit_flag::set(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
+            }
+            break;
+
+            case DWT_mode::disabled: {
+                cml::bit_flag::clear(&(CoreDebug->DEMCR), CoreDebug_DEMCR_TRCENA_Msk);
+                cml::bit_flag::clear(&(DWT->CTRL), DWT_CTRL_CYCCNTENA_Msk);
+            }
+            break;
+        }
     }
 
     static void set_FPU_mode(FPU_mode a_mode)
@@ -119,8 +128,7 @@ public:
 
     static DWT_mode get_DWT_mode()
     {
-        return static_cast<DWT_mode>(cml::bit_flag::is(CoreDebug->DEMCR, CoreDebug_DEMCR_TRCENA_Msk) &&
-                                     cml::bit_flag::is(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk));
+        return static_cast<DWT_mode>(cml::bit_flag::is(DWT->CTRL, DWT_CTRL_CYCCNTENA_Msk));
     }
 
     static FPU_mode get_FPU_mode()
@@ -133,9 +141,14 @@ public:
         return static_cast<SYSCFG_mode>(cml::bit_flag::is(RCC->APB2ENR, RCC_APB2ENR_SYSCFGEN));
     }
 
-    constexpr Package get_package()
+    static constexpr Package get_package()
     {
         return static_cast<Package>(*(reinterpret_cast<std::uint32_t*>(PACKAGE_BASE)));
+    }
+
+    static bool is_in_debug_mode()
+    {
+        return cml::bit_flag::is(CoreDebug->DHCSR, CoreDebug_DHCSR_C_DEBUGEN_Msk);
     }
 };
 template<> class rcc<mcu> : private cml::Non_constructible
@@ -229,7 +242,6 @@ public:
     class HSI48 : private cml::Non_constructible
     {
     public:
-
         static bool is_enabled()
         {
             return false;

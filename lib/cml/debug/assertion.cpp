@@ -8,19 +8,35 @@
 // this
 #include <cml/debug/assertion.hpp>
 
+#if defined(M4)
+// soc
+#include <cml/hal/mcu.hpp>
+#endif
+
 namespace {
 using namespace cml::debug;
+#if defined(M4)
+using namespace cml::hal;
+#endif
 
 assertion::Halt_hadler halt;
 assertion::Print_handler print;
+assertion::Trap_enter_mode trap_enter_mode;
 } // namespace
 
 namespace cml {
 namespace debug {
-void assertion::enable(const Halt_hadler& a_halt, const Print_handler& a_print)
+void assertion::enable(const Halt_hadler& a_halt,
+                       const Print_handler& a_print
+#if defined(M4)
+                       ,
+                       Trap_enter_mode a_trap_enter_mode
+#endif
+)
 {
-    halt = a_halt;
-    print = a_print;
+    halt            = a_halt;
+    print           = a_print;
+    trap_enter_mode = a_trap_enter_mode;
 }
 
 void assertion::disable()
@@ -31,6 +47,12 @@ void assertion::disable()
 
 void assertion::trap(const char* a_p_file, uint32_t a_line, const char* a_p_expression)
 {
+#if defined(M4)
+    if (Trap_enter_mode::enabled == trap_enter_mode && true == mcu::is_in_debug_mode())
+    {
+        __BKPT(0);
+    }
+#endif
     if (nullptr != print.p_function)
     {
         print.p_function(a_p_file, a_line, a_p_expression, print.p_user_data);

@@ -51,6 +51,7 @@ public:
     static void delay(Microseconds a_time)
     {
         cml_assert(hal::rcc<hal::mcu>::get_SYSCLK_frequency_Hz() >= 1_MHz);
+        cml_assert(hal::mcu::DWT_mode::enabled == hal::mcu::get_DWT_mode());
 
         hal::cycles_counter::reset();
         const std::uint32_t max = hal::cycles_counter::get() +
