@@ -101,6 +101,8 @@ public:
         Transmit_callback transmit_callback;
         Receive_callback receive_callback;
         Event_callback event_callback;
+
+        friend void I2C_interrupt_handler(I2C::Interrupt* a_p_this);
     };
 
     I2C(I2C&&)   = default;
@@ -133,8 +135,6 @@ protected:
 
     std::uint32_t idx;
     I2C_TypeDef* p_registers;
-
-    friend void I2C_interrupt_handler(I2C::Interrupt* a_p_this);
 };
 void I2C_interrupt_handler(I2C::Interrupt* a_p_this);
 

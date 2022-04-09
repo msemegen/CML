@@ -64,6 +64,60 @@ using namespace cml::utils;
 
 void I2C_interrupt_handler(I2C::Interrupt* a_p_this)
 {
+    const std::uint32_t isr = a_p_this->p_registers->ISR;
+    const std::uint32_t cr1 = a_p_this->p_registers->CR1;
+
+    if (true == is_error(a_p_this->p_registers))
+    {
+        const I2C::Event_flag status = get_Event_flag<I2C::Event_flag>(a_p_this->p_registers);
+
+        if (I2C::Event_flag::ok != status)
+        {
+            if (nullptr != a_p_this->event_callback.function)
+            {
+                a_p_this->event_callback.function(status, a_p_this->event_callback.p_user_data);
+            }
+
+            bit_flag::set(&(a_p_this->p_registers->ICR),
+                          I2C_ICR_TIMOUTCF | I2C_ICR_PECCF | I2C_ICR_OVRCF | I2C_ICR_ARLOCF | I2C_ICR_BERRCF |
+                              I2C_ICR_NACKCF);
+        }
+    }
+
+    if (true == bit_flag::is(isr, I2C_ISR_TXE) && true == bit_flag::is(cr1, I2C_CR1_TXIE) &&
+        nullptr != a_p_this->transmit_callback.function)
+    {
+        a_p_this->transmit_callback.function(reinterpret_cast<volatile std::uint32_t*>(&(a_p_this->p_registers->TXDR)),
+                                             false,
+                                             a_p_this->transmit_callback.p_user_data);
+    }
+
+    if (true == bit_flag::is(isr, I2C_ISR_STOPF) && true == bit_flag::is(cr1, I2C_CR1_STOPIE))
+    {
+        bit_flag::set(&(a_p_this->p_registers->ICR), I2C_ICR_STOPCF);
+
+        if (nullptr != a_p_this->transmit_callback.function)
+        {
+            a_p_this->transmit_callback.function(nullptr, true, a_p_this->transmit_callback.p_user_data);
+        }
+    }
+
+    if (true == bit_flag::is(isr, I2C_ISR_RXNE) && true == bit_flag::is(cr1, I2C_CR1_RXIE) &&
+        nullptr != a_p_this->receive_callback.function)
+    {
+        a_p_this->receive_callback.function(
+            static_cast<std::uint8_t>(a_p_this->p_registers->RXDR), false, a_p_this->receive_callback.p_user_data);
+    }
+
+    if (true == bit_flag::is(isr, I2C_ISR_STOPF) && true == bit_flag::is(cr1, I2C_CR1_STOPIE))
+    {
+        bit_flag::set(&(a_p_this->p_registers->ICR), I2C_ICR_STOPCF);
+
+        if (nullptr != a_p_this->receive_callback.function)
+        {
+            a_p_this->receive_callback.function(0, true, a_p_this->receive_callback.p_user_data);
+        }
+    }
 }
 
 void I2C::Interrupt::enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config)
