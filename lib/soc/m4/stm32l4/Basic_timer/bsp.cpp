@@ -59,15 +59,15 @@ using namespace cml;
 
 void Basic_timer::Interrupt::set_irq_context()
 {
-    cml_assert(nullptr == irq_context[this->p_timer->get_idx()]);
-    irq_context[this->p_timer->get_idx()] = this->p_timer;
+    cml_assert(nullptr == irq_context[this->p_timer->idx]);
+    irq_context[this->p_timer->idx] = this->p_timer;
 }
 
 void Basic_timer::Interrupt::clear_irq_context()
 {
-    cml_assert(nullptr != irq_context[this->p_timer->get_idx()]);
+    cml_assert(nullptr != irq_context[this->p_timer->idx]);
 
-    irq_context[this->p_timer->get_idx()] = nullptr;
+    irq_context[this->p_timer->idx] = nullptr;
 }
 
 template<> void rcc<Basic_timer, 6>::enable(bool a_enable_in_lp)
