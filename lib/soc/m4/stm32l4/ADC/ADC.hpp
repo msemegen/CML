@@ -146,7 +146,7 @@ public:
         Sampling_time sampling_time = cml::various::get_enum_incorrect_value<Sampling_time>();
     };
 
-    class Polling
+    class Polling : private cml::Non_copyable
     {
     public:
         template<Mode mode>
@@ -164,7 +164,7 @@ public:
         ADC* p_ADC;
         friend ADC;
     };
-    class Interrupt
+    class Interrupt : private cml::Non_copyable
     {
     public:
         struct Read_callback

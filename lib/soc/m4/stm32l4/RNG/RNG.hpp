@@ -36,7 +36,7 @@ namespace stm32l4 {
 class RNG : private cml::Non_copyable
 {
 public:
-    class Polling
+    class Polling : private cml::Non_copyable
     {
     public:
         bool get_value(std::uint32_t* a_p_value, cml::Milliseconds a_timeout);

@@ -102,7 +102,7 @@ public:
         Parity parity           = cml::various::get_enum_incorrect_value<Parity>();
     };
 
-    class Polling
+    class Polling : private cml::Non_copyable
     {
     public:
         struct Result
@@ -121,7 +121,7 @@ public:
         USART* p_USART = nullptr;
         friend class USART;
     };
-    class Interrupt
+    class Interrupt : private cml::Non_copyable
     {
     public:
         struct Transmit_callback

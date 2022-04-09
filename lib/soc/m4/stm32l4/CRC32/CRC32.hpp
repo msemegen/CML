@@ -64,11 +64,6 @@ public:
 
     std::uint32_t calculate(const std::uint8_t* a_p_data, std::uint32_t a_data_size);
 
-    std::uint32_t get_idx()
-    {
-        return this->idx;
-    }
-
     bool is_enabled() const
     {
         return this->enabled;

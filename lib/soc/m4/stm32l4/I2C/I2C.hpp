@@ -29,10 +29,7 @@
 namespace soc {
 namespace m4 {
 namespace stm32l4 {
-class I2C : private cml::Non_constructible
-{
-};
-class I2C_master
+class I2C : private cml::Non_copyable
 {
 public:
     enum class Event_flag : std::uint32_t
@@ -45,6 +42,105 @@ public:
         nack             = 0x10,
     };
 
+    class Interrupt : private cml::Non_copyable
+    {
+    public:
+        struct Transmit_callback
+        {
+            using Function = void (*)(volatile std::uint32_t* a_p_data, bool a_stop, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+        struct Receive_callback
+        {
+            using Function = void (*)(std::uint8_t a_data, bool a_stop, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+        struct Event_callback
+        {
+            using Function = void (*)(Event_flag a_flag, void* a_p_user_data);
+
+            Function function = nullptr;
+            void* p_user_data = nullptr;
+        };
+
+        Interrupt()          = default;
+        virtual ~Interrupt() = default;
+
+        void enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config);
+
+        void event_listening_start(const Event_callback& a_callback);
+        void event_listening_stop();
+
+        bool is_enabled() const
+        {
+            return 0 != NVIC_GetEnableIRQ(this->ev_irqn) && 0 != NVIC_GetEnableIRQ(this->er_irqn);
+        }
+
+    protected:
+        Interrupt(I2C* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
+            : p_registers(*a_p_I2C)
+            , idx(a_p_I2C->idx)
+            , ev_irqn(a_ev_irqn)
+            , er_irqn(a_er_irqn)
+        {
+        }
+
+        void set_irq_context();
+        void clear_irq_context();
+
+        I2C_TypeDef* p_registers = nullptr;
+        std::uint32_t idx        = std::numeric_limits<decltype(this->idx)>::max();
+
+        IRQn_Type ev_irqn = static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max());
+        IRQn_Type er_irqn = static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max());
+
+        Transmit_callback transmit_callback;
+        Receive_callback receive_callback;
+        Event_callback event_callback;
+    };
+
+    I2C(I2C&&)   = default;
+    I2C& operator=(I2C&&) = default;
+
+    I2C()
+        : idx(std::numeric_limits<decltype(this->idx)>::max())
+        , p_registers(nullptr)
+    {
+    }
+
+    virtual ~I2C() = default;
+
+    operator I2C_TypeDef*()
+    {
+        return this->p_registers;
+    }
+
+    operator const I2C_TypeDef*() const
+    {
+        return this->p_registers;
+    }
+
+protected:
+    I2C(std::size_t a_idx, I2C_TypeDef* a_p_registers, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
+        : idx(a_idx)
+        , p_registers(a_p_registers)
+    {
+    }
+
+    std::uint32_t idx;
+    I2C_TypeDef* p_registers;
+
+    friend void I2C_interrupt_handler(I2C::Interrupt* a_p_this);
+};
+void I2C_interrupt_handler(I2C::Interrupt* a_p_this);
+
+class I2C_master : public I2C
+{
+public:
     struct Enable_config
     {
         enum class Analog_filter : std::uint32_t
@@ -71,7 +167,7 @@ public:
         std::uint32_t timings       = 0;
     };
 
-    class Polling
+    class Polling : private cml::Non_copyable
     {
     public:
         struct Result
@@ -92,45 +188,17 @@ public:
                        std::size_t a_data_size_in_bytes,
                        cml::Milliseconds a_timeout);
 
-        bool is_connected(std::uint8_t a_slave_address);
-        bool is_connected(std::uint8_t a_slave_address, cml::Milliseconds a_timeout);
+        bool is_slave_connected(std::uint8_t a_slave_address);
+        bool is_slave_connected(std::uint8_t a_slave_address, cml::Milliseconds a_timeout);
 
     private:
         I2C_master* p_I2C = nullptr;
         friend class I2C_master;
     };
-    class Interrupt
+    class Interrupt : public I2C::Interrupt
     {
     public:
-        struct Transmit_callback
-        {
-            using Function = void (*)(volatile std::uint32_t* a_p_data, bool a_stop, void* a_p_user_data);
-
-            Function function = nullptr;
-            void* p_user_data = nullptr;
-        };
-        struct Receive_callback
-        {
-            using Function = void (*)(std::uint8_t a_data, bool a_stop, void* a_p_user_data);
-
-            Function function = nullptr;
-            void* p_user_data = nullptr;
-        };
-        struct Event_callback
-        {
-            using Function = void (*)(Event_flag a_flag, void* a_p_user_data);
-
-            Function function = nullptr;
-            void* p_user_data = nullptr;
-        };
-        struct Slave_discovery_callback
-        {
-            using Function = void (*)(void* a_p_user_data);
-
-            Function function = nullptr;
-            void* p_user_data = nullptr;
-        };
-
+        Interrupt() = default;
         ~Interrupt()
         {
             if (true == this->is_enabled())
@@ -139,43 +207,25 @@ public:
             }
         }
 
-        void enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config);
         void disable();
 
-        void transmit_start(std::uint8_t a_slave_address, const Transmit_callback& a_callback);
+        void transmit_start(std::uint8_t a_slave_address,
+                            std::size_t a_data_length_in_bytes,
+                            const Transmit_callback& a_callback);
         void transmit_stop();
 
-        void receive_start(std::uint8_t a_slave_address, const Receive_callback& a_callback);
+        void receive_start(std::uint8_t a_slave_address,
+                           std::size_t a_data_length_in_bytes,
+                           const Receive_callback& a_callback);
         void receive_stop();
-
-        void event_listening_start(std::uint8_t a_slave_address, const Event_callback& a_callback);
-        void event_listening_stop();
-
-        void slave_discovery_start(std::uint8_t a_slave_address, const Slave_discovery_callback& a_callback);
-        void slave_discovery_stop();
-
-        bool is_enabled() const
-        {
-            return 0 != NVIC_GetEnableIRQ(this->p_I2C->ev_irqn) && 0 != NVIC_GetEnableIRQ(this->p_I2C->er_irqn);
-        }
-
-    private:
-        void set_irq_context();
-        void clear_irq_context();
-
-        I2C_master* p_I2C = nullptr;
-        friend class I2C_master;
     };
 
     I2C_master(I2C_master&&) = default;
     I2C_master& operator=(I2C_master&&) = default;
 
     I2C_master()
-        : idx(std::numeric_limits<decltype(this->idx)>::max())
-        , p_registers(nullptr)
-        , ev_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
-        , er_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
     {
+        polling.p_I2C = nullptr;
     }
 
     ~I2C_master()
@@ -199,16 +249,6 @@ public:
         return std::numeric_limits<decltype(this->idx)>::max() != this->idx && nullptr != this->p_registers;
     }
 
-    operator I2C_TypeDef*()
-    {
-        return this->p_registers;
-    }
-
-    operator const I2C_TypeDef*() const
-    {
-        return this->p_registers;
-    }
-
     Polling polling;
     Interrupt interrupt;
 
@@ -216,29 +256,16 @@ public:
 
 private:
     I2C_master(std::size_t a_idx, I2C_TypeDef* a_p_registers, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
-        : idx(a_idx)
-        , p_registers(a_p_registers)
-        , ev_irqn(a_ev_irqn)
-        , er_irqn(a_er_irqn)
+        : I2C(a_idx, a_p_registers, a_er_irqn, a_er_irqn)
     {
-        polling.p_I2C   = this;
-        interrupt.p_I2C = this;
+        polling.p_I2C = this;
     }
-
-    std::uint32_t idx;
-    I2C_TypeDef* p_registers;
 
     Enable_config enable_config;
 
-    IRQn_Type ev_irqn;
-    IRQn_Type er_irqn;
-    Interrupt::Transmit_callback transmit_callback;
-    Interrupt::Receive_callback receive_callback;
-    Interrupt::Event_callback event_callback;
-
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
-class I2C_slave
+class I2C_slave : public I2C
 {
 public:
     enum class Event_flag : std::uint32_t
@@ -278,7 +305,7 @@ public:
         std::uint16_t address       = 0;
     };
 
-    class Polling
+    class Polling : private cml::Non_copyable
     {
     public:
         struct Result
@@ -297,31 +324,10 @@ public:
         I2C_slave* p_I2C = nullptr;
         friend class I2C_slave;
     };
-    class Interrupt
+    class Interrupt : public I2C::Interrupt
     {
     public:
-        struct Transmit_callback
-        {
-            using Function = void (*)(volatile std::uint32_t* a_p_data, bool a_stop, void* a_p_user_data);
-
-            Function function = nullptr;
-            void* p_user_data = nullptr;
-        };
-        struct Receive_callback
-        {
-            using Function = void (*)(std::uint8_t a_data, bool a_stop, void* a_p_user_data);
-
-            Function function = nullptr;
-            void* p_user_data = nullptr;
-        };
-        struct Event_callback
-        {
-            using Function = void (*)(Event_flag a_flag, void* a_p_user_data);
-
-            Function function = nullptr;
-            void* p_user_data = nullptr;
-        };
-
+        Interrupt() = default;
         ~Interrupt()
         {
             if (true == this->is_enabled())
@@ -330,7 +336,6 @@ public:
             }
         }
 
-        void enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config);
         void disable();
 
         void transmit_start(const Transmit_callback& a_callback);
@@ -338,33 +343,12 @@ public:
 
         void receive_start(const Receive_callback& a_callback);
         void receive_stop();
-
-        void event_listening_start(const Event_callback& a_callback);
-        void event_listening_stop();
-
-        bool is_enabled() const
-        {
-            return 0 != NVIC_GetEnableIRQ(this->p_I2C->ev_irqn) && 0 != NVIC_GetEnableIRQ(this->p_I2C->er_irqn);
-        }
-
-    private:
-        void set_irq_context();
-        void clear_irq_context();
-
-        I2C_slave* p_I2C = nullptr;
-        friend class I2C_slave;
     };
 
     I2C_slave(I2C_slave&&) = default;
     I2C_slave& operator=(I2C_slave&&) = default;
 
-    I2C_slave()
-        : idx(std::numeric_limits<decltype(this->idx)>::max())
-        , p_registers(nullptr)
-        , ev_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
-        , er_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
-    {
-    }
+    I2C_slave() {}
 
     ~I2C_slave()
     {
@@ -404,25 +388,12 @@ public:
 
 private:
     I2C_slave(std::size_t a_idx, I2C_TypeDef* a_p_registers, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
-        : idx(a_idx)
-        , p_registers(a_p_registers)
-        , ev_irqn(a_ev_irqn)
-        , er_irqn(a_er_irqn)
+        : I2C(a_idx, a_p_registers, a_ev_irqn, a_er_irqn)
     {
-        polling.p_I2C   = this;
-        interrupt.p_I2C = this;
+        polling.p_I2C = this;
     }
 
-    std::uint32_t idx;
-    I2C_TypeDef* p_registers;
-
     Enable_config enable_config;
-
-    IRQn_Type ev_irqn;
-    IRQn_Type er_irqn;
-    Interrupt::Transmit_callback transmit_callback;
-    Interrupt::Receive_callback receive_callback;
-    Interrupt::Event_callback event_callback;
 
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
