@@ -348,7 +348,10 @@ public:
     I2C_slave(I2C_slave&&) = default;
     I2C_slave& operator=(I2C_slave&&) = default;
 
-    I2C_slave() {}
+    I2C_slave()
+    {
+        polling.p_I2C = nullptr;
+    }
 
     ~I2C_slave()
     {
