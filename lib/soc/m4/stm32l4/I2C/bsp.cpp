@@ -21,15 +21,15 @@ using namespace cml;
 using namespace soc::m4::stm32l4;
 
 #if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && (!defined(SOC_I2C2_PRESENT) && !defined(SOC_I2C4_PRESENT))
-I2C::Interrupt* irq_context[2] = { nullptr, nullptr };
+I2C* irq_context[2] = { nullptr, nullptr };
 #endif
 #if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) &&    \
     ((!defined(SOC_I2C2_PRESENT) && defined(SOC_I2C4_PRESENT) || \
       (defined(SOC_I2C2_PRESENT) && !defined(SOC_I2C4_PRESENT))))
-I2C::Interrupt* irq_context[3] = { nullptr, nullptr, nullptr };
+I2C* irq_context[3] = { nullptr, nullptr, nullptr };
 #endif
 #if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && defined(SOC_I2C2_PRESENT) && defined(SOC_I2C4_PRESENT)
-I2C::Interrupt* irq_context[4] = { nullptr, nullptr, nullptr, nullptr };
+I2C* irq_context[4] = { nullptr, nullptr, nullptr, nullptr };
 #endif
 } // namespace
 
@@ -92,16 +92,16 @@ using namespace cml;
 
 void I2C::Interrupt::set_irq_context()
 {
-    cml_assert(nullptr == irq_context[this->idx]);
+    cml_assert(nullptr == irq_context[this->p_I2C->idx]);
     
-    irq_context[this->idx] = this;
+    irq_context[this->p_I2C->idx] = this->p_I2C;
 }
 
 void I2C::Interrupt::clear_irq_context()
 {
-    cml_assert(nullptr != irq_context[this->idx]);
+    cml_assert(nullptr != irq_context[this->p_I2C->idx]);
 
-    irq_context[this->idx] = nullptr;
+    irq_context[this->p_I2C->idx] = nullptr;
 }
 
 #if defined(SOC_I2C1_PRESENT)

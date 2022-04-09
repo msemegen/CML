@@ -62,7 +62,7 @@ namespace stm32l4 {
 using namespace cml;
 using namespace cml::utils;
 
-void I2C_interrupt_handler(I2C::Interrupt* a_p_this)
+void I2C_interrupt_handler(I2C* a_p_this)
 {
     const std::uint32_t isr = a_p_this->p_registers->ISR;
     const std::uint32_t cr1 = a_p_this->p_registers->CR1;
@@ -129,20 +129,20 @@ void I2C::Interrupt::enable(const IRQ_config& a_irq_transceiving_config, const I
 
     if (IRQ_config::Mode::enabled == a_irq_transceiving_config.mode)
     {
-        NVIC_SetPriority(this->ev_irqn,
+        NVIC_SetPriority(this->p_I2C->ev_irqn,
                          NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
                                              a_irq_transceiving_config.preempt_priority,
                                              a_irq_transceiving_config.sub_priority));
-        NVIC_EnableIRQ(this->ev_irqn);
+        NVIC_EnableIRQ(this->p_I2C->ev_irqn);
     }
 
     if (IRQ_config::Mode::enabled == a_irq_event_config.mode)
     {
-        NVIC_SetPriority(this->er_irqn,
+        NVIC_SetPriority(this->p_I2C->er_irqn,
                          NVIC_EncodePriority(NVIC_GetPriorityGrouping(),
                                              a_irq_event_config.preempt_priority,
                                              a_irq_event_config.sub_priority));
-        NVIC_EnableIRQ(this->er_irqn);
+        NVIC_EnableIRQ(this->p_I2C->er_irqn);
     }
 }
 void I2C::Interrupt::event_listening_start(const Event_callback& a_callback)
@@ -151,16 +151,16 @@ void I2C::Interrupt::event_listening_start(const Event_callback& a_callback)
 
     Interrupt_guard guard;
 
-    this->event_callback = a_callback;
-    cml::bit_flag::set(&(this->p_registers->CR1), I2C_CR1_NACKIE | I2C_CR1_ERRIE);
+    this->p_I2C->event_callback = a_callback;
+    cml::bit_flag::set(&(this->p_I2C->p_registers->CR1), I2C_CR1_NACKIE | I2C_CR1_ERRIE);
 }
 void I2C::Interrupt::event_listening_stop()
 {
     Interrupt_guard guard;
 
-    cml::bit_flag::clear(&(this->p_registers->CR1), I2C_CR1_NACKIE | I2C_CR1_ERRIE);
+    cml::bit_flag::clear(&(this->p_I2C->p_registers->CR1), I2C_CR1_NACKIE | I2C_CR1_ERRIE);
 
-    this->event_callback = { nullptr, nullptr };
+    this->p_I2C->event_callback = { nullptr, nullptr };
 }
 
 void I2C_master::enable(const Enable_config& a_enable_config)
@@ -434,8 +434,8 @@ void I2C_master::Interrupt::disable()
     this->receive_stop();
     this->event_listening_stop();
 
-    NVIC_DisableIRQ(this->ev_irqn);
-    NVIC_DisableIRQ(this->er_irqn);
+    NVIC_DisableIRQ(this->p_I2C->ev_irqn);
+    NVIC_DisableIRQ(this->p_I2C->er_irqn);
 
     this->clear_irq_context();
 }
@@ -448,21 +448,21 @@ void I2C_master::Interrupt::transmit_start(std::uint8_t a_slave_address,
 
     Interrupt_guard guard;
 
-    this->transmit_callback = a_callback;
+    this->p_I2C->transmit_callback = a_callback;
 
     const uint32_t address_mask   = static_cast<uint32_t>(a_slave_address) & I2C_CR2_SADD;
     const uint32_t data_size_mask = static_cast<uint32_t>(a_data_length_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    this->p_registers->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND;
-    bit_flag::set(&(this->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
+    this->p_I2C->p_registers->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND;
+    bit_flag::set(&(this->p_I2C->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
 }
 void I2C_master::Interrupt::transmit_stop()
 {
     Interrupt_guard guard;
 
-    bit_flag::clear(&(this->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
+    bit_flag::clear(&(this->p_I2C->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
 
-    this->transmit_callback = { nullptr, nullptr };
+    this->p_I2C->transmit_callback = { nullptr, nullptr };
 }
 void I2C_master::Interrupt::receive_start(std::uint8_t a_slave_address,
                                           std::size_t a_data_length_in_bytes,
@@ -473,22 +473,22 @@ void I2C_master::Interrupt::receive_start(std::uint8_t a_slave_address,
 
     Interrupt_guard guard;
 
-    this->receive_callback = a_callback;
+    this->p_I2C->receive_callback = a_callback;
 
     const uint32_t address_mask   = static_cast<uint32_t>(a_slave_address) & I2C_CR2_SADD;
     const uint32_t data_size_mask = static_cast<uint32_t>(a_data_length_in_bytes) << I2C_CR2_NBYTES_Pos;
 
-    this->p_registers->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
-    bit_flag::set(&(this->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
+    this->p_I2C->p_registers->CR2 = address_mask | data_size_mask | I2C_CR2_START | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN;
+    bit_flag::set(&(this->p_I2C->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
 }
 
 void I2C_master::Interrupt::receive_stop()
 {
     Interrupt_guard guard;
 
-    bit_flag::clear(&(this->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
+    bit_flag::clear(&(this->p_I2C->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE);
 
-    this->receive_callback = { nullptr, nullptr };
+    this->p_I2C->receive_callback = { nullptr, nullptr };
 }
 void I2C_slave::enable(const Enable_config& a_enable_config)
 {
@@ -740,15 +740,47 @@ void I2C_slave::Interrupt::disable()
     this->receive_stop();
     this->event_listening_stop();
 
-    NVIC_DisableIRQ(this->ev_irqn);
-    NVIC_DisableIRQ(this->er_irqn);
+    NVIC_DisableIRQ(this->p_I2C->ev_irqn);
+    NVIC_DisableIRQ(this->p_I2C->er_irqn);
 
     this->clear_irq_context();
 }
-void I2C_slave::Interrupt::transmit_start(const Transmit_callback& a_callback) {}
-void I2C_slave::Interrupt::transmit_stop() {}
-void I2C_slave::Interrupt::receive_start(const Receive_callback& a_callback) {}
-void I2C_slave::Interrupt::receive_stop() {}
+void I2C_slave::Interrupt::transmit_start(const Transmit_callback& a_callback)
+{
+    cml_assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
+
+    this->p_I2C->transmit_callback = a_callback;
+
+    bit_flag::set(&(this->p_I2C->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE | I2C_CR1_ADDRIE | I2C_CR1_NACKIE);
+}
+void I2C_slave::Interrupt::transmit_stop()
+{
+    Interrupt_guard guard;
+
+    bit_flag::clear(&(this->p_I2C->p_registers->CR1), I2C_CR1_TXIE | I2C_CR1_STOPIE | I2C_CR1_ADDRIE | I2C_CR1_NACKIE);
+
+    this->p_I2C->transmit_callback = { nullptr, nullptr };
+}
+void I2C_slave::Interrupt::receive_start(const Receive_callback& a_callback)
+{
+    cml_assert(nullptr != a_callback.function);
+
+    Interrupt_guard guard;
+
+    this->p_I2C->receive_callback = a_callback;
+
+    bit_flag::set(&(this->p_I2C->p_registers->CR1), I2C_CR1_RXIE | I2C_CR1_STOPIE | I2C_CR1_ADDRIE);
+}
+void I2C_slave::Interrupt::receive_stop()
+{
+    Interrupt_guard guard;
+
+    bit_flag::set(&(this->p_I2C->p_registers->CR1), I2C_CR1_RXIE | I2C_CR1_STOPIE | I2C_CR1_ADDRIE);
+
+    this->p_I2C->receive_callback = { nullptr, nullptr };
+}
 } // namespace stm32l4
 } // namespace m4
 } // namespace soc

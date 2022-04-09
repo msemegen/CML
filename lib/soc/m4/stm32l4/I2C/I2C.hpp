@@ -67,7 +67,6 @@ public:
             void* p_user_data = nullptr;
         };
 
-        Interrupt()          = default;
         virtual ~Interrupt() = default;
 
         void enable(const IRQ_config& a_irq_transceiving_config, const IRQ_config& a_irq_event_config);
@@ -77,32 +76,15 @@ public:
 
         bool is_enabled() const
         {
-            return 0 != NVIC_GetEnableIRQ(this->ev_irqn) && 0 != NVIC_GetEnableIRQ(this->er_irqn);
+            return 0 != NVIC_GetEnableIRQ(this->p_I2C->ev_irqn) && 0 != NVIC_GetEnableIRQ(this->p_I2C->er_irqn);
         }
 
     protected:
-        Interrupt(I2C* a_p_I2C, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
-            : p_registers(*a_p_I2C)
-            , idx(a_p_I2C->idx)
-            , ev_irqn(a_ev_irqn)
-            , er_irqn(a_er_irqn)
-        {
-        }
-
         void set_irq_context();
         void clear_irq_context();
 
-        I2C_TypeDef* p_registers = nullptr;
-        std::uint32_t idx        = std::numeric_limits<decltype(this->idx)>::max();
-
-        IRQn_Type ev_irqn = static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max());
-        IRQn_Type er_irqn = static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max());
-
-        Transmit_callback transmit_callback;
-        Receive_callback receive_callback;
-        Event_callback event_callback;
-
-        friend void I2C_interrupt_handler(I2C::Interrupt* a_p_this);
+        I2C* p_I2C = nullptr;
+        friend class I2C;
     };
 
     I2C(I2C&&)   = default;
@@ -111,6 +93,8 @@ public:
     I2C()
         : idx(std::numeric_limits<decltype(this->idx)>::max())
         , p_registers(nullptr)
+        , ev_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
+        , er_irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
     {
     }
 
@@ -130,13 +114,26 @@ protected:
     I2C(std::size_t a_idx, I2C_TypeDef* a_p_registers, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
         : idx(a_idx)
         , p_registers(a_p_registers)
+        , ev_irqn(a_ev_irqn)
+        , er_irqn(a_er_irqn)
     {
     }
 
     std::uint32_t idx;
     I2C_TypeDef* p_registers;
+
+    IRQn_Type ev_irqn;
+    IRQn_Type er_irqn;
+
+    Interrupt::Transmit_callback transmit_callback;
+    Interrupt::Receive_callback receive_callback;
+    Interrupt::Event_callback event_callback;
+
+    friend class I2C_master;
+    friend class I2C_slave;
+    friend void I2C_interrupt_handler(I2C* a_p_this);
 };
-void I2C_interrupt_handler(I2C::Interrupt* a_p_this);
+void I2C_interrupt_handler(I2C* a_p_this);
 
 class I2C_master : public I2C
 {
@@ -198,7 +195,6 @@ public:
     class Interrupt : public I2C::Interrupt
     {
     public:
-        Interrupt() = default;
         ~Interrupt()
         {
             if (true == this->is_enabled())
@@ -218,6 +214,9 @@ public:
                            std::size_t a_data_length_in_bytes,
                            const Receive_callback& a_callback);
         void receive_stop();
+
+    private:
+        friend class I2C_master;
     };
 
     I2C_master(I2C_master&&) = default;
@@ -225,7 +224,8 @@ public:
 
     I2C_master()
     {
-        polling.p_I2C = nullptr;
+        this->polling.p_I2C   = nullptr;
+        this->interrupt.p_I2C = nullptr;
     }
 
     ~I2C_master()
@@ -258,7 +258,8 @@ private:
     I2C_master(std::size_t a_idx, I2C_TypeDef* a_p_registers, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
         : I2C(a_idx, a_p_registers, a_er_irqn, a_er_irqn)
     {
-        polling.p_I2C = this;
+        this->polling.p_I2C = this;
+        this->interrupt.p_I2C = this;
     }
 
     Enable_config enable_config;
@@ -327,7 +328,6 @@ public:
     class Interrupt : public I2C::Interrupt
     {
     public:
-        Interrupt() = default;
         ~Interrupt()
         {
             if (true == this->is_enabled())
@@ -343,6 +343,9 @@ public:
 
         void receive_start(const Receive_callback& a_callback);
         void receive_stop();
+
+    private:
+        friend class I2C_slave;
     };
 
     I2C_slave(I2C_slave&&) = default;
@@ -350,7 +353,8 @@ public:
 
     I2C_slave()
     {
-        polling.p_I2C = nullptr;
+        this->polling.p_I2C   = nullptr;
+        this->interrupt.p_I2C = nullptr;
     }
 
     ~I2C_slave()
@@ -393,7 +397,8 @@ private:
     I2C_slave(std::size_t a_idx, I2C_TypeDef* a_p_registers, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
         : I2C(a_idx, a_p_registers, a_ev_irqn, a_er_irqn)
     {
-        polling.p_I2C = this;
+        this->polling.p_I2C   = this;
+        this->interrupt.p_I2C = this;
     }
 
     Enable_config enable_config;
