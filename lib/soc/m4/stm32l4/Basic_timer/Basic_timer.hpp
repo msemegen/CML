@@ -55,9 +55,6 @@ public:
     class Polling : private cml::Non_copyable
     {
     public:
-        Polling(Polling&&) = default;
-        Polling& operator=(Polling&&) = default;
-
         bool is_overload() const
         {
             return cml::bit::is(static_cast<TIM_TypeDef*>(*(this->p_timer))->CNT, 31u);
@@ -69,18 +66,7 @@ public:
         }
 
     private:
-        Polling()
-            : p_timer(nullptr)
-        {
-        }
-
-        Polling(Basic_timer* a_p_timer)
-            : p_timer(a_p_timer)
-        {
-        }
-
-        Basic_timer* p_timer;
-
+        Basic_timer* p_timer = nullptr;
         friend Basic_timer;
     };
     class Interrupt : private cml::Non_copyable
@@ -93,9 +79,6 @@ public:
             Function function = nullptr;
             void* p_user_data = nullptr;
         };
-
-        Interrupt(Interrupt&&) = default;
-        Interrupt& operator=(Interrupt&&) = default;
 
         ~Interrupt()
         {
@@ -113,38 +96,15 @@ public:
 
         bool is_enabled() const
         {
-            return 0u != NVIC_GetEnableIRQ(this->irqn);
-        }
-
-        bool is_created() const
-        {
-            return nullptr != this->p_timer &&
-                   static_cast<IRQn_Type>(std::numeric_limits<int32_t>::max()) != this->irqn;
+            return 0u != NVIC_GetEnableIRQ(this->p_timer->irqn);
         }
 
     private:
-        Interrupt()
-            : p_timer(nullptr)
-            , irqn(static_cast<IRQn_Type>(std::numeric_limits<int32_t>::max()))
-        {
-        }
-
-        Interrupt(Basic_timer* a_p_timer, IRQn_Type a_irqn)
-            : p_timer(a_p_timer)
-            , irqn(a_irqn)
-        {
-        }
-
         void set_irq_context();
         void clear_irq_context();
 
-        Basic_timer* p_timer;
-        IRQn_Type irqn;
-
-        Callback callback;
-
+        Basic_timer* p_timer = nullptr;
         friend Basic_timer;
-        friend void Basic_timer_interrupt_handler(Basic_timer* a_p_this);
     };
 
     Basic_timer(Basic_timer&&) = default;
@@ -153,6 +113,7 @@ public:
     Basic_timer()
         : idx(std::numeric_limits<decltype(this->idx)>::max())
         , p_registers(nullptr)
+        , irqn(static_cast<IRQn_Type>(std::numeric_limits<std::uint32_t>::max()))
     {
     }
     ~Basic_timer()
@@ -169,11 +130,6 @@ public:
 
     void start();
     void stop();
-
-    std::uint32_t get_idx() const
-    {
-        return this->idx;
-    }
 
     bool is_enabled() const
     {
@@ -200,18 +156,23 @@ public:
 
 private:
     Basic_timer(std::size_t a_idx, TIM_TypeDef* a_p_registers, IRQn_Type a_irqn_type)
-        : polling(this)
-        , interrupt(this, a_irqn_type)
-        , idx(0u)
+        : idx(0u)
         , p_registers(a_p_registers)
     {
+        this->polling.p_timer   = this;
+        this->interrupt.p_timer = this;
     }
 
     const std::uint32_t idx;
     TIM_TypeDef* p_registers;
 
+    IRQn_Type irqn;
+    Interrupt::Callback callback;
+
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
+    friend void Basic_timer_interrupt_handler(Basic_timer* a_p_this);
 };
+void Basic_timer_interrupt_handler(Basic_timer* a_p_this);
 
 template<std::size_t id> class rcc<Basic_timer, id> : private cml::Non_constructible
 {

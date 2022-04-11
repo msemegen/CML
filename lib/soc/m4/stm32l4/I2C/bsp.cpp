@@ -13,9 +13,6 @@
 // std
 #include <type_traits>
 
-// soc
-#include <soc/m4/stm32l4/I2C/Interrupt.hpp>
-
 // cml
 #include <cml/debug/assertion.hpp>
 
@@ -24,15 +21,15 @@ using namespace cml;
 using namespace soc::m4::stm32l4;
 
 #if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && (!defined(SOC_I2C2_PRESENT) && !defined(SOC_I2C4_PRESENT))
-Interrupt<I2C>* irq_context[2] = { nullptr, nullptr };
+I2C* irq_context[2] = { nullptr, nullptr };
 #endif
 #if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) &&    \
     ((!defined(SOC_I2C2_PRESENT) && defined(SOC_I2C4_PRESENT) || \
       (defined(SOC_I2C2_PRESENT) && !defined(SOC_I2C4_PRESENT))))
-Interrupt<I2C>* irq_context[3] = { nullptr, nullptr, nullptr };
+I2C* irq_context[3] = { nullptr, nullptr, nullptr };
 #endif
 #if defined(SOC_I2C1_PRESENT) && defined(SOC_I2C3_PRESENT) && defined(SOC_I2C2_PRESENT) && defined(SOC_I2C4_PRESENT)
-Interrupt<I2C>* irq_context[4] = { nullptr, nullptr, nullptr, nullptr };
+I2C* irq_context[4] = { nullptr, nullptr, nullptr, nullptr };
 #endif
 } // namespace
 
@@ -93,32 +90,18 @@ namespace m4 {
 namespace stm32l4 {
 using namespace cml;
 
-void Interrupt<I2C_master>::set_irq_context()
+void I2C::Interrupt::set_irq_context()
 {
-    //cml_assert(nullptr == irq_context[this->get_handle()->idx]);
-    //
-    //irq_context[this->get_handle()->idx] = this;
+    cml_assert(nullptr == irq_context[this->p_I2C->idx]);
+    
+    irq_context[this->p_I2C->idx] = this->p_I2C;
 }
 
-void Interrupt<I2C_master>::clear_irq_context()
+void I2C::Interrupt::clear_irq_context()
 {
-    //cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
-    //
-    //irq_context[this->get_handle()->idx] = nullptr;
-}
+    cml_assert(nullptr != irq_context[this->p_I2C->idx]);
 
-void Interrupt<I2C_slave>::set_irq_context()
-{
-    //cml_assert(nullptr == irq_context[this->get_handle()->get_idx()]);
-
-    //irq_context[this->get_handle()->get_idx()] = this;
-}
-
-void Interrupt<I2C_slave>::clear_irq_context()
-{
-    //cml_assert(nullptr != irq_context[this->get_handle()->get_idx()]);
-
-    //irq_context[this->get_handle()->get_idx()] = nullptr;
+    irq_context[this->p_I2C->idx] = nullptr;
 }
 
 #if defined(SOC_I2C1_PRESENT)

@@ -25,7 +25,7 @@ using namespace cml;
 
 void Basic_timer_interrupt_handler(Basic_timer* a_p_this)
 {
-    a_p_this->interrupt.callback.function(a_p_this, a_p_this->interrupt.callback.p_user_data);
+    a_p_this->callback.function(a_p_this, a_p_this->callback.p_user_data);
 
     static_cast<TIM_TypeDef*>(*(a_p_this))->SR = 0;
 }
@@ -68,47 +68,40 @@ void Basic_timer::stop()
 
 void Basic_timer::Interrupt::enable(const IRQ_config& a_irq_config)
 {
-    cml_assert(true == this->is_created());
-
     this->set_irq_context();
 
     NVIC_SetPriority(
-        this->irqn,
+        this->p_timer->irqn,
         NVIC_EncodePriority(NVIC_GetPriorityGrouping(), a_irq_config.preempt_priority, a_irq_config.sub_priority));
-    NVIC_EnableIRQ(this->irqn);
+    NVIC_EnableIRQ(this->p_timer->irqn);
 }
 
 void Basic_timer::Interrupt::disable()
 {
-    cml_assert(true == this->is_created());
-
-    NVIC_DisableIRQ(this->irqn);
-
     this->unregister_callback();
+
+    NVIC_DisableIRQ(this->p_timer->irqn);
+
     this->clear_irq_context();
 }
 
 void Basic_timer::Interrupt::register_callback(const Callback& a_callback)
 {
-    cml_assert(true == this->is_created());
-
     cml_assert(nullptr != a_callback.function);
 
     Interrupt_guard guard;
 
-    this->callback                                    = a_callback;
+    this->p_timer->callback                           = a_callback;
     static_cast<TIM_TypeDef*>(*(this->p_timer))->DIER = TIM_DIER_UIE;
 }
 
 void Basic_timer::Interrupt::unregister_callback()
 {
-    cml_assert(true == this->is_created());
-
     Interrupt_guard guard;
 
     static_cast<TIM_TypeDef*>(*(this->p_timer))->DIER = 0x0u;
 
-    this->callback = { nullptr, nullptr };
+    this->p_timer->callback = { nullptr, nullptr };
 }
 } // namespace stm32l4
 } // namespace m4
