@@ -261,6 +261,17 @@ std::uint32_t rcc<mcu>::HSI16::get_frequency_Hz()
     return 0u;
 }
 
+void rcc<mcu>::HSI48::enable(rcc<mcu>::HSI48::Frequency)
+{
+    bit_flag::set(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, RCC_CRRCR_HSI48ON);
+    wait_until::all_bits(&(RCC->CRRCR), RCC_CRRCR_HSI48RDY, false);
+}
+void rcc<mcu>::HSI16::disable()
+{
+    bit_flag::clear(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
+    wait_until::all_bits(&(RCC->CRRCR), RCC_CRRCR_HSI48RDY, true);
+}
+
 #if defined(SOC_PLLSAI_PRESENT)
 template<> void rcc<mcu>::PLL::enable<rcc<mcu>::MSI>(M a_M, const RQP a_RQP, const RQPSAI1& a_RQPSAI1)
 {
@@ -312,15 +323,6 @@ void rcc<mcu>::LSI::disable()
 {
     bit_flag::clear(&(RCC->CSR), RCC_CSR_LSION);
     wait_until::all_bits(&(RCC->CSR), RCC_CSR_LSIRDY, true);
-}
-std::uint32_t rcc<mcu>::LSI::get_frequency_Hz()
-{
-    if (true == is_enabled())
-    {
-        return 32_kHz;
-    }
-
-    return 0u;
 }
 
 template<> void rcc<mcu>::CLK48_mux::set_source<rcc<mcu>::HSI48>()
@@ -376,13 +378,14 @@ std::uint32_t rcc<mcu>::CLK48_mux::get_frequency_Hz()
 
     return 0;
 }
+
 template<> void rcc<mcu>::set_SYSCLK_source<rcc<mcu>::MSI>(const Bus_prescalers& a_prescalers)
 {
     cml_assert(true == MSI::is_enabled());
 
     ::set_SYSCLK_source(RCC_CFGR_SW_MSI, a_prescalers);
 
-    SystemCoreClock = LSI::get_frequency_Hz();
+    SystemCoreClock = MSI::get_frequency_Hz();
 }
 template<> void rcc<mcu>::set_SYSCLK_source<rcc<mcu>::HSI16>(const Bus_prescalers& a_prescalers)
 {

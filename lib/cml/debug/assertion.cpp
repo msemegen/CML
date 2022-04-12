@@ -8,24 +8,27 @@
 // this
 #include <cml/debug/assertion.hpp>
 
-#if defined(M4)
 // soc
+#if defined(M4)
 #include <cml/hal/mcu.hpp>
 #endif
 
 namespace {
 using namespace cml::debug;
-#if defined(M4)
-using namespace cml::hal;
-#endif
 
 assertion::Halt_hadler halt;
 assertion::Print_handler print;
+#if defined(M4)
 assertion::Trap_enter_mode trap_enter_mode;
+#endif
 } // namespace
 
 namespace cml {
 namespace debug {
+#if defined(M4)
+using namespace cml::hal;
+#endif
+
 void assertion::enable(const Halt_hadler& a_halt,
                        const Print_handler& a_print
 #if defined(M4)

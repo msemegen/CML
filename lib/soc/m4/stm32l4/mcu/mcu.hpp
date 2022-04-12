@@ -237,17 +237,41 @@ public:
             return cml::bit_flag::is(RCC->CR, RCC_CR_HSION);
         }
 
-        static std::uint32_t get_frequency_Hz();
+        static std::uint32_t get_frequency_Hz()
+        {
+            if (true == is_enabled())
+            {
+                return 16_MHz;
+            }
+
+            return 0u;
+        }
     };
     class HSI48 : private cml::Non_constructible
     {
     public:
+        enum class Frequency : std::uint32_t
+        {
+            _48_MHz
+        };
+
+        static void enable(Frequency a_frequency);
+        static void disable();
+
         static bool is_enabled()
         {
-            return false;
+            return cml::bit_flag::is(RCC->CRRCR, RCC_CRRCR_HSI48ON);
         }
 
-        static std::uint32_t get_frequency_Hz();
+        static std::uint32_t get_frequency_Hz()
+        {
+            if (true == is_enabled())
+            {
+                return 48_MHz;
+            }
+
+            return 0u;
+        }
     };
     class PLL : private cml::Non_constructible
     {
@@ -405,7 +429,15 @@ public:
             return cml::bit_flag::is(RCC->CSR, RCC_CSR_LSION);
         }
 
-        static std::uint32_t get_frequency_Hz();
+        static std::uint32_t get_frequency_Hz()
+        {
+            if (true == is_enabled())
+            {
+                return 32_kHz;
+            }
+
+            return 0u;
+        }
     };
     class CLK48_mux : private cml::Non_constructible
     {
