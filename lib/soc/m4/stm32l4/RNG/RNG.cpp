@@ -79,8 +79,8 @@ bool RNG::enable(Milliseconds a_timeout)
 
     if (true == ret)
     {
-        ret = wait_until::all_bits(&(RNG_T->SR), RNG_SR_SECS, true, start, a_timeout) &&
-              wait_until::all_bits(&(RNG_T->SR), RNG_SR_CECS, true, start, a_timeout);
+        ret = wait_until::all_bits(RNG_T->SR, RNG_SR_SECS, true, start, a_timeout) &&
+              wait_until::all_bits(RNG_T->SR, RNG_SR_CECS, true, start, a_timeout);
     }
 
     return ret;
@@ -102,7 +102,7 @@ bool RNG::Polling::get_value(std::uint32_t* a_p_value, Milliseconds a_timeout)
 
     cml_assert(a_timeout > 0_ms);
 
-    bool ret = wait_until::all_bits(&(RNG_T->SR), RNG_SR_DRDY, false, tick_counter::get(), a_timeout);
+    bool ret = wait_until::all_bits(RNG_T->SR, RNG_SR_DRDY, false, tick_counter::get(), a_timeout);
 
     if (true == ret)
     {

@@ -120,7 +120,7 @@ public:
     static void set_latency(Latency a_latency)
     {
         cml::bit_flag::set(&(FLASH->ACR), FLASH_ACR_LATENCY, static_cast<std::uint32_t>(a_latency));
-        cml::utils::wait_until::all_bits(&(FLASH->ACR), static_cast<std::uint32_t>(a_latency), false);
+        cml::utils::wait_until::all_bits(FLASH->ACR, static_cast<std::uint32_t>(a_latency), false);
     }
 
     static Latency get_latency()

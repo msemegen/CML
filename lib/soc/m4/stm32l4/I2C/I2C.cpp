@@ -187,8 +187,6 @@ void I2C_master::enable(const Enable_config& a_enable_config)
     {
         bit::set(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
-
-    this->enable_config = a_enable_config;
 }
 void I2C_master::disable()
 {
@@ -514,8 +512,6 @@ void I2C_slave::enable(const Enable_config& a_enable_config)
     {
         bit::set(&(SYSCFG->CFGR1), SYSCFG_CFGR1_I2C1_FMP_Pos + this->idx);
     }
-
-    this->enable_config = a_enable_config;
 }
 void I2C_slave::disable()
 {

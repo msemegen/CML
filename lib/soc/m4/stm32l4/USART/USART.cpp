@@ -187,7 +187,7 @@ bool USART::enable(const Enable_config& a_enable_config, const Frame_format& a_f
         (true == bit_flag::is(this->p_registers->CR1, USART_CR1_TE) ? USART_ISR_TEACK : 0);
 
     bool ret = wait_until::all_bits(
-        &(this->p_registers->ISR), wait_flag, false, start, a_timeout - (tick_counter::get() - start));
+        this->p_registers->ISR, wait_flag, false, start, a_timeout - (tick_counter::get() - start));
 
     if (true == ret)
     {

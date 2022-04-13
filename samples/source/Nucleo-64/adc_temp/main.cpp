@@ -52,7 +52,7 @@ int main()
     };
 
     internal_flash::set_latency(internal_flash::Latency::_4);
-    pwr::set_voltage_scaling(pwr::Voltage_scaling::_1);
+    pwr::set(pwr::Voltage_scaling::_1);
 
     rcc<mcu>::HSI16::enable(rcc<mcu>::HSI16::Frequency::_16_MHz);
     rcc<mcu>::set_SYSCLK_source<rcc<mcu>::HSI16>(
@@ -66,7 +66,7 @@ int main()
     tick_counter::enable(&systick, { IRQ_config::Mode::enabled, 0x1u, 0x1u });
     assertion::enable({ assert_halt, nullptr }, { assert_print, nullptr }, assertion::Trap_enter_mode::enabled);
 
-    mcu::set_DWT_mode(mcu::DWT_mode::disabled);
+    mcu::set_DWT_mode(mcu::DWT_mode::enabled);
 
     GPIO gpio_port_a = Peripheral<GPIO, 1>::create();
     rcc<GPIO, 1>::enable(false);

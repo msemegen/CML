@@ -239,6 +239,11 @@ public:
     void enable(const Enable_config& a_enable_config);
     void disable();
 
+    Enable_config get_Enable_config() const
+    {
+        return {};
+    }
+
     bool is_enabled() const
     {
         return cml::bit_flag::is(this->p_registers->CR1, I2C_CR1_PE);
@@ -252,17 +257,13 @@ public:
     Polling polling;
     Interrupt interrupt;
 
-    const Enable_config* const p_enable_config = &(this->enable_config);
-
 private:
     I2C_master(std::size_t a_idx, I2C_TypeDef* a_p_registers, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
         : I2C(a_idx, a_p_registers, a_er_irqn, a_er_irqn)
     {
-        this->polling.p_I2C = this;
+        this->polling.p_I2C   = this;
         this->interrupt.p_I2C = this;
     }
-
-    Enable_config enable_config;
 
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };
@@ -368,6 +369,11 @@ public:
     void enable(const Enable_config& a_config);
     void disable();
 
+    Enable_config get_Enable_config() const
+    {
+        return {};
+    }
+
     bool is_enabled() const
     {
         return cml::bit_flag::is(this->p_registers->CR1, I2C_CR1_PE);
@@ -391,8 +397,6 @@ public:
     Polling polling;
     Interrupt interrupt;
 
-    const Enable_config* const p_enable_config = &(this->enable_config);
-
 private:
     I2C_slave(std::size_t a_idx, I2C_TypeDef* a_p_registers, IRQn_Type a_ev_irqn, IRQn_Type a_er_irqn)
         : I2C(a_idx, a_p_registers, a_ev_irqn, a_er_irqn)
@@ -400,8 +404,6 @@ private:
         this->polling.p_I2C   = this;
         this->interrupt.p_I2C = this;
     }
-
-    Enable_config enable_config;
 
     template<typename Periph_t, std::size_t id> friend class soc::Peripheral;
 };

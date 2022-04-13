@@ -22,9 +22,9 @@ using namespace soc::m4;
 using namespace soc::m4::stm32l4;
 using namespace cml::utils;
 
-constexpr std::uint32_t bus_dividers[] = { 1u, 2u, 4u, 8u, 16u, 64u, 128u, 256u, 512u };
-constexpr std::uint32_t msi_frequency_hz_lut[] { 100_kHz, 200_kHz, 400_kHz, 800_kHz, 1_MHz,  2_MHz,
-                                                 4_MHz,   8_MHz,   16_MHz,  24_MHz,  32_MHz, 48_MHz };
+constexpr std::uint32_t bus_dividers[]         = { 1u, 2u, 4u, 8u, 16u, 64u, 128u, 256u, 512u };
+constexpr std::uint32_t msi_frequency_hz_lut[] = { 100_kHz, 200_kHz, 400_kHz, 800_kHz, 1_MHz,  2_MHz,
+                                                   4_MHz,   8_MHz,   16_MHz,  24_MHz,  32_MHz, 48_MHz };
 
 template<typename Config_t>
 uint32_t get_PLL_register_config_from_factor(const Config_t& a_config, uint32_t a_enable_flag)
@@ -73,7 +73,7 @@ void enable_PLL(std::uint32_t a_source,
                    get_PLL_register_config_from_factor(a_rqp.r, RCC_PLLCFGR_PLLREN);
 
     bit_flag::set(&(RCC->CR), RCC_CR_PLLON);
-    wait_until::all_bits(&(RCC->CR), RCC_CR_PLLRDY, false);
+    wait_until::all_bits(RCC->CR, RCC_CR_PLLRDY, false);
 
     RCC->PLLSAI1CFGR = (a_rqp_sai1.n << RCC_PLLSAI1CFGR_PLLSAI1N_Pos) |
                        get_PLLSAI1_register_config_from_factor(a_rqp_sai1.p, RCC_PLLSAI1CFGR_PLLSAI1PEN) |
@@ -81,7 +81,7 @@ void enable_PLL(std::uint32_t a_source,
                        get_PLLSAI1_register_config_from_factor(a_rqp_sai1.r, RCC_PLLSAI1CFGR_PLLSAI1REN);
 
     bit_flag::set(&(RCC->CR), RCC_CR_PLLSAI1ON);
-    wait_until::all_bits(&(RCC->CR), RCC_CR_PLLSAI1RDY, false);
+    wait_until::all_bits(RCC->CR, RCC_CR_PLLSAI1RDY, false);
 }
 #endif
 
@@ -115,7 +115,7 @@ void enable_PLL(std::uint32_t a_source, rcc<mcu>::PLL::M a_m, const rcc<mcu>::PL
                    get_PLL_register_config_from_factor(a_rqp.r, RCC_PLLCFGR_PLLREN);
 
     bit_flag::set(&(RCC->CR), RCC_CR_PLLON);
-    wait_until::all_bits(&(RCC->CR), RCC_CR_PLLRDY, false);
+    wait_until::all_bits(RCC->CR, RCC_CR_PLLRDY, false);
 }
 #endif
 
@@ -197,11 +197,12 @@ void set_SYSCLK_source(std::uint32_t a_source, const rcc<mcu>::Bus_prescalers& a
     cml_assert(various::get_enum_incorrect_value<rcc<mcu>::Bus_prescalers::APB2>() != a_prescalers.apb2);
 
     bit_flag::set(&(RCC->CFGR), RCC_CFGR_SW, RCC_CFGR_SW_HSI);
-    wait_until::all_bits(&(RCC->CFGR), RCC_CFGR_SW_HSI << RCC_CFGR_SW_Pos, false);
+    wait_until::all_bits(RCC->CFGR, RCC_CFGR_SW_HSI << RCC_CFGR_SW_Pos, false);
 
-    bit_flag::set(&(RCC->CFGR), RCC_CFGR_HPRE, static_cast<std::uint32_t>(a_prescalers.ahb));
-    bit_flag::set(&(RCC->CFGR), RCC_CFGR_PPRE1, static_cast<std::uint32_t>(a_prescalers.apb1));
-    bit_flag::set(&(RCC->CFGR), RCC_CFGR_PPRE2, static_cast<std::uint32_t>(a_prescalers.apb2));
+    bit_flag::set(&(RCC->CFGR),
+                  RCC_CFGR_HPRE | RCC_CFGR_PPRE1 | RCC_CFGR_PPRE2,
+                  static_cast<std::uint32_t>(a_prescalers.ahb) | static_cast<std::uint32_t>(a_prescalers.apb1) |
+                      static_cast<std::uint32_t>(a_prescalers.apb2));
 }
 } // namespace
 
@@ -214,22 +215,22 @@ using namespace cml::utils;
 void rcc<mcu>::MSI::enable(rcc<mcu>::MSI::Frequency a_frequency)
 {
     bit_flag::clear(&(RCC->CR), RCC_CR_MSION);
-    wait_until::all_bits(&(RCC->CR), RCC_CR_MSIRDY, true);
+    wait_until::all_bits(RCC->CR, RCC_CR_MSIRDY, true);
 
     bit_flag::set(&(RCC->CR), RCC_CR_MSIRANGE, static_cast<std::uint32_t>(a_frequency) << RCC_CR_MSIRANGE_Pos);
     bit_flag::set(&(RCC->CR), RCC_CR_MSION);
 
-    wait_until::all_bits(&(RCC->CR), RCC_CR_MSIRDY, false);
+    wait_until::all_bits(RCC->CR, RCC_CR_MSIRDY, false);
 
     bit_flag::clear(&(RCC->ICSCR), RCC_ICSCR_MSITRIM);
     bit_flag::set(&(RCC->CR), RCC_CR_MSIRGSEL);
 
-    wait_until::all_bits(&(RCC->CR), RCC_CR_MSIRDY, false);
+    wait_until::all_bits(RCC->CR, RCC_CR_MSIRDY, false);
 }
 void rcc<mcu>::MSI::disable()
 {
     bit_flag::clear(&(RCC->CR), RCC_CR_MSION);
-    wait_until::all_bits(&(RCC->CR), RCC_CR_MSIRDY, true);
+    wait_until::all_bits(RCC->CR, RCC_CR_MSIRDY, true);
 }
 std::uint32_t rcc<mcu>::MSI::get_frequency_Hz()
 {
@@ -244,32 +245,23 @@ std::uint32_t rcc<mcu>::MSI::get_frequency_Hz()
 void rcc<mcu>::HSI16::enable(rcc<mcu>::HSI16::Frequency)
 {
     bit_flag::set(&(RCC->CR), RCC_CR_HSION, RCC_CR_HSION);
-    wait_until::all_bits(&(RCC->CR), RCC_CR_HSIRDY, false);
+    wait_until::all_bits(RCC->CR, RCC_CR_HSIRDY, false);
 }
 void rcc<mcu>::HSI16::disable()
 {
     bit_flag::clear(&(RCC->CR), RCC_CR_HSION);
-    wait_until::all_bits(&(RCC->CR), RCC_CR_HSIRDY, true);
-}
-std::uint32_t rcc<mcu>::HSI16::get_frequency_Hz()
-{
-    if (true == is_enabled())
-    {
-        return 16_MHz;
-    }
-
-    return 0u;
+    wait_until::all_bits(RCC->CR, RCC_CR_HSIRDY, true);
 }
 
 void rcc<mcu>::HSI48::enable(rcc<mcu>::HSI48::Frequency)
 {
     bit_flag::set(&(RCC->CRRCR), RCC_CRRCR_HSI48ON, RCC_CRRCR_HSI48ON);
-    wait_until::all_bits(&(RCC->CRRCR), RCC_CRRCR_HSI48RDY, false);
+    wait_until::all_bits(RCC->CRRCR, RCC_CRRCR_HSI48RDY, false);
 }
-void rcc<mcu>::HSI16::disable()
+void rcc<mcu>::HSI48::disable()
 {
     bit_flag::clear(&(RCC->CRRCR), RCC_CRRCR_HSI48ON);
-    wait_until::all_bits(&(RCC->CRRCR), RCC_CRRCR_HSI48RDY, true);
+    wait_until::all_bits(RCC->CRRCR, RCC_CRRCR_HSI48RDY, true);
 }
 
 #if defined(SOC_PLLSAI_PRESENT)
@@ -297,11 +289,11 @@ template<> void rcc<mcu>::PLL::enable<rcc<mcu>::HSI>(M a_m, const RQP a_rqp)
 void rcc<mcu>::PLL::disable()
 {
     bit_flag::clear(&(RCC->CR), RCC_CR_PLLON);
-    wait_until::all_bits(&(RCC->CR), RCC_CR_PLLRDY, true);
+    wait_until::all_bits(RCC->CR, RCC_CR_PLLRDY, true);
 
 #if defined(SOC_PLLSAI_PRESENT)
     bit_flag::clear(&(RCC->CR), RCC_CR_PLLSAI1ON);
-    wait_until::all_bits(&(RCC->CR), RCC_CR_PLLSAI1RDY, true);
+    wait_until::all_bits(RCC->CR, RCC_CR_PLLSAI1RDY, true);
 #endif
 }
 std::uint32_t rcc<mcu>::PLL::get_frequency_Hz()
@@ -317,12 +309,12 @@ std::uint32_t rcc<mcu>::PLL::get_frequency_Hz()
 void rcc<mcu>::LSI::enable(Frequency)
 {
     bit_flag::set(&(RCC->CSR), RCC_CSR_LSION, RCC_CSR_LSION);
-    wait_until::all_bits(&(RCC->CSR), RCC_CSR_LSIRDY, false);
+    wait_until::all_bits(RCC->CSR, RCC_CSR_LSIRDY, false);
 }
 void rcc<mcu>::LSI::disable()
 {
     bit_flag::clear(&(RCC->CSR), RCC_CSR_LSION);
-    wait_until::all_bits(&(RCC->CSR), RCC_CSR_LSIRDY, true);
+    wait_until::all_bits(RCC->CSR, RCC_CSR_LSIRDY, true);
 }
 
 template<> void rcc<mcu>::CLK48_mux::set_source<rcc<mcu>::HSI48>()

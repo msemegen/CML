@@ -22,13 +22,13 @@ namespace cml {
 namespace utils {
 struct wait_until : private cml::Non_constructible
 {
-    template<typename Register_t> static void all_bits(const Register_t* a_p_register, uint32_t a_flag, bool a_status)
+    template<typename Register_t> static void all_bits(const Register_t& a_register, uint32_t a_flag, bool a_status)
     {
-        while (a_status == bit_flag::is(*a_p_register, a_flag))
+        while (a_status == bit_flag::is(a_register, a_flag))
             ;
     }
 
-    template<typename Register_t> static bool all_bits(const Register_t* a_p_register,
+    template<typename Register_t> static bool all_bits(const Register_t &a_register,
                                                        uint32_t a_flag,
                                                        bool a_status,
                                                        Milliseconds a_start,
@@ -40,19 +40,19 @@ struct wait_until : private cml::Non_constructible
         while (true == status && false == timeout)
         {
             timeout = a_timeout <= tick_counter::get() - a_start;
-            status  = bit_flag::is(*a_p_register, a_flag) == a_status;
+            status  = bit_flag::is(a_register, a_flag) == a_status;
         }
 
         return ((false == status) && (false == timeout));
     }
 
-    template<typename Register_t> static void any_bit(const Register_t* a_p_register, uint32_t a_flag, bool a_status)
+    template<typename Register_t> static void any_bit(const Register_t& a_register, uint32_t a_flag, bool a_status)
     {
-        while (a_status == bit::is_any(*a_p_register, a_flag))
+        while (a_status == bit::is_any(a_register, a_flag))
             ;
     }
 
-    template<typename Register_t> static bool any_bit(const Register_t* a_p_register,
+    template<typename Register_t> static bool any_bit(const Register_t& a_register,
                                                       uint32_t a_flag,
                                                       bool a_status,
                                                       Milliseconds a_start,
@@ -64,7 +64,7 @@ struct wait_until : private cml::Non_constructible
         while (true == status && false == timeout)
         {
             timeout = a_timeout <= (tick_counter::get() - a_start);
-            status  = bit::is_any(*a_p_register, a_flag) == a_status;
+            status  = bit::is_any(a_register, a_flag) == a_status;
         }
 
         return ((false == status) && (false == timeout));

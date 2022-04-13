@@ -58,13 +58,12 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
     IWDG_T->KR = control_flags::write_access_enable;
 
     IWDG_T->PR = static_cast<std::uint32_t>(a_prescaler);
-    bool ret   = wait_until::all_bits(&(IWDG_T->SR), IWDG_SR_PVU, true, start, a_timeout);
+    bool ret   = wait_until::all_bits(IWDG_T->SR, IWDG_SR_PVU, true, start, a_timeout);
 
     if (true == ret)
     {
         IWDG_T->RLR = a_reload;
-        ret =
-            wait_until::all_bits(&(IWDG_T->SR), IWDG_SR_RVU, true, start, a_timeout - (tick_counter::get() - start));
+        ret = wait_until::all_bits(IWDG_T->SR, IWDG_SR_RVU, true, start, a_timeout - (tick_counter::get() - start));
     }
 
     if (true == ret)
@@ -72,8 +71,7 @@ bool IWDG::enable(Prescaler a_prescaler, std::uint16_t a_reload, const Window& a
         if (Window::Mode::enabled == a_window.mode)
         {
             IWDG_T->WINR = a_window.value;
-            ret          = wait_until::all_bits(
-                &(IWDG_T->SR), IWDG_SR_WVU, true, start, a_timeout - (tick_counter::get() - start));
+            ret = wait_until::all_bits(IWDG_T->SR, IWDG_SR_WVU, true, start, a_timeout - (tick_counter::get() - start));
         }
         else
         {

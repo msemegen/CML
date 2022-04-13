@@ -52,14 +52,14 @@ namespace stm32l4 {
 using namespace cml;
 using namespace cml::utils;
 
-class Unlock_guard : private cml::Non_copyable
+class Unlock_guard : private Non_copyable
 {
 public:
     Unlock_guard()
     {
-        cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+        wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true);
 
-        if (true == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK))
+        if (true == bit_flag::is(FLASH->CR, FLASH_CR_LOCK))
         {
             Interrupt_guard interrupt_guard;
 
@@ -67,14 +67,14 @@ public:
             FLASH->KEYR = 0xCDEF89ABu;
         }
 
-        this->unlocked = false == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
+        this->unlocked = false == bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
     }
 
-    Unlock_guard(cml::Milliseconds a_start, cml::Milliseconds a_timeout)
+    Unlock_guard(Milliseconds a_start, Milliseconds a_timeout)
     {
-        this->unlocked = cml::utils::wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, a_start, a_timeout);
+        this->unlocked = wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true, a_start, a_timeout);
 
-        if (true == this->unlocked && true == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK))
+        if (true == this->unlocked && true == bit_flag::is(FLASH->CR, FLASH_CR_LOCK))
         {
             Interrupt_guard interrupt_guard;
 
@@ -82,13 +82,13 @@ public:
             FLASH->KEYR = 0xCDEF89ABu;
         }
 
-        this->unlocked = false == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
+        this->unlocked = false == bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
     }
 
     ~Unlock_guard()
     {
-        cml::bit_flag::set(&(FLASH->CR), FLASH_CR_LOCK);
-        this->unlocked = false == cml::bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
+        bit_flag::set(&(FLASH->CR), FLASH_CR_LOCK);
+        this->unlocked = false == bit_flag::is(FLASH->CR, FLASH_CR_LOCK);
     }
 
     bool is_unlocked() const
@@ -100,7 +100,7 @@ private:
     bool unlocked;
 };
 
-class Cache_disabler_guard : private cml::Non_copyable
+class Cache_disabler_guard : private Non_copyable
 {
 public:
     Cache_disabler_guard()
@@ -127,7 +127,7 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
                a_address <= internal_flash::start_address + internal_flash::size_in_bytes);
     cml_assert(nullptr != a_p_data);
     cml_assert(a_size_in_double_words > 0);
-    cml_assert((Mode::fast == a_mode && pwr::Voltage_scaling::_1 == pwr::get_voltage_scaling()) ||
+    cml_assert((Mode::fast == a_mode && pwr::Voltage_scaling::_1 == pwr::get_Voltage_scaling()) ||
                Mode::standard == a_mode);
 
     Unlock_guard guard;
@@ -149,7 +149,7 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
                     *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
                     *(p_address + ret.words * 2u + 1u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x20u);
 
-                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+                    wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true);
 
                     if (true == bit_flag::is(FLASH->SR, FLASH_SR_EOP))
                     {
@@ -170,7 +170,7 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
                     *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
                     *(p_address + ret.words * 2u + 1u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x20u);
 
-                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+                    wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true);
 
                     if (true == bit_flag::is(FLASH->SR, FLASH_SR_EOP))
                     {
@@ -198,7 +198,7 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
                a_address <= internal_flash::start_address + internal_flash::size_in_bytes);
     cml_assert(nullptr != a_p_data);
     cml_assert(a_size_in_double_words > 0);
-    cml_assert((Mode::fast == a_mode && pwr::Voltage_scaling::_1 == pwr::get_voltage_scaling()) ||
+    cml_assert((Mode::fast == a_mode && pwr::Voltage_scaling::_1 == pwr::get_Voltage_scaling()) ||
                Mode::standard == a_mode);
     cml_assert(a_timeout > 0_ms);
 
@@ -225,7 +225,7 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
                     *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
                     *(p_address + ret.words * 2u + 1u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x20u);
 
-                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+                    wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true);
 
                     if (true == bit_flag::is(FLASH->SR, FLASH_SR_EOP))
                     {
@@ -249,7 +249,7 @@ internal_flash::polling::Result internal_flash::polling::write(uint32_t a_addres
                     *(p_address + ret.words * 2u + 0u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x00u);
                     *(p_address + ret.words * 2u + 1u) = static_cast<uint32_t>(a_p_data[ret.words] >> 0x20u);
 
-                    wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+                    wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true);
 
                     if (true == bit_flag::is(FLASH->SR, FLASH_SR_EOP))
                     {
@@ -324,7 +324,7 @@ internal_flash::polling::Result internal_flash::polling::erase_page(uint32_t a_p
 
         bit_flag::set(&(FLASH->CR), FLASH_CR_PNB, (index << FLASH_CR_PNB_Pos));
         bit_flag::set(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
-        wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+        wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true);
 
         bit_flag::clear(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
     }
@@ -332,8 +332,7 @@ internal_flash::polling::Result internal_flash::polling::erase_page(uint32_t a_p
     return { get_status_flag_from_FLASH_SR(), 0 };
 }
 
-internal_flash::polling::Result internal_flash::polling::erase_page(uint32_t a_page_address,
-                                                                    Milliseconds a_timeout)
+internal_flash::polling::Result internal_flash::polling::erase_page(uint32_t a_page_address, Milliseconds a_timeout)
 {
     cml_assert(a_page_address >= internal_flash::start_address &&
                a_page_address <= internal_flash::start_address + internal_flash::size_in_bytes);
@@ -354,7 +353,7 @@ internal_flash::polling::Result internal_flash::polling::erase_page(uint32_t a_p
         bit_flag::set(&(FLASH->CR), FLASH_CR_PNB, (index << FLASH_CR_PNB_Pos));
         bit_flag::set(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
 
-        if (true == wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, timeout_start, a_timeout))
+        if (true == wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true, timeout_start, a_timeout))
         {
             bit_flag::clear(&(FLASH->CR), FLASH_CR_PER | FLASH_CR_STRT);
         }
@@ -375,7 +374,7 @@ internal_flash::polling::Result internal_flash::polling::erase_bank(Bank_id)
         clear_FLASH_SR_errors();
 
         bit_flag::set(&(FLASH->CR), FLASH_CR_MER1 | FLASH_CR_STRT);
-        wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true);
+        wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true);
     }
 
     return { get_status_flag_from_FLASH_SR(), 0 };
@@ -396,7 +395,7 @@ internal_flash::polling::Result internal_flash::polling::erase_bank(Bank_id, Mil
         clear_FLASH_SR_errors();
 
         bit_flag::set(&(FLASH->CR), FLASH_CR_MER1 | FLASH_CR_STRT);
-        wait_until::all_bits(&(FLASH->SR), FLASH_SR_BSY, true, timeout_start, a_timeout);
+        wait_until::all_bits(FLASH->SR, FLASH_SR_BSY, true, timeout_start, a_timeout);
 
         ret.status = get_status_flag_from_FLASH_SR();
     }

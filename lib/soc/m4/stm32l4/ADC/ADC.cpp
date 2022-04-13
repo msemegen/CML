@@ -66,7 +66,7 @@ void polling_read(ADC_TypeDef* a_p_registers,
         }
     }
 
-    wait_until::all_bits(&(a_p_registers->ISR), ADC_ISR_EOS, false);
+    wait_until::all_bits(a_p_registers->ISR, ADC_ISR_EOS, false);
     bit_flag::set(&(a_p_registers->ISR), ADC_ISR_EOS);
 
     bit_flag::set(&(a_p_registers->CR), ADC_CR_ADSTP);
@@ -108,8 +108,8 @@ bool polling_read(ADC_TypeDef* a_p_registers,
         }
     }
 
-    bool ret = wait_until::all_bits(
-        &(a_p_registers->ISR), ADC_ISR_EOS, false, start, a_timeout - (tick_counter::get() - start));
+    bool ret =
+        wait_until::all_bits(a_p_registers->ISR, ADC_ISR_EOS, false, start, a_timeout - (tick_counter::get() - start));
 
     if (true == ret)
     {
@@ -169,7 +169,7 @@ bool ADC::enable(Resolution a_resolution,
     bit_flag::set(&(this->p_registers->CR), ADC_CR_ADCAL);
 
     bool ret = wait_until::all_bits(
-        &(this->p_registers->CR), ADC_CR_ADCAL, true, start, a_timeout - (tick_counter::get() - start));
+        this->p_registers->CR, ADC_CR_ADCAL, true, start, a_timeout - (tick_counter::get() - start));
 
     if (true == ret)
     {
@@ -177,7 +177,7 @@ bool ADC::enable(Resolution a_resolution,
         bit_flag::set(&(this->p_registers->CR), ADC_CR_ADEN);
 
         ret = wait_until::all_bits(
-            &(this->p_registers->ISR), ADC_ISR_ADRDY, false, start, a_timeout - (tick_counter::get() - start));
+            this->p_registers->ISR, ADC_ISR_ADRDY, false, start, a_timeout - (tick_counter::get() - start));
     }
 
     if (true == ret)
@@ -253,7 +253,7 @@ void ADC::disable()
     bit_flag::clear(&(ADC_COMMON_T->CCR), ADC_CCR_TSEN | ADC_CCR_VREFEN | ADC_CCR_VBATEN);
 
     bit_flag::set(&(this->p_registers->CR), ADC_CR_ADDIS);
-    wait_until::all_bits(&(this->p_registers->CR), ADC_CR_ADDIS, true);
+    wait_until::all_bits(this->p_registers->CR, ADC_CR_ADDIS, true);
 
     bit_flag::set(&(this->p_registers->CR), ADC_CR_DEEPPWD);
 }

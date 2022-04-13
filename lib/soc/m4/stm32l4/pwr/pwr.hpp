@@ -35,13 +35,13 @@ public:
         _2 = PWR_CR1_VOS_1,
     };
 
-    static void set_voltage_scaling(Voltage_scaling a_scaling)
+    static void set(Voltage_scaling a_scaling)
     {
         cml::bit_flag::set(&(PWR->CR1), PWR_CR1_VOS, static_cast<std::uint32_t>(a_scaling));
-        cml::utils::wait_until::all_bits(&(PWR->SR2), PWR_SR2_VOSF_Pos, true);
+        cml::utils::wait_until::all_bits(PWR->SR2, PWR_SR2_VOSF_Pos, true);
     }
 
-    static Voltage_scaling get_voltage_scaling()
+    static Voltage_scaling get_Voltage_scaling()
     {
         return static_cast<Voltage_scaling>(cml::bit_flag::get(PWR->CR1, PWR_CR1_VOS));
     }

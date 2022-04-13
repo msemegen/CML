@@ -478,8 +478,8 @@ void GPIO::Interrupt::attach(const GPIO& a_port, std::uint32_t a_pin, Trigger_fl
     std::uint32_t pos                  = ((static_cast<std::uint32_t>(a_pin) % 4u) * 4u);
 
 #ifdef CML_ASSERT_ENABLED
-    const bool f = bit_flag::is(*p_register, (a_port.get_id()) << pos);
-    cml_assert((0u == a_port.get_id() && true == f) || (0u != a_port.get_id() && false == f));
+    const bool f = bit_flag::is(*p_register, (a_port.idx) << pos);
+    cml_assert((0u == a_port.idx && true == f) || (0u != a_port.idx && false == f));
     cml_assert((0u == this->idx && 0u == a_pin) || (1u == this->idx && 1u == a_pin) ||
                (2u == this->idx && 2u == a_pin) || (3u == this->idx && 3u == a_pin) ||
                (4u == this->idx && 4u == a_pin) || (5u == this->idx && (a_pin >= 5u && a_pin <= 9u)) ||
@@ -488,7 +488,7 @@ void GPIO::Interrupt::attach(const GPIO& a_port, std::uint32_t a_pin, Trigger_fl
 
     Interrupt_guard guard;
 
-    bit_flag::set(p_register, 0x3u << pos, a_port.get_id() << pos);
+    bit_flag::set(p_register, 0x3u << pos, a_port.idx << pos);
 
     bit::clear(&(EXTI->RTSR1), a_pin);
     bit::clear(&(EXTI->FTSR1), a_pin);
@@ -540,7 +540,7 @@ void GPIO::Interrupt::deattach(const GPIO& a_port, std::uint32_t a_pin)
     bit::clear(&(EXTI->EMR1), a_pin);
     bit::clear(&(EXTI->IMR1), a_pin);
 
-    bit_flag::clear(&(SYSCFG->EXTICR[a_pin / 4u]), a_port.get_id() << ((static_cast<std::uint32_t>(a_pin) % 4u) * 4u));
+    bit_flag::clear(&(SYSCFG->EXTICR[a_pin / 4u]), a_port.idx << ((static_cast<std::uint32_t>(a_pin) % 4u) * 4u));
 
     callbacks[this->idx] = { nullptr, nullptr };
 }

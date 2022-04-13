@@ -60,7 +60,7 @@ void SPI_master::disable()
         true == bit_flag::is(p_registers->CR1, SPI_CR1_RXONLY))
     {
         bit_flag::clear(&(p_registers->CR1), SPI_CR1_SPE);
-        wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
+        wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
 
         while (true == bit::is_any(p_registers->SR, SPI_SR_FRLVL))
         {
@@ -70,8 +70,8 @@ void SPI_master::disable()
     }
     else
     {
-        wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
-        wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
+        wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
+        wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
 
         bit_flag::clear(&(p_registers->CR1), SPI_CR1_SPE);
 
@@ -119,7 +119,7 @@ void SPI_slave::disable()
         true == bit_flag::is(p_registers->CR1, SPI_CR1_RXONLY))
     {
         bit_flag::clear(&(p_registers->CR1), SPI_CR1_SPE);
-        wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
+        wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
 
         while (true == bit::is_any(p_registers->SR, SPI_SR_FRLVL))
         {
@@ -129,8 +129,8 @@ void SPI_slave::disable()
     }
     else
     {
-        wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
-        wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
+        wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
+        wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
 
         bit_flag::clear(&(p_registers->CR1), SPI_CR1_SPE);
 

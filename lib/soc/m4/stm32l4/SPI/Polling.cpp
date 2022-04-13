@@ -112,7 +112,7 @@ Polling<SPI_master>::transmit(const void* a_p_data, std::size_t a_data_size_in_w
         busy  = bit_flag::is(p_registers->SR, SPI_SR_BSY);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
 
     clear_overrun(p_registers);
 
@@ -184,7 +184,7 @@ Polling<SPI_master>::Result Polling<SPI_master>::transmit(const void* a_p_data,
         busy  = bit_flag::is(p_registers->SR, SPI_SR_BSY);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
 
     clear_overrun(p_registers);
 
@@ -265,9 +265,9 @@ Polling<SPI_master>::receive(void* a_p_data, std::size_t a_data_size_in_words, G
         error = is_error(p_registers, Direction_flag::receive);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
-    wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
+    wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
 
     if (true == error)
     {
@@ -352,9 +352,9 @@ Polling<SPI_master>::Result Polling<SPI_master>::receive(void* a_p_data,
         error = is_error(p_registers, Direction_flag::receive);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
-    wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
+    wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
 
     if (true == error)
     {
@@ -451,9 +451,9 @@ Polling<SPI_master>::Result Polling<SPI_master>::transmit_receive(const void* a_
         error = is_error(p_registers, Direction_flag::transmit | Direction_flag::receive);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
-    wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
+    wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
 
     if (true == error)
     {
@@ -555,9 +555,9 @@ Polling<SPI_master>::Result Polling<SPI_master>::transmit_receive(const void* a_
         error = is_error(p_registers, Direction_flag::transmit | Direction_flag::receive);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
-    wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
+    wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
 
     if (true == error)
     {
@@ -613,7 +613,7 @@ Polling<SPI_slave>::Result Polling<SPI_slave>::transmit(const void* a_p_data, st
         busy  = bit_flag::is(p_registers->SR, SPI_SR_BSY);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
 
     clear_overrun(p_registers);
 
@@ -666,7 +666,7 @@ Polling<SPI_slave>::transmit(const void* a_p_data, std::size_t a_data_size_in_wo
         busy  = bit_flag::is(p_registers->SR, SPI_SR_BSY);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
 
     clear_overrun(p_registers);
 
@@ -711,9 +711,9 @@ Polling<SPI_slave>::Result Polling<SPI_slave>::receive(void* a_p_data, std::size
         error = is_error(p_registers, Direction_flag::receive);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
-    wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
+    wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
 
     if (true == error)
     {
@@ -761,9 +761,9 @@ Polling<SPI_slave>::receive(void* a_p_data, std::size_t a_data_size_in_words, Mi
         error = is_error(p_registers, Direction_flag::receive);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
-    wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
+    wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
 
     if (true == error)
     {
@@ -840,9 +840,9 @@ Polling<SPI_slave>::transmit_receive(const void* a_p_tx_data, void* a_p_rx_data,
         error = is_error(p_registers, Direction_flag::transmit | Direction_flag::receive);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
-    wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
+    wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
 
     if (true == error)
     {
@@ -925,9 +925,9 @@ Polling<SPI_slave>::Result Polling<SPI_slave>::transmit_receive(const void* a_p_
         error = is_error(p_registers, Direction_flag::transmit | Direction_flag::receive);
     }
 
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FTLVL, true);
-    wait_until::all_bits(&(p_registers->SR), SPI_SR_BSY, true);
-    wait_until::any_bit(&(p_registers->SR), SPI_SR_FRLVL, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FTLVL, true);
+    wait_until::all_bits(p_registers->SR, SPI_SR_BSY, true);
+    wait_until::any_bit(p_registers->SR, SPI_SR_FRLVL, true);
 
     if (true == error)
     {

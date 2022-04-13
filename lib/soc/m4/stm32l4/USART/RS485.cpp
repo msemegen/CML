@@ -178,7 +178,7 @@ bool RS485::enable(const Enable_config& a_enable_config, Milliseconds a_timeout)
 
     this->p_registers->RQR = USART_RQR_MMRQ;
 
-    bool ret = wait_until::all_bits(&(this->p_registers->ISR),
+    bool ret = wait_until::all_bits(this->p_registers->ISR,
                                     USART_ISR_TEACK | USART_ISR_REACK | USART_ISR_RWU | USART_ISR_IDLE,
                                     false,
                                     start,

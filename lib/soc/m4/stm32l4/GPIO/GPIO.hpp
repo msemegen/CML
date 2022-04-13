@@ -471,11 +471,6 @@ public:
         cml::bit::clear(&(this->flags), 31u);
     }
 
-    std::uint32_t get_id() const
-    {
-        return this->idx;
-    }
-
     bool is_pin_taken(std::uint8_t a_id) const
     {
         return cml::bit::is(this->flags, a_id);
