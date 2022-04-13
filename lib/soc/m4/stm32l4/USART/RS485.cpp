@@ -189,8 +189,6 @@ bool RS485::enable(const Enable_config& a_enable_config, Milliseconds a_timeout)
         bit_flag::set(&(this->p_registers->ICR), USART_ICR_IDLECF);
     }
 
-    this->enable_config = a_enable_config;
-
     return ret;
 }
 

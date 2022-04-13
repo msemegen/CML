@@ -223,9 +223,6 @@ public:
     Polling polling;
     Interrupt interrupt;
 
-    const Enable_config* const p_enable_config = &(this->enable_config);
-    const Frame_format* const p_frame_format   = &(this->frame_format);
-
 private:
     USART(std::size_t a_idx, USART_TypeDef* a_p_registers, IRQn_Type a_irqn)
         : idx(a_idx)
@@ -239,9 +236,6 @@ private:
 
     std::uint32_t idx;
     USART_TypeDef* p_registers;
-
-    Enable_config enable_config;
-    Frame_format frame_format;
 
     IRQn_Type irqn;
     Interrupt::Transmit_callback transmit_callback;

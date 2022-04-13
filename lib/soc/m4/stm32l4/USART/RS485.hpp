@@ -196,8 +196,6 @@ public:
     Polling polling;
     Interrupt interrupt;
 
-    const Enable_config* const p_enable_config = &(this->enable_config);
-
 private:
     RS485(std::size_t a_idx, USART_TypeDef* a_p_registers, IRQn_Type a_irqn)
         : idx(a_idx)
@@ -211,8 +209,6 @@ private:
 
     std::uint32_t idx;
     USART_TypeDef* p_registers;
-
-    Enable_config enable_config;
 
     IRQn_Type irqn;
     Interrupt::Transmit_callback transmit_callback;

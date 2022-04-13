@@ -195,9 +195,6 @@ bool USART::enable(const Enable_config& a_enable_config, const Frame_format& a_f
         {
             bit_flag::set(&(this->p_registers->ICR), USART_ICR_IDLECF);
         }
-
-        this->enable_config = a_enable_config;
-        this->frame_format  = a_frame_format;
     }
 
     return ret;
