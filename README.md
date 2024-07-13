@@ -5,7 +5,7 @@ HAL for part of STM32L4 family (STM32L412xx, STM32L422xx, STM32L431xx, STM32L432
 
 # IMPORTANT NOTE
 This repo is not under active development. 
-Newer versions are avaliable here: 
+Newer versions are available here: 
 * https://github.com/msemegen/ng_hal - features sandbox for: 
 * https://github.com/xEmbeddedTools/xmcu 
 
